@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mini CRM</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo">CRM</div>
+      <div class="brand-text">
+        <h1>Mini CRM</h1>
+        <span id="storageInfo">lokal gespeichert</span>
+      </div>
+    </div>
+    <nav>
+      <button class="nav-btn active" data-view="dashboard">
+        <span class="icon">📊</span> Dashboard
+      </button>
+      <button class="nav-btn" data-view="contacts">
+        <span class="icon">👤</span> Kontakte
+      </button>
+      <button class="nav-btn" data-view="companies">
+        <span class="icon">🏢</span> Firmen
+      </button>
+      <button class="nav-btn" data-view="deals">
+        <span class="icon">💼</span> Deals
+      </button>
+      <button class="nav-btn" data-view="activities">
+        <span class="icon">📝</span> Aktivitäten
+      </button>
+    </nav>
+    <div class="sidebar-footer">
+      <button id="exportBtn" class="btn-ghost">Export</button>
+      <button id="importBtn" class="btn-ghost">Import</button>
+      <input type="file" id="importFile" accept="application/json" hidden />
+      <button id="seedBtn" class="btn-ghost">Demodaten</button>
+      <button id="resetBtn" class="btn-ghost danger">Reset</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <h2 id="viewTitle">Dashboard</h2>
+      <div class="topbar-actions">
+        <input type="search" id="globalSearch" placeholder="Suchen…" />
+        <button id="primaryAction" class="btn-primary">+ Neu</button>
+      </div>
+    </header>
+
+    <section id="view" class="view"></section>
+  </main>
+
+  <div id="modalBackdrop" class="modal-backdrop hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modalTitle"></h3>
+        <button id="modalClose" class="icon-btn">✕</button>
+      </div>
+      <form id="modalForm" class="modal-form"></form>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
