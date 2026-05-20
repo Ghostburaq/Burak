@@ -1,41 +1,68 @@
-# Mini CRM
+# MiT CRM Pro · Mobil in Time AG
 
-Ein leichtgewichtiges, vollständig browserbasiertes CRM-Tool. Keine Installation, kein Server, keine Datenbank – alle Daten werden im LocalStorage des Browsers gespeichert.
+Professionelles, vollständig browserbasiertes CRM in einer einzigen HTML-Datei. Keine Installation, kein Server, kein Build-Schritt – einfach `MiT_CRM_Pro.html` im Browser öffnen.
 
-## Features
+## Funktionen
 
-- **Dashboard** mit KPIs (Kontakte, Firmen, offene Pipeline, gewonnene Deals) und Pipeline-Übersicht
-- **Kontakte** (CRUD) mit Position, E-Mail, Telefon und Firmenzuordnung
-- **Firmen** (CRUD) mit Branche, Website, Adresse und Verknüpfungen zu Kontakten/Deals
-- **Deal-Pipeline** mit Drag & Drop zwischen den Stadien *Lead → Qualifiziert → Angebot → Gewonnen / Verloren*
-- **Aktivitäten/Notizen**: Notizen, Anrufe, Meetings, E-Mails – mit Verknüpfung zu Kontakten und Deals
-- **Globale Suche** in der jeweils aktiven Ansicht
-- **Import / Export** als JSON
-- **Demodaten** auf Knopfdruck
-- Responsive (Desktop & Tablet)
+**Übersicht**
+- Dashboard mit KPIs (Pipeline CHF, Gewonnen, Kontakte, Anrufe, Win Rate) und Aktivitäts-Charts (Chart.js)
+- Pipeline (Kanban: Prospecting → Qualified → Proposal → Negotiation → Won/Lost)
+- Kontakte mit Such- und Branchenfilter, XLSX-Export
+- Schweiz-Karte (Leaflet + Cluster) mit Kunden, Deals, Kantons-Heatmap
+- Kantons-Übersicht CH (alle 26 Kantone)
+- Forecast / Ziele mit Fortschrittsbalken
+
+**Akquise**
+- Kaltakquise-Dialer mit Timer, Tages-Stats und KI-Coach (Skripte, Einwand-Behandlung)
+- E-Mail-Generator (Kalt, Follow-Up, Nach Angebot, Reaktivierung) mit Tonalitäts-Steuerung
+- 5-Schritte-Follow-Up-Sequenzgenerator
+- WhatsApp-Sender mit Vorlagen (Erstkontakt, Nach Meeting, Angebot, Bestätigung)
+- KI-Firmen-Recherche
+
+**Engineering**
+- Produkt-Datenbank (Generatoren, BESS, Power Quality, Wärme/Kälte, Zubehör)
+- Angebots-Generator mit Positionen, KI-Text, PDF-Export (jsPDF)
+- ROI-Rechner: Ausfallkosten, THD/PQ, Diesel vs BESS, Miet-TCO
+- Engineering-Toolbox: Generator-Dimensionierung, Kabel NIN 2020, BESS IEC 62619, Parallelschaltung IEC 60034-3, Baustromverteiler, Kombisystem-KI, Lastliste, USV IEC 62040, Schallpegel ISO 3744 / LSV CH, IBC Tank ADR
+- CO₂ / Stage V mit ESG-Argument
+- Notstrom NIV Art.13
+
+**Tools**
+- Aufgaben mit Prioritäten und Fälligkeit
+- simap.ch-Radar inkl. PDF-Analyse von Ausschreibungen (Claude Vision)
+- Wettbewerbs-Analyse (SWOT pro Konkurrent)
+- TIGORZ Content-Studio (LinkedIn / TikTok / YouTube)
+- Tagesrapport mit Doughnut-Chart und PDF-Export
+- Notizen mit Suche und Kategorien
+
+**Datenmanagement**
+- Excel/CSV-Import mit automatischer Spaltenerkennung (Firmenname, Ansprechpartner, Telefon, E-Mail, Kanton, Status, Prio, kVA, Produkt etc.) – verteilt auf Kontakte, Karte, Pipeline, Aufgaben
+- Drag-&-Drop-Import
+- JSON-Backup Export/Import
+- Volltext-Suche (Ctrl+K)
+- Light/Dark-Theme
+- Anthropic Claude API für alle KI-Funktionen
 
 ## Verwendung
 
-`index.html` einfach im Browser öffnen – fertig.
-
 ```bash
-# Optional: lokalen Server starten
+# Datei direkt im Browser öffnen
+open MiT_CRM_Pro.html
+# oder
+xdg-open MiT_CRM_Pro.html
+
+# Optional: lokaler Server
 python3 -m http.server 8000
-# dann http://localhost:8000 im Browser öffnen
 ```
 
-### Demodaten laden
+Beim ersten Start: API-Key oben rechts eintragen (`sk-ant-…`), dann Excel/CSV importieren oder Demo-Daten manuell anlegen.
 
-In der Seitenleiste auf **Demodaten** klicken – es werden 3 Firmen, 3 Kontakte, 4 Deals und 3 Aktivitäten angelegt.
+## Daten
 
-### Daten sichern
+Alle Daten werden im `localStorage` unter dem Key `mit_crm_v2` gespeichert. Backup jederzeit über den Export-Button (JSON) möglich.
 
-- **Export**: Lädt den kompletten Datenbestand als JSON herunter
-- **Import**: Lädt ein zuvor exportiertes JSON wieder ein
-- **Reset**: Löscht alle Daten aus dem LocalStorage
+## Dateien im Repo
 
-## Dateien
-
-- `index.html` – Markup
-- `styles.css` – Styling
-- `app.js` – komplette App-Logik (State, Routing, Rendering, Drag & Drop)
+- `MiT_CRM_Pro.html` – **die Haupt-App** (alles inline)
+- `mini-crm.html` – schlanker Vorgänger (für einfache CRM-Anwendungen)
+- `index.html` / `styles.css` / `app.js` – Quell-Variante des Mini-CRM (separate Dateien)

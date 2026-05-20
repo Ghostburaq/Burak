@@ -1,0 +1,1616 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>MiT CRM Pro · Mobil in Time AG</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{
+  --bg0:#0d1525;--bg1:#14202e;--bg2:#1a2c42;--bg3:#1f3455;
+  --acc:#e63329;--acca:rgba(230,51,41,.12);
+  --grn:#00e5a0;--blu:#4b9ef8;--yel:#ffbb33;--pur:#a66ef5;--cyn:#00d4f5;
+  --t1:#dce8ff;--t2:#5d7faa;--t3:#1e3055;
+  --bdr:rgba(75,158,248,.12);--bdr2:rgba(75,158,248,.28);
+  --r:10px;--rs:6px;--sh:0 8px 32px rgba(0,8,24,.6);
+  --fh:'Barlow Condensed',sans-serif;--fb:'DM Sans',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;overflow:hidden;background:var(--bg0);color:var(--t1);font-family:var(--fb);font-size:14px;}
+/* LAYOUT */
+#hdr{display:flex;align-items:center;gap:.6rem;padding:.4rem 1rem;background:var(--bg1);border-bottom:1px solid var(--bdr);height:50px;flex-shrink:0;}
+.logo{display:flex;align-items:center;gap:.5rem;cursor:pointer;flex-shrink:0;}
+.lm{width:28px;height:28px;background:var(--acc);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:1rem;}
+.lt{font-family:var(--fh);font-size:1.2rem;font-weight:800;}
+.ls{font-size:9px;color:var(--t2);letter-spacing:1.5px;text-transform:uppercase;}
+.hdiv{width:1px;height:24px;background:var(--bdr);}
+.srch{position:relative;flex:1;max-width:250px;}
+.srch input{width:100%;background:var(--bg3);border:1px solid var(--bdr);border-radius:var(--rs);color:var(--t1);padding:.3rem .65rem .3rem 1.65rem;font-size:12px;font-family:var(--fb);outline:none;}
+.srch input:focus{border-color:var(--acc);}
+.si{position:absolute;left:.5rem;top:50%;transform:translateY(-50%);font-size:11px;color:var(--t2);pointer-events:none;}
+.hdr-r{margin-left:auto;display:flex;align-items:center;gap:.3rem;}
+.hbtn{background:var(--bg3);border:1px solid var(--bdr);color:var(--t2);padding:.28rem .6rem;border-radius:var(--rs);cursor:pointer;font-size:11px;font-family:var(--fb);transition:all .15s;white-space:nowrap;}
+.hbtn:hover{border-color:var(--blu);color:var(--t1);}
+.hbtn.grn{background:rgba(0,229,160,.1);border-color:rgba(0,229,160,.5);color:var(--grn);font-weight:700;}
+.hbtn.grn:hover{background:rgba(0,229,160,.18);}
+.adot{width:7px;height:7px;border-radius:50%;background:var(--t3);}
+.adot.ok{background:var(--grn);box-shadow:0 0 6px var(--grn);}
+#akey{background:var(--bg3);border:1px solid var(--bdr);color:var(--t1);padding:.28rem .55rem;border-radius:var(--rs);font-size:11px;width:130px;font-family:var(--fb);outline:none;}
+#app{display:flex;height:calc(100vh - 50px);}
+#sb{width:200px;background:var(--bg1);border-right:1px solid var(--bdr);overflow-y:auto;flex-shrink:0;}
+#main{flex:1;overflow-y:auto;overflow-x:hidden;}
+/* SIDEBAR */
+.ng{padding:.5rem .9rem .1rem;font-size:8px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:2px;border-top:1px solid var(--bdr);margin-top:.2rem;}
+.ng:first-child{border-top:none;}
+.ni{display:flex;align-items:center;gap:.5rem;padding:.42rem 1rem;cursor:pointer;transition:all .1s;border-left:3px solid transparent;color:var(--t2);font-size:12.5px;font-weight:500;}
+.ni:hover{background:var(--bg2);color:var(--t1);}
+.ni.act{background:var(--acca);border-left-color:var(--acc);color:var(--acc);}
+.ic{font-size:13px;width:16px;text-align:center;flex-shrink:0;}
+.nbadge{margin-left:auto;background:var(--acc);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px;}
+/* PAGES */
+.pg{display:none;padding:1.2rem;}
+.pg.act{display:block;}
+.pgtitle{font-family:var(--fh);font-size:1.6rem;font-weight:800;letter-spacing:.5px;text-transform:uppercase;margin-bottom:1.1rem;}
+.pgtitle span{color:var(--acc);}
+/* KPI */
+.krow{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:.7rem;margin-bottom:1rem;}
+.kpi{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:.8rem 1rem;position:relative;overflow:hidden;}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2.5px;border-radius:var(--r) var(--r) 0 0;}
+.kpi.kr::before{background:var(--acc);}.kpi.kg::before{background:var(--grn);}
+.kpi.kb::before{background:var(--blu);}.kpi.ky::before{background:var(--yel);}
+.kpi.kp::before{background:var(--pur);}
+.klbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--t2);margin-bottom:.3rem;}
+.kval{font-family:var(--fh);font-size:1.65rem;font-weight:800;line-height:1;}
+.ksub{font-size:10px;color:var(--t2);margin-top:.1rem;}
+/* CARDS */
+.card{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);margin-bottom:.85rem;overflow:hidden;}
+.ch{padding:.65rem 1rem;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;gap:.5rem;flex-wrap:wrap;}
+.ct{font-family:var(--fh);font-size:.88rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
+.cb{padding:.9rem;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:.85rem;}
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:.3rem;padding:.38rem .8rem;border-radius:var(--rs);font-family:var(--fb);font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all .12s;white-space:nowrap;}
+.bp{background:var(--acc);color:#fff;}.bp:hover{opacity:.88;}
+.bs{background:transparent;border:1.5px solid var(--acc);color:var(--acc);}.bs:hover{background:var(--acca);}
+.bg{background:var(--bg3);border:1px solid var(--bdr);color:var(--t1);}.bg:hover{border-color:var(--t2);}
+.bgrn{background:var(--grn);color:#000;font-weight:700;}
+.sm{padding:.22rem .55rem;font-size:11px;}
+.brow{display:flex;gap:.3rem;flex-wrap:wrap;align-items:center;}
+/* FORMS */
+.fg{margin-bottom:.75rem;}
+.fg label{display:block;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--t2);margin-bottom:.2rem;}
+input,select,textarea{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--rs);color:var(--t1);padding:.38rem .65rem;font-family:var(--fb);font-size:12px;width:100%;outline:none;transition:border-color .15s;}
+input:focus,select:focus,textarea:focus{border-color:var(--acc);}
+select option{background:var(--bg2);}
+textarea{resize:vertical;min-height:65px;}
+.ir{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;}
+.ir3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.6rem;}
+/* TABLE */
+.tw{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+thead th{background:var(--bg2);padding:.4rem .75rem;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--t2);font-weight:700;border-bottom:1px solid var(--bdr);}
+tbody tr{border-bottom:1px solid var(--bdr);transition:background .1s;}
+tbody tr:hover{background:rgba(255,255,255,.02);}
+tbody td{padding:.48rem .75rem;font-size:12px;}
+/* TAGS */
+.tg{display:inline-block;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:600;}
+.tr{background:rgba(230,51,41,.12);color:var(--acc);}
+.tg2{background:rgba(0,229,160,.12);color:var(--grn);}
+.tb2{background:rgba(75,158,248,.12);color:var(--blu);}
+.ty{background:rgba(255,187,51,.12);color:var(--yel);}
+.tgr{background:var(--bg3);color:var(--t2);}
+/* KANBAN */
+.kanban{display:flex;gap:.65rem;overflow-x:auto;padding-bottom:.65rem;}
+.kcol{min-width:190px;width:190px;flex-shrink:0;}
+.kch{padding:.4rem .6rem;border-radius:var(--rs) var(--rs) 0 0;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;display:flex;justify-content:space-between;}
+.kcb{background:var(--bg1);border:1px solid var(--bdr);border-top:none;border-radius:0 0 var(--rs) var(--rs);padding:.3rem;min-height:240px;}
+.kcard{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--rs);padding:.5rem;margin-bottom:.3rem;cursor:pointer;transition:all .12s;}
+.kcard:hover{border-color:var(--acc);transform:translateY(-1px);}
+/* MAP */
+#the-map{width:100%;border-radius:var(--r);overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.35);border:1px solid rgba(75,158,248,.18);}.leaflet-tile-pane{filter:brightness(1.08) saturate(1.15) contrast(.95);}
+.mtgl{background:rgba(13,21,37,.8);border:1px solid var(--bdr);border-radius:var(--rs);padding:.26rem .65rem;color:var(--t2);cursor:pointer;font-size:11px;font-family:var(--fb);transition:all .12s;}
+.mtgl.act{border-color:var(--acc);color:var(--acc);}
+/* TABS */
+.tabs{display:flex;gap:.1rem;border-bottom:1px solid var(--bdr);margin-bottom:.9rem;flex-wrap:wrap;}
+.tbtn{padding:.3rem .7rem;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--t2);cursor:pointer;font-family:var(--fb);font-size:12px;font-weight:600;margin-bottom:-1px;transition:all .12s;}
+.tbtn.act{color:var(--acc);border-bottom-color:var(--acc);}
+.tpane{display:none;}.tpane.act{display:block;}
+/* PRODUCTS */
+.ptabs{display:flex;gap:.1rem;border-bottom:1px solid var(--bdr);margin-bottom:.9rem;}
+.ptb{padding:.3rem .7rem;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--t2);cursor:pointer;font-family:var(--fb);font-size:12px;font-weight:600;margin-bottom:-1px;transition:all .12s;}
+.ptb.act{color:var(--acc);border-bottom-color:var(--acc);}
+.ppanel{display:none;}.ppanel.act{display:block;}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:.75rem;}
+.pcard{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:.9rem;cursor:pointer;transition:all .15s;}
+.pcard:hover{border-color:var(--acc);transform:translateY(-2px);}
+.pcat{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--acc);}
+.pname{font-family:var(--fh);font-size:1rem;font-weight:700;margin:.15rem 0;}
+.pspecs span{font-size:10px;background:var(--bg2);padding:1px 5px;border-radius:3px;color:var(--t2);margin:.1rem .1rem 0 0;display:inline-block;}
+/* AI BOX */
+.aibox{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r);padding:.85rem;min-height:80px;font-size:12px;line-height:1.7;white-space:pre-wrap;word-break:break-word;color:var(--t1);}
+/* RESULT */
+.rres{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r);padding:.9rem;margin-top:.75rem;}
+.rgrid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.5rem;}
+.ri{padding:.5rem;background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--rs);}
+.ri.hl{border-color:var(--grn);background:rgba(0,229,160,.04);}
+.rl{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--t2);margin-bottom:.15rem;}
+.rv{font-family:var(--fh);font-size:1.2rem;font-weight:800;}
+.rv.g{color:var(--grn);}.rv.r{color:var(--acc);}.rv.y{color:var(--yel);}
+.rsumm{font-size:11px;color:var(--t2);line-height:1.6;padding-top:.4rem;border-top:1px solid var(--bdr);margin-top:.4rem;}
+/* MODAL */
+#mo{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:2000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+#mo.on{display:flex;}
+.modal{background:var(--bg1);border:1px solid var(--bdr2);border-radius:var(--r);width:92%;max-width:560px;max-height:88vh;overflow-y:auto;box-shadow:var(--sh);}
+.mh{padding:.75rem 1rem;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;}
+.mt{font-family:var(--fh);font-size:1rem;font-weight:700;text-transform:uppercase;}
+.mx{background:none;border:none;color:var(--t2);cursor:pointer;font-size:1.1rem;padding:.15rem .4rem;line-height:1;}
+.mx:hover{color:var(--acc);}
+.mb{padding:1rem;}
+.mf{padding:.65rem 1rem;border-top:1px solid var(--bdr);display:flex;gap:.4rem;justify-content:flex-end;}
+/* IMPORT DROPZONE */
+#imp-dz{border:2.5px dashed rgba(0,229,160,.45);border-radius:var(--r);padding:2rem;text-align:center;cursor:pointer;transition:all .2s;background:rgba(0,229,160,.03);}
+#imp-dz:hover,#imp-dz.drag{border-color:var(--grn);background:rgba(0,229,160,.07);}
+/* TOASTS */
+#toasts{position:fixed;bottom:1rem;right:1rem;z-index:9999;display:flex;flex-direction:column;gap:.35rem;pointer-events:none;}
+.toast{padding:.5rem .85rem;border-radius:var(--rs);font-size:12px;font-weight:500;display:flex;align-items:center;gap:.4rem;box-shadow:var(--sh);animation:tin .18s ease;}
+.tok{background:#011c14;border:1px solid var(--grn);color:var(--grn);}
+.terr{background:#1c0101;border:1px solid var(--acc);color:var(--acc);}
+.tinfo{background:#01091c;border:1px solid var(--blu);color:var(--blu);}
+.twarn{background:#1c1001;border:1px solid var(--yel);color:var(--yel);}
+@keyframes tin{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:none}}
+/* MISC */
+.empty{padding:2.2rem;text-align:center;color:var(--t2);}
+.empty .eico{font-size:1.8rem;margin-bottom:.4rem;}
+.sep{height:1px;background:var(--bdr);margin:.8rem 0;}
+.aitem{display:flex;gap:.5rem;align-items:flex-start;padding:.4rem 0;border-bottom:1px solid var(--bdr);}
+.aitem:last-child{border:none;}
+.aico{width:22px;height:22px;border-radius:5px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;margin-top:1px;}
+.fbar{height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;margin:.2rem 0;}
+.fbar div{height:100%;border-radius:3px;transition:width .5s;}
+.ncard{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:.8rem;cursor:pointer;transition:all .12s;}
+.ncard:hover{border-color:var(--acc);}
+.sime{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:.8rem;margin-bottom:.5rem;}
+.swot{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin:.5rem 0;}
+.sb{padding:.55rem;border-radius:var(--rs);}
+.sb.ss{background:rgba(0,229,160,.06);border:1px solid rgba(0,229,160,.18);}
+.sb.sw{background:rgba(230,51,41,.06);border:1px solid rgba(230,51,41,.18);}
+.sb h5{font-size:9px;text-transform:uppercase;letter-spacing:1px;margin-bottom:.25rem;font-weight:700;}
+.sb ul{padding-left:.8rem;font-size:11px;color:var(--t2);line-height:1.7;}
+/* LEAFLET */
+.leaflet-popup-content-wrapper{background:linear-gradient(135deg,rgba(13,25,50,.96),rgba(18,35,65,.98))!important;border:1px solid rgba(75,158,248,.45)!important;border-radius:var(--rs)!important;color:var(--t1)!important;box-shadow:0 12px 40px rgba(0,0,0,.55)!important;backdrop-filter:blur(12px);}
+.leaflet-popup-tip{background:#0e1f36!important;}
+.leaflet-popup-content{margin:.55rem .8rem!important;font-family:'DM Sans',sans-serif!important;}
+.mpt{font-family:'Barlow Condensed',sans-serif;font-size:.95rem;font-weight:700;color:var(--acc);margin-bottom:.2rem;}
+.mpr{font-size:11px;color:var(--t2);margin:.06rem 0;}
+/* CLUSTER */
+.marker-cluster{width:38px!important;height:38px!important;}
+.marker-cluster div{width:28px!important;height:28px!important;margin:5px!important;border-radius:50%!important;text-align:center;font-family:'Barlow Condensed',sans-serif!important;font-size:13px!important;font-weight:800!important;line-height:28px!important;}
+.marker-cluster-small{background:rgba(75,158,248,.15);border:1.5px solid rgba(75,158,248,.5);}
+.marker-cluster-small div{background:rgba(37,99,235,.9);color:#fff;font-weight:900;}
+.marker-cluster-medium{background:rgba(255,187,51,.15);border:1.5px solid rgba(255,187,51,.6);}
+.marker-cluster-medium div{background:rgba(245,158,11,.95);color:#000;font-weight:900;}
+.marker-cluster-large{background:rgba(230,51,41,.15);border:1.5px solid rgba(230,51,41,.6);}
+.marker-cluster-large div{background:rgba(220,38,38,.92);color:#fff;font-weight:900;}
+::-webkit-scrollbar{width:4px;height:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:2px;}
+</style>
+</head>
+<body style="display:flex;flex-direction:column;height:100vh;">
+
+<!-- HEADER -->
+<header id="hdr">
+  <div class="logo" onclick="nav('dash')"><div class="lm">⚡</div><div><div class="lt">MiT CRM</div><div class="ls">Mobil in Time · Aggreko</div></div></div>
+  <div class="hdiv"></div>
+  <div class="srch"><span class="si">🔍</span><input id="si" placeholder="Suchen… Ctrl+K" autocomplete="off" oninput="doSearch(this.value)"></div>
+  <div class="hdr-r">
+    <div class="adot" id="adot"></div>
+    <input type="password" id="akey" placeholder="sk-ant-… API Key" autocomplete="off">
+    <button class="hbtn grn" onclick="openImport()">📥 Excel Import</button>
+    <button class="hbtn" onclick="doExport()">↓ Export</button>
+    <input type="file" id="json-inp" accept=".json" style="display:none" onchange="loadBackup(this)">
+    <button class="hbtn" onclick="toggleTheme()" id="tbtn">🌙</button>
+    <button class="hbtn" onclick="if(confirm('Alle Daten löschen? Nicht rückgängig machbar!')){localStorage.clear();location.reload();}">↺</button>
+  </div>
+</header>
+
+<div id="app">
+<!-- SIDEBAR -->
+<nav id="sb">
+  <div class="ng">Übersicht</div>
+  <div class="ni act" onclick="nav('dash')"><span class="ic">📊</span>Dashboard</div>
+  <div class="ni" onclick="nav('pipe')"><span class="ic">🎯</span>Pipeline<span id="nb-pipe" class="nbadge" style="display:none">0</span></div>
+  <div class="ni" onclick="nav('ctc')"><span class="ic">👥</span>Kontakte</div>
+  <div class="ni" onclick="nav('map')"><span class="ic">🗺️</span>Karte</div>
+  <div class="ni" onclick="nav('kt')"><span class="ic">🏔️</span>Kantone CH</div>
+  <div class="ni" onclick="nav('fc')"><span class="ic">📈</span>Forecast</div>
+  <div class="ng">Akquise</div>
+  <div class="ni" onclick="nav('dial')"><span class="ic">📞</span>Kaltakquise</div>
+  <div class="ni" onclick="nav('email')"><span class="ic">✉️</span>E-Mail Gen</div>
+  <div class="ni" onclick="nav('fu')"><span class="ic">🔄</span>Follow-Up</div>
+  <div class="ni" onclick="nav('wa')"><span class="ic">💬</span>WhatsApp</div>
+  <div class="ni" onclick="nav('rech')"><span class="ic">🔍</span>Firma Recherche</div>
+  <div class="ng">Engineering</div>
+  <div class="ni" onclick="nav('prod')"><span class="ic">⚡</span>Produkte</div>
+  <div class="ni" onclick="nav('ang')"><span class="ic">📄</span>Angebot</div>
+  <div class="ni" onclick="nav('roi')"><span class="ic">💰</span>ROI Rechner</div>
+  <div class="ni" onclick="nav('eng')"><span class="ic">⚙️</span>Engineering</div>
+  <div class="ni" onclick="nav('co2')"><span class="ic">🌿</span>CO₂ / Stage V</div>
+  <div class="ni" onclick="nav('nst')"><span class="ic">🏥</span>Notstrom NIV</div>
+  <div class="ng">Tools</div>
+  <div class="ni" onclick="nav('tasks')"><span class="ic">✅</span>Aufgaben<span id="nb-tasks" class="nbadge" style="display:none">0</span></div>
+  <div class="ni" onclick="nav('simap')"><span class="ic">🏛️</span>simap.ch</div>
+  <div class="ni" onclick="nav('comp')"><span class="ic">🥊</span>Wettbewerb</div>
+  <div class="ni" onclick="nav('tig')"><span class="ic">🎬</span>TIGORZ Studio</div>
+  <div class="ni" onclick="nav('rap')"><span class="ic">📑</span>Rapport</div>
+  <div class="ni" onclick="nav('notes')"><span class="ic">📝</span>Notizen</div>
+</nav>
+
+<main id="main">
+<!-- DASHBOARD -->
+<div id="pg-dash" class="pg act">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+    <div class="pgtitle" style="margin:0">Dashboard <span id="dgreet"></span></div>
+    <button class="btn bgrn" onclick="openImport()">📥 Excel / CSV importieren</button>
+  </div>
+  <!-- IMPORT CTA – shown when empty -->
+  <div id="imp-cta" onclick="openImport()" ondragover="event.preventDefault();this.style.borderColor='var(--grn)'" ondragleave="this.style.borderColor='rgba(0,229,160,.4)'" ondrop="event.preventDefault();this.style.borderColor='rgba(0,229,160,.4)';handleDrop(event)" style="border:2px dashed rgba(0,229,160,.4);border-radius:var(--r);padding:1.4rem;text-align:center;margin-bottom:1rem;cursor:pointer;background:rgba(0,229,160,.03);transition:all .2s;">
+    <div style="font-size:2rem;margin-bottom:.35rem">📊</div>
+    <div style="font-family:var(--fh);font-size:1.1rem;font-weight:800;color:var(--grn);margin-bottom:.2rem">Excel oder CSV importieren</div>
+    <div style="font-size:11px;color:var(--t2)">Datei hier ablegen oder klicken · .xlsx · .csv · Spalten automatisch erkannt</div>
+  </div>
+  <div class="krow">
+    <div class="kpi kr"><div class="klbl">Pipeline CHF</div><div class="kval" id="k-pipe">0</div></div>
+    <div class="kpi kg"><div class="klbl">Gewonnen</div><div class="kval" id="k-won">0</div></div>
+    <div class="kpi kb"><div class="klbl">Kontakte</div><div class="kval" id="k-ctc">0</div></div>
+    <div class="kpi ky"><div class="klbl">Anrufe heute</div><div class="kval" id="k-calls">0</div></div>
+    <div class="kpi kp"><div class="klbl">Win Rate</div><div class="kval" id="k-wr">–</div></div>
+  </div>
+  <div class="g2">
+    <div class="card"><div class="ch"><span class="ct">Pipeline Funnel</span></div><div class="cb"><canvas id="ch-funnel" height="155"></canvas></div></div>
+    <div class="card"><div class="ch"><span class="ct">Aktivität 7 Tage</span></div><div class="cb"><canvas id="ch-act" height="155"></canvas></div></div>
+  </div>
+  <div class="g2" style="margin-top:.85rem;">
+    <div class="card"><div class="ch"><span class="ct">Letzte Aktivitäten</span><button class="btn bp sm" onclick="openTask()">+ Aufgabe</button></div><div class="cb" id="dash-feed"><div class="empty"><div class="eico">📭</div><p>Noch keine Aktivitäten</p></div></div></div>
+    <div class="card"><div class="ch"><span class="ct">Top Deals</span></div><div class="cb" id="dash-deals"><div class="empty"><div class="eico">🎯</div><p>Noch keine Deals</p></div></div></div>
+  </div>
+</div>
+
+<!-- PIPELINE -->
+<div id="pg-pipe" class="pg">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+    <div class="pgtitle" style="margin:0">Pipeline</div>
+    <div class="brow"><span id="pipe-val" style="font-size:12px;color:var(--t2)">CHF 0</span><button class="btn bp" onclick="openDeal()">+ Deal</button></div>
+  </div>
+  <div class="kanban" id="kanban"></div>
+</div>
+
+<!-- CONTACTS -->
+<div id="pg-ctc" class="pg">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.85rem;">
+    <div class="pgtitle" style="margin:0">Kontakte</div>
+    <div class="brow">
+      <input id="ctc-q" placeholder="Suchen…" style="width:160px" oninput="renderCtc()">
+      <select id="ctc-ind" onchange="renderCtc()" style="width:130px"><option value="">Alle Branchen</option><option>Industrie</option><option>Pharma/Chemie</option><option>Rechenzentrum</option><option>Spital/Klinik</option><option>EVU</option><option>Bau</option><option>Gemeinde</option></select>
+      <button class="btn bp" onclick="openCtc()">+ Kontakt</button>
+      <button class="btn bg sm" onclick="exportCtc()">↓ XLSX</button>
+    </div>
+  </div>
+  <div class="card"><div class="tw"><table><thead><tr><th>Firma</th><th>Name</th><th>Branche</th><th>Kanton</th><th>Telefon</th><th>Status</th><th>Prio</th><th></th></tr></thead><tbody id="ctc-body"></tbody></table></div></div>
+</div>
+
+<!-- MAP -->
+<div id="pg-map" class="pg" style="padding:.85rem!important;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;">
+    <div class="pgtitle" style="margin:0">Schweiz <span>Karte</span></div>
+    <div class="brow"><button class="mtgl act" id="ml-c" onclick="toggleML('c',this)">👥 Kunden</button><button class="mtgl act" id="ml-d" onclick="toggleML('d',this)">🎯 Deals</button></div>
+  </div>
+  <div id="the-map" style="height:calc(100vh - 155px);min-height:340px;">
+  <div id="map-loading" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:500;background:var(--bg2);border-radius:var(--r);gap:.75rem;">
+    <div style="width:32px;height:32px;border:3px solid var(--bdr);border-top-color:var(--acc);border-radius:50%;animation:spin .8s linear infinite;"></div>
+    <span style="color:var(--t2);font-size:13px;">Karte wird geladen…</span>
+  </div>
+</div>
+<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+  <div style="display:flex;gap:1.5rem;padding:.5rem 0;flex-wrap:wrap;">
+    <div><div style="font-family:var(--fh);font-size:1.2rem;font-weight:800;" id="ms-ctc">0</div><div style="font-size:9px;color:var(--t2);text-transform:uppercase;letter-spacing:1px;">Kunden</div></div>
+    <div><div style="font-family:var(--fh);font-size:1.2rem;font-weight:800;" id="ms-deals">0</div><div style="font-size:9px;color:var(--t2);text-transform:uppercase;letter-spacing:1px;">Deals</div></div>
+    <div><div style="font-family:var(--fh);font-size:1.2rem;font-weight:800;color:var(--grn);" id="ms-pot">CHF 0</div><div style="font-size:9px;color:var(--t2);text-transform:uppercase;letter-spacing:1px;">Pipeline</div></div>
+    <div><div style="font-family:var(--fh);font-size:1.2rem;font-weight:800;" id="ms-kt">0</div><div style="font-size:9px;color:var(--t2);text-transform:uppercase;letter-spacing:1px;">Kantone</div></div>
+  </div>
+</div>
+
+<!-- KANTONE -->
+<div id="pg-kt" class="pg">
+  <div class="pgtitle">Kantone <span>CH</span></div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:.6rem;" id="kt-grid"></div>
+</div>
+
+<!-- FORECAST -->
+<div id="pg-fc" class="pg">
+  <div class="pgtitle">Forecast <span>&amp; Ziele</span></div>
+  <div class="g2">
+    <div class="card"><div class="ch"><span class="ct">Monatsziele</span></div><div class="cb">
+      <div class="ir"><div class="fg"><label>Pipeline CHF</label><input id="g-pipe" type="number" placeholder="500000" oninput="saveGoals()"></div><div class="fg"><label>Anrufe/Monat</label><input id="g-calls" type="number" placeholder="120" oninput="saveGoals()"></div></div>
+      <div class="ir"><div class="fg"><label>Meetings</label><input id="g-meet" type="number" placeholder="15" oninput="saveGoals()"></div><div class="fg"><label>Angebote</label><input id="g-off" type="number" placeholder="8" oninput="saveGoals()"></div></div>
+    </div></div>
+    <div class="card"><div class="ch"><span class="ct">Fortschritt</span></div><div class="cb" id="fc-prog"><div class="empty"><p>Ziele setzen</p></div></div></div>
+  </div>
+  <div class="card" style="margin-top:.75rem;"><div class="ch"><span class="ct">Forecast</span></div><div class="cb"><canvas id="ch-fc" height="170"></canvas></div></div>
+</div>
+
+<!-- DIALER -->
+<div id="pg-dial" class="pg">
+  <div class="pgtitle">Kaltakquise <span>Dialer</span></div>
+  <div class="g2">
+    <div>
+      <div style="background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:1.2rem;text-align:center;">
+        <div id="d-av" style="width:50px;height:50px;border-radius:50%;background:var(--acc);margin:0 auto .6rem;display:flex;align-items:center;justify-content:center;font-family:var(--fh);font-size:1.5rem;font-weight:800;">?</div>
+        <div id="d-name" style="font-family:var(--fh);font-size:1.1rem;font-weight:700;">Kein Kontakt</div>
+        <div id="d-dial-co" style="font-size:11px;color:var(--t2);margin-bottom:.4rem;"></div>
+        <div id="d-timer" style="font-family:var(--fh);font-size:1.8rem;font-weight:800;color:var(--grn);margin:.5rem 0;">00:00</div>
+        <div class="brow" style="justify-content:center;margin-bottom:.35rem;">
+          <button class="btn bp" id="d-btn" onclick="dialCall()">📞 Anrufen</button>
+          <button class="btn bg" onclick="dialSkip()">⏭ Skip</button>
+        </div>
+        <div class="brow" style="justify-content:center;">
+          <button class="btn sm bgrn" onclick="dialLog('Meeting vereinbart')">✅ Meeting</button>
+          <button class="btn sm bg" onclick="dialLog('Callback')">📅 Callback</button>
+          <button class="btn sm bg" onclick="dialLog('Kein Interesse')">👎 Nein</button>
+        </div>
+      </div>
+      <div class="card" style="margin-top:.75rem;">
+        <div class="ch"><span class="ct">Tages-Stats</span></div>
+        <div class="cb" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:.4rem;text-align:center;">
+          <div><div style="font-family:var(--fh);font-size:1.5rem;font-weight:800;" id="dc-calls">0</div><div style="font-size:10px;color:var(--t2)">Anrufe</div></div>
+          <div><div style="font-family:var(--fh);font-size:1.5rem;font-weight:800;color:var(--grn);" id="dc-reach">0</div><div style="font-size:10px;color:var(--t2)">Erreicht</div></div>
+          <div><div style="font-family:var(--fh);font-size:1.5rem;font-weight:800;color:var(--yel);" id="dc-meet">0</div><div style="font-size:10px;color:var(--t2)">Meetings</div></div>
+          <div><div style="font-family:var(--fh);font-size:1.5rem;font-weight:800;" id="dc-rate">0%</div><div style="font-size:10px;color:var(--t2)">Quote</div></div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:.75rem;">
+      <div class="card" style="flex:1;">
+        <div class="ch"><span class="ct">KI Coach</span><div class="brow"><button class="btn bp sm" onclick="genScript()">🤖 Skript</button><button class="btn bg sm" onclick="genObj()">💡 Einwand</button></div></div>
+        <div class="cb"><div class="fg"><label>Einwand eingeben</label><input id="obj-q" placeholder="Wir haben bereits einen Anbieter…" onkeydown="if(event.key==='Enter')genObj()"></div><div class="aibox" id="script-out" style="min-height:120px;font-size:11px;">← Skript generieren</div></div>
+      </div>
+      <div class="card"><div class="ch"><span class="ct">Call-Log</span></div><div class="cb" style="max-height:180px;overflow-y:auto;" id="call-log"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- EMAIL -->
+<div id="pg-email" class="pg">
+  <div class="pgtitle">E-Mail <span>Generator</span></div>
+  <div class="g2">
+    <div class="card"><div class="ch"><span class="ct">Parameter</span></div><div class="cb">
+      <div class="ir"><div class="fg"><label>Vorname</label><input id="em-first" placeholder="Thomas"></div><div class="fg"><label>Firma *</label><input id="em-co" placeholder="Müller AG"></div></div>
+      <div class="ir"><div class="fg"><label>Branche</label><select id="em-ind"><option>Industrie</option><option>Pharma/Chemie</option><option>Rechenzentrum</option><option>Spital/Klinik</option><option>EVU</option><option>Bau</option><option>Gemeinde</option></select></div>
+        <div class="fg"><label>Typ</label><select id="em-type"><option value="cold">Kaltakquise</option><option value="fu1">Follow-Up #1</option><option value="fu2">Nach Meeting</option><option value="offer">Nach Angebot</option><option value="react">Reaktivierung</option></select></div>
+      </div>
+      <div class="fg"><label>Tonalität</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:.25rem;margin-top:.2rem;">
+          <button class="btn bs sm" id="tone-e" onclick="setTone('e',this)">⚡ Energisch</button>
+          <button class="btn bg sm" id="tone-s" onclick="setTone('s',this)">📋 Sachlich</button>
+          <button class="btn bg sm" id="tone-p" onclick="setTone('p',this)">🤝 Persönlich</button>
+          <button class="btn bg sm" id="tone-r" onclick="setTone('r',this)">💰 ROI</button>
+        </div>
+      </div>
+      <div class="fg"><label>Schmerzpunkt</label><textarea id="em-pain" rows="2" placeholder="Produktionsausfall, Revision…"></textarea></div>
+      <button class="btn bp" onclick="genEmail()" style="width:100%">🤖 Generieren</button>
+    </div></div>
+    <div class="card" style="display:flex;flex-direction:column;">
+      <div class="ch"><span class="ct">Output</span><div class="brow"><button class="btn bg sm" onclick="copyEl('em-out')">📋</button><button class="btn bg sm" onclick="emailOutlook()">📬 Outlook</button></div></div>
+      <div class="cb" style="flex:1;"><div class="fg"><label>Betreff</label><input id="em-sub" readonly></div><div class="aibox" id="em-out" style="min-height:230px;">← Felder ausfüllen</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- FOLLOW-UP -->
+<div id="pg-fu" class="pg">
+  <div class="pgtitle">Follow-Up <span>Sequenz</span></div>
+  <div class="g2">
+    <div class="card"><div class="ch"><span class="ct">Parameter</span></div><div class="cb">
+      <div class="fg"><label>Kontakt / Firma *</label><input id="fu-ctc" placeholder="Thomas Müller, Müller AG"></div>
+      <div class="fg"><label>Situation</label><textarea id="fu-sit" rows="2"></textarea></div>
+      <div class="ir"><div class="fg"><label>Status</label><select id="fu-st"><option>Kalt</option><option>Nach Erstgespräch</option><option>Angebot verschickt</option><option>Ghosted</option><option>Nein gesagt</option></select></div>
+        <div class="fg"><label>Ziel</label><select id="fu-goal"><option>Termin buchen</option><option>Angebot präsentieren</option><option>Kaufentscheidung</option><option>Reaktivierung</option></select></div>
+      </div>
+      <button class="btn bp" onclick="genFU()" style="width:100%">⚡ 5-Schritte Sequenz</button>
+    </div></div>
+    <div class="card" style="display:flex;flex-direction:column;">
+      <div class="ch"><span class="ct">Sequenz</span><button class="btn bg sm" onclick="copyEl('fu-out')">📋</button></div>
+      <div class="cb" id="fu-out" style="max-height:460px;overflow-y:auto;"><div class="empty"><div class="eico">🔄</div><p>Parameter ausfüllen</p></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- WHATSAPP -->
+<div id="pg-wa" class="pg">
+  <div class="pgtitle">WhatsApp <span>Sender</span></div>
+  <div class="g2">
+    <div class="card"><div class="ch"><span class="ct">Vorlage</span></div><div class="cb">
+      <div class="fg"><label>Mein Handy (einmalig)</label><div style="display:flex;gap:.35rem;"><input id="my-ph" placeholder="+41791234567" style="flex:1" oninput="S.cfg.myPhone=this.value"><button class="btn bp sm" onclick="S.cfg.myPhone=document.getElementById('my-ph').value;save();toast('Gespeichert','ok')">💾</button></div></div>
+      <div class="fg"><label>Empfänger Telefon</label><input id="wa-tel" placeholder="+41791234567"></div>
+      <div class="ir"><div class="fg"><label>Vorname</label><input id="wa-fn" oninput="buildWA()"></div><div class="fg"><label>Firma</label><input id="wa-co" oninput="buildWA()"></div></div>
+      <div class="fg"><label>Vorlage</label><select id="wa-tmpl" onchange="buildWA()"><option value="cold">Erstkontakt</option><option value="fu">Nach Meeting</option><option value="offer">Angebot</option><option value="confirm">Terminbestätigung</option><option value="free">Freier Text</option></select></div>
+      <div class="fg"><label>Zusatz</label><textarea id="wa-extra" rows="2" oninput="buildWA()"></textarea></div>
+    </div></div>
+    <div class="card"><div class="ch"><span class="ct">Vorschau</span></div><div class="cb">
+      <div class="aibox" id="wa-prev" style="min-height:150px;"></div>
+      <div class="brow" style="margin-top:.7rem;"><button class="btn bp" onclick="openWA()">📱 WhatsApp öffnen</button><button class="btn bg" onclick="copyEl('wa-prev')">📋</button></div>
+    </div></div>
+  </div>
+</div>
+
+<!-- RECHERCHE -->
+<div id="pg-rech" class="pg">
+  <div class="pgtitle">Firma <span>Recherche</span></div>
+  <div class="g2">
+    <div class="card"><div class="ch"><span class="ct">Analysieren</span></div><div class="cb">
+      <div class="fg"><label>Firma / Website *</label><input id="re-url" placeholder="www.muellerag.ch"></div>
+      <div class="fg"><label>Branche</label><select id="re-ind"><option>Industrie</option><option>Pharma/Chemie</option><option>Rechenzentrum</option><option>Spital/Klinik</option><option>EVU</option><option>Bau</option><option>Gemeinde</option></select></div>
+      <div class="fg"><label>Ziel</label><select id="re-goal"><option value="cold">Kaltakquise</option><option value="offer">Angebotsvorbereitung</option><option value="meet">Meeting-Vorbereitung</option></select></div>
+      <div class="fg"><label>Ansprechpartner</label><input id="re-pers" placeholder="Thomas Müller, Leiter Technik"></div>
+      <button class="btn bp" onclick="genRech()" style="width:100%">🔍 Recherchieren</button>
+    </div></div>
+    <div class="card" style="display:flex;flex-direction:column;"><div class="ch"><span class="ct">Report</span><button class="btn bg sm" onclick="copyEl('re-out')">📋</button></div><div class="cb" style="flex:1;"><div class="aibox" id="re-out" style="min-height:300px;">← Firma eingeben</div></div></div>
+  </div>
+</div>
+
+<!-- PRODUCTS -->
+<div id="pg-prod" class="pg">
+  <div class="pgtitle">Produkt<span>datenbank</span></div>
+  <div class="ptabs">
+    <button class="ptb act" onclick="showProd('gen',this)">⚡ Generatoren</button>
+    <button class="ptb" onclick="showProd('bess',this)">🔋 BESS</button>
+    <button class="ptb" onclick="showProd('pq',this)">📊 Power Quality</button>
+    <button class="ptb" onclick="showProd('heat',this)">🌡️ Wärme/Kälte</button>
+    <button class="ptb" onclick="showProd('acc',this)">🔧 Zubehör</button>
+  </div>
+  <div id="pp-gen" class="ppanel act"><div class="pgrid" id="pg-gen-g"></div></div>
+  <div id="pp-bess" class="ppanel"><div class="pgrid" id="pg-bess-g"></div></div>
+  <div id="pp-pq" class="ppanel"><div class="pgrid" id="pg-pq-g"></div></div>
+  <div id="pp-heat" class="ppanel"><div class="pgrid" id="pg-heat-g"></div></div>
+  <div id="pp-acc" class="ppanel"><div class="pgrid" id="pg-acc-g"></div></div>
+</div>
+
+<!-- ANGEBOT -->
+<div id="pg-ang" class="pg">
+  <div class="pgtitle">Angebots<span>-Generator</span></div>
+  <div class="g2">
+    <div style="display:flex;flex-direction:column;gap:.85rem;">
+      <div class="card"><div class="ch"><span class="ct">Kundendaten</span></div><div class="cb">
+        <div class="ir"><div class="fg"><label>Firma *</label><input id="a-co"></div><div class="fg"><label>Ansprechpartner</label><input id="a-pers"></div></div>
+        <div class="ir"><div class="fg"><label>Ort/Kanton</label><input id="a-loc"></div><div class="fg"><label>Datum</label><input id="a-date" type="date"></div></div>
+        <div class="fg"><label>Branche</label><select id="a-ind"><option>Industrie</option><option>Pharma/Chemie</option><option>Rechenzentrum</option><option>Spital/Klinik</option><option>EVU</option><option>Bau</option><option>Gemeinde</option></select></div>
+      </div></div>
+      <div class="card"><div class="ch"><span class="ct">Positionen</span><button class="btn bp sm" onclick="openAngPos()">+ Position</button></div>
+        <div class="cb" id="ang-pos-list"></div>
+        <div class="cb" style="border-top:1px solid var(--bdr);">
+          <div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:12px;color:var(--t2)">Total (inkl. 8.1% MwSt.)</span><span style="font-family:var(--fh);font-size:1.2rem;font-weight:800;color:var(--grn);" id="a-total">CHF 0</span></div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:.85rem;">
+      <div class="card"><div class="ch"><span class="ct">Optionen</span></div><div class="cb">
+        <div class="fg"><label>Titel</label><input id="a-title" placeholder="Angebot temporäre Stromversorgung"></div>
+        <div class="fg"><label>Einleitung</label><textarea id="a-intro" rows="3"></textarea></div>
+        <div class="brow"><button class="btn bp" onclick="genAngText()" style="flex:1">🤖 KI-Text</button><button class="btn bgrn" onclick="expAngPDF()" style="flex:1">📄 PDF</button></div>
+      </div></div>
+      <div class="card" style="flex:1;"><div class="ch"><span class="ct">Vorschau</span></div><div class="cb" id="a-prev" style="font-size:11px;line-height:1.7;min-height:160px;color:var(--t2);">← Positionen hinzufügen</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ROI -->
+<div id="pg-roi" class="pg">
+  <div class="pgtitle">ROI <span>Rechner</span></div>
+  <div class="tabs">
+    <button class="tbtn act" onclick="roiTab('out',this)">⚡ Ausfallkosten</button>
+    <button class="tbtn" onclick="roiTab('thd',this)">📊 THD/PQ</button>
+    <button class="tbtn" onclick="roiTab('bess',this)">🔋 Diesel vs BESS</button>
+    <button class="tbtn" onclick="roiTab('miet',this)">📋 Miet-TCO</button>
+  </div>
+  <div id="rt-out" class="tpane act"><div class="g2"><div class="card"><div class="ch"><span class="ct">Ausfallkosten</span></div><div class="cb">
+    <div class="ir"><div class="fg"><label>Jahresumsatz CHF</label><input id="r-rev" type="number" value="5000000"></div><div class="fg"><label>Ausfallzeit (Std.)</label><input id="r-hrs" type="number" value="4"></div></div>
+    <div class="ir"><div class="fg"><label>Mitarbeiter</label><input id="r-emp" type="number" value="50"></div><div class="fg"><label>Lohn CHF/Std.</label><input id="r-sal" type="number" value="65"></div></div>
+    <div class="ir"><div class="fg"><label>Neustart CHF</label><input id="r-rst" type="number" value="5000"></div><div class="fg"><label>Gen-Miete CHF</label><input id="r-rnt" type="number" value="3500"></div></div>
+    <button class="btn bp" onclick="calcOut()" style="width:100%">Berechnen</button>
+  </div></div><div id="rr-out"><div class="empty"><div class="eico">💰</div><p>Parameter eingeben</p></div></div></div></div>
+  <div id="rt-thd" class="tpane"><div class="g2"><div class="card"><div class="ch"><span class="ct">THD / Power Quality</span></div><div class="cb">
+    <div class="ir"><div class="fg"><label>THD (%)</label><input id="r-thd" type="number" value="12"></div><div class="fg"><label>Leistung (kVA)</label><input id="r-kva" type="number" value="500"></div></div>
+    <div class="ir"><div class="fg"><label>Energiepreis Rp./kWh</label><input id="r-ep" type="number" value="22"></div><div class="fg"><label>Betriebsstunden/J</label><input id="r-eh" type="number" value="8760"></div></div>
+    <button class="btn bp" onclick="calcTHD()" style="width:100%">Berechnen</button>
+  </div></div><div id="rr-thd"><div class="empty"><div class="eico">📊</div><p>Parameter eingeben</p></div></div></div></div>
+  <div id="rt-bess" class="tpane"><div class="g2"><div class="card"><div class="ch"><span class="ct">Diesel vs BESS</span></div><div class="cb">
+    <div class="ir"><div class="fg"><label>Leistung (kW)</label><input id="r-pw" type="number" value="100"></div><div class="fg"><label>Betrieb Std./Tag</label><input id="r-bh" type="number" value="6"></div></div>
+    <div class="ir"><div class="fg"><label>Dauer (Tage)</label><input id="r-days" type="number" value="30"></div><div class="fg"><label>Dieselpreis CHF/L</label><input id="r-dsl" type="number" value="1.85"></div></div>
+    <div class="fg"><label>BESS Miete CHF/Tag</label><input id="r-br" type="number" value="600"></div>
+    <button class="btn bp" onclick="calcBESS()" style="width:100%">Berechnen</button>
+  </div></div><div id="rr-bess"><div class="empty"><div class="eico">🔋</div><p>Parameter eingeben</p></div></div></div></div>
+  <div id="rt-miet" class="tpane"><div class="g2"><div class="card"><div class="ch"><span class="ct">Miet vs Kauf TCO</span></div><div class="cb">
+    <div class="ir"><div class="fg"><label>Gerätewert CHF</label><input id="r-kauf" type="number" value="180000"></div><div class="fg"><label>Nutzung (Jahre)</label><input id="r-nutz" type="number" value="5"></div></div>
+    <div class="ir"><div class="fg"><label>Miete CHF/Monat</label><input id="r-miet" type="number" value="4500"></div><div class="fg"><label>Betriebskosten/J</label><input id="r-bk" type="number" value="8000"></div></div>
+    <button class="btn bp" onclick="calcMiet()" style="width:100%">Berechnen</button>
+  </div></div><div id="rr-miet"><div class="empty"><div class="eico">📋</div><p>Parameter eingeben</p></div></div></div></div>
+</div>
+
+<!-- ENGINEERING -->
+<div id="pg-eng" class="pg">
+  <div class="pgtitle">Engineering <span>Toolbox</span></div>
+  <div class="tabs" style="flex-wrap:wrap;">
+    <button class="tbtn act" onclick="dimTab('gen',this)">⚡ Generator</button>
+    <button class="tbtn" onclick="dimTab('kab',this)">∼ Kabel NIN</button>
+    <button class="tbtn" onclick="dimTab('bess',this)">🔋 BESS</button>
+    <button class="tbtn" onclick="dimTab('par',this)">⚙️ Parallel</button>
+    <button class="tbtn" onclick="dimTab('bsv',this)">🏗️ BSV</button>
+    <button class="tbtn" onclick="dimTab('kombi',this)">🔗 Kombi KI</button>
+    <button class="tbtn" onclick="dimTab('last',this)">📋 Lastliste</button>
+    <button class="tbtn" onclick="dimTab('usv',this)">🛡️ USV</button>
+    <button class="tbtn" onclick="dimTab('sch',this)">🔊 Schall</button>
+    <button class="tbtn" onclick="dimTab('ibc',this)">🛢️ IBC Tank</button>
+  </div>
+  <div id="dt-gen" class="tpane act"><div class="g2"><div class="card"><div class="ch"><span class="ct">Generator Dimensionierung</span></div><div class="cb">
+    <div class="ir"><div class="fg"><label>Leistung (kVA)</label><input id="dim-kva" type="number" placeholder="200"></div><div class="fg"><label>cos φ</label><select id="dim-cos"><option value="0.8">0.8 Motor</option><option value="0.85">0.85</option><option value="0.9" selected>0.9</option><option value="0.95">0.95 IT</option><option value="1.0">1.0</option></select></div></div>
+    <div class="ir"><div class="fg"><label>Höhe m ü.M.</label><select id="dim-alt"><option value="0">400m Zürich/Basel</option><option value="500">500m</option><option value="1000">1000m</option><option value="2000">2000m Davos</option></select></div><div class="fg"><label>Temperatur</label><select id="dim-tmp"><option value="20">20°C</option><option value="25">25°C</option><option value="35" selected>35°C Sommer</option><option value="40">40°C</option></select></div></div>
+    <div class="ir"><div class="fg"><label>Marge</label><select id="dim-mg"><option value="15">15%</option><option value="20">20%</option><option value="25" selected>25%</option><option value="30">30% Spital</option></select></div><div class="fg"><label>Kraftstoff</label><select id="dim-fuel"><option value="diesel">Diesel Stage V</option><option value="hvo">HVO100</option></select></div></div>
+    <div class="fg"><label>Besondere Anforderungen</label><textarea id="dim-req" rows="2" placeholder="PQ-Monitoring, NIV…"></textarea></div>
+    <button class="btn bp" onclick="calcDim()" style="width:100%">⚡ Berechnen</button>
+  </div></div>
+  <div style="display:flex;flex-direction:column;gap:.75rem;">
+    <div class="card"><div class="ch"><span class="ct">Ergebnis</span></div><div class="cb" id="dim-res"><div class="empty"><div class="eico">⚙️</div><p>Parameter eingeben</p></div></div></div>
+    <div class="card"><div class="ch"><span class="ct">KI-Empfehlung</span><button class="btn bp sm" onclick="genDimAdv()">🤖</button></div><div class="cb"><div class="aibox" id="dim-ai" style="min-height:90px;font-size:11px;">← Berechnen</div></div></div>
+  </div></div></div>
+  <div id="dt-kab" class="tpane"><div class="g2"><div class="card"><div class="ch"><span class="ct">Kabel NIN 2020</span></div><div class="cb">
+    <div class="ir"><div class="fg"><label>Wirkleistung (kW)</label><input id="kab-kw" type="number" placeholder="160"></div><div class="fg"><label>cos φ</label><select id="kab-cos"><option value="0.8">0.8</option><option value="0.9" selected>0.9</option><option value="0.95">0.95</option><option value="1.0">1.0</option></select></div></div>
+    <div class="ir"><div class="fg"><label>Länge (m)</label><input id="kab-len" type="number" placeholder="50"></div><div class="fg"><label>Spannung</label><select id="kab-v"><option value="400" selected>400V 3Ph</option><option value="230">230V 1Ph</option></select></div></div>
+    <div class="ir"><div class="fg"><label>Material</label><select id="kab-mat"><option value="cu">Kupfer</option><option value="al">Aluminium</option></select></div><div class="fg"><label>Max. ΔU</label><select id="kab-du"><option value="2">2%</option><option value="3" selected>3% NIN</option><option value="4">4%</option><option value="5">5%</option></select></div></div>
+    <div style="display:flex;gap:.25rem;flex-wrap:wrap;margin:.4rem 0;"><button class="btn bg sm" onclick="sv('kab-kw',50);sv('kab-len',30)">Gen 50kVA 30m</button><button class="btn bg sm" onclick="sv('kab-kw',160);sv('kab-len',50)">Gen 200kVA 50m</button><button class="btn bg sm" onclick="sv('kab-kw',400);sv('kab-len',30)">Gen 500kVA 30m</button></div>
+    <button class="btn bp" onclick="calcKab()" style="width:100%">∼ Berechnen</button>
+  </div></div><div id="kab-res"><div class="empty"><div class="eico">∼</div><p>Parameter eingeben</p></div></div></div></div>
+  <div id="dt-bess" class="tpane"><div class="g2"><div class="card"><div class="ch"><span class="ct">BESS Dimensionierung IEC 62619</span></div><div class="cb">
+    <div class="ir"><div class="fg"><label>Kritische Last (kW)</label><input id="bes-kw" type="number" placeholder="100"></div><div class="fg"><label>Überbrückung</label><select id="bes-t"><option value="5">5 Min.</option><option value="10">10 Min.</option><option value="15" selected>15 Min.</option><option value="30">30 Min.</option><option value="60">60 Min.</option></select></div></div>
+    <div class="ir"><div class="fg"><label>Technologie</label><select id="bes-tech"><option value="lfp" selected>LFP Aggreko</option><option value="nmc">NMC</option><option value="vrla">VRLA</option></select></div><div class="fg"><label>DoD (%)</label><input id="bes-dod" type="number" value="80"></div></div>
+    <button class="btn bp" onclick="calcBESSDim()" style="width:100%">🔋 Berechnen</button>
+  </div></div><div id="bes-res"><div class="empty"><div class="eico">🔋</div><p>Parameter eingeben</p></div></div></div></div>
+  <div id="dt-par" class="tpane"><div class="g2"><div class="card"><div class="ch"><span class="ct">Parallelschaltung IEC 60034-3</span></div><div class="cb">
+    <div class="ir"><div class="fg"><label>Anzahl Aggregate</label><select id="par-n"><option value="2">2</option><option value="3">3</option><option value="4">4</option></select></div><div class="fg"><label>Einzelleistung (kVA)</label><select id="par-kva"><option value="200">200 kVA</option><option value="350">350 kVA</option><option value="500">500 kVA</option><option value="1000">1000 kVA</option></select></div></div>
+    <div class="ir"><div class="fg"><label>Gesamtlast (kW)</label><input id="par-ld" type="number" placeholder="600"></div><div class="fg"><label>Governor Droop</label><select id="par-dr"><option value="3">3%</option><option value="4" selected>4%</option><option value="5">5%</option></select></div></div>
+    <button class="btn bp" onclick="calcPar()" style="width:100%">Berechnen</button>
+  </div></div><div id="par-res"><div class="empty"><div class="eico">⚙️</div><p>Parameter eingeben</p></div></div></div></div>
+  <div id="dt-bsv" class="tpane"><div class="g2"><div class="card"><div class="ch"><span class="ct">Baustromverteiler-Finder</span></div><div class="cb">
+    <div class="fg"><label>Quelle</label><select id="bsv-src"><option value="gen">Generator MiT</option><option value="netz">Netzanschluss 400V</option></select></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;">
+      <div class="fg"><label>16A CEE (blau)</label><input id="bsv-16" type="number" value="4" min="0"></div>
+      <div class="fg"><label>32A CEE (rot)</label><input id="bsv-32" type="number" value="2" min="0"></div>
+      <div class="fg"><label>63A CEE (rot)</label><input id="bsv-63" type="number" value="1" min="0"></div>
+      <div class="fg"><label>230V Schuko</label><input id="bsv-230" type="number" value="6" min="0"></div>
+    </div>
+    <button class="btn bp" onclick="calcBSV()" style="width:100%;margin-top:.4rem">🏗️ Berechnen</button>
+  </div></div><div id="bsv-res"><div class="empty"><div class="eico">🏗️</div><p>Parameter eingeben</p></div></div></div></div>
+  <div id="dt-kombi" class="tpane"><div class="g2"><div class="card"><div class="ch"><span class="ct">Kombisystem KI-Konfigurator</span></div><div class="cb">
+    <div class="ir"><div class="fg"><label>Gesamtlast (kW)</label><input id="km-tot" type="number" placeholder="500"></div><div class="fg"><label>Kritische Last (kW)</label><input id="km-crit" type="number" placeholder="150"></div></div>
+    <div class="ir"><div class="fg"><label>Überbrückung</label><select id="km-br"><option value="0">Keine</option><option value="15">15 Min.</option><option value="30">30 Min.</option><option value="60">60 Min.</option></select></div><div class="fg"><label>Gebäudetyp</label><select id="km-type"><option value="industrie">Industrie</option><option value="spital">Spital NIV</option><option value="rz">Rechenzentrum</option><option value="bau">Baustelle</option></select></div></div>
+    <div class="fg"><label>Anforderungen</label><textarea id="km-req" rows="2" placeholder="PQ, Schall, HVO100…"></textarea></div>
+    <button class="btn bp" onclick="genKombi()" style="width:100%">🔗 KI Kombi-System</button>
+  </div></div><div class="card" style="display:flex;flex-direction:column;"><div class="ch"><span class="ct">System-Empfehlung</span><button class="btn bg sm" onclick="copyEl('km-out')">📋</button></div><div class="cb" style="flex:1;"><div class="aibox" id="km-out" style="min-height:340px;font-size:11px;">← Anforderungen eingeben</div></div></div></div></div>
+  <div id="dt-last" class="tpane"><div class="g2"><div class="card"><div class="ch"><span class="ct">Elektrische Lastliste</span><button class="btn bp sm" onclick="addLastRow()">+ Verbraucher</button></div>
+    <div class="cb">
+      <div style="display:grid;grid-template-columns:2fr 80px 60px 80px 40px;gap:.25rem;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--t2);padding:.25rem 0;border-bottom:1px solid var(--bdr);"><span>Bezeichnung</span><span>kW</span><span>cos φ</span><span>Gleichz.%</span><span></span></div>
+      <div id="last-rows"></div>
+      <button class="btn bp" onclick="calcLast()" style="width:100%;margin-top:.5rem">📋 Gesamtlast</button>
+    </div>
+  </div><div id="last-res"><div class="empty"><div class="eico">📋</div><p>Verbraucher eingeben</p></div></div></div></div>
+  <div id="dt-usv" class="tpane"><div class="g2"><div class="card"><div class="ch"><span class="ct">USV Dimensionierung IEC 62040</span></div><div class="cb">
+    <div class="ir"><div class="fg"><label>Kritische Last (kVA)</label><input id="usv-kva" type="number" placeholder="40"></div><div class="fg"><label>Überbrückung</label><select id="usv-br"><option value="5">5 Min.</option><option value="10">10 Min.</option><option value="15" selected>15 Min.</option><option value="30">30 Min.</option><option value="60">60 Min.</option></select></div></div>
+    <div class="ir"><div class="fg"><label>Topologie</label><select id="usv-tp"><option value="vfi">VFI Online ✓</option><option value="vi">VI Line-Interactive</option></select></div><div class="fg"><label>Redundanz</label><select id="usv-rd"><option value="n">N</option><option value="n1" selected>N+1</option><option value="2n">2N</option></select></div></div>
+    <button class="btn bp" onclick="calcUSV()" style="width:100%">🛡️ Dimensionieren</button>
+  </div></div><div id="usv-res"><div class="empty"><div class="eico">🛡️</div><p>Parameter eingeben</p></div></div></div></div>
+  <div id="dt-sch" class="tpane"><div class="g2"><div class="card"><div class="ch"><span class="ct">Schallpegel ISO 3744 / LSV CH</span></div><div class="cb">
+    <div class="ir"><div class="fg"><label>Generator (kVA)</label><select id="sch-kva"><option value="30">30 kVA – 65dB</option><option value="60">60 kVA – 68dB</option><option value="100">100 kVA – 70dB</option><option value="150">150 kVA – 72dB</option><option value="200">200 kVA – 73dB</option><option value="350">350 kVA – 76dB</option><option value="500">500 kVA – 78dB</option><option value="1000">1000 kVA – 82dB</option></select></div><div class="fg"><label>Anzahl</label><select id="sch-n"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select></div></div>
+    <div class="ir"><div class="fg"><label>Abstand (m)</label><input id="sch-dist" type="number" value="10"></div><div class="fg"><label>Hintergrundlärm</label><select id="sch-bg"><option value="30">30 ruhig</option><option value="40" selected>40 Wohngebiet</option><option value="50">50 Stadtrand</option><option value="60">60 Strasse</option></select></div></div>
+    <div class="ir"><div class="fg"><label>Betriebszeit</label><select id="sch-t"><option value="day">Tag 7–19h</option><option value="eve">Abend 19–22h</option><option value="night">Nacht 22–7h</option></select></div><div class="fg"><label>LSV Empfindlichkeit</label><select id="sch-es"><option value="I">ES I Erholung</option><option value="II" selected>ES II Wohnzone</option><option value="III">ES III Mischzone</option><option value="IV">ES IV Industrie</option></select></div></div>
+    <div class="fg"><label>Schutzwand</label><select id="sch-wall"><option value="0">Keine</option><option value="8">2m Wand (–8dB)</option><option value="12">3m Wand (–12dB)</option><option value="15">SuperSilent (–15dB)</option></select></div>
+    <button class="btn bp" onclick="calcSch()" style="width:100%">🔊 Berechnen</button>
+  </div></div><div id="sch-res"><div class="empty"><div class="eico">🔊</div><p>Parameter eingeben</p></div></div></div></div>
+  <div id="dt-ibc" class="tpane"><div class="g2"><div class="card"><div class="ch"><span class="ct">IBC Tank-Planer / ADR</span></div><div class="cb">
+    <div class="ir"><div class="fg"><label>Generator (kVA)</label><select id="ibc-kva"><option value="60">60 kVA</option><option value="100">100 kVA</option><option value="200">200 kVA</option><option value="350">350 kVA</option><option value="500">500 kVA</option><option value="1000">1000 kVA</option></select></div><div class="fg"><label>Auslastung (%)</label><input id="ibc-ld" type="number" value="75"></div></div>
+    <div class="ir"><div class="fg"><label>Std./Tag</label><input id="ibc-h" type="number" value="8"></div><div class="fg"><label>Tage</label><input id="ibc-d" type="number" value="7"></div></div>
+    <div class="ir"><div class="fg"><label>IBC Grösse (L)</label><select id="ibc-sz"><option value="600">600L</option><option value="1000" selected>1000L</option><option value="1200">1200L</option></select></div><div class="fg"><label>Preis CHF/L</label><input id="ibc-p" type="number" value="1.85"></div></div>
+    <button class="btn bp" onclick="calcIBC()" style="width:100%">🛢️ Berechnen</button>
+  </div></div><div id="ibc-res"><div class="empty"><div class="eico">🛢️</div><p>Parameter eingeben</p></div></div></div></div>
+</div>
+
+<!-- CO2 -->
+<div id="pg-co2" class="pg">
+  <div class="pgtitle">CO₂ <span>&amp; Stage V</span></div>
+  <div class="g2"><div class="card"><div class="ch"><span class="ct">Emissionen berechnen</span></div><div class="cb">
+    <div class="ir"><div class="fg"><label>Nennleistung (kW)</label><input id="co-kw" type="number" placeholder="160"></div><div class="fg"><label>Auslastung (%)</label><input id="co-ld" type="number" value="75"></div></div>
+    <div class="ir"><div class="fg"><label>Betriebsstunden</label><input id="co-h" type="number" value="720"></div><div class="fg"><label>Kraftstoff</label><select id="co-f"><option value="diesel">Diesel fossil</option><option value="hvo">HVO100</option></select></div></div>
+    <div class="ir"><div class="fg"><label>Stage</label><select id="co-st"><option value="3a">Stage IIIA</option><option value="5" selected>Stage V Aggreko</option></select></div><div class="fg"><label>CO₂-Abgabe CH CHF/t</label><input id="co-tx" type="number" value="120"></div></div>
+    <button class="btn bp" onclick="calcCO2()" style="width:100%">🌿 Berechnen</button>
+  </div></div>
+  <div style="display:flex;flex-direction:column;gap:.75rem;">
+    <div id="co2-res"><div class="empty"><div class="eico">🌿</div><p>Parameter eingeben</p></div></div>
+    <div class="card"><div class="ch"><span class="ct">ESG-Argument</span><button class="btn bp sm" onclick="genCO2Arg()">🤖</button></div><div class="cb"><div class="aibox" id="co2-ai" style="min-height:80px;font-size:11px;">← Erst berechnen</div></div></div>
+  </div></div>
+</div>
+
+<!-- NOTSTROM -->
+<div id="pg-nst" class="pg">
+  <div class="pgtitle">Notstrom <span>NIV Art.13</span></div>
+  <div class="g2"><div class="card"><div class="ch"><span class="ct">Parameter</span></div><div class="cb">
+    <div class="fg"><label>Gebäudetyp</label><select id="ns-type"><option value="spital">Spital/Klinik NIV Art.13</option><option value="rz">Rechenzentrum</option><option value="industrie">Industrie</option><option value="gemeinde">Gemeinde/Krit. Infra</option></select></div>
+    <div class="ir"><div class="fg"><label>Gesamtlast (kW)</label><input id="ns-tot" type="number" placeholder="500"></div><div class="fg"><label>Kritische Last (kW)</label><input id="ns-crit" type="number" placeholder="200"></div></div>
+    <div class="ir"><div class="fg"><label>Max. Unterbrechung</label><select id="ns-int"><option value="0">0ms USV Online</option><option value="500">500ms NIV Gr.2</option><option value="15">15s NIV Gr.1</option><option value="60">60s Komfort</option></select></div><div class="fg"><label>Verfügbarkeit</label><select id="ns-av"><option value="99.9">99.9% Tier II</option><option value="99.99" selected>99.99% Tier III</option><option value="99.999">99.999% Tier IV</option></select></div></div>
+    <button class="btn bp" onclick="calcNst()" style="width:100%">🏥 Konzept berechnen</button>
+  </div></div>
+  <div style="display:flex;flex-direction:column;gap:.75rem;">
+    <div id="nst-res"><div class="empty"><div class="eico">🏥</div><p>Parameter eingeben</p></div></div>
+    <div class="card"><div class="ch"><span class="ct">KI-Konzept</span><button class="btn bp sm" onclick="genNst()">🤖</button></div><div class="cb"><div class="aibox" id="nst-ai" style="min-height:100px;font-size:11px;">← Erst berechnen</div></div></div>
+  </div></div>
+</div>
+
+<!-- TASKS -->
+<div id="pg-tasks" class="pg">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+    <div class="pgtitle" style="margin:0">Aufgaben</div>
+    <button class="btn bp" onclick="openTask()">+ Aufgabe</button>
+  </div>
+  <div class="krow" style="margin-bottom:.85rem;">
+    <div class="kpi kr"><div class="klbl">Offen</div><div class="kval" id="tk-open">0</div></div>
+    <div class="kpi ky"><div class="klbl">Fällig heute</div><div class="kval" id="tk-today">0</div></div>
+    <div class="kpi kr"><div class="klbl">Überfällig</div><div class="kval" id="tk-over">0</div></div>
+  </div>
+  <div class="card"><div class="ch"><span class="ct">Aufgaben</span><select id="tk-filt" onchange="renderTasks()" style="width:110px"><option value="">Alle</option><option value="open">Offen</option><option value="done">Erledigt</option></select></div><div class="cb" id="tasks-list"><div class="empty"><div class="eico">✅</div><p>Keine Aufgaben</p></div></div></div>
+</div>
+
+<!-- SIMAP -->
+<div id="pg-simap" class="pg">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+    <div class="pgtitle" style="margin:0">simap.ch <span>Radar</span></div>
+    <div class="brow"><a href="https://www.simap.ch" target="_blank" class="btn bg sm">🔗 simap.ch</a><button class="btn bp" onclick="openSimap()">+ Ausschreibung</button></div>
+  </div>
+  <div class="g2" style="margin-bottom:.85rem;">
+    <div class="card"><div class="ch"><span class="ct">PDF-Analyser RFP</span></div><div class="cb">
+      <div id="pdf-zone" style="border:2px dashed var(--bdr2);border-radius:var(--rs);padding:1.2rem;text-align:center;cursor:pointer;" onclick="document.getElementById('pdf-inp').click()">
+        <div style="font-size:1.3rem;margin-bottom:.25rem">📄</div><div style="font-size:12px;color:var(--t2)">PDF ablegen oder klicken</div>
+        <input type="file" id="pdf-inp" accept=".pdf" style="display:none" onchange="handlePDF(this)">
+      </div>
+      <button class="btn bp" onclick="analyzePDF()" style="width:100%;margin-top:.5rem" id="pdf-btn" disabled>🤖 Ausschreibung analysieren</button>
+    </div></div>
+    <div class="card"><div class="ch"><span class="ct">KI-Analyse</span><button class="btn bg sm" onclick="copyEl('pdf-out')">📋</button></div><div class="cb"><div class="aibox" id="pdf-out" style="min-height:130px;font-size:11px;">← PDF hochladen</div></div></div>
+  </div>
+  <div id="simap-list"></div>
+</div>
+
+<!-- COMPETITION -->
+<div id="pg-comp" class="pg">
+  <div class="pgtitle">Wett<span>bewerb</span></div>
+  <div id="comp-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:.85rem;"></div>
+</div>
+
+<!-- TIGORZ -->
+<div id="pg-tig" class="pg">
+  <div class="pgtitle">TIGORZ <span>Content Studio</span></div>
+  <div class="g2">
+    <div class="card"><div class="ch"><span class="ct">Content erstellen</span></div><div class="cb">
+      <div class="fg"><label>Plattform</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.25rem;">
+          <button class="btn bs sm" id="tig-li" onclick="setTigPlat('linkedin',this)">💼 LinkedIn</button>
+          <button class="btn bg sm" id="tig-tt" onclick="setTigPlat('tiktok',this)">🎵 TikTok</button>
+          <button class="btn bg sm" id="tig-yt" onclick="setTigPlat('youtube',this)">▶️ YouTube</button>
+        </div>
+      </div>
+      <div class="fg"><label>Content-Typ</label><select id="tig-type"><option value="story">Story aus Berufsalltag</option><option value="tip">Fach-Tipp EMV/Energie</option><option value="mindset">Mindset / Disziplin</option><option value="hook">Viral Hook</option></select></div>
+      <div class="fg"><label>Thema</label><textarea id="tig-topic" rows="3" placeholder="Heute 3 Meetings in Zürich, davon 2 abgeschlossen…"></textarea></div>
+      <button class="btn bp" onclick="genTig()" style="width:100%">🎬 Content generieren</button>
+    </div></div>
+    <div class="card" style="display:flex;flex-direction:column;"><div class="ch"><span class="ct">Output</span><button class="btn bg sm" onclick="copyEl('tig-out')">📋</button></div><div class="cb" style="flex:1;"><div class="aibox" id="tig-out" style="min-height:290px;font-size:11px;">← Thema eingeben</div></div></div>
+  </div>
+</div>
+
+<!-- RAPPORT -->
+<div id="pg-rap" class="pg">
+  <div class="pgtitle">Tages<span>rapport</span></div>
+  <div class="g2" style="margin-bottom:.85rem;">
+    <div class="card"><div class="ch"><span class="ct">Neuer Eintrag</span></div><div class="cb">
+      <div class="ir3"><div class="fg"><label>Datum</label><input id="rap-date" type="date"></div><div class="fg"><label>Typ</label><select id="rap-type"><option value="call">📞 Anruf</option><option value="email">✉️ E-Mail</option><option value="meeting">🤝 Meeting</option><option value="offer">📄 Angebot</option><option value="demo">🖥️ Demo</option></select></div><div class="fg"><label>Dauer (Min.)</label><input id="rap-dur" type="number" placeholder="30"></div></div>
+      <div class="ir"><div class="fg"><label>Firma</label><input id="rap-who"></div><div class="fg"><label>Ergebnis</label><input id="rap-res" placeholder="Meeting vereinbart"></div></div>
+      <div class="fg"><label>Notiz</label><textarea id="rap-note" rows="2"></textarea></div>
+      <button class="btn bp" onclick="addRap()" style="width:100%">+ Eintrag</button>
+    </div></div>
+    <div class="card"><div class="ch"><span class="ct">Diese Woche</span></div><div class="cb"><canvas id="ch-rap" height="145"></canvas></div></div>
+  </div>
+  <div class="card"><div class="ch"><span class="ct">Aktivitäten</span><button class="btn bp sm" onclick="expRapPDF()">📄 PDF</button></div><div class="cb" id="rap-list"><div class="empty"><div class="eico">📑</div><p>Keine Einträge</p></div></div></div>
+</div>
+
+<!-- NOTES -->
+<div id="pg-notes" class="pg">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.85rem;">
+    <div class="pgtitle" style="margin:0">Notizen</div>
+    <div class="brow"><input id="note-q" placeholder="Suchen…" style="width:150px" oninput="renderNotes()"><button class="btn bp" onclick="openNote()">+ Notiz</button></div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:.75rem;" id="notes-grid"></div>
+</div>
+
+</main>
+</div>
+
+<!-- ═══════════════ MODALS ═══════════════ -->
+<div id="mo" onclick="if(event.target===this)closeM()">
+
+<!-- IMPORT MODAL - THE MOST IMPORTANT ONE -->
+<div class="modal" id="m-import" style="display:none;max-width:580px;">
+  <div class="mh"><span class="mt">📥 Excel / CSV Importieren</span><button class="mx" onclick="closeM()">✕</button></div>
+  <div class="mb">
+    <div id="imp-dz"
+      ondragover="event.preventDefault();this.classList.add('drag')"
+      ondragleave="this.classList.remove('drag')"
+      ondrop="event.preventDefault();this.classList.remove('drag');handleDrop(event)"
+      onclick="document.getElementById('xl-inp').click()">
+      <div style="font-size:2.5rem;margin-bottom:.4rem">📊</div>
+      <div style="font-size:15px;font-weight:700;color:var(--grn);margin-bottom:.25rem">Excel oder CSV ablegen</div>
+      <div style="font-size:11px;color:var(--t2)">oder klicken zum Auswählen · .xlsx · .xls · .csv</div>
+      <input type="file" id="xl-inp" accept=".xlsx,.xls,.csv" style="display:none" onchange="readFile(this.files[0])">
+    </div>
+    <div id="imp-prev" style="display:none;margin-top:.9rem;">
+      <div id="imp-info" style="font-size:13px;font-weight:700;color:var(--grn);margin-bottom:.5rem;"></div>
+      <div id="imp-cols" style="display:grid;grid-template-columns:1fr 1fr;gap:.25rem;margin-bottom:.75rem;font-size:11px;"></div>
+      <button class="btn bgrn" onclick="doImport()" style="width:100%;font-size:14px;font-weight:700;padding:.7rem;">
+        ⬇ Importieren — auf alle Tabs verteilen
+      </button>
+    </div>
+    <div style="background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--rs);padding:.75rem;margin-top:.75rem;font-size:11px;color:var(--t2);line-height:1.8;">
+      <strong style="color:var(--t1)">Erkannte Spalten:</strong> Firmenname · Ansprechpartner · Telefon · E-Mail · Kanton · Ort · Segment · Status · Prio · Nächster Schritt · Follow-up · kVA · Produkt<br>
+      <span style="color:var(--grn)">→ Verteilt auf: Kontakte · Karte · Pipeline · Aufgaben · Tags · Kantone · Dashboard</span>
+    </div>
+    <div style="margin-top:.65rem;display:flex;gap:.4rem;">
+      <button class="btn bg sm" onclick="document.getElementById('json-inp').click();closeM()" style="flex:1;">🔄 JSON Backup laden</button>
+      <button class="btn bg sm" onclick="doExport()" style="flex:1;">💾 Backup erstellen</button>
+    </div>
+  </div>
+  <div class="mf"><button class="btn bg" onclick="closeM()">Schliessen</button></div>
+</div>
+
+<!-- DEAL MODAL -->
+<div class="modal" id="m-deal" style="display:none;">
+  <div class="mh"><span class="mt" id="m-deal-t">Deal</span><button class="mx" onclick="closeM()">✕</button></div>
+  <div class="mb">
+    <div class="fg"><label>Titel *</label><input id="d-title" placeholder="Müller AG — Generator 200 kVA"></div>
+    <div class="ir"><div class="fg"><label>Firma *</label><input id="d-co"></div><div class="fg"><label>Wert CHF</label><input id="d-val" type="number"></div></div>
+    <div class="ir"><div class="fg"><label>Phase</label><select id="d-stage"><option value="prospecting">Prospecting</option><option value="qualified">Qualified</option><option value="proposal">Proposal</option><option value="negotiation">Negotiation</option><option value="won">Won ✅</option><option value="lost">Lost ❌</option></select></div><div class="fg"><label>Wahrscheinlichkeit %</label><input id="d-prob" type="number" value="20"></div></div>
+    <div class="fg"><label>Notiz</label><textarea id="d-note" rows="2"></textarea></div>
+  </div>
+  <div class="mf"><button class="btn bg" onclick="closeM()">Abbrechen</button><button class="btn bp" onclick="saveDeal()">Speichern</button></div>
+</div>
+
+<!-- CONTACT MODAL -->
+<div class="modal" id="m-ctc" style="display:none;">
+  <div class="mh"><span class="mt" id="m-ctc-t">Kontakt</span><button class="mx" onclick="closeM()">✕</button></div>
+  <div class="mb">
+    <div class="ir"><div class="fg"><label>Firma *</label><input id="c-co"></div><div class="fg"><label>Name</label><input id="c-name"></div></div>
+    <div class="ir"><div class="fg"><label>Funktion</label><input id="c-role"></div><div class="fg"><label>Branche</label><select id="c-ind"><option>Industrie</option><option>Pharma/Chemie</option><option>Rechenzentrum</option><option>Spital/Klinik</option><option>EVU</option><option>Bau</option><option>Gemeinde</option></select></div></div>
+    <div class="ir"><div class="fg"><label>Telefon</label><input id="c-tel" type="tel"></div><div class="fg"><label>E-Mail</label><input id="c-email" type="email"></div></div>
+    <div class="ir"><div class="fg"><label>Kanton</label><select id="c-kt"><option value="">–</option><option>ZH</option><option>BE</option><option>LU</option><option>UR</option><option>SZ</option><option>OW</option><option>NW</option><option>GL</option><option>ZG</option><option>FR</option><option>SO</option><option>BS</option><option>BL</option><option>SH</option><option>AR</option><option>AI</option><option>SG</option><option>GR</option><option>AG</option><option>TG</option><option>TI</option><option>VD</option><option>VS</option><option>NE</option><option>GE</option><option>JU</option></select></div><div class="fg"><label>Status</label><select id="c-st"><option value="lead">Lead</option><option value="prospect">Prospect</option><option value="active">Aktiv</option><option value="inactive">Inaktiv</option></select></div></div>
+    <div class="ir"><div class="fg"><label>Priorität</label><select id="c-prio"><option value="normal">C – Normal</option><option value="high">B – Hoch</option><option value="vip">A – VIP</option></select></div><div class="fg"><label>Website</label><input id="c-web" type="url"></div></div>
+    <div class="fg"><label>Notiz</label><textarea id="c-note" rows="2"></textarea></div>
+  </div>
+  <div class="mf"><button class="btn bg" onclick="closeM()">Abbrechen</button><button class="btn bp" onclick="saveCtc()">Speichern</button></div>
+</div>
+
+<!-- TASK MODAL -->
+<div class="modal" id="m-task" style="display:none;">
+  <div class="mh"><span class="mt">Aufgabe</span><button class="mx" onclick="closeM()">✕</button></div>
+  <div class="mb">
+    <div class="fg"><label>Titel *</label><input id="t-title"></div>
+    <div class="ir"><div class="fg"><label>Fälligkeit</label><input id="t-due" type="date"></div><div class="fg"><label>Priorität</label><select id="t-prio"><option value="low">Niedrig</option><option value="med" selected>Mittel</option><option value="high">Hoch</option></select></div></div>
+    <div class="ir"><div class="fg"><label>Typ</label><select id="t-type"><option value="call">Anruf</option><option value="email">E-Mail</option><option value="meeting">Meeting</option><option value="offer">Angebot</option><option value="todo">To-Do</option></select></div><div class="fg"><label>Firma</label><input id="t-co"></div></div>
+    <div class="fg"><label>Notiz</label><textarea id="t-note" rows="2"></textarea></div>
+  </div>
+  <div class="mf"><button class="btn bg" onclick="closeM()">Abbrechen</button><button class="btn bp" onclick="saveTask()">Speichern</button></div>
+</div>
+
+<!-- NOTE MODAL -->
+<div class="modal" id="m-note" style="display:none;">
+  <div class="mh"><span class="mt">Notiz</span><button class="mx" onclick="closeM()">✕</button></div>
+  <div class="mb">
+    <div class="fg"><label>Titel</label><input id="n-title" placeholder="Notiz-Titel"></div>
+    <div class="fg"><label>Kategorie</label><select id="n-cat"><option value="allg">Allgemein</option><option value="kunde">Kunde</option><option value="idee">Idee</option><option value="meeting">Meeting</option><option value="strat">Strategie</option></select></div>
+    <div class="fg"><label>Text</label><textarea id="n-text" rows="5"></textarea></div>
+  </div>
+  <div class="mf"><button class="btn bg" onclick="closeM()">Abbrechen</button><button class="btn bp" onclick="saveNote()">Speichern</button></div>
+</div>
+
+<!-- SIMAP MODAL -->
+<div class="modal" id="m-simap" style="display:none;">
+  <div class="mh"><span class="mt">Ausschreibung erfassen</span><button class="mx" onclick="closeM()">✕</button></div>
+  <div class="mb">
+    <div class="fg"><label>Titel *</label><input id="sim-title" placeholder="Notstromanlage Kantonsspital…"></div>
+    <div class="ir"><div class="fg"><label>Kanton</label><select id="sim-kt"><option value="">CH</option><option>ZH</option><option>BE</option><option>AG</option><option>SG</option><option>GE</option><option>BS</option><option>BL</option><option>SO</option><option>LU</option><option>TG</option><option>GR</option><option>VS</option><option>VD</option><option>FR</option></select></div><div class="fg"><label>Deadline</label><input id="sim-dead" type="date"></div></div>
+    <div class="ir"><div class="fg"><label>Volumen CHF (ca.)</label><input id="sim-val" type="number"></div><div class="fg"><label>Status</label><select id="sim-st"><option value="beobachten">Beobachten</option><option value="vorbereitung">Vorbereitung</option><option value="eingereicht">Eingereicht</option><option value="gewonnen">Gewonnen</option><option value="verloren">Verloren</option></select></div></div>
+    <div class="fg"><label>Notiz</label><textarea id="sim-note" rows="2"></textarea></div>
+  </div>
+  <div class="mf"><button class="btn bg" onclick="closeM()">Abbrechen</button><button class="btn bp" onclick="saveSimap()">Speichern</button></div>
+</div>
+
+<!-- ANGEBOT POSITION MODAL -->
+<div class="modal" id="m-ang" style="display:none;max-width:480px;">
+  <div class="mh"><span class="mt">Position hinzufügen</span><button class="mx" onclick="closeM()">✕</button></div>
+  <div class="mb">
+    <div class="fg"><label>Beschreibung *</label><input id="ap-desc" placeholder="Generator 200 kVA Stage V"></div>
+    <div class="ir"><div class="fg"><label>Menge</label><input id="ap-qty" type="number" value="1"></div><div class="fg"><label>Einheit</label><select id="ap-unit"><option>Tag</option><option>Woche</option><option>Monat</option><option>Stk.</option><option>Pauschal</option></select></div></div>
+    <div class="ir"><div class="fg"><label>Einzelpreis CHF</label><input id="ap-price" type="number" placeholder="1200"></div><div class="fg"><label>Rabatt %</label><input id="ap-disc" type="number" value="0"></div></div>
+  </div>
+  <div class="mf"><button class="btn bg" onclick="closeM()">Abbrechen</button><button class="btn bp" onclick="saveAngPos()">Hinzufügen</button></div>
+</div>
+
+</div><!-- #mo -->
+<div id="toasts"></div>
+<script>
+// ═══════════════════════════════════════════════════════════════
+// MiT CRM Pro — Complete JavaScript
+// ═══════════════════════════════════════════════════════════════
+
+// ── STATE ──────────────────────────────────────────────────────
+const S = {
+  contacts:[], deals:[], tasks:[], notes:[], acts:[], simap:[],
+  goals:{pipe:0,calls:0,meet:0,off:0},
+  cfg:{apiKey:'',name:'Burak',myPhone:''},
+  _tone:'e', _tigPlat:'linkedin', _pdfB64:'', _angPos:[],
+  _lastRows:[], _impData:[],
+  _editDeal:null, _editCtc:null, _editTask:null, _editNote:null, _editSim:null,
+  _dialQ:[], _dialIdx:0, _dialTimer:null, _dialSec:0,
+  _dialSt:{calls:0,reach:0,meet:0}, _mapInit:false,
+};
+
+// ── UTILS ──────────────────────────────────────────────────────
+const uid = () => Math.random().toString(36).slice(2,10);
+const today = () => new Date().toISOString().slice(0,10);
+const g = id => document.getElementById(id);
+const gv = id => (g(id)||{}).value||'';
+const sv = (id,v) => { const e=g(id); if(e) e.value=v??''; };
+const st = (id,v) => { const e=g(id); if(e) e.textContent=v??''; };
+const fmtN = n => (+n||0).toLocaleString('de-CH');
+const fmtCHF = n => 'CHF '+fmtN(Math.round(+n||0));
+
+const toast = (msg, type='info', ms=3500) => {
+  const d=document.createElement('div');
+  const cls={ok:'tok',err:'terr',warn:'twarn',info:'tinfo'};
+  d.className='toast '+(cls[type]||'tinfo');
+  d.innerHTML=`<span>${type==='ok'?'✓':type==='err'?'✕':type==='warn'?'⚠':'ℹ'}</span><span>${msg}</span>`;
+  g('toasts').appendChild(d);
+  setTimeout(()=>d.remove(),ms);
+};
+
+// ── PERSIST ────────────────────────────────────────────────────
+const KEY = 'mit_crm_v2';
+const save = () => { try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){} };
+const load = () => {
+  try{
+    const d=JSON.parse(localStorage.getItem(KEY)||'{}');
+    ['contacts','deals','tasks','notes','acts','simap','goals','cfg','_angPos','_lastRows'].forEach(k=>{if(d[k]!==undefined)S[k]=d[k];});
+  }catch(e){}
+};
+
+// ── NAV ────────────────────────────────────────────────────────
+const PAGES=['dash','pipe','ctc','map','kt','fc','dial','email','fu','wa','rech','prod','ang','roi','eng','co2','nst','tasks','simap','comp','tig','rap','notes'];
+const nav = pg => {
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('act'));
+  const btn=document.querySelector(`.ni[onclick*="'${pg}'"]`);
+  if(btn) btn.classList.add('act');
+  PAGES.forEach(p=>{ const e=g(`pg-${p}`); if(e) e.classList.toggle('act',p===pg); });
+  window.location.hash=pg;
+  if(pg==='dash') renderDash();
+  if(pg==='pipe') renderKanban();
+  if(pg==='ctc') renderCtc();
+  if(pg==='map'){
+    if(typeof L==='undefined'){setTimeout(()=>{if(!S._mapInit)initMap();else updateMap();},400);}
+    else if(!S._mapInit){setTimeout(initMap,80);}
+    else updateMap();
+  }
+  if(pg==='kt') renderKt();
+  if(pg==='fc') renderFc();
+  if(pg==='rap') { renderRap(); sv('rap-date',today()); }
+  if(pg==='tasks') renderTasks();
+  if(pg==='notes') renderNotes();
+  if(pg==='simap') renderSimap();
+  if(pg==='comp') renderComp();
+  if(pg==='prod') renderProd('gen');
+  if(pg==='wa') { buildWA(); setTimeout(()=>{const p=g('my-ph');if(p&&S.cfg.myPhone)p.value=S.cfg.myPhone;},50); }
+};
+
+// ── MODAL ──────────────────────────────────────────────────────
+const openM = id => {
+  g('mo').classList.add('on');
+  document.querySelectorAll('.modal').forEach(m=>m.style.display='none');
+  const m=g(id); if(m) m.style.display='block';
+};
+const closeM = () => {
+  g('mo').classList.remove('on');
+  document.querySelectorAll('.modal').forEach(m=>m.style.display='none');
+};
+
+// ── THEME ──────────────────────────────────────────────────────
+const toggleTheme = () => {
+  const r=document.documentElement, btn=g('tbtn');
+  const isLight=localStorage.getItem('theme')==='light';
+  if(!isLight){
+    r.style.cssText='--bg0:#f0f4f8;--bg1:#ffffff;--bg2:#e8eef5;--bg3:#dde6f0;--t1:#1a2c42;--t2:#4a6080;--t3:#c0ccda;--bdr:rgba(0,0,0,.08);--bdr2:rgba(0,0,0,.16);';
+    if(btn)btn.textContent='☀️'; localStorage.setItem('theme','light');
+  } else {
+    r.removeAttribute('style');
+    if(btn)btn.textContent='🌙'; localStorage.setItem('theme','dark');
+  }
+};
+
+// ── EXPORT ─────────────────────────────────────────────────────
+const doExport = () => {
+  const b=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);
+  a.download=`MiT_CRM_Backup_${today()}.json`;a.click();
+  toast('Backup exportiert','ok');
+};
+const loadBackup = async el => {
+  const f=el.files[0]; if(!f) return;
+  try{
+    const d=JSON.parse(await f.text());
+    ['contacts','deals','tasks','notes','acts','simap','goals','cfg'].forEach(k=>{if(d[k])S[k]=d[k];});
+    save(); renderDash(); renderCtc(); renderTasks();
+    toast('Backup geladen ✅','ok'); nav('dash');
+  }catch(e){toast('JSON Fehler: '+e.message,'err');}
+};
+
+// ── API (Anthropic) ────────────────────────────────────────────
+const claude = async (prompt, isArr=false) => {
+  if(!S.cfg.apiKey){toast('API Key fehlt — oben rechts eintragen','warn');return null;}
+  try{
+    const msgs=isArr?prompt:[{role:'user',content:prompt}];
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'content-type':'application/json','x-api-key':S.cfg.apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1500,messages:msgs})
+    });
+    const d=await r.json();
+    if(d.error)throw new Error(d.error.message);
+    return d.content[0].text;
+  }catch(e){toast('KI Fehler: '+e.message,'err');console.error(e);return null;}
+};
+
+// ════════════════════════════════════════════════════════════════
+// IMPORT — EXCEL / CSV (core feature)
+// ════════════════════════════════════════════════════════════════
+
+// City coordinates for map placement
+const CITY_XY={
+'Aarau':[47.392,8.045],'Baden':[47.474,8.306],'Basel':[47.560,7.589],'Bern':[46.948,7.447],
+'Biel/Bienne':[47.137,7.247],'Brugg':[47.484,8.207],'Bülach':[47.522,8.538],
+'Burgdorf':[47.057,7.624],'Cham':[47.180,8.464],'Chur':[46.851,9.535],
+'Davos':[46.803,9.840],'Davos Platz':[46.799,9.826],'Delémont':[47.366,7.346],
+'Dietikon':[47.401,8.400],'Einsiedeln':[47.126,8.751],'Emmen':[47.071,8.292],
+'Engelberg':[46.821,8.407],'Frauenfeld':[47.558,8.896],'Freiburg':[46.807,7.162],
+'Genf':[46.204,6.143],'Glarus':[47.041,9.068],'Gossau':[47.417,9.255],
+'Grenchen':[47.196,7.396],'Herisau':[47.388,9.274],'Interlaken':[46.686,7.863],
+'Kloten':[47.450,8.580],'Kreuzlingen':[47.651,9.174],'Kriens':[47.023,8.273],
+'La Chaux-de-Fonds':[47.098,6.825],'Langenthal':[47.215,7.792],'Laufenburg':[47.560,8.064],
+'Lausanne':[46.520,6.632],'Le Locle':[47.056,6.750],'Liestal':[47.484,7.731],
+'Locarno':[46.169,8.797],'Lugano':[46.005,8.950],'Luzern':[47.050,8.309],
+'Lyss':[47.073,7.303],'Muttenz':[47.521,7.649],'Meiringen':[46.728,8.188],
+'Mendrisio':[45.869,8.983],'Montreux':[46.431,6.912],'Morges':[46.510,6.499],
+'Moutier':[47.279,7.374],'Neuchâtel':[46.990,6.930],'Neuhausen am Rheinfall':[47.693,8.621],
+'Olten':[47.352,7.904],'Opfikon':[47.429,8.569],'Pfäffikon SZ':[47.205,8.779],
+'Porrentruy':[47.415,7.078],'Pratteln':[47.523,7.694],'Reinach':[47.501,7.593],
+'Rheinfelden':[47.555,7.794],'Romanshorn':[47.566,9.380],'Rotkreuz':[47.143,8.429],
+'Sarnen':[46.896,8.247],'Schaffhausen':[47.696,8.633],'Schlieren':[47.397,8.446],
+'Schwyz':[47.020,8.655],'Sierre':[46.293,7.536],'Sion':[46.223,7.361],
+'Solothurn':[47.209,7.532],'St. Gallen':[47.424,9.377],'St. Moritz':[46.500,9.843],
+'Stans':[46.958,8.365],'Thun':[46.758,7.634],'Thusis':[46.696,9.439],
+'Uster':[47.348,8.720],'Uzwil':[47.432,9.140],'Vevey':[46.463,6.842],
+'Visp':[46.293,7.883],'Weinfelden':[47.566,9.106],'Wil':[47.463,9.045],
+'Winterthur':[47.500,8.724],'Zermatt':[46.021,7.748],'Zofingen':[47.288,7.945],
+'Zug':[47.166,8.516],'Zürich':[47.377,8.542],
+'Altdorf':[46.880,8.643],'Andermatt':[46.634,8.594],'Appenzell':[47.331,9.409],
+'Arbon':[47.516,9.428],'Arth-Goldau':[47.056,8.554],'Baar':[47.196,8.529],
+'Bellinzona':[46.192,9.020],'Ebikon':[47.078,8.337],'Domat/Ems':[46.839,9.456],
+'Freienbach':[47.201,8.776],'Glattbrugg':[47.437,8.563],'Birsfelden':[47.545,7.628],
+'Saas-Fee':[46.108,7.927],'Verbier':[46.098,7.226],'Vernier':[46.217,6.083],
+'Villars-sur-Glâne':[46.792,7.123],'Volketswil':[47.385,8.748],'Lyss':[47.073,7.303],
+};
+const KT_XY={ZH:[47.38,8.54],BE:[46.95,7.44],LU:[47.05,8.31],UR:[46.87,8.64],SZ:[47.02,8.66],OW:[46.87,8.25],NW:[46.93,8.38],GL:[47.04,9.07],ZG:[47.17,8.52],FR:[46.80,7.15],SO:[47.21,7.53],BS:[47.56,7.59],BL:[47.49,7.73],SH:[47.70,8.63],AR:[47.39,9.28],AI:[47.33,9.40],SG:[47.42,9.38],GR:[46.66,9.58],AG:[47.39,8.05],TG:[47.54,8.90],TI:[46.17,8.80],VD:[46.57,6.55],VS:[46.21,7.36],NE:[46.99,6.89],GE:[46.20,6.14],JU:[47.35,7.15]};
+
+const openImport = () => {
+  S._impData=[];
+  const prev=g('imp-prev'); if(prev) prev.style.display='none';
+  const dz=g('imp-dz');
+  if(dz) dz.innerHTML=`<div style="font-size:2.5rem;margin-bottom:.4rem">📊</div><div style="font-size:15px;font-weight:700;color:var(--grn);margin-bottom:.25rem">Excel oder CSV ablegen</div><div style="font-size:11px;color:var(--t2)">oder klicken zum Auswählen · .xlsx · .xls · .csv</div><input type="file" id="xl-inp" accept=".xlsx,.xls,.csv" style="display:none" onchange="readFile(this.files[0])">`;
+  openM('m-import');
+};
+
+const handleDrop = e => {
+  e.preventDefault();
+  const f=e.dataTransfer?.files?.[0]; if(!f) return;
+  if(f.name.toLowerCase().endsWith('.json')){
+    const r=new FileReader();r.onload=ev=>{loadBackup({files:[{text:()=>Promise.resolve(ev.target.result),name:f.name}]});};r.readAsText(f);
+  } else {
+    openImport();
+    setTimeout(()=>readFile(f),300);
+  }
+};
+
+const readFile = async file => {
+  if(!file) return;
+  const dz=g('imp-dz');
+  if(dz) dz.innerHTML=`<div style="font-size:1.8rem">⏳</div><div style="font-size:13px;font-weight:700;color:var(--grn);margin-top:.3rem">${file.name}</div><div style="font-size:11px;color:var(--t2)">Lese Datei…</div>`;
+
+  try{
+    let rows=[];
+    const ext=file.name.split('.').pop().toLowerCase();
+    if(ext==='csv'){
+      const txt=await file.text();
+      const sep=txt.indexOf(';')>-1?';':',';
+      rows=txt.split(/\r?\n/).filter(Boolean).map(l=>l.split(sep).map(c=>c.replace(/^"|"$/g,'').trim()));
+    } else {
+      // Wait for XLSX to be ready
+      let tries=0;
+      while(!window.XLSX && tries<20){await new Promise(r=>setTimeout(r,200));tries++;}
+      if(!window.XLSX){toast('SheetJS nicht geladen — bitte kurz warten','warn');return;}
+      const buf=await file.arrayBuffer();
+      const wb=XLSX.read(buf,{type:'array',raw:false,cellDates:true});
+      rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:'',raw:false});
+    }
+
+    // Find header row: first with 4+ non-empty cells
+    let hi=0;
+    for(let i=0;i<Math.min(8,rows.length);i++){
+      if(rows[i].filter(c=>String(c||'').trim()).length>=4){hi=i;break;}
+    }
+    const hdrs=rows[hi].map(h=>String(h||'').toLowerCase().replace(/[*.]/g,'').trim());
+    const data=rows.slice(hi+1).filter(r=>r.some(c=>String(c||'').trim()));
+
+    // COLUMN MATCHING — word-exact to prevent tel/titel collision
+    const match=(aliases)=>{
+      // 1. Exact full match
+      for(const a of aliases){const i=hdrs.indexOf(a);if(i>=0)return i;}
+      // 2. Split header by / and spaces, check each word
+      for(const a of aliases){
+        const i=hdrs.findIndex(h=>{
+          const w=h.split(/[\s\/,;]+/).map(x=>x.trim()).filter(Boolean);
+          return w.includes(a)||(w.length<=2&&w.join(' ')===a);
+        });
+        if(i>=0)return i;
+      }
+      // 3. Header starts with alias (>4 chars only)
+      for(const a of aliases){if(a.length<5)continue;const i=hdrs.findIndex(h=>h.startsWith(a));if(i>=0)return i;}
+      return -1;
+    };
+
+    const M={
+      company: match(['firmenname','firma','company','unternehmen']),
+      name:    match(['ansprechpartner','name','kontakt','contact']),
+      role:    match(['funktion / titel','funktion/titel','funktion','position','rolle']),
+      email:   match(['e-mail','email','mail']),
+      tel:     match(['telefon','telephone','phone','mobile','handy','mobil']),
+      web:     match(['website','homepage','url']),
+      city:    match(['ort','stadt','city','gemeinde']),
+      plz:     match(['plz','postleitzahl','zip']),
+      canton:  match(['kanton','canton']),
+      segment: match(['segment']),
+      industry:match(['branche','industrie','industry']),
+      status:  match(['status']),
+      prio:    match(['prio','priorität','priority']),
+      naxt:    match(['nächster schritt','naechster schritt','next step']),
+      followup:match(['follow-up datum','follow-up','followup']),
+      kva:     match(['bedarf / kva','bedarf/kva','kva']),
+      product: match(['hauptprodukt','produkt','product']),
+      note:    match(['notizen','notiz','note','bemerkung']),
+    };
+
+    const get=(row,f)=>M[f]>=0?String(row[M[f]]||'').trim():'';
+
+    S._impData=data.map(row=>{
+      const co=get(row,'company');
+      const city=get(row,'city');
+      const xy=CITY_XY[city]||null;
+      const kt=(get(row,'canton')||'').toUpperCase().trim();
+      const ktxy=KT_XY[kt]||null;
+      return {
+        company:co,name:get(row,'name'),role:get(row,'role'),
+        email:get(row,'email'),tel:get(row,'tel'),web:get(row,'web'),
+        city,plz:get(row,'plz'),canton:get(row,'canton'),
+        industry:get(row,'industry')||get(row,'segment'),
+        segment:get(row,'segment'),
+        status:get(row,'status'),prio:get(row,'prio'),
+        note:get(row,'note'),naxt:get(row,'naxt'),
+        followup:get(row,'followup'),kva:get(row,'kva'),product:get(row,'product'),
+        _lat:xy?xy[0]:(ktxy?ktxy[0]+(Math.random()-.5)*.04:null),
+        _lng:xy?xy[1]:(ktxy?ktxy[1]+(Math.random()-.5)*.06:null),
+      };
+    }).filter(r=>r.company);
+
+    if(!S._impData.length){
+      toast('Keine Firmenname-Spalte gefunden — Datei prüfen','err');
+      if(dz)dz.innerHTML=`<div style="font-size:1.5rem">❌</div><div style="font-size:12px;color:var(--acc)">Keine Daten erkannt</div><div style="font-size:11px;color:var(--t2)">Spalte "Firmenname" muss vorhanden sein</div><input type="file" id="xl-inp" accept=".xlsx,.xls,.csv" style="display:none" onchange="readFile(this.files[0])">`;
+      return;
+    }
+
+    // Show mapping preview
+    const FLBL={company:'Firma',name:'Ansprechpartner',role:'Funktion',tel:'Telefon',email:'E-Mail',canton:'Kanton',city:'Ort',prio:'Prio',status:'Status',naxt:'Nächster Schritt',kva:'Bedarf kVA',product:'Produkt'};
+    const cols=g('imp-cols');
+    if(cols)cols.innerHTML=Object.entries(FLBL).map(([f,lbl])=>{
+      const idx=M[f];const ok=idx>=0;
+      return `<div style="background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--rs);padding:.28rem .6rem;display:flex;justify-content:space-between;"><span style="color:var(--t2)">${lbl}</span><span style="font-weight:600;color:${ok?'var(--grn)':'var(--t3)'}">${ok?hdrs[idx]:'–'}</span></div>`;
+    }).join('');
+
+    const withXY=S._impData.filter(r=>r._lat).length;
+    const info=g('imp-info');
+    if(info)info.textContent=`✓ ${S._impData.length} Kontakte erkannt · ${withXY} mit Stadtkoordinaten`;
+    if(dz)dz.innerHTML=`<div style="font-size:1.8rem">✅</div><div style="font-size:13px;font-weight:700;color:var(--grn);margin-top:.3rem">${file.name}</div><div style="font-size:11px;color:var(--t2)">${S._impData.length} Datensätze bereit · klicken zum Wechseln</div><input type="file" id="xl-inp" accept=".xlsx,.xls,.csv" style="display:none" onchange="readFile(this.files[0])">`;
+    const prev=g('imp-prev');if(prev)prev.style.display='block';
+    toast(`${S._impData.length} Kontakte erkannt`,'ok');
+
+  }catch(err){
+    toast('Ladefehler: '+err.message,'err');
+    console.error('Import error:',err);
+    if(dz)dz.innerHTML=`<div style="font-size:1.5rem">❌</div><div style="font-size:12px;color:var(--acc)">Fehler: ${err.message}</div><div style="font-size:11px;color:var(--t2);margin-top:.3rem">Nochmals versuchen</div><input type="file" id="xl-inp" accept=".xlsx,.xls,.csv" style="display:none" onchange="readFile(this.files[0])">`;
+  }
+};
+
+const doImport = () => {
+  if(!S._impData.length){toast('Keine Daten — erst Datei auswählen','warn');return;}
+
+  const PMAP={'A':'vip','B':'high','C':'normal','a':'vip','b':'high','c':'normal'};
+  const SMAP={'offen':'lead','kontaktiert':'prospect','in gespräch':'active','aktiv':'active','active':'active','lead':'lead'};
+  const TCC={'EVU/Netzbetreiber':'#e63329','Pharma/Chemie':'#a66ef5','Spital/Klinik':'#f03e9e','Rechenzentrum':'#00e5a0','Bau/Infrastruktur':'#ffbb33','Industrie/Maschinenbau':'#4b9ef8','Gemeinde/Öffentlich':'#00d4f5','Events/Messen':'#f5a623'};
+
+  if(!S.deals) S.deals=[];if(!S.tasks) S.tasks=[];if(!S.contacts) S.contacts=[];
+
+  const existing=new Set((S.contacts||[]).map(c=>(c.company||'').toLowerCase().trim()));
+  const tagCache={};
+  const mkTag=(n,c)=>{if(tagCache[n])return tagCache[n];let t=(S.tags||[]).find(x=>x.name===n);if(!t){if(!S.tags)S.tags=[];t={id:uid(),name:n,color:c||'#4b9ef8'};S.tags.push(t);}tagCache[n]=t.id;return t.id;};
+  const impTag=mkTag('Importiert','#00e5a0');
+  const pA=mkTag('Prio A','#e63329');
+  const pB=mkTag('Prio B','#ffbb33');
+
+  let added=0,skipped=0,tasks=0,deals=0;
+
+  S._impData.forEach(r=>{
+    const co=(r.company||'').toLowerCase().trim();
+    if(existing.has(co)){skipped++;return;}
+    existing.add(co);
+
+    const prio=PMAP[r.prio]||'normal';
+    const tags=[impTag];
+    if(prio==='vip')tags.push(pA);
+    if(prio==='high')tags.push(pB);
+    const seg=r.segment||r.industry;
+    if(seg&&TCC[seg])tags.push(mkTag(seg,TCC[seg]));
+
+    const id=uid();
+    S.contacts.push({
+      id,company:r.company,name:r.name||r.company,role:r.role,
+      email:r.email,tel:r.tel,web:r.web,canton:r.canton,
+      industry:r.industry||r.segment||'Industrie',
+      status:SMAP[(r.status||'').toLowerCase()]||'lead',
+      prio,note:r.note,tags,
+      _segment:r.segment,_kva:r.kva,_product:r.product,
+      _naxt:r.naxt,_followup:r.followup,_ort:r.city,
+      _lat:r._lat,_lng:r._lng,_src:'import',
+    });
+    added++;
+
+    if(r.naxt&&r.naxt.length>2){
+      S.tasks.push({id:uid(),title:r.naxt.slice(0,80),company:r.company,contactId:id,due:r.followup||'',prio:prio==='vip'?'high':prio==='high'?'med':'low',type:'call',done:false,note:r.kva||''});
+      tasks++;
+    }
+    if((prio==='vip'||prio==='high')&&r.naxt){
+      S.deals.push({id:uid(),title:`${r.company} — ${r.product||r.segment||'Temporärstrom'}`,company:r.company,contact:r.name,stage:prio==='vip'?'qualified':'prospecting',value:0,prob:prio==='vip'?25:15,note:r.naxt,industry:r.industry});
+      deals++;
+    }
+  });
+
+  save();
+  closeM();
+
+  // Refresh ALL tabs
+  try{renderDash();}catch(e){}
+  try{renderCtc();}catch(e){}
+  try{renderKanban();}catch(e){}
+  try{renderTasks();}catch(e){}
+  try{renderKt();}catch(e){}
+  try{if(S._mapInit)updateMap();}catch(e){}
+
+  // Update badges
+  const op=S.deals.filter(d=>d.stage!=='won'&&d.stage!=='lost').length;
+  const ot=S.tasks.filter(t=>!t.done).length;
+  const nbp=g('nb-pipe');if(nbp){nbp.textContent=op;nbp.style.display=op?'':'none';}
+  const nbt=g('nb-tasks');if(nbt){nbt.textContent=ot;nbt.style.display=ot?'':'none';}
+
+  // Hide CTA
+  const cta=g('imp-cta');if(cta)cta.style.display='none';
+
+  S._impData=[];
+  toast(`✅ ${added} Kontakte · ${deals} Deals · ${tasks} Aufgaben · ${skipped} Duplikate übersprungen`,'ok');
+  setTimeout(()=>nav('dash'),400);
+};
+
+// ── DASHBOARD ──────────────────────────────────────────────────
+const renderDash = () => {
+  const hr=new Date().getHours();
+  st('dgreet',(hr<12?'Guten Morgen':hr<18?'Guten Tag':'Guten Abend')+`, ${S.cfg.name} 👋`);
+  const cta=g('imp-cta');if(cta)cta.style.display=S.contacts.length?'none':'block';
+  const deals=S.deals||[];
+  const pipe=deals.filter(d=>d.stage!=='won'&&d.stage!=='lost').reduce((s,d)=>s+(+d.value||0),0);
+  const won=deals.filter(d=>d.stage==='won').length;
+  const tot=deals.filter(d=>d.stage==='won'||d.stage==='lost').length;
+  const calls=(S.acts||[]).filter(a=>a.date===today()&&a.type==='call').length;
+  st('k-pipe',fmtCHF(pipe));st('k-won',won);st('k-ctc',S.contacts.length);
+  st('k-calls',calls);st('k-wr',tot?Math.round(won/tot*100)+'%':'–');
+  try{renderFunnelChart();}catch(e){}try{renderActChart();}catch(e){}
+  const feed=g('dash-feed');
+  if(feed){
+    const r=(S.acts||[]).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,6);
+    feed.innerHTML=r.length?r.map(a=>`<div class="aitem"><div class="aico">${a.type==='call'?'📞':a.type==='email'?'✉️':a.type==='meeting'?'🤝':'📄'}</div><div><div style="font-size:12px;font-weight:600">${a.who||'–'}</div><div style="font-size:10px;color:var(--t2)">${a.date}${a.res?' · '+a.res:''}</div></div></div>`).join(''):'<div class="empty"><div class="eico">📭</div><p>Keine Aktivitäten</p></div>';
+  }
+  const de=g('dash-deals');
+  if(de){
+    const td=deals.filter(d=>d.stage!=='won'&&d.stage!=='lost').sort((a,b)=>(+b.value||0)-(+a.value||0)).slice(0,5);
+    de.innerHTML=td.length?td.map(d=>`<div style="display:flex;justify-content:space-between;padding:.38rem 0;border-bottom:1px solid var(--bdr);font-size:12px;"><div><div style="font-weight:600">${d.company}</div><div style="font-size:10px;color:var(--t2)">${d.stage}</div></div><div style="font-weight:700;color:var(--grn);font-family:var(--fh)">${d.value?fmtCHF(d.value):'–'}</div></div>`).join(''):'<div class="empty"><div class="eico">🎯</div><p>Keine Deals</p></div>';
+  }
+};
+const renderFunnelChart=()=>{try{const c=g('ch-funnel');if(!c)return;const s=['prospecting','qualified','proposal','negotiation'];const l=['Prospecting','Qualified','Proposal','Negotiation'];const v=s.map(x=>(S.deals||[]).filter(d=>d.stage===x).length);if(window._cf)window._cf.destroy();window._cf=new Chart(c,{type:'bar',data:{labels:l,datasets:[{data:v,backgroundColor:['#4b9ef8','#9b59f5','#f5a623','#e63329'],borderRadius:4}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{color:'#5d7faa',stepSize:1},grid:{color:'rgba(255,255,255,.04)'}},x:{ticks:{color:'#5d7faa'},grid:{display:false}}}}});}catch(e){}};
+const renderActChart=()=>{try{const c=g('ch-act');if(!c)return;const l=[],v=[];for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const ds=d.toISOString().slice(0,10);l.push(ds.slice(5));v.push((S.acts||[]).filter(a=>a.date===ds).length);}if(window._ca)window._ca.destroy();window._ca=new Chart(c,{type:'bar',data:{labels:l,datasets:[{data:v,backgroundColor:'#e63329',borderRadius:3}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{color:'#5d7faa',stepSize:1},grid:{color:'rgba(255,255,255,.04)'}},x:{ticks:{color:'#5d7faa'},grid:{display:false}}}}});}catch(e){}};
+
+// ── PIPELINE ───────────────────────────────────────────────────
+const renderKanban=()=>{
+  const el=g('kanban');if(!el)return;
+  const ST=[{k:'prospecting',l:'Prospecting',c:'#4b9ef8'},{k:'qualified',l:'Qualified',c:'#9b59f5'},{k:'proposal',l:'Proposal',c:'#f5a623'},{k:'negotiation',l:'Negotiation',c:'#e63329'},{k:'won',l:'Won ✅',c:'#00e5a0'},{k:'lost',l:'Lost ❌',c:'#5d7faa'}];
+  const pv=S.deals.filter(d=>d.stage!=='won'&&d.stage!=='lost').reduce((s,d)=>s+(+d.value||0),0);
+  st('pipe-val',fmtCHF(pv));
+  const nb=g('nb-pipe');if(nb){const n=S.deals.filter(d=>d.stage!=='won'&&d.stage!=='lost').length;nb.textContent=n;nb.style.display=n?'':'none';}
+  el.innerHTML=ST.map(s=>{
+    const cs=(S.deals||[]).filter(d=>d.stage===s.k);
+    return `<div class="kcol"><div class="kch" style="background:${s.c}22;color:${s.c}"><span>${s.l}</span><span>${cs.length}</span></div><div class="kcb">${cs.map(d=>`<div class="kcard" onclick="openDeal('${d.id}')"><div style="font-size:12px;font-weight:600">${d.company||d.title}</div>${d.value?`<div style="font-size:11px;color:var(--grn);font-family:var(--fh)">${fmtCHF(d.value)}</div>`:''}<div style="font-size:10px;color:var(--t2);margin-top:.15rem">${d.prob||0}% · ${(d.note||'').slice(0,30)}</div></div>`).join('')}</div></div>`;
+  }).join('');
+};
+const openDeal=(id)=>{S._editDeal=id?(S.deals||[]).find(d=>d.id===id):null;const d=S._editDeal;sv('d-title',d?.title||'');sv('d-co',d?.company||'');sv('d-val',d?.value||'');sv('d-stage',d?.stage||'prospecting');sv('d-prob',d?.prob||20);sv('d-note',d?.note||'');g('m-deal-t').textContent=d?'Deal bearbeiten':'Neuer Deal';openM('m-deal');};
+const saveDeal=()=>{const t=gv('d-title');if(!t){toast('Titel fehlt','warn');return;}if(!S.deals)S.deals=[];const d={id:S._editDeal?.id||uid(),title:t,company:gv('d-co'),value:+gv('d-val')||0,stage:gv('d-stage'),prob:+gv('d-prob')||20,note:gv('d-note')};if(S._editDeal){const i=S.deals.findIndex(x=>x.id===d.id);if(i>=0)S.deals[i]=d;}else S.deals.push(d);save();renderKanban();renderDash();closeM();toast('Deal gespeichert','ok');};
+
+// ── CONTACTS ───────────────────────────────────────────────────
+const renderCtc=()=>{
+  const el=g('ctc-body');if(!el)return;
+  const q=(gv('ctc-q')||'').toLowerCase(),ind=gv('ctc-ind')||'';
+  let list=(S.contacts||[]).filter(c=>(!q||(c.company||'').toLowerCase().includes(q)||(c.name||'').toLowerCase().includes(q))&&(!ind||(c.industry||'').includes(ind)));
+  if(!list.length){el.innerHTML=`<tr><td colspan="8"><div class="empty"><div class="eico">👥</div><p>${S.contacts.length?'Keine Treffer':'Noch leer — Excel importieren'}</p></div></td></tr>`;return;}
+  const PC={vip:'tr',high:'ty',normal:'tgr'};const PL={vip:'A',high:'B',normal:'C'};
+  el.innerHTML=list.slice(0,100).map(c=>`<tr><td><div style="font-weight:600;font-size:12px">${c.company}</div></td><td style="font-size:12px">${c.name||'–'}</td><td><span class="tg tb2" style="font-size:10px">${c.industry||'–'}</span></td><td style="font-size:12px">${c.canton||'–'}</td><td style="font-size:12px">${c.tel?`<a href="tel:${c.tel}" style="color:var(--cyn)">${c.tel}</a>`:'–'}</td><td><span class="tg ${c.status==='active'?'tg2':c.status==='lead'?'tb2':'tgr'}" style="font-size:10px">${c.status||'lead'}</span></td><td><span class="tg ${PC[c.prio]||'tgr'}" style="font-size:10px">${PL[c.prio]||'C'}</span></td><td><button class="btn bg sm" onclick="openCtc('${c.id}')">✏️</button></td></tr>`).join('');
+};
+const openCtc=(id)=>{S._editCtc=id?(S.contacts||[]).find(c=>c.id===id):null;const c=S._editCtc;sv('c-co',c?.company||'');sv('c-name',c?.name||'');sv('c-role',c?.role||'');sv('c-tel',c?.tel||'');sv('c-email',c?.email||'');sv('c-web',c?.web||'');sv('c-kt',c?.canton||'');sv('c-st',c?.status||'lead');sv('c-prio',c?.prio||'normal');sv('c-ind',c?.industry||'Industrie');sv('c-note',c?.note||'');g('m-ctc-t').textContent=c?'Kontakt bearbeiten':'Neuer Kontakt';openM('m-ctc');};
+const saveCtc=()=>{const co=gv('c-co');if(!co){toast('Firma fehlt','warn');return;}if(!S.contacts)S.contacts=[];const c={id:S._editCtc?.id||uid(),company:co,name:gv('c-name'),role:gv('c-role'),tel:gv('c-tel'),email:gv('c-email'),web:gv('c-web'),canton:gv('c-kt'),industry:gv('c-ind'),status:gv('c-st'),prio:gv('c-prio'),note:gv('c-note')};if(S._editCtc){const i=S.contacts.findIndex(x=>x.id===c.id);if(i>=0)S.contacts[i]=c;}else S.contacts.push(c);save();renderCtc();renderDash();closeM();toast('Kontakt gespeichert','ok');};
+const exportCtc=()=>{if(!window.XLSX){toast('XLSX nicht geladen','err');return;}const d=(S.contacts||[]).map(c=>({'Firma':c.company,'Name':c.name,'Funktion':c.role,'Telefon':c.tel,'E-Mail':c.email,'Kanton':c.canton,'Branche':c.industry,'Status':c.status,'Prio':c.prio==='vip'?'A':c.prio==='high'?'B':'C','Website':c.web,'Notiz':c.note}));const ws=XLSX.utils.json_to_sheet(d);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Kontakte');XLSX.writeFile(wb,'MiT_Kontakte.xlsx');toast('XLSX exportiert','ok');};
+
+// ── MAP ────────────────────────────────────────────────────────
+const initMap=()=>{
+  if(S._mapInit||!g('the-map'))return;
+  if(typeof L==='undefined'){
+    // Leaflet not yet loaded — retry in 300ms
+    setTimeout(initMap,300);return;
+  }
+  S._mapInit=true;
+  S._map=L.map('the-map',{zoomControl:true}).setView([46.85,8.20],8);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{
+    attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> · <a href="https://carto.com/attributions">CartoDB</a>',
+    maxZoom:19,subdomains:'abcd'}).addTo(S._map);
+  S._R=L.canvas({padding:.5});
+  const ml=g('map-loading');if(ml)ml.style.display='none';
+  S._cL=L.markerClusterGroup({maxClusterRadius:45,disableClusteringAtZoom:13,chunkedLoading:true,chunkInterval:150,chunkDelay:50,iconCreateFunction:cl=>{const n=cl.getChildCount();const sz=n>=100?42:n>=50?36:n>=20?30:24;const t=n>=100?'large':n>=20?'medium':'small';const col={small:'rgba(75,158,248,.9)',medium:'rgba(255,187,51,.9)',large:'rgba(230,51,41,.9)'};return L.divIcon({html:`<div style="width:${sz}px;height:${sz}px;border-radius:50%;background:${col[t]};display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:${sz>32?13:11}px;font-weight:800;color:${t==='medium'?'#000':'#fff'};">${n}</div>`,className:'',iconSize:[sz,sz],iconAnchor:[sz/2,sz/2]})}}).addTo(S._map);
+  S._dL=L.layerGroup().addTo(S._map);
+  S._zL=L.layerGroup().addTo(S._map);
+  updateMap();
+};
+const updateMap=()=>{
+  if(!S._map)return;
+  S._cL.clearLayers();S._dL.clearLayers();S._zL.clearLayers();
+  const IC={'EVU':'#e63329','Pharma':'#a66ef5','Rechenzentrum':'#00e5a0','Spital':'#ffbb33','Bau':'#7facc8','Gemeinde':'#f03e9e'};
+  const gc=ind=>IC[Object.keys(IC).find(k=>(ind||'').includes(k))||'X']||'#4b9ef8';
+  const markers=[];
+  (S.contacts||[]).forEach(c=>{
+    const kt=(c.canton||'').toUpperCase();const kxy=KT_XY[kt];
+    const lat=c._lat||(kxy?kxy[0]+(Math.random()-.5)*.04:null);
+    const lng=c._lng||(kxy?kxy[1]+(Math.random()-.5)*.06:null);
+    if(!lat||!lng)return;
+    const col=gc(c.industry);const r=c.prio==='vip'?7:c.prio==='high'?5:4;
+    const m=L.circleMarker([lat,lng],{renderer:S._R,radius:r,fillColor:col,color:c.prio==='vip'?'#000':'rgba(0,0,0,.6)',weight:c.prio==='vip'?2.5:1.5,fillOpacity:.92});
+    m.bindPopup(`<div class="mpt" style="color:${col}">${c.company}</div><div class="mpr">📍 ${c._ort||c.canton||'CH'} · ${c._segment||c.industry||'–'}</div>${c.name?`<div class="mpr">👤 ${c.name}${c.role?' · '+c.role:''}</div>`:''}${c.tel?`<div class="mpr"><a href="tel:${c.tel}" style="color:var(--cyn)">📞 ${c.tel}</a></div>`:''}${c._naxt?`<div class="mpr" style="color:var(--yel);font-size:10px">→ ${c._naxt.slice(0,50)}</div>`:''}<div style="margin-top:.35rem"><button onclick="openCtc('${c.id}')" style="background:var(--acc);border:none;color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;cursor:pointer">✏️ Öffnen</button></div>`,{maxWidth:260});
+    markers.push(m);
+  });
+  S._cL.addLayers(markers);
+  (S.deals||[]).filter(d=>d.stage!=='won'&&d.stage!=='lost').forEach(d=>{const c=(S.contacts||[]).find(x=>x.company===d.company);const kt=(c?.canton||'').toUpperCase();const kxy=KT_XY[kt];const lat=c?._lat||(kxy?kxy[0]+(Math.random()-.5)*.03:null);const lng=c?._lng||(kxy?kxy[1]+(Math.random()-.5)*.04:null);if(!lat||!lng)return;L.circleMarker([lat,lng],{renderer:S._R,radius:8,fillColor:'#f59e0b',color:'rgba(0,0,0,.6)',weight:2,fillOpacity:.95}).bindPopup(`<div class="mpt">🎯 ${d.title}</div>${d.value?`<div class="mpr">${fmtCHF(d.value)}</div>`:''}`).addTo(S._dL);});
+  const zc={};(S.contacts||[]).forEach(c=>{const k=(c.canton||'').toUpperCase();zc[k]=(zc[k]||0)+1;});
+  Object.entries(KT_XY).forEach(([k,xy])=>{const n=zc[k]||0;if(!n)return;const r=n>50?24000:n>20?18000:n>5?13000:9000;const a=n>20?.08:n>5?.05:.03;L.circle(xy,{radius:r,color:`rgba(37,99,235,${a*2.5})`,fillColor:`rgba(37,99,235,${a})`,fillOpacity:.7,weight:.8,interactive:false}).addTo(S._zL);});
+  st('ms-ctc',S.contacts.length);st('ms-deals',(S.deals||[]).filter(d=>d.stage!=='won'&&d.stage!=='lost').length);
+  const pv=(S.deals||[]).filter(d=>d.stage!=='won'&&d.stage!=='lost').reduce((s,d)=>s+(+d.value||0),0);st('ms-pot',fmtCHF(pv));
+  const ks=new Set((S.contacts||[]).map(c=>(c.canton||'').toUpperCase()).filter(Boolean));st('ms-kt',ks.size);
+};
+const toggleML=(l,btn)=>{btn.classList.toggle('act');const ly=l==='c'?S._cL:S._dL;if(!ly||!S._map)return;if(btn.classList.contains('act'))S._map.addLayer(ly);else S._map.removeLayer(ly);};
+
+// ── KANTONE ────────────────────────────────────────────────────
+const renderKt=()=>{
+  const el=g('kt-grid');if(!el)return;
+  const KN={ZH:'Zürich',BE:'Bern',LU:'Luzern',UR:'Uri',SZ:'Schwyz',OW:'Obwalden',NW:'Nidwalden',GL:'Glarus',ZG:'Zug',FR:'Freiburg',SO:'Solothurn',BS:'Basel-Stadt',BL:'Basel-Land',SH:'Schaffhausen',AR:'Appenzell AR',AI:'Appenzell AI',SG:'St. Gallen',GR:'Graubünden',AG:'Aargau',TG:'Thurgau',TI:'Tessin',VD:'Waadt',VS:'Wallis',NE:'Neuenburg',GE:'Genf',JU:'Jura'};
+  const kc={};(S.contacts||[]).forEach(c=>{const k=(c.canton||'').toUpperCase();kc[k]=(kc[k]||0)+1;});
+  const kd={};(S.deals||[]).forEach(d=>{const c=(S.contacts||[]).find(x=>x.company===d.company);const k=(c?.canton||'').toUpperCase();if(k)kd[k]=(kd[k]||0)+1;});
+  const max=Math.max(...Object.values(kc),1);
+  el.innerHTML=Object.entries(KN).map(([k,n])=>{const c=kc[k]||0,d=kd[k]||0;return `<div style="background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:.8rem;cursor:pointer;transition:all .12s;" onmouseover="this.style.borderColor='var(--acc)'" onmouseout="this.style.borderColor='var(--bdr)'" onclick="sv('ctc-q','${k}');nav('ctc')"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.3rem;"><div style="font-family:var(--fh);font-size:1rem;font-weight:800">${n}</div><span style="font-size:10px;font-weight:700;color:var(--t2);background:var(--bg3);padding:1px 6px;border-radius:10px">${k}</span></div><div style="display:flex;gap:.9rem;"><div><div style="font-family:var(--fh);font-size:1.15rem;font-weight:800;color:${c?'var(--blu)':'var(--t3)'}">${c}</div><div style="font-size:9px;color:var(--t2)">Kontakte</div></div>${d?`<div><div style="font-family:var(--fh);font-size:1.15rem;font-weight:800;color:var(--yel)">${d}</div><div style="font-size:9px;color:var(--t2)">Deals</div></div>`:''}</div><div class="fbar" style="margin-top:.4rem;"><div style="width:${Math.round(c/max*100)}%;background:var(--blu)"></div></div></div>`;}).join('');
+};
+
+// ── FORECAST ───────────────────────────────────────────────────
+const saveGoals=()=>{const ks=['pipe','calls','meet','off'];ks.forEach(k=>{const v=+(g('g-'+k)||{}).value||0;if(!S.goals)S.goals={};S.goals[k]=v;});save();renderFc();};
+const renderFc=()=>{const el=g('fc-prog');if(!el)return;const G=S.goals||{},A=S.acts||[],tm=new Date().toISOString().slice(0,7);const act={pipe:(S.deals||[]).filter(d=>d.stage!=='won'&&d.stage!=='lost').reduce((s,d)=>s+(+d.value||0),0),calls:A.filter(a=>a.type==='call'&&a.date?.slice(0,7)===tm).length,meet:A.filter(a=>a.type==='meeting'&&a.date?.slice(0,7)===tm).length,off:A.filter(a=>a.type==='offer'&&a.date?.slice(0,7)===tm).length};const items=[['Pipeline CHF','pipe',v=>fmtCHF(v)],['Anrufe','calls',v=>v],['Meetings','meet',v=>v],['Angebote','off',v=>v]];el.innerHTML=items.map(([l,k,f])=>{const gv2=G[k]||0,av=act[k]||0,p=gv2?Math.min(Math.round(av/gv2*100),100):0;return `<div style="margin-bottom:.55rem"><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:.18rem"><span>${l}</span><span style="color:var(--t2)">${f(av)} / ${gv2||'–'}</span></div><div class="fbar"><div style="width:${p}%;background:${p>=100?'var(--grn)':p>=70?'var(--yel)':'var(--acc)'}"></div></div></div>`;}).join('');};
+
+// ── DIALER ─────────────────────────────────────────────────────
+const initDialer=()=>{S._dialQ=[...(S.contacts||[]).filter(c=>c.tel)].sort(()=>Math.random()-.5);S._dialIdx=0;showDC();};
+const showDC=()=>{const c=S._dialQ[S._dialIdx];if(!c){st('d-name','Fertig!');st('d-co','Alle abgearbeitet');return;}const av=g('d-av');if(av)av.textContent=(c.company||'X')[0].toUpperCase();st('d-name',c.company||'–');st('d-co',c.name||(c.tel||''));};
+const dialCall=()=>{const c=S._dialQ[S._dialIdx];if(!c)return;if(c.tel)window.open('tel:'+c.tel);S._dialSt.calls++;st('dc-calls',S._dialSt.calls);let s=0;clearInterval(S._dialTimer);S._dialTimer=setInterval(()=>{s++;st('d-timer',`${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`);},1000);};
+const dialLog=(res)=>{const c=S._dialQ[S._dialIdx];clearInterval(S._dialTimer);st('d-timer','00:00');if(!S.acts)S.acts=[];S.acts.push({id:uid(),type:'call',date:today(),who:c?.company||'',res});save();if(res==='Meeting vereinbart'){S._dialSt.meet++;st('dc-meet',S._dialSt.meet);}S._dialSt.reach++;st('dc-reach',S._dialSt.reach);const r=S._dialSt.calls?Math.round(S._dialSt.reach/S._dialSt.calls*100):0;st('dc-rate',r+'%');const log=g('call-log');if(log)log.innerHTML=`<div style="font-size:11px;padding:.22rem 0;border-bottom:1px solid var(--bdr)">${today()} · ${c?.company||'–'} · <strong>${res}</strong></div>`+(log.innerHTML||'');dialSkip();};
+const dialSkip=()=>{S._dialIdx=(S._dialIdx+1)%Math.max(S._dialQ.length,1);showDC();};
+const genScript=async()=>{const c=S._dialQ[S._dialIdx];if(!c){toast('Kein Kontakt aktiv','warn');return;}const el=g('script-out');if(!el)return;el.textContent='Generiere…';const r=await claude(`Kaltakquise-Skript für:\nFirma: ${c.company}, Branche: ${c.industry||'–'}\nBurak Ücöz, Mobil in Time AG (Aggreko), temporäre Energie CH 30-2100 kVA, Stage V, BESS.\nSkript: Einleitung (15s), Nutzen (20s), eine klare Frage. Kurz und direkt.`);if(r)el.textContent=r;};
+const genObj=async()=>{const q=gv('obj-q');if(!q){toast('Einwand eingeben','warn');return;}const el=g('script-out');if(!el)return;el.textContent='Denke nach…';const r=await claude(`Einwand: "${q}"\nKurze, überzeugende Antwort als Burak Ücöz, MiT/Aggreko Schweiz. Konkret, 2-3 Sätze.`);if(r)el.textContent=r;};
+
+// ── EMAIL ──────────────────────────────────────────────────────
+const setTone=(t,btn)=>{S._tone=t;document.querySelectorAll('#pg-email .btn[id^="tone-"]').forEach(b=>b.className=b.className.replace('bs','bg'));if(btn)btn.className=btn.className.replace('bg','bs');};
+const genEmail=async()=>{const co=gv('em-co');if(!co){toast('Firma eingeben','warn');return;}const el=g('em-out');if(!el)return;el.textContent='Generiere…';const T={e:'Energisch mit Emojis',s:'Sachlich Swiss B2B',p:'Persönlich netzwerkartig',r:'ROI-fokussiert mit Zahlen'};const TY={'cold':'Kaltakquise','fu1':'Follow-Up #1','fu2':'Follow-Up nach Meeting','offer':'Nach Angebot versandt','react':'Reaktivierung'};const r=await claude(`Du bist Burak Ücöz, Mobil in Time AG. Schreibe E-Mail:\nEmpfänger: ${gv('em-first')||''} ${co}, Branche: ${gv('em-ind')}\nTyp: ${TY[gv('em-type')]}\nTonalität: ${T[S._tone||'e']}\nSchmerzpunkt: ${gv('em-pain')||'temporäre Energie'}\nFormat: Zeile 1 = "Betreff: …", dann Leerzeile, dann E-Mail.`);if(r){const lines=r.split('\n');const sl=lines.find(l=>l.startsWith('Betreff:'));if(g('em-sub'))g('em-sub').value=sl?.replace('Betreff:','').trim()||'';el.textContent=lines.filter(l=>!l.startsWith('Betreff:')).join('\n').trim();}};
+const emailOutlook=()=>{window.open(`mailto:?subject=${encodeURIComponent(gv('em-sub'))}&body=${encodeURIComponent((g('em-out')||{}).textContent||'')}`);}; 
+
+// ── FOLLOW-UP ──────────────────────────────────────────────────
+const genFU=async()=>{const c=gv('fu-ctc');if(!c){toast('Kontakt eingeben','warn');return;}const el=g('fu-out');if(!el)return;el.innerHTML='<div class="empty"><p>Generiere…</p></div>';const r=await claude(`5-Schritte Follow-Up für:\nKontakt: ${c}\nStatus: ${gv('fu-st')}\nZiel: ${gv('fu-goal')}\nSituation: ${gv('fu-sit')}\nJeder Schritt: Timing, Kanal, fertiger Text. MiT/Aggreko CH.`);if(r)el.textContent=r;};
+
+// ── WHATSAPP ───────────────────────────────────────────────────
+const WA={cold:`Guten Tag {fn} 👋\n\nIch bin Burak Ücöz von Mobil in Time AG — Schweizer Marktführer für temporäre Energielösungen (Aggreko).\n\nHat {co} aktuell Bedarf an mobiler Stromversorgung? Wir decken 30–2100 kVA ab, inkl. BESS und EMV-Expertise.\n\nKurzes 15-Min-Gespräch diese Woche?`,fu:`Guten Tag {fn},\n\nIch wollte kurz nachfassen nach unserem Gespräch.\n\nKonnten Sie unsere Lösung intern besprechen?\n\nFür Fragen stehe ich gerne zur Verfügung.`,offer:`Guten Tag {fn},\n\nHaben Sie unser Angebot erhalten und konnten es prüfen?\n\nBei Fragen bin ich gerne da — auch telefonisch.`,confirm:`Guten Tag {fn},\n\nTermin bestätigt! Freue mich auf unser Gespräch.\n\nBis dann,\nBurak Ücöz, MiT AG`,free:'{extra}'};
+const buildWA=()=>{const fn=gv('wa-fn')||'Frau/Herr',co=gv('wa-co')||'Ihrem Unternehmen',t=gv('wa-tmpl')||'cold';let txt=(WA[t]||'').replace('{fn}',fn).replace('{co}',co).replace('{extra}',gv('wa-extra')||'');const ex=gv('wa-extra');if(ex&&t!=='free')txt+='\n\n'+ex;const el=g('wa-prev');if(el)el.textContent=txt;S._waTxt=txt;};
+const openWA=()=>{let t=gv('wa-tel')||S.cfg.myPhone||'';t=t.replace(/[^+\d]/g,'');if(!t){toast('Telefon fehlt','warn');return;}window.open(`https://wa.me/${t}?text=${encodeURIComponent(S._waTxt||'')}`);}; 
+
+// ── RECHERCHE ──────────────────────────────────────────────────
+const genRech=async()=>{const u=gv('re-url');if(!u){toast('Firma eingeben','warn');return;}const el=g('re-out');if(!el)return;el.textContent='Recherchiere…';const r=await claude(`Vertriebsanalyse für MiT/Aggreko:\nFirma: ${u}, Branche: ${gv('re-ind')}\nZiel: ${gv('re-goal')}, Person: ${gv('re-pers')||'unbekannt'}\nGib: 1)Firmenprofil 2)Energiebedarf 3)Anknüpfungspunkte 4)Produkte 5)Gesprächseinstieg.`);if(r)el.textContent=r;};
+
+// ── PRODUCTS ───────────────────────────────────────────────────
+const PRODS={gen:[{cat:'Generator',n:'M13+',kva:'10–30 kVA',sp:['Stage V','HVO'],d:'Kompaktgenerator Events/Bau'},{cat:'Generator',n:'X100',kva:'100 kVA',sp:['Stage V','ISO 8528'],d:'Industrie Standard'},{cat:'Generator',n:'X200',kva:'200 kVA',sp:['Stage V','AVR G2'],d:'DACH Standard'},{cat:'Generator',n:'X350',kva:'350 kVA',sp:['Stage V','Parallel'],d:'Leistungsstarke Lösung'},{cat:'Generator',n:'X500',kva:'500 kVA',sp:['Stage V','HVO100'],d:'Grossgenerator'},{cat:'Generator',n:'X1000',kva:'1000 kVA',sp:['Stage V','2100kVA Parallel'],d:'Maximale Leistung'}],bess:[{cat:'BESS',n:'PowerStore 200',kva:'200 kWh',sp:['LFP','IEC 62619'],d:'BESS Überbrückung'},{cat:'BESS',n:'PowerStore Hybrid',kva:'200kWh+Gen',sp:['Hybrid','CO₂ -70%'],d:'Gen+BESS Hybrid'}],pq:[{cat:'Power Quality',n:'PQ Analyser Class A',kva:'IEC 61000-4-30',sp:['EN 50160','Klasse A'],d:'Professionelle PQ-Messung'},{cat:'Power Quality',n:'Active Filter',kva:'50–600A',sp:['THD<5%'],d:'Aktiver Oberschwingungsfilter'}],heat:[{cat:'Wärme',n:'T50 Heizaggregat',kva:'50 kW',sp:['HVO-fähig'],d:'Mobiles Heizaggregat'},{cat:'Kälte',n:'C100 Kühlaggregat',kva:'100 kW',sp:['R32'],d:'Temporäre Kühlung'}],acc:[{cat:'Zubehör',n:'BSV 125A',kva:'125A',sp:['IP44','CEE'],d:'Baustromverteiler'},{cat:'Zubehör',n:'IBC 1000L',kva:'1000L',sp:['ADR'],d:'Kraftstoff ADR-konform'}]};
+const showProd=(t,btn)=>{document.querySelectorAll('.ptb').forEach(b=>b.classList.remove('act'));document.querySelectorAll('.ppanel').forEach(p=>p.classList.remove('act'));if(btn)btn.classList.add('act');const pp=g('pp-'+t);if(pp)pp.classList.add('act');renderProd(t);};
+const renderProd=(t)=>{const el=g('pg-'+t+'-g');if(!el)return;const l=PRODS[t]||[];el.innerHTML=l.map(p=>`<div class="pcard"><div class="pcat">${p.cat}</div><div class="pname">${p.n}</div><div style="font-size:12px;color:var(--grn);font-family:var(--fh);font-weight:700;margin:.1rem 0">${p.kva}</div><div style="font-size:11px;color:var(--t2);margin:.2rem 0">${p.d}</div><div class="pspecs">${(p.sp||[]).map(s=>`<span>${s}</span>`).join('')}</div></div>`).join('');};
+
+// ── ANGEBOT ────────────────────────────────────────────────────
+const openAngPos=()=>{sv('ap-desc','');sv('ap-qty',1);sv('ap-unit','Tag');sv('ap-price','');sv('ap-disc',0);openM('m-ang');};
+const saveAngPos=()=>{const d=gv('ap-desc');if(!d){toast('Beschreibung fehlt','warn');return;}if(!S._angPos)S._angPos=[];const p={id:uid(),desc:d,qty:+gv('ap-qty')||1,unit:gv('ap-unit')||'Tag',price:+gv('ap-price')||0,disc:+gv('ap-disc')||0};S._angPos.push(p);renderAngPos();closeM();};
+const renderAngPos=()=>{const el=g('ang-pos-list');if(!el)return;const ps=S._angPos||[];if(!ps.length){el.innerHTML='<div class="empty" style="padding:.6rem"><p>Noch keine Positionen</p></div>';st('a-total','CHF 0');return;}let sub=0;el.innerHTML=ps.map(p=>{const n=p.qty*p.price*(1-p.disc/100);sub+=n;return `<div style="display:flex;justify-content:space-between;padding:.38rem 0;border-bottom:1px solid var(--bdr);font-size:12px;"><div><div style="font-weight:600">${p.desc}</div><div style="font-size:10px;color:var(--t2)">${p.qty}× ${p.unit} @CHF ${fmtN(p.price)}${p.disc?` -${p.disc}%`:''}</div></div><div style="display:flex;align-items:center;gap:.5rem;"><span style="font-weight:700;color:var(--grn)">${fmtCHF(n)}</span><button onclick="S._angPos=S._angPos.filter(x=>x.id!=='${p.id}');renderAngPos()" style="background:none;border:none;color:var(--acc);cursor:pointer;font-size:12px;">✕</button></div></div>`}).join('');st('a-total',fmtCHF(sub*1.081));const prev=g('a-prev');if(prev)prev.innerHTML=`<strong>${gv('a-co')||'Kunde'}</strong><br><br>${ps.map(p=>`${p.qty}× ${p.desc} — ${fmtCHF(p.qty*p.price)}`).join('<br>')}<br><br><strong>Total ${fmtCHF(sub*1.081)}</strong> (inkl. 8.1% MwSt.)`;};
+const genAngText=async()=>{const el=g('a-prev');if(!el)return;el.innerHTML='Generiere…';const r=await claude(`Angebotstext für ${gv('a-co')||'Kunde'}, Burak Ücöz MiT AG. Positionen: ${(S._angPos||[]).map(p=>p.desc).join(', ')}. Total: ${gv('a-total')}.`);if(r)el.textContent=r;};
+const expAngPDF=async()=>{try{const{jsPDF}=window.jspdf;const doc=new jsPDF();doc.setFontSize(16);doc.text('ANGEBOT — Mobil in Time AG',15,20);doc.setFontSize(11);doc.text(`Kunde: ${gv('a-co')}  Datum: ${gv('a-date')||today()}`,15,35);let y=55;(S._angPos||[]).forEach(p=>{doc.text(`${p.qty}× ${p.desc} — CHF ${fmtN(p.qty*p.price)}`,15,y);y+=7;});doc.setFont('helvetica','bold');doc.text(`Total: ${gv('a-total')}`,15,y+5);doc.save('MiT_Angebot.pdf');toast('PDF gespeichert','ok');}catch(e){toast('PDF Fehler: '+e.message,'err');}};
+
+// ── ROI ────────────────────────────────────────────────────────
+const roiTab=(t,btn)=>{document.querySelectorAll('#pg-roi .tbtn').forEach(b=>b.classList.remove('act'));document.querySelectorAll('#pg-roi .tpane').forEach(p=>p.classList.remove('act'));if(btn)btn.classList.add('act');const p=g('rt-'+t);if(p)p.classList.add('act');};
+const mkR=(el,rows,sum)=>{if(!el)return;el.innerHTML=`<div class="rres"><div class="rgrid">${rows.map(([l,v,c])=>`<div class="ri ${c||''}"><div class="rl">${l}</div><div class="rv ${c||''}">${v}</div></div>`).join('')}</div><div class="rsumm">${sum}</div></div>`;};
+const calcOut=()=>{const rev=+gv('r-rev')||0,h=+gv('r-hrs')||0,e=+gv('r-emp')||0,s=+gv('r-sal')||0,rs=+gv('r-rst')||0,rn=+gv('r-rnt')||0;const pl=rev/8760*h,ll=e*s*h,tot=pl+ll+rs,roi=(tot-rn)/Math.max(rn,1)*100;mkR(g('rr-out'),[['Produktionsverlust',fmtCHF(pl),''],['Lohnkosten',fmtCHF(ll),''],['Gesamtschaden',fmtCHF(tot),'hl'],['ROI Mietlösung',Math.round(roi)+'%','g']],`${h}h Ausfall = CHF ${fmtN(Math.round(tot))} — Generator ROI ${Math.round(roi)}%`);};
+const calcTHD=()=>{const t=+gv('r-thd')||0,k=+gv('r-kva')||0,e=+gv('r-ep')||0,h=+gv('r-eh')||0;const l=k*.9*(t/100)*.03*h*e/100,q=k*.9*(t>8?.015:.005)*500;mkR(g('rr-thd'),[['THD-Verlust CHF/J',fmtCHF(l),''],['Geräteschäden/J',fmtCHF(q),''],['Total CHF/J',fmtCHF(l+q),'hl']],`THD ${t}% = ca. CHF ${fmtN(Math.round(l+q))}/Jahr`);};
+const calcBESS=()=>{const k=+gv('r-pw')||0,h=+gv('r-bh')||0,d=+gv('r-days')||0,dl=+gv('r-dsl')||1.85,br=+gv('r-br')||600;const f=k*.75*.26*h*d,fc=f*dl,bc=br*d,sav=fc-bc;mkR(g('rr-bess'),[['Diesel-Kosten',fmtCHF(fc),''],['BESS-Kosten',fmtCHF(bc),''],['Einsparung',fmtCHF(sav),sav>0?'g':'r'],['CO₂ Ersparnis',Math.round(f*2.65*.7)+'kg','']],`BESS spart CHF ${fmtN(Math.round(Math.max(sav,0)))} und ${Math.round(f*2.65*.7)}kg CO₂`);};
+const calcMiet=()=>{const k=+gv('r-kauf')||0,n=+gv('r-nutz')||5,m=+gv('r-miet')||0,b=+gv('r-bk')||0;const kt=k+b*n,mt=m*12*n,d=kt-mt;mkR(g('rr-miet'),[['Kauf TCO',fmtCHF(kt),''],['Miete TCO',fmtCHF(mt),''],['Vorteil',fmtCHF(Math.abs(d)),d>0?'g':'r'],['Break-even',Math.round(k/Math.max(m*12-b,1))+'J','']],`${n} Jahre: ${d>0?'Miete spart CHF '+fmtN(Math.round(d)):'Kauf spart CHF '+fmtN(Math.round(-d))}`);};
+
+// ── ENGINEERING ────────────────────────────────────────────────
+const dimTab=(t,btn)=>{document.querySelectorAll('#pg-eng .tbtn').forEach(b=>b.classList.remove('act'));document.querySelectorAll('#pg-eng .tpane').forEach(p=>p.classList.remove('act'));if(btn)btn.classList.add('act');const p=g('dt-'+t);if(p)p.classList.add('act');};
+const calcDim=()=>{const k=+gv('dim-kva')||0;if(!k){toast('kVA eingeben','warn');return;}const cos=+gv('dim-cos')||.9,mg=+gv('dim-mg')||25,alt=+gv('dim-alt')||0,tmp=+gv('dim-tmp')||35;let dr=1;if(alt>1000)dr*=(1-(alt-1000)*1e-5);if(tmp>40)dr*=(1-(tmp-40)*.0005);const kr=k/dr,km=kr*(1+mg/100),SZ=[30,60,100,150,200,350,500,650,750,1000,1250,1500,2000],rec=SZ.find(s=>s>=km)||2100;const el=g('dim-res');if(el)el.innerHTML=`<div class="rres"><div class="rgrid"><div class="ri hl"><div class="rl">Empfohlene Grösse</div><div class="rv g">${rec} kVA</div></div><div class="ri"><div class="rl">Bedarf netto</div><div class="rv">${Math.round(kr)} kVA</div></div><div class="ri"><div class="rl">Derating</div><div class="rv">${Math.round(dr*100)}%</div></div><div class="ri"><div class="rl">Mit ${mg}% Reserve</div><div class="rv">${Math.round(km)} kVA</div></div></div><div class="rsumm">Aggreko: <strong>${rec} kVA Stage V${gv('dim-fuel')==='hvo'?' HVO100':''}</strong></div></div>`;};
+const genDimAdv=async()=>{const el=g('dim-ai');if(!el)return;el.textContent='Generiere…';const r=await claude(`MiT Ingenieur-Empfehlung für ${gv('dim-kva')} kVA. Anforderungen: ${gv('dim-req')||'keine'}. Konkrete Produkte und Konfiguration. 5 Sätze.`);if(r)el.textContent=r;};
+const calcKab=()=>{const kw=+gv('kab-kw')||0;if(!kw){toast('Leistung eingeben','warn');return;}const cos=+gv('kab-cos')||.9,len=+gv('kab-len')||0,v=+gv('kab-v')||400,mat=gv('kab-mat')||'cu',du=+gv('kab-du')||3,kp=mat==='cu'?44:27;const I=kw*1000/(v*cos*(v===400?Math.sqrt(3):1)),aq_du=kw*1000*len/(kp*v*du/100*(v===400?v*Math.sqrt(3):v)),aq_th=I/(mat==='cu'?4.4:3.6),SZ=[1.5,2.5,4,6,10,16,25,35,50,70,95,120,150,185,240],aq=Math.max(aq_du,aq_th),ch=SZ.find(s=>s>=aq)||240;const el=g('kab-res');if(el)el.innerHTML=`<div class="rres"><div class="rgrid"><div class="ri hl"><div class="rl">Querschnitt</div><div class="rv g">${ch} mm²</div></div><div class="ri"><div class="rl">Betriebsstrom</div><div class="rv">${Math.round(I)} A</div></div><div class="ri"><div class="rl">Thermisch mind.</div><div class="rv">${Math.round(aq_th)} mm²</div></div><div class="ri"><div class="rl">ΔU-Bedarf</div><div class="rv">${Math.round(aq_du)} mm²</div></div></div><div class="rsumm">NIN 2020: <strong>${mat.toUpperCase()} ${ch} mm²</strong>, ${len}m, ${v}V</div></div>`;};
+const calcBESSDim=()=>{const k=+gv('bes-kw')||0;if(!k){toast('Last eingeben','warn');return;}const t=+gv('bes-t')||15,d=+gv('bes-dod')||80,kwh=k*t/60/(d/100)/.95,m=Math.ceil(kwh/100);const el=g('bes-res');if(el)el.innerHTML=`<div class="rres"><div class="rgrid"><div class="ri hl"><div class="rl">BESS Kapazität</div><div class="rv g">${Math.round(kwh)} kWh</div></div><div class="ri"><div class="rl">Leistung</div><div class="rv">${k} kW</div></div><div class="ri"><div class="rl">Überbrückung</div><div class="rv">${t} Min.</div></div><div class="ri"><div class="rl">Module à 100kWh</div><div class="rv">${m}×</div></div></div><div class="rsumm">IEC 62619: <strong>${Math.round(kwh)} kWh ${gv('bes-tech').toUpperCase()}</strong> @ ${d}% DoD</div></div>`;};
+const calcPar=()=>{const n=+gv('par-n')||2,k=+gv('par-kva')||500,ld=+gv('par-ld')||0,tot=n*k*.8,pu=ld/n,lp=Math.round(pu/k/.8*100);const el=g('par-res');if(el)el.innerHTML=`<div class="rres"><div class="rgrid"><div class="ri hl"><div class="rl">Gesamtleistung</div><div class="rv g">${Math.round(tot)} kW</div></div><div class="ri"><div class="rl">Je Aggregat</div><div class="rv">${Math.round(pu)} kW</div></div><div class="ri"><div class="rl">Auslastung</div><div class="rv ${lp>85?'r':lp>70?'y':'g'}">${lp}%</div></div></div><div class="rsumm">IEC 60034-3: Cross-Current-Kabel PFLICHT!</div></div>`;};
+const calcBSV=()=>{const a16=+gv('bsv-16')||0,a32=+gv('bsv-32')||0,a63=+gv('bsv-63')||0,kw=a16*.4*16*.9+a32*.7*32*.9+a63*.8*63*.9,aT=a16*16+a32*32+a63*63;const el=g('bsv-res');if(el)el.innerHTML=`<div class="rres"><div class="rgrid"><div class="ri hl"><div class="rl">Anschlussbedarf</div><div class="rv g">${Math.round(aT)} A</div></div><div class="ri"><div class="rl">Leistung</div><div class="rv">${Math.round(kw)} kW</div></div><div class="ri"><div class="rl">Generator mind.</div><div class="rv">${Math.round(kw*1.25/.8)} kVA</div></div></div><div class="rsumm">BSV: ${Math.round(aT)}A Einspeisung, IP44 für Aussen</div></div>`;};
+const genKombi=async()=>{const el=g('km-out');if(!el)return;el.textContent='KI berechnet…';const r=await claude(`Aggreko/MiT Systemingenieur. Kombisystem:\nGesamtlast: ${gv('km-tot')} kW, Kritisch: ${gv('km-crit')} kW\nÜberbrückung: ${gv('km-br')} Min., Typ: ${gv('km-type')}\nAnforderungen: ${gv('km-req')||'keine'}\nGib: Generator kVA, BESS kWh, USV, Kabelquerschnitt, Kostenschätzung, ESG Note.`);if(r)el.textContent=r;};
+
+// LASTLISTE
+const addLastRow=()=>{if(!S._lastRows)S._lastRows=[];S._lastRows.push({id:uid(),name:'',kw:0,cos:.8,gz:100});renderLR();};
+const renderLR=()=>{const el=g('last-rows');if(!el)return;if(!S._lastRows?.length){el.innerHTML='<div style="font-size:11px;color:var(--t2);padding:.4rem 0">→ Verbraucher hinzufügen</div>';return;}el.innerHTML=S._lastRows.map(r=>`<div style="display:grid;grid-template-columns:2fr 80px 60px 80px 40px;gap:.2rem;margin-bottom:.22rem;"><input value="${r.name}" placeholder="Bezeichnung" style="font-size:11px" oninput="updLR('${r.id}','name',this.value)"><input type="number" value="${r.kw||''}" placeholder="kW" style="font-size:11px" oninput="updLR('${r.id}','kw',+this.value)"><input type="number" value="${r.cos||.8}" step=".05" style="font-size:11px" oninput="updLR('${r.id}','cos',+this.value)"><input type="number" value="${r.gz||100}" style="font-size:11px" oninput="updLR('${r.id}','gz',+this.value)"><button onclick="S._lastRows=S._lastRows.filter(x=>x.id!=='${r.id}');renderLR()" class="btn bg sm">✕</button></div>`).join('');};
+const updLR=(id,f,v)=>{const r=(S._lastRows||[]).find(x=>x.id===id);if(r)r[f]=v;};
+const calcLast=()=>{const el=g('last-res');if(!el)return;const rs=S._lastRows||[];if(!rs.length){toast('Verbraucher hinzufügen','warn');return;}let sk=0,skva=0;rs.forEach(r=>{const e=r.kw*(r.gz/100);sk+=e;skva+=r.cos?e/r.cos:e/.8;});const rec=Math.ceil(skva*1.25/10)*10;el.innerHTML=`<div class="rres"><div class="rgrid"><div class="ri hl"><div class="rl">Generator</div><div class="rv g">${rec} kVA</div></div><div class="ri"><div class="rl">Gesamtlast</div><div class="rv">${sk.toFixed(1)} kW</div></div><div class="ri"><div class="rl">Scheinleistung</div><div class="rv">${skva.toFixed(1)} kVA</div></div></div></div>`;};
+const calcUSV=()=>{const k=+gv('usv-kva')||0;if(!k){toast('Last eingeben','warn');return;}const b=+gv('usv-br')||15,rd=gv('usv-rd')||'n1',f=rd==='2n'?2:rd==='n1'?1.25:1,kr=Math.ceil(k*f/10)*10,bat=Math.ceil(k*.9*b/60*1.25);const el=g('usv-res');if(el)el.innerHTML=`<div class="rres"><div class="rgrid"><div class="ri hl"><div class="rl">USV Nennleistung</div><div class="rv g">${kr} kVA</div></div><div class="ri"><div class="rl">Batteriekapazität</div><div class="rv y">${bat} kWh</div></div></div><div class="rsumm">IEC 62040-3 VFI, ${b}Min. Überbrückung, ${rd}</div></div>`;};
+const calcSch=()=>{const KM={30:65,60:68,100:70,150:72,200:73,350:76,500:78,1000:82},k=+gv('sch-kva')||100,n=+gv('sch-n')||1,d=+gv('sch-dist')||10,bg=+gv('sch-bg')||40,w=+gv('sch-wall')||0,Lw=KM[k]||70,Ln=Lw+10*Math.log10(n),Ld=Ln-20*Math.log10(Math.max(d,1))-8-w;const LL={I:{day:50,eve:45,night:40},II:{day:55,eve:50,night:45},III:{day:60,eve:55,night:50},IV:{day:65,eve:60,night:55}};const ES=gv('sch-es')||'II',t=gv('sch-t')||'day',lim=LL[ES][t],ok=Ld<=lim;const el=g('sch-res');if(el)el.innerHTML=`<div class="rres"><div class="rgrid"><div class="ri hl"><div class="rl">Pegel am Empfänger</div><div class="rv ${ok?'g':'r'}">${Ld.toFixed(1)} dB(A)</div></div><div class="ri"><div class="rl">LSV Grenzwert</div><div class="rv">${lim} dB(A)</div></div></div><div class="rsumm">${ok?'✅ LSV konform':'❌ Grenzwert um '+Math.abs(Math.round(Ld-lim))+'dB überschritten'}</div></div>`;};
+const calcIBC=()=>{const SFC={60:.275,100:.265,200:.255,350:.245,500:.240,1000:.235},k=+gv('ibc-kva')||200,ld=+gv('ibc-ld')||75,h=+gv('ibc-h')||8,d=+gv('ibc-d')||7,sz=+gv('ibc-sz')||1000,p=+gv('ibc-p')||1.85,kw=k*.8*ld/100,lph=kw*(SFC[k]||.255),tot=lph*h*d*1.2,tk=Math.ceil(tot/sz);const el=g('ibc-res');if(el)el.innerHTML=`<div class="rres"><div class="rgrid"><div class="ri hl"><div class="rl">Kraftstoff Total</div><div class="rv g">${Math.round(tot)} L</div></div><div class="ri"><div class="rl">IBC ${sz}L Tanks</div><div class="rv y">${tk}×</div></div><div class="ri"><div class="rl">Verbrauch</div><div class="rv">${lph.toFixed(1)} L/h</div></div><div class="ri"><div class="rl">Kosten</div><div class="rv">CHF ${Math.round(tot*p).toLocaleString('de-CH')}</div></div></div></div>`;};
+
+// CO2
+const calcCO2=()=>{const k=+gv('co-kw')||0,ld=+gv('co-ld')||75,h=+gv('co-h')||720,f=gv('co-f')||'diesel',st2=gv('co-st')||'5',tx=+gv('co-tx')||120,fuel=k*ld/100*.26*h,co2=f==='hvo'?fuel*.1:fuel*2.65,tax=co2/1000*tx;const el=g('co2-res');if(el)el.innerHTML=`<div class="rres"><div class="rgrid"><div class="ri hl"><div class="rl">CO₂ Emissionen</div><div class="rv ${f==='hvo'?'g':''}">${Math.round(co2)} kg</div></div><div class="ri"><div class="rl">Kraftstoff</div><div class="rv">${Math.round(fuel)} L</div></div><div class="ri"><div class="rl">CO₂-Abgabe CH</div><div class="rv y">CHF ${Math.round(tax).toLocaleString()}</div></div></div><div class="rsumm">${f==='hvo'?'HVO100 spart ~90% CO₂ vs Diesel':'Stage '+st2+' + HVO100 für ESG'}</div></div>`;S._lastCO2={co2};};
+const genCO2Arg=async()=>{const el=g('co2-ai');if(!el||!S._lastCO2)return;el.textContent='Generiere…';const r=await claude(`ESG-Argument für ${gv('co-kw')} kW, CO₂: ${Math.round(S._lastCO2.co2)}kg. HVO100 verfügbar. MiT/Aggreko. 3-4 Sätze.`);if(r)el.textContent=r;};
+const calcNst=()=>{const t=gv('ns-type'),tot=+gv('ns-tot')||0,crit=+gv('ns-crit')||0,int2=gv('ns-int'),av=+gv('ns-av')||99.99;const gk=Math.ceil(crit/.8/10)*10,bess=+int2<=15,tier=av>=99.999?'IV':av>=99.99?'III':av>=99.9?'II':'I';const el=g('nst-res');if(el)el.innerHTML=`<div class="rres"><div class="rgrid"><div class="ri hl"><div class="rl">Generator</div><div class="rv g">${gk} kVA</div></div><div class="ri"><div class="rl">USV/BESS</div><div class="rv ${bess?'':'y'}">${bess?'Empfohlen':'Optional'}</div></div><div class="ri"><div class="rl">Tier Level</div><div class="rv">${tier}</div></div></div><div class="rsumm">${t==='spital'?'NIV Art.13: Genehmigungspflichtig, 24h Bereitschaft':'IEC 60364-7-710'}</div></div>`;};
+const genNst=async()=>{const el=g('nst-ai');if(!el)return;el.textContent='Generiere…';const r=await claude(`Notstromkonzept ${gv('ns-type')}, ${gv('ns-tot')}kW, kritisch ${gv('ns-crit')}kW, Verfügbarkeit ${gv('ns-av')}%. MiT/Aggreko. 5-6 Sätze.`);if(r)el.textContent=r;};
+
+// ── TASKS ──────────────────────────────────────────────────────
+const openTask=(id)=>{S._editTask=id?(S.tasks||[]).find(t=>t.id===id):null;const t=S._editTask;sv('t-title',t?.title||'');sv('t-due',t?.due||today());sv('t-prio',t?.prio||'med');sv('t-type',t?.type||'call');sv('t-co',t?.company||'');sv('t-note',t?.note||'');openM('m-task');};
+const saveTask=()=>{const ti=gv('t-title');if(!ti){toast('Titel fehlt','warn');return;}if(!S.tasks)S.tasks=[];const t={id:S._editTask?.id||uid(),title:ti,due:gv('t-due'),prio:gv('t-prio')||'med',type:gv('t-type')||'call',company:gv('t-co'),note:gv('t-note'),done:S._editTask?.done||false};if(S._editTask){const i=S.tasks.findIndex(x=>x.id===t.id);if(i>=0)S.tasks[i]=t;}else S.tasks.push(t);save();renderTasks();closeM();toast('Gespeichert','ok');};
+const toggleTask=(id)=>{const t=(S.tasks||[]).find(x=>x.id===id);if(t){t.done=!t.done;save();renderTasks();}};
+const renderTasks=()=>{const el=g('tasks-list');if(!el)return;const fi=gv('tk-filt')||'';let l=(S.tasks||[]).filter(t=>!fi||(fi==='open'?!t.done:t.done));l.sort((a,b)=>(!a.done&&b.done)?-1:(a.done&&!b.done)?1:0);const td=today(),op=l.filter(t=>!t.done).length,to=l.filter(t=>!t.done&&t.due===td).length,ov=l.filter(t=>!t.done&&t.due&&t.due<td).length;st('tk-open',op);st('tk-today',to);st('tk-over',ov);const nb=g('nb-tasks');if(nb){nb.textContent=op;nb.style.display=op?'':'none';}if(!l.length){el.innerHTML='<div class="empty"><div class="eico">✅</div><p>Keine Aufgaben</p></div>';return;}const PC={high:'var(--acc)',med:'var(--yel)',low:'var(--t2)'};el.innerHTML=l.map(t=>{const od=!t.done&&t.due&&t.due<td;return `<div style="display:flex;align-items:flex-start;gap:.6rem;padding:.5rem;border-bottom:1px solid var(--bdr);${t.done?'opacity:.42':''}"><div onclick="toggleTask('${t.id}')" style="width:18px;height:18px;border-radius:4px;border:2px solid ${PC[t.prio]||'var(--t2)'};cursor:pointer;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;background:${t.done?PC[t.prio]||'var(--t2)':'transparent'};color:#fff;font-size:11px">${t.done?'✓':''}</div><div style="flex:1"><div style="font-size:12px;font-weight:${t.done?400:600}">${t.title}</div><div style="font-size:10px;color:var(--t2);margin-top:.1rem">${t.due?`<span style="color:${od?'var(--acc)':t.due===td?'var(--yel)':'var(--t2)'}">${od?'⚠ ':''} ${t.due}</span>`:''} ${t.company?'· '+t.company:''}</div></div><button onclick="openTask('${t.id}')" class="btn bg sm" style="font-size:10px">✏️</button></div>`}).join('');};
+
+// ── SIMAP ──────────────────────────────────────────────────────
+const openSimap=(id)=>{S._editSim=id?(S.simap||[]).find(s=>s.id===id):null;const s=S._editSim;sv('sim-title',s?.title||'');sv('sim-kt',s?.kt||'');sv('sim-dead',s?.dead||'');sv('sim-val',s?.val||'');sv('sim-st',s?.status||'beobachten');sv('sim-note',s?.note||'');openM('m-simap');};
+const saveSimap=()=>{const ti=gv('sim-title');if(!ti){toast('Titel fehlt','warn');return;}if(!S.simap)S.simap=[];const e={id:S._editSim?.id||uid(),title:ti,kt:gv('sim-kt'),dead:gv('sim-dead'),val:gv('sim-val'),status:gv('sim-st')||'beobachten',note:gv('sim-note')};if(S._editSim){const i=S.simap.findIndex(s=>s.id===e.id);if(i>=0)S.simap[i]=e;}else S.simap.push(e);save();renderSimap();closeM();toast('Gespeichert','ok');};
+const renderSimap=()=>{const el=g('simap-list');if(!el)return;const l=S.simap||[];if(!l.length){el.innerHTML='<div class="empty"><div class="eico">🏛️</div><p>Ausschreibungen erfassen</p></div>';return;}const SC={beobachten:'var(--blu)',vorbereitung:'var(--yel)',eingereicht:'var(--grn)',gewonnen:'var(--acc)',verloren:'var(--t2)'};el.innerHTML=l.map(s=>`<div class="sime"><div style="display:flex;justify-content:space-between;align-items:flex-start;"><div><div style="font-size:13px;font-weight:600">${s.title}</div><div style="font-size:10px;color:var(--t2)">${s.kt||'CH'}${s.dead?' · Deadline: '+s.dead:''}</div></div><div style="display:flex;gap:.35rem;align-items:center;"><span class="tg" style="background:${SC[s.status]||'var(--t3)'}22;color:${SC[s.status]||'var(--t3)'};font-size:10px">${s.status}</span><button onclick="openSimap('${s.id}')" class="btn bg sm">✏️</button><button onclick="delSimap('${s.id}')" style="background:none;border:none;color:var(--acc);cursor:pointer;font-size:14px">✕</button></div></div>${s.val?`<div style="font-size:11px;color:var(--grn);margin-top:.25rem">CHF ${(+s.val||0).toLocaleString('de-CH')}</div>`:''}</div>`).join('');};
+const delSimap=(id)=>{if(!confirm('Löschen?'))return;S.simap=(S.simap||[]).filter(s=>s.id!==id);save();renderSimap();};
+const handlePDF=(el)=>{const f=el.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{S._pdfB64=e.target.result.split(',')[1];const b=g('pdf-btn');if(b)b.disabled=false;toast('PDF geladen','ok');};r.readAsDataURL(f);};
+const analyzePDF=async()=>{if(!S._pdfB64){toast('PDF hochladen','warn');return;}const el=g('pdf-out');if(!el)return;el.textContent='Analysiere…';const r=await claude([{role:'user',content:[{type:'document',source:{type:'base64',media_type:'application/pdf',data:S._pdfB64}},{type:'text',text:'Analysiere diese Ausschreibung für MiT AG. Extrahiere: kVA-Bedarf, Laufzeit, Standort, NIV/Schall, Deadline, Bewertungskriterien. MiT-Relevanz 1-10.'}]}],true);if(r)el.textContent=r;};
+
+// ── COMPETITION ────────────────────────────────────────────────
+const COMP_D=[{n:'Aggreko',co:'Global #1 Temporärenergie',s:['Global #1 Temporärenergie','Stage V Portfolio','BESS & ESG'],w:['Höherer Preis','Global standardisiert'],a:['MiT = CH-Spezialist','Lokale Reaktionszeit','NIV-Expertise']},{n:'Zeppelin CAT',co:'Zeppelin Schweiz AG',s:['CAT-Markenimage','Günstig bei Flotten'],w:['Kein BESS','Kein Wärme/Kälte'],a:['BESS-Gap nutzen','PQ-Analyse anbieten']},{n:'Burkhalter',co:'Burkhalter Haustechnik',s:['Regional ZH stark','Spital-Netzwerk'],w:['Kein temporäres Portfolio'],a:['NIV Art.13 Notstrom pushen']},{n:'Speedy',co:'Speedy Generators',s:['Günstiger Preis','Schnelle Lieferung'],w:['Kein Stage V','Kein BESS'],a:['Stage V + Compliance','Qualitätsargument']}];
+const renderComp=()=>{const el=g('comp-grid');if(!el)return;el.innerHTML=COMP_D.map(c=>`<div style="background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:.9rem;"><div style="font-family:var(--fh);font-size:1.1rem;font-weight:800">${c.n}</div><div style="font-size:10px;color:var(--t2);margin-bottom:.5rem">${c.co}</div><div class="swot"><div class="sb ss"><h5 style="color:var(--grn)">Stärken</h5><ul>${c.s.map(x=>'<li>'+x+'</li>').join('')}</ul></div><div class="sb sw"><h5 style="color:var(--acc)">Schwächen</h5><ul>${c.w.map(x=>'<li>'+x+'</li>').join('')}</ul></div></div><div style="background:rgba(75,158,248,.06);border:1px solid rgba(75,158,248,.18);border-radius:var(--rs);padding:.5rem;margin-top:.4rem;"><div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--blu);margin-bottom:.25rem">MiT Argumente</div><ul style="padding-left:.8rem;font-size:11px;color:var(--t2);line-height:1.7">${c.a.map(x=>'<li>'+x+'</li>').join('')}</ul></div></div>`).join('');};
+
+// ── TIGORZ ─────────────────────────────────────────────────────
+const setTigPlat=(p,btn)=>{S._tigPlat=p;document.querySelectorAll('#pg-tig .btn[id^="tig-"]').forEach(b=>b.className=b.className.replace('bs','bg'));if(btn)btn.className=btn.className.replace('bg','bs');};
+const genTig=async()=>{const el=g('tig-out');if(!el)return;el.textContent='Generiere…';const p=S._tigPlat,t=gv('tig-type'),top=gv('tig-topic');const r=await claude(`Du bist Burak Ücöz (TIGORZ) — Ingenieur, Sales Engineer, Bodybuilder, Schweiz.\n${p.toUpperCase()} Post, Typ "${t}", Thema: "${top}"\n${p==='linkedin'?'150-250 Wörter, 5-8 Emojis, 3-5 Hashtags':'60-80 Wörter, kurz, viral, 1-2 Hashtags'}\nAuthentisch, direkt, Hook in Zeile 1, Deutsch.`);if(r)el.textContent=r;};
+
+// ── RAPPORT ────────────────────────────────────────────────────
+const addRap=()=>{if(!S.acts)S.acts=[];const e={id:uid(),type:gv('rap-type')||'call',date:gv('rap-date')||today(),who:gv('rap-who')||'',res:gv('rap-res')||'',note:gv('rap-note')||''};S.acts.push(e);save();renderRap();sv('rap-who','');sv('rap-res','');sv('rap-note','');toast('Eintrag gespeichert','ok');};
+const renderRap=()=>{const el=g('rap-list');if(!el)return;const l=(S.acts||[]).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,50);if(!l.length){el.innerHTML='<div class="empty"><div class="eico">📑</div><p>Keine Einträge</p></div>';return;}el.innerHTML=l.map(a=>`<div class="aitem"><div class="aico">${a.type==='call'?'📞':a.type==='email'?'✉️':a.type==='meeting'?'🤝':a.type==='offer'?'📄':'🖥️'}</div><div style="flex:1"><div style="display:flex;justify-content:space-between"><span style="font-size:12px;font-weight:600">${a.who||'–'}</span><span style="font-size:10px;color:var(--t2)">${a.date}</span></div>${a.res?`<div style="font-size:11px;color:var(--grn)">${a.res}</div>`:''}</div></div>`).join('');try{renderRapChart();}catch(e){}};
+const renderRapChart=()=>{try{const c=g('ch-rap');if(!c)return;const t=['call','email','meeting','offer','demo'],lb=['Anruf','E-Mail','Meeting','Angebot','Demo'],tm=new Date().toISOString().slice(0,7),v=t.map(x=>(S.acts||[]).filter(a=>a.date?.slice(0,7)===tm&&a.type===x).length);if(window._cr)window._cr.destroy();window._cr=new Chart(c,{type:'doughnut',data:{labels:lb,datasets:[{data:v,backgroundColor:['#e63329','#4b9ef8','#00e5a0','#f5a623','#a66ef5'],borderWidth:0}]},options:{responsive:true,plugins:{legend:{position:'right',labels:{color:'#5d7faa',font:{size:11}}}}}});}catch(e){}};
+const expRapPDF=async()=>{try{const{jsPDF}=window.jspdf;const doc=new jsPDF();doc.setFontSize(14);doc.text('MiT Tagesrapport',15,20);doc.setFontSize(10);let y=35;(S.acts||[]).slice(0,30).forEach(a=>{doc.text(`${a.date} · ${a.type} · ${a.who} · ${a.res||''}`,15,y);y+=7;if(y>270){doc.addPage();y=20;}});doc.save('MiT_Rapport.pdf');toast('PDF gespeichert','ok');}catch(e){toast('PDF Fehler','err');}};
+
+// ── NOTES ──────────────────────────────────────────────────────
+const openNote=(id)=>{S._editNote=id?(S.notes||[]).find(n=>n.id===id):null;const n=S._editNote;sv('n-title',n?.title||'');sv('n-text',n?.text||'');sv('n-cat',n?.cat||'allg');openM('m-note');};
+const saveNote=()=>{const t=gv('n-title')||'Notiz';if(!S.notes)S.notes=[];const n={id:S._editNote?.id||uid(),title:t,text:gv('n-text'),cat:gv('n-cat')||'allg',date:today(),pin:S._editNote?.pin||false};if(S._editNote){const i=S.notes.findIndex(x=>x.id===n.id);if(i>=0)S.notes[i]=n;}else S.notes.push(n);save();renderNotes();closeM();toast('Notiz gespeichert','ok');};
+const renderNotes=()=>{const el=g('notes-grid');if(!el)return;const q=(gv('note-q')||'').toLowerCase();const l=(S.notes||[]).filter(n=>!q||(n.title||'').toLowerCase().includes(q)||(n.text||'').toLowerCase().includes(q));if(!l.length){el.innerHTML='<div class="empty"><div class="eico">📝</div><p>Keine Notizen</p></div>';return;}el.innerHTML=l.map(n=>`<div class="ncard ${n.pin?'pin':''}" onclick="openNote('${n.id}')"><div style="display:flex;justify-content:space-between;margin-bottom:.3rem"><span style="font-size:12px;font-weight:600">${n.title}</span><span style="font-size:10px;color:var(--t2)">${n.date||''}</span></div><div style="font-size:11px;color:var(--t2);line-height:1.6">${(n.text||'').slice(0,120)}${(n.text||'').length>120?'…':''}</div><div class="brow" style="margin-top:.4rem"><span class="tg tgr" style="font-size:9px">${n.cat||'allg'}</span>${n.pin?'<span class="tg ty" style="font-size:9px">📌</span>':''}</div></div>`).join('');};
+
+// ── SEARCH ─────────────────────────────────────────────────────
+const doSearch=(q)=>{if(!q){g('si').removeAttribute('data-active');return;}const lower=q.toLowerCase();const res=[];(S.contacts||[]).slice(0,50).forEach(c=>{if((c.company||'').toLowerCase().includes(lower)||(c.name||'').toLowerCase().includes(lower))res.push({type:'Kontakt',text:c.company,sub:c.name||c.canton||'',fn:`openCtc('${c.id}');nav('ctc')`});});(S.deals||[]).slice(0,20).forEach(d=>{if((d.company||'').toLowerCase().includes(lower)||(d.title||'').toLowerCase().includes(lower))res.push({type:'Deal',text:d.title||d.company,sub:fmtCHF(d.value),fn:`openDeal('${d.id}');nav('pipe')`});});const drop=g('si'); // reuse as anchor
+const el=document.createElement('div');el.style.cssText='position:absolute;top:110%;left:0;right:0;background:var(--bg2);border:1px solid var(--bdr2);border-radius:var(--r);z-index:9999;box-shadow:var(--sh);';if(!res.length)el.innerHTML='<div style="padding:.65rem;font-size:12px;color:var(--t2)">Kein Ergebnis</div>';else el.innerHTML=res.slice(0,8).map(r=>`<div onclick="${r.fn};document.getElementById('si').value=''" style="padding:.45rem .75rem;cursor:pointer;border-bottom:1px solid var(--bdr);display:flex;justify-content:space-between;font-size:12px;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''"><div><span style="color:var(--t2);font-size:10px;margin-right:.4rem">${r.type}</span>${r.text}</div><span style="color:var(--t2);font-size:11px">${r.sub}</span></div>`).join('');const si=g('si').parentElement;si.style.position='relative';const old=si.querySelector('.search-drop');if(old)old.remove();el.className='search-drop';si.appendChild(el);setTimeout(()=>document.addEventListener('click',()=>el.remove(),{once:true}),100);};
+
+// ── COPY UTIL ──────────────────────────────────────────────────
+const copyEl=(id)=>{const el=g(id);if(!el)return;const t=el.textContent||el.value||'';navigator.clipboard.writeText(t).then(()=>toast('Kopiert','ok')).catch(()=>{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('Kopiert','ok');});};
+
+// ── API KEY INIT ────────────────────────────────────────────────
+const initKey=()=>{const ak=g('akey'),dot=g('adot');if(S.cfg.apiKey){ak.value=S.cfg.apiKey.slice(0,8)+'…';if(dot)dot.className='adot ok';}ak.addEventListener('change',()=>{S.cfg.apiKey=ak.value.trim();save();if(dot)dot.className=S.cfg.apiKey.startsWith('sk-ant')?'adot ok':'adot';});};
+
+// ════════════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  try { load(); } catch(e) {}
+  // Apply theme
+  if(localStorage.getItem('theme')==='light') toggleTheme();
+  // Init API key
+  try { initKey(); } catch(e) {}
+  // Set defaults
+  try { sv('rap-date', today()); } catch(e) {}
+  try { const h=new Date().getHours(); st('dgreet',(h<12?'Guten Morgen':h<18?'Guten Tag':'Guten Abend')+`, ${S.cfg.name} 👋`); } catch(e) {}
+  // Restore myPhone
+  try { if(S.cfg.myPhone&&g('my-ph')) g('my-ph').value=S.cfg.myPhone; } catch(e) {}
+  // Show/hide import CTA
+  const cta=g('imp-cta'); if(cta) cta.style.display=S.contacts.length?'none':'block';
+  // KPI badges
+  try{const op=(S.deals||[]).filter(d=>d.stage!=='won'&&d.stage!=='lost').length,ot=(S.tasks||[]).filter(t=>!t.done).length;const nbp=g('nb-pipe');if(nbp){nbp.textContent=op;nbp.style.display=op?'':'none';}const nbt=g('nb-tasks');if(nbt){nbt.textContent=ot;nbt.style.display=ot?'':'none';}}catch(e){}
+  // Render dash
+  try { renderDash(); } catch(e) {}
+  // Keyboard shortcuts
+  document.addEventListener('keydown', e => {
+    if((e.ctrlKey||e.metaKey)&&e.key==='k'){e.preventDefault();const si=g('si');if(si)si.focus();}
+    if(e.key==='Escape')closeM();
+  });
+  // Init dialer queue
+  try { initDialer(); } catch(e) {}
+  // Nav from hash
+  const hash=window.location.hash.replace('#','');
+  if(hash&&PAGES.includes(hash)) nav(hash);
+  console.log('%cMiT CRM Pro — bereit ✅', 'color:#00e5a0;font-weight:bold;font-size:14px;');
+});
+
+// ── WINDOW ASSIGNMENTS ──────────────────────────────────────
+try{window._FNS=_FNS;}catch(_){}
+try{window.addLastRow=addLastRow;}catch(_){}
+try{window.addRap=addRap;}catch(_){}
+try{window.analyzePDF=analyzePDF;}catch(_){}
+try{window.buildWA=buildWA;}catch(_){}
+try{window.calcBESS=calcBESS;}catch(_){}
+try{window.calcBESSDim=calcBESSDim;}catch(_){}
+try{window.calcBSV=calcBSV;}catch(_){}
+try{window.calcCO2=calcCO2;}catch(_){}
+try{window.calcDim=calcDim;}catch(_){}
+try{window.calcIBC=calcIBC;}catch(_){}
+try{window.calcKab=calcKab;}catch(_){}
+try{window.calcLast=calcLast;}catch(_){}
+try{window.calcMiet=calcMiet;}catch(_){}
+try{window.calcNst=calcNst;}catch(_){}
+try{window.calcOut=calcOut;}catch(_){}
+try{window.calcPar=calcPar;}catch(_){}
+try{window.calcSch=calcSch;}catch(_){}
+try{window.calcTHD=calcTHD;}catch(_){}
+try{window.calcUSV=calcUSV;}catch(_){}
+try{window.claude=claude;}catch(_){}
+try{window.closeM=closeM;}catch(_){}
+try{window.copyEl=copyEl;}catch(_){}
+try{window.delSimap=delSimap;}catch(_){}
+try{window.dialCall=dialCall;}catch(_){}
+try{window.dialLog=dialLog;}catch(_){}
+try{window.dialSkip=dialSkip;}catch(_){}
+try{window.dimTab=dimTab;}catch(_){}
+try{window.doExport=doExport;}catch(_){}
+try{window.doImport=doImport;}catch(_){}
+try{window.doSearch=doSearch;}catch(_){}
+try{window.el=el;}catch(_){}
+try{window.emailOutlook=emailOutlook;}catch(_){}
+try{window.expAngPDF=expAngPDF;}catch(_){}
+try{window.expRapPDF=expRapPDF;}catch(_){}
+try{window.exportCtc=exportCtc;}catch(_){}
+try{window.fmtCHF=fmtCHF;}catch(_){}
+try{window.fmtN=fmtN;}catch(_){}
+try{window.g=g;}catch(_){}
+try{window.genAngText=genAngText;}catch(_){}
+try{window.genCO2Arg=genCO2Arg;}catch(_){}
+try{window.genDimAdv=genDimAdv;}catch(_){}
+try{window.genEmail=genEmail;}catch(_){}
+try{window.genFU=genFU;}catch(_){}
+try{window.genKombi=genKombi;}catch(_){}
+try{window.genNst=genNst;}catch(_){}
+try{window.genObj=genObj;}catch(_){}
+try{window.genRech=genRech;}catch(_){}
+try{window.genScript=genScript;}catch(_){}
+try{window.genTig=genTig;}catch(_){}
+try{window.gv=gv;}catch(_){}
+try{window.handleDrop=handleDrop;}catch(_){}
+try{window.handlePDF=handlePDF;}catch(_){}
+try{window.initDialer=initDialer;}catch(_){}
+try{window.initKey=initKey;}catch(_){}
+try{window.initMap=initMap;}catch(_){}
+try{window.load=load;}catch(_){}
+try{window.loadBackup=loadBackup;}catch(_){}
+try{window.mkR=mkR;}catch(_){}
+try{window.nav=nav;}catch(_){}
+try{window.openAngPos=openAngPos;}catch(_){}
+try{window.openCtc=openCtc;}catch(_){}
+try{window.openDeal=openDeal;}catch(_){}
+try{window.openImport=openImport;}catch(_){}
+try{window.openM=openM;}catch(_){}
+try{window.openNote=openNote;}catch(_){}
+try{window.openSimap=openSimap;}catch(_){}
+try{window.openTask=openTask;}catch(_){}
+try{window.openWA=openWA;}catch(_){}
+try{window.readFile=readFile;}catch(_){}
+try{window.renderActChart=renderActChart;}catch(_){}
+try{window.renderAngPos=renderAngPos;}catch(_){}
+try{window.renderComp=renderComp;}catch(_){}
+try{window.renderCtc=renderCtc;}catch(_){}
+try{window.renderDash=renderDash;}catch(_){}
+try{window.renderFc=renderFc;}catch(_){}
+try{window.renderFunnelChart=renderFunnelChart;}catch(_){}
+try{window.renderKanban=renderKanban;}catch(_){}
+try{window.renderKt=renderKt;}catch(_){}
+try{window.renderLR=renderLR;}catch(_){}
+try{window.renderNotes=renderNotes;}catch(_){}
+try{window.renderProd=renderProd;}catch(_){}
+try{window.renderRap=renderRap;}catch(_){}
+try{window.renderRapChart=renderRapChart;}catch(_){}
+try{window.renderSimap=renderSimap;}catch(_){}
+try{window.renderTasks=renderTasks;}catch(_){}
+try{window.roiTab=roiTab;}catch(_){}
+try{window.save=save;}catch(_){}
+try{window.saveAngPos=saveAngPos;}catch(_){}
+try{window.saveCtc=saveCtc;}catch(_){}
+try{window.saveDeal=saveDeal;}catch(_){}
+try{window.saveGoals=saveGoals;}catch(_){}
+try{window.saveNote=saveNote;}catch(_){}
+try{window.saveSimap=saveSimap;}catch(_){}
+try{window.saveTask=saveTask;}catch(_){}
+try{window.setTigPlat=setTigPlat;}catch(_){}
+try{window.setTone=setTone;}catch(_){}
+try{window.showDC=showDC;}catch(_){}
+try{window.showProd=showProd;}catch(_){}
+try{window.st=st;}catch(_){}
+try{window.sv=sv;}catch(_){}
+try{window.toast=toast;}catch(_){}
+try{window.today=today;}catch(_){}
+try{window.toggleML=toggleML;}catch(_){}
+try{window.toggleTask=toggleTask;}catch(_){}
+try{window.toggleTheme=toggleTheme;}catch(_){}
+try{window.uid=uid;}catch(_){}
+try{window.updLR=updLR;}catch(_){}
+try{window.updateMap=updateMap;}catch(_){}
+
+</script>
+</body>
+</html>
