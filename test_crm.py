@@ -26,8 +26,9 @@ wb = openpyxl.load_workbook(PATH, data_only=False)
 print(f"Loaded {PATH}")
 
 # T1 sheets present
-expected_sheets = {"📊 Dashboard", "📋 Kunden-Datenbank", "📖 Anleitung", "🏷️ Segmente & Produkte"}
-check("Alle 4 Sheets vorhanden", expected_sheets <= set(wb.sheetnames),
+expected_sheets = {"📊 Dashboard", "📋 Kunden-Datenbank", "🎯 Pipeline", "📈 Forecast",
+                   "⏰ Aging", "📖 Anleitung", "🏷️ Segmente & Produkte", "⚙️ Makros"}
+check("Alle 8 Sheets vorhanden", expected_sheets <= set(wb.sheetnames),
       f"sheets={wb.sheetnames}")
 
 ws = wb["📋 Kunden-Datenbank"]
@@ -36,8 +37,9 @@ ws = wb["📋 Kunden-Datenbank"]
 HEADERS = ["Nr.", "Prio", "Segment", "Firmenname *", "Ort", "PLZ", "Kanton",
            "Ansprechpartner", "Funktion / Titel", "E-Mail", "Telefon", "Website",
            "Status", "Nächster Schritt", "Bedarf / kVA", "Hauptprodukt",
-           "Follow-up Datum", "Notizen", "Internes"]
-actual = [ws.cell(row=3, column=c).value for c in range(1, 20)]
+           "Follow-up Datum", "Notizen", "Internes",
+           "Wahrsch. %", "Wert CHF", "Letzte Aktivität"]
+actual = [ws.cell(row=3, column=c).value for c in range(1, 23)]
 check("Header-Reihe korrekt", actual == HEADERS, f"diff={set(actual)^set(HEADERS)}")
 
 # T3 Data rows
@@ -115,7 +117,28 @@ db2 = wb_calc["📊 Dashboard"]
 sample = db2["B6"].value  # COUNTA prio
 check("Dashboard-Zelle B6 existiert (Formel hinterlegt)", db["B6"].value is not None)
 
-# T17 Segmente & Produkte alle 12 Segmente
+# T17 Pipeline sheet hat Forecast-Formel
+pl = wb["🎯 Pipeline"]
+pl_formulas = sum(1 for row in pl.iter_rows() for c in row if c.data_type == "f")
+check("Pipeline-Sheet enthält Formeln (>=2000)", pl_formulas >= 2000, f"n={pl_formulas}")
+
+# T18 Forecast sheet
+fc = wb["📈 Forecast"]
+fc_formulas = sum(1 for row in fc.iter_rows() for c in row if c.data_type == "f")
+check("Forecast-Sheet enthält Formeln (>=80)", fc_formulas >= 80, f"n={fc_formulas}")
+
+# T19 Aging sheet
+ag = wb["⏰ Aging"]
+ag_formulas = sum(1 for row in ag.iter_rows() for c in row if c.data_type == "f")
+check("Aging-Sheet enthält Formeln (>=10)", ag_formulas >= 10, f"n={ag_formulas}")
+
+# T20 Neue Spalten populiert
+prob_set = sum(1 for r in range(4, 4 + data_count)
+               if isinstance(ws.cell(row=r, column=20).value, (int, float)))
+check("Wahrscheinlichkeit-Spalte ist befüllt", prob_set == data_count,
+      f"befüllt={prob_set}/{data_count}")
+
+# T21 Segmente & Produkte alle 12 Segmente
 sp = wb["🏷️ Segmente & Produkte"]
 sp_segments = {sp.cell(row=r, column=2).value for r in range(4, 16) if sp.cell(row=r, column=2).value}
 check("Segmente-Sheet enthält alle 12 Segmente", SEGMENTS <= sp_segments,

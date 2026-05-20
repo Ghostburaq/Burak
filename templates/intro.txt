@@ -1,0 +1,20 @@
+Sehr geehrte/r {{ansprechpartner}}
+
+als spezialisierter Anbieter für mobile Energie- und Klimalösungen begleitet
+die Mobil in Time AG Unternehmen wie {{firma}} im Segment {{segment}}.
+
+Im Bereich {{hauptprodukt}} bieten wir:
+  • Sofort verfügbare Generatoren (5 – 2'000 kVA, Stage V konform)
+  • Batteriespeicher (BESS) für Lastspitzen-Kappung & Notstrom
+  • USV-Lösungen für kritische Infrastruktur (IEC 61000-4-30)
+  • Power-Quality-Analyse Klasse A & Engineering vor Ort
+
+Für {{firma}} ({{ort}} {{kanton}}) sehen wir konkret folgendes Potenzial:
+{{bedarf}}
+
+Gerne stelle ich Ihnen eine massgeschneiderte Lösung vor — schlagen Sie
+einen Termin in den nächsten zwei Wochen vor?
+
+Mit besten Grüssen
+Mobil in Time AG
++41 56 418 31 11 · verkauf@mobilintime.ch
