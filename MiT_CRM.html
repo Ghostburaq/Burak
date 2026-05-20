@@ -284,7 +284,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .score-l{background:var(--danger-soft);color:var(--danger)}
 
 /* PIPELINE Kanban */
-.pipe{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;height:calc(100vh - 180px);overflow:hidden}
+.pipe{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;height:calc(100vh - 180px);overflow:hidden}
 .pipe-col{
   background:var(--bg-card);border:1px solid var(--line);border-radius:var(--r-lg);
   display:flex;flex-direction:column;overflow:hidden;min-width:200px;
@@ -625,6 +625,27 @@ input,select,textarea{font-family:inherit;font-size:14px}
   padding:8px 14px;background:var(--good-soft);color:var(--good);
   border-radius:var(--r-sm);font-size:12px;font-weight:600;
 }
+
+/* Global Search Dropdown */
+.gs-results{
+  position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:1000;
+  background:var(--bg-card);border:1px solid var(--line-strong);
+  border-radius:var(--r-md);box-shadow:var(--shadow-2);
+  max-height:400px;overflow-y:auto;
+}
+.gs-results.hidden{display:none}
+.gs-item{
+  padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--line);
+  transition:background 0.12s;
+}
+.gs-item:last-child{border-bottom:none}
+.gs-item:hover{background:var(--bg2)}
+.gs-firma{font-weight:600;font-size:13px;color:var(--text)}
+.gs-meta{font-size:11px;color:var(--text-mute);margin-top:2px}
+.gs-empty{padding:14px;text-align:center;color:var(--text-dim);font-size:12px}
+
+/* Hide field-section when empty */
+.field-section:empty{display:none}
 </style>
 </head>
 <body>
@@ -692,10 +713,14 @@ input,select,textarea{font-family:inherit;font-size:14px}
     <div class="topbar">
       <div class="tb-title" id="pageTitle">Heute</div>
       <div class="tb-spacer"></div>
-      <div class="tb-search">
+      <div class="tb-search" style="position:relative">
         <span class="tb-icon">⌕</span>
-        <input id="globalSearch" type="text" placeholder="Suche Kontakt, Firma..." oninput="window.searchGlobal(this.value)">
+        <input id="globalSearch" type="text" placeholder="Suche Kontakt, Firma..." autocomplete="off"
+               oninput="window.searchGlobal(this.value)"
+               onkeydown="if(event.key==='Escape'){this.blur();document.getElementById('globalSearchResults').classList.add('hidden')}"
+               onblur="setTimeout(()=>{const r=document.getElementById('globalSearchResults');if(r)r.classList.add('hidden')},180)">
         <kbd>/</kbd>
+        <div id="globalSearchResults" class="hidden gs-results"></div>
       </div>
       <div style="position:relative;display:inline-flex;gap:6px">
         <button class="btn btn-ghost btn-sm" onclick="window.exportCrmExcel()" title="CRM-Export als Excel (reimportierbar)">↓ Export</button>
@@ -1462,12 +1487,20 @@ function parseCHF(v){
   return isNaN(num) ? null : num;
 }
 function todayISO(){
-  const d = new Date();
-  return d.toISOString().slice(0,10);
+  return localISO(new Date());
+}
+function localISO(d){
+  if(!d) d = new Date();
+  if(!(d instanceof Date)) d = new Date(d);
+  if(isNaN(d)) return '';
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
 }
 function daysBetween(a,b){
   const ms = 1000*60*60*24;
-  return Math.round((new Date(b) - new Date(a))/ms);
+  // Normalize to local midnight to avoid DST drift
+  const da = new Date(a); da.setHours(0,0,0,0);
+  const db = new Date(b); db.setHours(0,0,0,0);
+  return Math.round((db - da)/ms);
 }
 function escHtml(s){
   if(s === null || s === undefined) return '';
@@ -1614,9 +1647,10 @@ function renderToday(){
   const total = STATE.contacts.length;
   const conv = total > 0 ? (wonCount/total*100) : 0;
 
-  const overdue = open.filter(c => c.wv && new Date(c.wv) < today).length;
-  const todayDue = open.filter(c => c.wv && fmtDateShort(c.wv) === fmtDateShort(today)).length;
-  const aktTotal = STATE.activities.filter(a => new Date(a.date) >= t30).length;
+  const todayIsoStr = todayISO();
+  const overdue = open.filter(c => c.wv && c.wv.slice(0,10) < todayIsoStr).length;
+  const todayDue = open.filter(c => c.wv && c.wv.slice(0,10) === todayIsoStr).length;
+  const aktTotal = STATE.activities.filter(a => a.date && a.date.slice(0,10) >= localISO(t30)).length;
 
   const kpis = [
     {label:'Pipeline gesamt', val:fmtCHF(pipelineCHF), class:''},
@@ -1708,7 +1742,7 @@ function drawTrendChart(){
   for(let i=days-1; i>=0; i--){
     const d = new Date(today); d.setDate(d.getDate()-i);
     labels.push(d.toLocaleDateString('de-CH',{day:'2-digit',month:'2-digit'}));
-    const ds = d.toISOString().slice(0,10);
+    const ds = localISO(d);
     const count = STATE.activities.filter(a => a.date && a.date.slice(0,10) === ds).length;
     data.push(count);
   }
@@ -1804,16 +1838,16 @@ window.renderKontakte = function renderKontakte(){
 // ════════════════════════════════════════════════════════════════════════
 //  RENDER: PIPELINE (Kanban with drag-drop)
 // ════════════════════════════════════════════════════════════════════════
-const PIPE_COLS = ['Lead','Kontaktiert','Angebot','Verhandlung','Gewonnen'];
+const PIPE_COLS = ['Lead','Kontaktiert','Angebot','Verhandlung','Gewonnen','Verloren'];
 
 function renderPipeline(){
-  // KPIs
-  const open = STATE.contacts.filter(c => !['Verloren','Pausiert'].includes(c.status));
+  // KPIs: all deals shown on board (incl. Verloren so user can move cards back)
+  const allDeals = STATE.contacts.filter(c => c.status !== 'Pausiert');
+  const open = STATE.contacts.filter(c => !['Verloren','Pausiert','Gewonnen'].includes(c.status));
   const cols = {};
   PIPE_COLS.forEach(s => { cols[s] = []; });
-  cols['Verloren'] = [];
 
-  open.forEach(c => {
+  allDeals.forEach(c => {
     if(cols[c.status]) cols[c.status].push(c);
   });
 
@@ -1897,6 +1931,11 @@ window.pipeDrop = function(ev){
     const oldStatus = c.status;
     c.status = newStatus;
     c.updated = new Date().toISOString();
+    // Cleared next step if deal is closed
+    if(newStatus === 'Gewonnen' || newStatus === 'Verloren'){
+      c.next = '';
+      c.wv = null;
+    }
     // Auto-log activity
     STATE.activities.push({
       id: uid(),
@@ -1910,6 +1949,7 @@ window.pipeDrop = function(ev){
     });
     saveState();
     renderPipeline();
+    updateSidebarBadge();
     showToast(c.firma + ' → ' + newStatus, 'success');
   }
 };
@@ -1919,14 +1959,15 @@ window.pipeDrop = function(ev){
 // ════════════════════════════════════════════════════════════════════════
 function renderWiedervorlagen(){
   const today = new Date(); today.setHours(0,0,0,0);
-  const tEnd = new Date(today); tEnd.setHours(23,59,59,999);
-  const wEnd = new Date(today); wEnd.setDate(wEnd.getDate()+7);
+  const todayIso = todayISO();
+  const wEndDate = new Date(today); wEndDate.setDate(wEndDate.getDate()+7);
+  const wEndIso = localISO(wEndDate);
 
   const open = STATE.contacts.filter(c => !['Gewonnen','Verloren','Pausiert'].includes(c.status) && c.wv);
 
-  const overdue = open.filter(c => new Date(c.wv) < today).sort((a,b)=>new Date(a.wv)-new Date(b.wv));
-  const todayDue = open.filter(c => new Date(c.wv) >= today && new Date(c.wv) <= tEnd);
-  const week = open.filter(c => new Date(c.wv) > tEnd && new Date(c.wv) <= wEnd).sort((a,b)=>new Date(a.wv)-new Date(b.wv));
+  const overdue = open.filter(c => c.wv.slice(0,10) < todayIso).sort((a,b)=>(a.wv||'').localeCompare(b.wv||''));
+  const todayDue = open.filter(c => c.wv.slice(0,10) === todayIso);
+  const week = open.filter(c => c.wv.slice(0,10) > todayIso && c.wv.slice(0,10) <= wEndIso).sort((a,b)=>(a.wv||'').localeCompare(b.wv||''));
 
   document.getElementById('wvOverdueCount').textContent = overdue.length;
   document.getElementById('wvTodayCount').textContent = todayDue.length;
@@ -1968,18 +2009,18 @@ window.snooze = function(id, days){
   const c = STATE.contacts.find(x=>x.id===id);
   if(!c) return;
   const d = new Date(); d.setDate(d.getDate()+days);
-  c.wv = d.toISOString().slice(0,10);
+  c.wv = localISO(d);
   c.updated = new Date().toISOString();
   saveState();
   renderWiedervorlagen();
+  refreshAll();
   showToast('Wiedervorlage verschoben auf ' + fmtDate(c.wv), 'success');
 };
 
 function updateSidebarBadge(){
-  const today = new Date(); today.setHours(0,0,0,0);
-  const tEnd = new Date(today); tEnd.setHours(23,59,59,999);
+  const todayIso = todayISO();
   const open = STATE.contacts.filter(c => !['Gewonnen','Verloren','Pausiert'].includes(c.status) && c.wv);
-  const due = open.filter(c => new Date(c.wv) <= tEnd).length;
+  const due = open.filter(c => c.wv.slice(0,10) <= todayIso).length;
   const badge = document.getElementById('badgeWV');
   if(due > 0){
     badge.textContent = due;
@@ -1996,9 +2037,11 @@ function renderAktivitaeten(){
   const today = new Date(); today.setHours(0,0,0,0);
   const t30 = new Date(today); t30.setDate(t30.getDate()-30);
   const t7 = new Date(today); t7.setDate(t7.getDate()-7);
+  const t30Iso = localISO(t30);
+  const t7Iso  = localISO(t7);
 
-  const all = STATE.activities.filter(a => a.date && new Date(a.date) >= t30);
-  const week = STATE.activities.filter(a => a.date && new Date(a.date) >= t7);
+  const all = STATE.activities.filter(a => a.date && a.date.slice(0,10) >= t30Iso);
+  const week = STATE.activities.filter(a => a.date && a.date.slice(0,10) >= t7Iso);
 
   const byTyp = {};
   week.forEach(a => { byTyp[a.typ] = (byTyp[a.typ]||0)+1; });
@@ -2054,7 +2097,7 @@ function renderAktivitaeten(){
     return `
       <tr onclick="${c?`window.openContact('${c.id}')`:''}">
         <td class="mono tx-mute">${fmtDate(a.date)}</td>
-        <td><span class="tl-typ ${a.typ.toLowerCase()}">${a.typ}</span></td>
+        <td><span class="tl-typ ${(a.typ||'').toLowerCase()}">${escHtml(a.typ||'—')}</span></td>
         <td class="fw-bold">${c?escHtml(c.firma):'—'}</td>
         <td class="tx-mute">${c?escHtml(c.kontakt||'—'):'—'}</td>
         <td>${escHtml(a.sum||'—')}</td>
@@ -2107,7 +2150,7 @@ window.openContact = function(id){
   document.getElementById('cStatus').value = c.status || 'Lead';
   document.getElementById('cChf').value = c.chf != null ? String(c.chf) : '';
   document.getElementById('cProb').value = c.prob != null ? String(c.prob) : '';
-  document.getElementById('cWv').value = c.wv || '';
+  document.getElementById('cWv').value = c.wv ? c.wv.slice(0,10) : '';
   document.getElementById('cNext').value = c.next || '';
   document.getElementById('cNotiz').value = c.notiz || '';
 
@@ -2142,7 +2185,7 @@ function renderTimeline(contactId){
     <div class="tl-item">
       <div class="tl-date">${fmtDate(a.date)}</div>
       <div class="tl-content">
-        <span class="tl-typ ${a.typ.toLowerCase()}">${a.typ}</span>
+        <span class="tl-typ ${(a.typ||'').toLowerCase()}">${escHtml(a.typ||'—')}</span>
         ${a.newStatus ? `<span class="bd ${statusClass(a.newStatus)}" style="margin-left:6px">→ ${a.newStatus}</span>` : ''}
         <div class="tl-summary">${escHtml(a.sum||'—')}</div>
         ${a.next?`<div class="tl-next">↪ ${escHtml(a.next)}</div>`:''}
@@ -2164,8 +2207,8 @@ window.saveContact = function(){
     ort:     document.getElementById('cOrt').value.trim(),
     segment: document.getElementById('cSegment').value,
     status:  document.getElementById('cStatus').value,
-    chf:     parseCHF(document.getElementById('cChf').value) || null,
-    prob:    parseFloat(document.getElementById('cProb').value)||null,
+    chf:     parseCHF(document.getElementById('cChf').value),
+    prob:    (function(){ const v = parseFloat(document.getElementById('cProb').value); return isNaN(v)?null:v; })(),
     wv:      document.getElementById('cWv').value || null,
     next:    document.getElementById('cNext').value.trim(),
     notiz:   document.getElementById('cNotiz').value.trim(),
@@ -2238,6 +2281,7 @@ window.saveActivity = function(){
   if(!contactId){ showToast('Kontakt auswählen', 'error'); return; }
   if(!sum){ showToast('Zusammenfassung darf nicht leer sein', 'error'); return; }
 
+  const newWvVal = document.getElementById('aNewWv').value || null;
   const a = {
     id: uid(),
     contactId,
@@ -2245,6 +2289,7 @@ window.saveActivity = function(){
     typ: document.getElementById('aTyp').value,
     sum,
     next: document.getElementById('aNext').value.trim(),
+    newWv: newWvVal,
     newStatus: document.getElementById('aNewStatus').value || null,
     created: new Date().toISOString()
   };
@@ -2253,8 +2298,7 @@ window.saveActivity = function(){
   // Side effects on contact
   const c = STATE.contacts.find(x=>x.id===contactId);
   if(c){
-    const newWv = document.getElementById('aNewWv').value;
-    if(newWv) c.wv = newWv;
+    if(newWvVal) c.wv = newWvVal;
     if(a.newStatus) c.status = a.newStatus;
     if(a.next) c.next = a.next;
     c.updated = new Date().toISOString();
@@ -2339,15 +2383,39 @@ function initExtraContactFields(c){
 //  SEARCH (global)
 // ════════════════════════════════════════════════════════════════════════
 window.searchGlobal = function(q){
-  if(!q || q.length < 2) return;
-  const matches = STATE.contacts.filter(c =>
-    (c.firma||'').toLowerCase().includes(q.toLowerCase()) ||
-    (c.kontakt||'').toLowerCase().includes(q.toLowerCase())
-  );
-  if(matches.length === 1){
-    // auto-jump
-    return; // wait for Enter to confirm
+  const wrap = document.getElementById('globalSearchResults');
+  if(!wrap) return;
+  const query = (q||'').toLowerCase().trim();
+  if(!query || query.length < 2){
+    wrap.classList.add('hidden');
+    wrap.innerHTML = '';
+    return;
   }
+  const matches = STATE.contacts.filter(c =>
+    (c.firma||'').toLowerCase().includes(query) ||
+    (c.kontakt||'').toLowerCase().includes(query) ||
+    (c.email||'').toLowerCase().includes(query) ||
+    (c.tel||'').toLowerCase().includes(query)
+  ).slice(0, 8);
+  if(matches.length === 0){
+    wrap.innerHTML = '<div class="gs-empty">Keine Treffer für "' + escHtml(q) + '"</div>';
+  } else {
+    wrap.innerHTML = matches.map(c => `
+      <div class="gs-item" onclick="window.gsOpen('${c.id}')">
+        <div class="gs-firma">${escHtml(c.firma)}</div>
+        <div class="gs-meta">${escHtml(c.kontakt||'')} · <span class="bd ${statusClass(c.status)}">${escHtml(c.status||'—')}</span> · ${fmtCHF(c.chf)}</div>
+      </div>
+    `).join('');
+  }
+  wrap.classList.remove('hidden');
+};
+
+window.gsOpen = function(id){
+  const wrap = document.getElementById('globalSearchResults');
+  if(wrap){ wrap.classList.add('hidden'); wrap.innerHTML = ''; }
+  const input = document.getElementById('globalSearch');
+  if(input) input.value = '';
+  window.openContact(id);
 };
 
 // ════════════════════════════════════════════════════════════════════════
@@ -2375,12 +2443,16 @@ document.addEventListener('keydown', e => {
     document.querySelectorAll('.modal-bg.open').forEach(m => m.classList.remove('open'));
   }
 });
-// Backdrop click closes
-document.querySelectorAll('.modal-bg').forEach(bg => {
-  bg.addEventListener('click', e => {
-    if(e.target === bg) bg.classList.remove('open');
+// Backdrop click closes (attached after DOM ready so all modals are present)
+function attachBackdropClose(){
+  document.querySelectorAll('.modal-bg').forEach(bg => {
+    if(bg._backdropBound) return;
+    bg._backdropBound = true;
+    bg.addEventListener('click', e => {
+      if(e.target === bg) window.closeModal(bg.id);
+    });
   });
-});
+}
 
 // ════════════════════════════════════════════════════════════════════════
 //  FEATURE 1 — MINI CALENDAR (Wiedervorlage picker in contact modal)
@@ -2447,11 +2519,12 @@ function renderMiniCal(){
     html += `<div class="mini-cal-day empty"></div>`;
   }
 
+  const selectedTime = selected ? new Date(selected.getFullYear(), selected.getMonth(), selected.getDate()).getTime() : null;
   for(let d = 1; d <= daysInMonth; d++){
     const thisDate = new Date(calYear, calMonth, d);
-    const iso = thisDate.toISOString().slice(0,10);
+    const iso = localISO(thisDate);
     const isToday    = thisDate.getTime() === today.getTime();
-    const isSelected = selected && thisDate.getTime() === selected.setHours(0,0,0,0);
+    const isSelected = selectedTime !== null && thisDate.getTime() === selectedTime;
     let cls = 'mini-cal-day';
     if(isToday) cls += ' today';
     if(isSelected) cls += ' selected';
@@ -2481,7 +2554,10 @@ window.calSelect = function(iso){
 
 // Also render calendar when activity modal wv changes (convenience)
 document.addEventListener('change', e => {
-  if(e.target && e.target.id === 'cWv' && !document.getElementById('miniCal').classList.contains('hidden')){
+  if(e.target && e.target.id === 'cWv'){
+    const miniCal = document.getElementById('miniCal');
+    if(!miniCal || miniCal.classList.contains('hidden')) return;
+    if(!e.target.value) return;
     const d = new Date(e.target.value + 'T12:00:00');
     if(!isNaN(d)){ calYear = d.getFullYear(); calMonth = d.getMonth(); }
     renderMiniCal();
@@ -2697,6 +2773,9 @@ async function callClaude(prompt, system='', maxTokens=1200){
     });
     const data = await resp.json();
     if(data.error) throw new Error(data.error.message);
+    if(!data.content || !data.content[0] || !data.content[0].text){
+      throw new Error('Leere Antwort vom KI-Modell');
+    }
     return data.content[0].text;
   }catch(err){
     showToast('KI-Fehler: ' + err.message, 'error');
@@ -2782,6 +2861,8 @@ Liefere zuerst BETREFF auf einer Zeile, dann eine Leerzeile, dann den Email-Text
     _kiEmailBody    = fullText;
     const outlookBtn = document.getElementById('kiEmOutlookBtn');
     if(outlookBtn) outlookBtn.style.display = 'inline-flex';
+  } else {
+    out.textContent = 'Fehler bei der Email-Generierung — bitte API-Key prüfen und erneut versuchen.';
   }
 };
 
@@ -2823,6 +2904,7 @@ Kurze, direkte Sätze. Keine generischen "Wie geht es Ihnen heute"-Phrasen.`;
 
   const resp = await callClaude(prompt, system, 1000);
   if(resp) out.textContent = resp;
+  else out.textContent = 'Fehler bei der Generierung — bitte erneut versuchen.';
 };
 
 window.kiGenObj = async function(){
@@ -2855,6 +2937,7 @@ Halte jede Strategie auf 2-3 Sätze. Konkret, zitierbar, sofort einsetzbar.`;
 
   const resp = await callClaude(prompt, system, 1000);
   if(resp) out.textContent = resp;
+  else out.textContent = 'Fehler bei der Generierung — bitte erneut versuchen.';
 };
 
 
@@ -3162,6 +3245,12 @@ window.applyAiImport = function(){
   const firma = document.getElementById('ai_firma').value.trim();
   if(!firma){ showToast('Firma fehlt', 'error'); return; }
 
+  const chfTotal = parseCHF(document.getElementById('ai_chf_total').value);
+  let notizFinal = document.getElementById('ai_notiz').value.trim();
+  if(chfTotal != null){
+    notizFinal += (notizFinal?'\n':'') + '— CHF inkl. MwSt: ' + fmtCHF(chfTotal);
+  }
+
   const data = {
     firma,
     kontakt:  document.getElementById('ai_kontakt').value.trim(),
@@ -3171,11 +3260,12 @@ window.applyAiImport = function(){
     ort:      document.getElementById('ai_ort').value.trim(),
     segment:  document.getElementById('ai_segment').value,
     status:   document.getElementById('ai_status').value,
-    chf:      parseCHF(document.getElementById('ai_chf').value) || null,
-    prob:     parseFloat(document.getElementById('ai_prob').value) || null,
+    chf:      parseCHF(document.getElementById('ai_chf').value),
+    chfTotal: chfTotal,
+    prob:     (function(){ const v = parseFloat(document.getElementById('ai_prob').value); return isNaN(v)?null:v; })(),
     wv:       document.getElementById('ai_wv').value || null,
     next:     document.getElementById('ai_next').value.trim(),
-    notiz:    document.getElementById('ai_notiz').value.trim(),
+    notiz:    notizFinal,
     updated:  new Date().toISOString()
   };
 
@@ -3311,17 +3401,24 @@ window.handleExcelFile = function(input){
         kontakt:  colIdx('kontakt','kontaktperson','ansprech','name','person','contact'),
         ort:      colIdx('einsatzort','standort','adress','ort','plz','location','lieu'),
         datum:    colIdx('datum','date','letzter'),
-        anruf:    colIdx('anruf','telefon','phone','appel'),
-        mail:     colIdx('mail','e-mail','email'),
         status:   colIdx('status','stufe','phase','stage'),
         chf:      colIdx('angebot','chf','betrag','wert','umsatz','value','montant','revenue','budget'),
         segment:  colIdx('segment','branche','industrie','kategorie','category'),
         notiz:    colIdx('notiz','notizen','notes','bemerkung','comment','remark'),
         next:     colIdx('nächster','naechster','schritt','next','action','todo'),
         wv:       colIdx('wiedervorlage','wv','follow','rappel','nachfassen'),
-        email:    colIdx('e-mail','email','mail'),
-        tel:      colIdx('telefon','tel ','mobile','handy','natel','phone')
+        email:    colIdx('e-mail','email','emailadresse','mailadresse','mail-adresse'),
+        tel:      colIdx('telefon','tel','mobile','handy','natel','phone')
       };
+      // Activity Y/N columns: only assign if column header explicitly indicates a Y/N tracker
+      // (must not collide with email/tel columns above)
+      ix.anruf = -1;
+      ix.mail = -1;
+      headers.forEach((h, i) => {
+        if(i === ix.email || i === ix.tel) return;
+        if(/letzter anruf|telefonkontakt|anruf gemacht|telefon ja\/nein|appel/i.test(h) && ix.anruf < 0) ix.anruf = i;
+        if(/letzter mail|mailkontakt|mail gemacht|mail ja\/nein/i.test(h) && ix.mail < 0) ix.mail = i;
+      });
 
       let imported = 0;
       let skipped = 0;
@@ -3365,12 +3462,12 @@ window.handleExcelFile = function(input){
 
         const parseDate = v => {
           if(!v) return null;
-          if(v instanceof Date && !isNaN(v)) return v.toISOString().slice(0,10);
+          if(v instanceof Date && !isNaN(v)) return localISO(v);
           const s = String(v);
           const m = s.match(/(\d{1,2})\.(\d{1,2})\.(\d{4})/);
           if(m) return m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0');
           const d = new Date(s);
-          if(!isNaN(d)) return d.toISOString().slice(0,10);
+          if(!isNaN(d)) return localISO(d);
           return null;
         };
 
@@ -3475,7 +3572,7 @@ window.exportCSV = function(){
     c.tel, (c.extraTels||[]).map(t=>t.val).join(' | '),
     c.position, c.ort, c.segment, c.status,
     c.chf, c.prob, c.wv, lastActivityDate(c.id), c.notiz, c.created
-  ].map(v => v === null || v === undefined ? '' : String(v).replace(/"/g,'""')));
+  ].map(v => v === null || v === undefined ? '' : String(v).replace(/[\r\n]+/g,' ').replace(/"/g,'""')));
   const csv = [headers.join(';'), ...rows.map(r => r.map(v => '"'+v+'"').join(';'))].join('\n');
   const blob = new Blob(['\uFEFF' + csv], {type:'text/csv;charset=utf-8'});
   const a = document.createElement('a');
@@ -3517,7 +3614,7 @@ window.loadDemo = function(){
     const newC = {
       id: uid(),
       ...c,
-      wv: wv.toISOString().slice(0,10),
+      wv: localISO(wv),
       notiz: '',
       created: d.toISOString(),
       updated: d.toISOString()
@@ -3528,7 +3625,7 @@ window.loadDemo = function(){
     STATE.activities.push({
       id: uid(),
       contactId: newC.id,
-      date: act.toISOString().slice(0,10),
+      date: localISO(act),
       typ: ['Anruf','Mail','Meeting'][i%3],
       sum: 'Erstkontakt aufgenommen, Bedarf qualifiziert. Interesse signalisiert.',
       next: c.next,
@@ -3539,7 +3636,7 @@ window.loadDemo = function(){
       STATE.activities.push({
         id: uid(),
         contactId: newC.id,
-        date: act2.toISOString().slice(0,10),
+        date: localISO(act2),
         typ: 'Mail',
         sum: 'Follow-Up versandt mit technischen Unterlagen.',
         next: '',
@@ -3564,6 +3661,7 @@ function refreshAll(){
   else if(id === 'pipeline') renderPipeline();
   else if(id === 'wiedervorlagen') renderWiedervorlagen();
   else if(id === 'aktivitaeten') renderAktivitaeten();
+  else if(id === 'kalender') renderCalendar();
   updateSidebarBadge();
   populateKiSelects();
 }
@@ -3636,7 +3734,7 @@ function renderCalendar(){
   // Current month
   for(let d = 1; d <= totalDays; d++){
     const date = new Date(calDate.getFullYear(), calDate.getMonth(), d);
-    const iso  = date.toISOString().slice(0,10);
+    const iso  = localISO(date);
     const isToday = iso === todayISO_;
     const events = calEventsForDate(iso);
 
@@ -3787,6 +3885,8 @@ window.exportContactIcs = function(){
   const pad = n => String(n).padStart(2,'0');
   const icsDate = dt => `${dt.getFullYear()}${pad(dt.getMonth()+1)}${pad(dt.getDate())}T${pad(dt.getHours())}${pad(dt.getMinutes())}00`;
 
+  const icsEsc = s => String(s||'').replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\r?\n/g,'\\n');
+
   const title = `Wiedervorlage: ${c.firma}`;
   const desc  = [
     c.kontakt ? `Kontakt: ${c.kontakt}` : '',
@@ -3810,13 +3910,13 @@ window.exportContactIcs = function(){
     `UID:${uid_}`,
     `DTSTART:${icsDate(d)}`,
     `DTEND:${icsDate(dEnd)}`,
-    `SUMMARY:${title}`,
-    `DESCRIPTION:${desc.replace(/\n/g,'\\n')}`,
-    c.ort ? `LOCATION:${c.ort}` : '',
+    `SUMMARY:${icsEsc(title)}`,
+    `DESCRIPTION:${icsEsc(desc)}`,
+    c.ort ? `LOCATION:${icsEsc(c.ort)}` : '',
     'BEGIN:VALARM',
     'TRIGGER:-PT30M',
     'ACTION:DISPLAY',
-    `DESCRIPTION:Erinnerung: ${title}`,
+    `DESCRIPTION:${icsEsc('Erinnerung: ' + title)}`,
     'END:VALARM',
     'END:VEVENT',
     'END:VCALENDAR'
@@ -3847,7 +3947,7 @@ function checkWvNotifications(){
   if(!('Notification' in window) || Notification.permission !== 'granted') return;
   const today = todayISO();
   const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate()+1);
-  const tomorrowISO = tomorrow.toISOString().slice(0,10);
+  const tomorrowISO = localISO(tomorrow);
 
   const overdue = STATE.contacts.filter(c =>
     c.wv && c.wv < today && !['Gewonnen','Verloren','Pausiert'].includes(c.status)
@@ -3912,8 +4012,8 @@ function getWeekRange(){
   const sunday = new Date(monday);
   sunday.setDate(monday.getDate() + 6);
   return { monday, sunday,
-    mondayISO: monday.toISOString().slice(0,10),
-    sundayISO: sunday.toISOString().slice(0,10)
+    mondayISO: localISO(monday),
+    sundayISO: localISO(sunday)
   };
 }
 
@@ -4042,7 +4142,7 @@ function buildWbEmailText({ mondayISO, sundayISO, weekActs, typCount, newContact
   lines.push('━━ PIPELINE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   lines.push(`Pipeline:  ${fmtCHF(pipelineTotal)}`);
   lines.push(`Offene:    ${openDeals.length} Deals`);
-  if(newContacts.length) lines.push(`Neue Leads:${newContacts.length} diesen Monat`);
+  if(newContacts.length) lines.push(`Neue Leads:  ${newContacts.length} diese Woche`);
   if(wonThisWeek.length){
     lines.push('');
     lines.push(`✅ GEWONNEN (${wonThisWeek.length}):`);
@@ -4078,7 +4178,6 @@ function buildWbEmailText({ mondayISO, sundayISO, weekActs, typCount, newContact
   lines.push('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   lines.push('');
   lines.push('Freundliche Grüsse');
-  lines.push('Sales Engineer Strom');
   lines.push('Sales Engineer Strom | Mobil in Time AG');
   return lines.join('\n');
 }
@@ -4275,21 +4374,15 @@ window.importCrmExcelFile = function(input){
           return colonIdx>-1 ? {label:p.slice(0,colonIdx).trim(), val:p.slice(colonIdx+2).trim()} : {label:'',val:p};
         }).filter(t=>t.val) : [];
 
-        const parseChf = v => {
-          if(v===''||v==null) return null;
-          const n = parseFloat(String(v).replace(/[^0-9.-]/g,''));
-          return isNaN(n) ? null : n;
-        };
-
         const parseDate = v => {
           if(!v) return null;
-          if(v instanceof Date && !isNaN(v)) return v.toISOString().slice(0,10);
+          if(v instanceof Date && !isNaN(v)) return localISO(v);
           const s = String(v).trim();
           if(/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
           const m = s.match(/(\d{1,2})\.(\d{1,2})\.(\d{4})/);
           if(m) return m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0');
           const d = new Date(s);
-          return !isNaN(d) ? d.toISOString().slice(0,10) : null;
+          return !isNaN(d) ? localISO(d) : null;
         };
 
         const contactData = {
@@ -4303,8 +4396,8 @@ window.importCrmExcelFile = function(input){
           ort:       String(row['Einsatzort']||'').trim(),
           segment:   String(row['Segment']||'').trim() || 'Sonstige',
           status:    String(row['Status']||'').trim() || 'Lead',
-          chf:       parseChf(row['CHF']),
-          prob:      parseChf(row['Wahrscheinlichkeit %']),
+          chf:       parseCHF(row['CHF']),
+          prob:      parseCHF(row['Wahrscheinlichkeit %']),
           wv:        parseDate(row['Wiedervorlage']),
           next:      String(row['Nächster Schritt']||'').trim(),
           notiz:     String(row['Notiz']||'').trim(),
@@ -4351,7 +4444,7 @@ window.importCrmExcelFile = function(input){
 
           const parseDate = v => {
             if(!v) return null;
-            if(v instanceof Date && !isNaN(v)) return v.toISOString().slice(0,10);
+            if(v instanceof Date && !isNaN(v)) return localISO(v);
             const s = String(v).trim();
             if(/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
             const m = s.match(/(\d{1,2})\.(\d{1,2})\.(\d{4})/);
@@ -4574,7 +4667,7 @@ window.generateWbPdf = function(){
   doc.setFont('helvetica','normal');
   doc.setFontSize(9);
   rgbT(200,210,230);
-  const kw = getKW(new Date(mondayISO));
+  const kw = getKW(new Date(mondayISO + 'T12:00:00'));
   txt('KW ' + kw + '  |  ' + fmtDFull(mondayISO) + ' - ' + fmtDFull(sundayISO), PW-MR, 20, {align:'right'});
 
   Y = 37;
@@ -4904,7 +4997,7 @@ window.generateWbPdf = function(){
   /* ================================================================
      SAVE
   ================================================================ */
-  const fname = 'MiT-Wochenbericht-KW' + getKW(new Date(mondayISO)) + '-' + new Date().getFullYear() + '.pdf';
+  const fname = 'MiT-Wochenbericht-KW' + getKW(new Date(mondayISO + 'T12:00:00')) + '-' + new Date().getFullYear() + '.pdf';
   doc.save(fname);
   showToast('PDF gespeichert: ' + fname, 'success');
 };
@@ -4931,31 +5024,43 @@ function fmtDateShortPdf(iso){
 // ════════════════════════════════════════════════════════════════════════
 //  INIT
 // ════════════════════════════════════════════════════════════════════════
+let _initialized = false;
 function init(){
+  if(_initialized) return;
+  _initialized = true;
   loadState();
   updateApiStatus();
   // Load saved API key into settings page
   const key = localStorage.getItem(API_KEY);
-  if(key){ document.getElementById('settingsApiKey').value = key; }
+  const settingsApiInput = document.getElementById('settingsApiKey');
+  if(key && settingsApiInput){ settingsApiInput.value = key; }
   // Load saved signature
   const sig = loadSignature();
-  if(sig){ document.getElementById('settingsSig').value = sig; }
+  const settingsSig = document.getElementById('settingsSig');
+  if(sig && settingsSig){ settingsSig.value = sig; }
   // Load WB settings
   const wbSettings = loadWbSettings();
   if(wbSettings.stefanEmail && document.getElementById('stefanEmail'))
     document.getElementById('stefanEmail').value = wbSettings.stefanEmail;
   if(wbSettings.ccEmail && document.getElementById('wbCcEmail'))
     document.getElementById('wbCcEmail').value = wbSettings.ccEmail;
+  // Bind backdrop close on all modals now that DOM is complete
+  attachBackdropClose();
   renderToday();
   updateSidebarBadge();
   populateKiSelects();
   // Init browser notifications (after short delay so page loads first)
   setTimeout(initNotifications, 1500);
+  // Re-check notifications when tab becomes visible again
+  document.addEventListener('visibilitychange', () => {
+    if(document.visibilityState === 'visible') checkWvNotifications();
+  });
 }
 
-document.addEventListener('DOMContentLoaded', init);
-// Fallback if DOMContentLoaded already fired
-if(document.readyState === 'complete' || document.readyState === 'interactive'){
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  // DOMContentLoaded already fired
   setTimeout(init, 0);
 }
 
