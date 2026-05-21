@@ -6,6 +6,10 @@ Professionelles, vollständig browserbasiertes CRM in einer einzigen HTML-Datei.
 
 **Übersicht**
 - Dashboard mit KPIs (Pipeline CHF, Gewonnen, Kontakte, Anrufe, Win Rate) und Aktivitäts-Charts (Chart.js)
+- **Heute / KI-Cockpit**: Tages-Briefing, „Wen heute anrufen?" (Top-Kandidaten per Lead-Score, optional mit KI-Begründung) und Auto-Enrichment fehlender Felder (Branche, kVA-Schätzung)
+- **Lead-Scoring**: automatischer 0–100-Score je Kontakt (Priorität, Status, Erreichbarkeit, kVA-Potenzial, offener Deal-Wert, Aktivitäts-Aktualität) – Kontaktliste sortierbar nach Score / Firma / Priorität (offline, ohne API-Key)
+- **PWA**: installierbar (Manifest inline), Theme-Color, Add-to-Home-Screen
+- **Auto-Backup**: automatische Snapshots in IndexedDB (letzte 20 Stände) mit Wiederherstellung über das 🗄️-Menü, plus Export-Erinnerung nach 7 Tagen ohne Backup
 - Pipeline (Kanban: Prospecting → Qualified → Proposal → Negotiation → Won/Lost)
 - Kontakte mit Such- und Branchenfilter, XLSX-Export
 - Schweiz-Karte (Leaflet + Cluster) mit Kunden, Deals, Kantons-Heatmap

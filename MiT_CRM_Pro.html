@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>MiT CRM Pro · Mobil in Time AG</title>
+<meta name="theme-color" content="#0d1525">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MiT CRM">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Crect width='180' height='180' rx='32' fill='%23e63329'/%3E%3Ctext x='50%25' y='58%25' font-size='110' text-anchor='middle' fill='white' font-family='sans-serif'%3E%E2%9A%A1%3C/text%3E%3C/svg%3E">
+<!-- PWA manifest injected at runtime by initPWA() so the app stays a single self-contained file -->
+
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css"/>
@@ -210,6 +217,8 @@ tbody td{padding:.48rem .75rem;font-size:12px;}
   <div class="hdiv"></div>
   <div class="srch"><span class="si">🔍</span><input id="si" placeholder="Suchen… Ctrl+K" autocomplete="off" oninput="doSearch(this.value)"></div>
   <div class="hdr-r">
+    <button class="hbtn" id="install-btn" onclick="doInstall()" style="display:none">⬇ Installieren</button>
+    <button class="hbtn" id="backup-btn" onclick="openBackup()" title="Backups & Wiederherstellung">🗄️</button>
     <div class="adot" id="adot"></div>
     <input type="password" id="akey" placeholder="sk-ant-… API Key" autocomplete="off">
     <button class="hbtn grn" onclick="openImport()">📥 Excel Import</button>
@@ -225,6 +234,7 @@ tbody td{padding:.48rem .75rem;font-size:12px;}
 <nav id="sb">
   <div class="ng">Übersicht</div>
   <div class="ni act" onclick="nav('dash')"><span class="ic">📊</span>Dashboard</div>
+  <div class="ni" onclick="nav('today')"><span class="ic">🤖</span>Heute / KI<span id="nb-today" class="nbadge" style="display:none">0</span></div>
   <div class="ni" onclick="nav('pipe')"><span class="ic">🎯</span>Pipeline<span id="nb-pipe" class="nbadge" style="display:none">0</span></div>
   <div class="ni" onclick="nav('ctc')"><span class="ic">👥</span>Kontakte</div>
   <div class="ni" onclick="nav('map')"><span class="ic">🗺️</span>Karte</div>
@@ -282,6 +292,34 @@ tbody td{padding:.48rem .75rem;font-size:12px;}
   </div>
 </div>
 
+<!-- HEUTE / KI-COCKPIT -->
+<div id="pg-today" class="pg">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+    <div class="pgtitle" style="margin:0">Heute <span>· KI-Cockpit</span></div>
+    <button class="btn bp" onclick="genBriefing()">🤖 Tages-Briefing</button>
+  </div>
+  <div class="krow">
+    <div class="kpi kr"><div class="klbl">Calls heute fällig</div><div class="kval" id="tk-today2">0</div></div>
+    <div class="kpi ky"><div class="klbl">Fristen 7 Tage</div><div class="kval" id="tk-soon">0</div></div>
+    <div class="kpi kg"><div class="klbl">Heisse Deals</div><div class="kval" id="tk-hot">0</div></div>
+    <div class="kpi kb"><div class="klbl">Vergessene VIPs</div><div class="kval" id="tk-cold">0</div></div>
+  </div>
+  <div class="g2">
+    <div class="card" style="display:flex;flex-direction:column;">
+      <div class="ch"><span class="ct">📋 Tages-Briefing</span><button class="btn bg sm" onclick="copyEl('brief-out')">📋</button></div>
+      <div class="cb" style="flex:1;"><div class="aibox" id="brief-out" style="min-height:230px;font-size:11px;">← „Tages-Briefing" klicken (braucht API-Key). Fasst Fristen, heisse Deals und Calls zusammen.</div></div>
+    </div>
+    <div class="card" style="display:flex;flex-direction:column;">
+      <div class="ch"><span class="ct">📞 Wen heute anrufen?</span><div class="brow"><button class="btn bp sm" onclick="renderCallList()">↻ Berechnen</button><button class="btn bs sm" onclick="genCallReasons()">🤖 KI-Gründe</button></div></div>
+      <div class="cb" style="flex:1;max-height:320px;overflow-y:auto;" id="calllist"><div class="empty"><div class="eico">📞</div><p>„Berechnen" klicken — funktioniert offline (Lead-Score)</p></div></div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:.85rem;">
+    <div class="ch"><span class="ct">✨ Auto-Enrichment</span><button class="btn bp sm" onclick="autoEnrich()">🤖 Fehlende Felder ergänzen</button></div>
+    <div class="cb"><div style="font-size:11px;color:var(--t2);margin-bottom:.5rem;">Ergänzt fehlende Branche und schätzt Energiebedarf (kVA) für Kontakte ohne diese Angaben — per KI. Bestehende Werte bleiben unangetastet.</div><div class="aibox" id="enrich-out" style="min-height:60px;font-size:11px;">← Bereit. Braucht API-Key.</div></div>
+  </div>
+</div>
+
 <!-- PIPELINE -->
 <div id="pg-pipe" class="pg">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
@@ -298,11 +336,12 @@ tbody td{padding:.48rem .75rem;font-size:12px;}
     <div class="brow">
       <input id="ctc-q" placeholder="Suchen…" style="width:160px" oninput="renderCtc()">
       <select id="ctc-ind" onchange="renderCtc()" style="width:130px"><option value="">Alle Branchen</option><option>Industrie</option><option>Pharma/Chemie</option><option>Rechenzentrum</option><option>Spital/Klinik</option><option>EVU</option><option>Bau</option><option>Gemeinde</option></select>
+      <select id="ctc-sort" onchange="renderCtc()" style="width:130px"><option value="score">Sort: Lead-Score</option><option value="company">Sort: Firma A-Z</option><option value="prio">Sort: Priorität</option></select>
       <button class="btn bp" onclick="openCtc()">+ Kontakt</button>
       <button class="btn bg sm" onclick="exportCtc()">↓ XLSX</button>
     </div>
   </div>
-  <div class="card"><div class="tw"><table><thead><tr><th>Firma</th><th>Name</th><th>Branche</th><th>Kanton</th><th>Telefon</th><th>Status</th><th>Prio</th><th></th></tr></thead><tbody id="ctc-body"></tbody></table></div></div>
+  <div class="card"><div class="tw"><table><thead><tr><th>Firma</th><th>Name</th><th>Branche</th><th>Kanton</th><th>Telefon</th><th>Status</th><th>Score</th><th>Prio</th><th></th></tr></thead><tbody id="ctc-body"></tbody></table></div></div>
 </div>
 
 <!-- MAP -->
@@ -852,6 +891,23 @@ tbody td{padding:.48rem .75rem;font-size:12px;}
   <div class="mf"><button class="btn bg" onclick="closeM()">Abbrechen</button><button class="btn bp" onclick="saveAngPos()">Hinzufügen</button></div>
 </div>
 
+<!-- BACKUP / RESTORE MODAL -->
+<div class="modal" id="m-backup" style="display:none;">
+  <div class="mh"><span class="mt">🗄️ Backups & Wiederherstellung</span><button class="mx" onclick="closeM()">✕</button></div>
+  <div class="mb">
+    <div style="background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--rs);padding:.7rem;font-size:11px;color:var(--t2);margin-bottom:.75rem;line-height:1.7;">
+      Automatische Snapshots werden lokal im Browser (IndexedDB) gespeichert — die letzten 20 Stände. Zusätzlich solltest du regelmässig ein JSON-Backup exportieren.
+    </div>
+    <div class="brow" style="margin-bottom:.75rem;">
+      <button class="btn bgrn" onclick="doExport()" style="flex:1">💾 JSON exportieren</button>
+      <button class="btn bg" onclick="snapshotNow()" style="flex:1">📸 Snapshot jetzt</button>
+    </div>
+    <div id="snap-info" style="font-size:11px;color:var(--t2);margin-bottom:.4rem;"></div>
+    <div id="snap-list" style="max-height:280px;overflow-y:auto;"></div>
+  </div>
+  <div class="mf"><button class="btn bg" onclick="closeM()">Schliessen</button></div>
+</div>
+
 </div><!-- #mo -->
 <div id="toasts"></div>
 <script>
@@ -892,7 +948,7 @@ const toast = (msg, type='info', ms=3500) => {
 
 // ── PERSIST ────────────────────────────────────────────────────
 const KEY = 'mit_crm_v2';
-const save = () => { try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){} };
+const save = () => { try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){} try{autoSnapshot();}catch(e){} };
 const load = () => {
   try{
     const d=JSON.parse(localStorage.getItem(KEY)||'{}');
@@ -901,7 +957,7 @@ const load = () => {
 };
 
 // ── NAV ────────────────────────────────────────────────────────
-const PAGES=['dash','pipe','ctc','map','kt','fc','dial','email','fu','wa','rech','prod','ang','roi','eng','co2','nst','tasks','simap','comp','tig','rap','notes'];
+const PAGES=['dash','today','pipe','ctc','map','kt','fc','dial','email','fu','wa','rech','prod','ang','roi','eng','co2','nst','tasks','simap','comp','tig','rap','notes'];
 const nav = pg => {
   document.querySelectorAll('.ni').forEach(n=>n.classList.remove('act'));
   const btn=document.querySelector(`.ni[onclick*="'${pg}'"]`);
@@ -909,6 +965,7 @@ const nav = pg => {
   PAGES.forEach(p=>{ const e=g(`pg-${p}`); if(e) e.classList.toggle('act',p===pg); });
   window.location.hash=pg;
   if(pg==='dash') renderDash();
+  if(pg==='today') renderToday();
   if(pg==='pipe') renderKanban();
   if(pg==='ctc') renderCtc();
   if(pg==='map'){
@@ -956,6 +1013,7 @@ const doExport = () => {
   const b=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(b);
   a.download=`MiT_CRM_Backup_${today()}.json`;a.click();
+  try{localStorage.setItem('mit_last_export',Date.now());}catch(e){}
   toast('Backup exportiert','ok');
 };
 const loadBackup = async el => {
@@ -1267,6 +1325,90 @@ const renderDash = () => {
 const renderFunnelChart=()=>{try{const c=g('ch-funnel');if(!c)return;const s=['prospecting','qualified','proposal','negotiation'];const l=['Prospecting','Qualified','Proposal','Negotiation'];const v=s.map(x=>(S.deals||[]).filter(d=>d.stage===x).length);if(window._cf)window._cf.destroy();window._cf=new Chart(c,{type:'bar',data:{labels:l,datasets:[{data:v,backgroundColor:['#4b9ef8','#9b59f5','#f5a623','#e63329'],borderRadius:4}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{color:'#5d7faa',stepSize:1},grid:{color:'rgba(255,255,255,.04)'}},x:{ticks:{color:'#5d7faa'},grid:{display:false}}}}});}catch(e){}};
 const renderActChart=()=>{try{const c=g('ch-act');if(!c)return;const l=[],v=[];for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const ds=d.toISOString().slice(0,10);l.push(ds.slice(5));v.push((S.acts||[]).filter(a=>a.date===ds).length);}if(window._ca)window._ca.destroy();window._ca=new Chart(c,{type:'bar',data:{labels:l,datasets:[{data:v,backgroundColor:'#e63329',borderRadius:3}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{color:'#5d7faa',stepSize:1},grid:{color:'rgba(255,255,255,.04)'}},x:{ticks:{color:'#5d7faa'},grid:{display:false}}}}});}catch(e){}};
 
+// ── LEAD SCORING (offline) ─────────────────────────────────────
+const daysSince=iso=>{if(!iso)return 99999;const t=new Date(iso).getTime();if(!isFinite(t))return 99999;return Math.floor((Date.now()-t)/864e5);};
+const parseKva=c=>{const m=String(c._kva||'').match(/\d{2,4}/);return m?+m[0]:0;};
+const lastActivityDate=c=>{const co=(c.company||'').toLowerCase();const ds=(S.acts||[]).filter(a=>(a.who||'').toLowerCase()===co).map(a=>a.date).filter(Boolean).sort();return ds.length?ds[ds.length-1]:null;};
+const openDealValue=c=>{const co=(c.company||'').toLowerCase();return (S.deals||[]).filter(d=>(d.company||'').toLowerCase()===co&&d.stage!=='won'&&d.stage!=='lost').reduce((a,d)=>a+(+d.value||0),0);};
+const leadScore=c=>{
+  let s=0;
+  s+=c.prio==='vip'?40:c.prio==='high'?25:10;
+  s+=({active:18,prospect:12,lead:6,inactive:0})[c.status]||6;
+  if(c.tel)s+=8; if(c.email)s+=6;
+  const kva=parseKva(c); s+=kva>=500?14:kva>=200?10:kva>=60?6:kva>0?3:0;
+  const dv=openDealValue(c); s+=dv>=100000?12:dv>=30000?8:dv>0?4:0;
+  const la=lastActivityDate(c),ds=daysSince(la);
+  if(la)s+=ds<=7?8:ds<=30?4:0;
+  if((c.prio==='vip'||c.prio==='high')&&ds>30)s-=10;
+  return Math.max(0,Math.min(100,Math.round(s)));
+};
+const scoreColor=s=>s>=70?'var(--grn)':s>=40?'var(--yel)':'var(--t2)';
+// reasons for the call-list
+const callReason=c=>{
+  const r=[]; const la=lastActivityDate(c),ds=daysSince(la);
+  if(c.prio==='vip')r.push('VIP/A-Kunde');else if(c.prio==='high')r.push('Prio B');
+  const dv=openDealValue(c); if(dv>0)r.push('offener Deal '+fmtCHF(dv));
+  const kva=parseKva(c); if(kva)r.push(kva+' kVA Bedarf');
+  if(!la)r.push('noch nie kontaktiert');else if(ds>30)r.push(ds+' Tage kein Kontakt');
+  if(c._naxt)r.push('nächster Schritt: '+c._naxt.slice(0,40));
+  return r.slice(0,3).join(' · ')||'Standard-Lead';
+};
+
+// ── HEUTE / KI-COCKPIT ─────────────────────────────────────────
+const renderToday=()=>{
+  const td=today();
+  const tasksToday=(S.tasks||[]).filter(t=>!t.done&&t.due===td).length;
+  const in7=new Date(Date.now()+7*864e5).toISOString().slice(0,10);
+  const soon=(S.tasks||[]).filter(t=>!t.done&&t.due&&t.due>=td&&t.due<=in7).length
+           +(S.simap||[]).filter(s=>s.dead&&s.dead>=td&&s.dead<=in7&&s.status!=='gewonnen'&&s.status!=='verloren').length;
+  const hot=(S.deals||[]).filter(d=>(d.stage==='proposal'||d.stage==='negotiation')).length;
+  const cold=(S.contacts||[]).filter(c=>(c.prio==='vip'||c.prio==='high')&&daysSince(lastActivityDate(c))>30).length;
+  st('tk-today2',tasksToday);st('tk-soon',soon);st('tk-hot',hot);st('tk-cold',cold);
+  const nb=g('nb-today');if(nb){const n=tasksToday+soon;nb.textContent=n;nb.style.display=n?'':'none';}
+  renderCallList();
+};
+const callCandidates=(n=8)=>(S.contacts||[]).filter(c=>c.tel).map(c=>({c,score:leadScore(c)})).sort((a,b)=>b.score-a.score).slice(0,n);
+const renderCallList=()=>{
+  const el=g('calllist');if(!el)return;
+  const list=callCandidates(8);
+  if(!list.length){el.innerHTML='<div class="empty"><div class="eico">📞</div><p>Keine Kontakte mit Telefon — erst importieren</p></div>';return;}
+  el.innerHTML=list.map(({c,score})=>`<div style="display:flex;align-items:center;gap:.6rem;padding:.5rem 0;border-bottom:1px solid var(--bdr)"><div style="width:34px;height:34px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:var(--fh);font-weight:800;font-size:13px;background:${scoreColor(score)}22;color:${scoreColor(score)}">${score}</div><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600">${c.company}</div><div style="font-size:10px;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="cr-${c.id}">${callReason(c)}</div></div>${c.tel?`<a href="tel:${c.tel}" class="btn bp sm" style="text-decoration:none">📞</a>`:''}<button class="btn bg sm" onclick="openCtc('${c.id}')">✏️</button></div>`).join('');
+};
+const genCallReasons=async()=>{
+  const list=callCandidates(5);if(!list.length){toast('Keine Kandidaten','warn');return;}
+  const ctx=list.map(({c,score})=>`- ${c.company} (Score ${score}, ${c.industry||'?'}, Prio ${c.prio||'C'}${c._kva?', '+c._kva:''})`).join('\n');
+  const r=await claude(`Du bist Sales-Coach bei Mobil in Time AG (Aggreko, temporäre Energie CH). Für jeden dieser Kontakte EIN Satz, warum heute der richtige Moment für einen Anruf ist und mit welchem Aufhänger:\n${ctx}\nFormat: "Firma — Grund". Konkret, max. 1 Zeile pro Firma.`);
+  if(!r)return;
+  // map AI lines back onto entries by company name
+  r.split('\n').forEach(line=>{list.forEach(({c})=>{if(line.toLowerCase().includes((c.company||'').toLowerCase().slice(0,8))){const el=g('cr-'+c.id);if(el)el.textContent=line.replace(/^[-•\d.\s]*/,'').trim();}});});
+  toast('KI-Gründe ergänzt','ok');
+};
+const genBriefing=async()=>{
+  const el=g('brief-out');if(!el)return;el.textContent='Generiere Tages-Briefing…';
+  const td=today();const in7=new Date(Date.now()+7*864e5).toISOString().slice(0,10);
+  const dueTasks=(S.tasks||[]).filter(t=>!t.done&&t.due&&t.due<=in7).map(t=>`${t.due}: ${t.title} (${t.company||'?'})`);
+  const deadlines=(S.simap||[]).filter(s=>s.dead&&s.dead>=td&&s.dead<=in7).map(s=>`${s.dead}: ${s.title} (${s.kt||'CH'})`);
+  const hotDeals=(S.deals||[]).filter(d=>d.stage==='proposal'||d.stage==='negotiation').map(d=>`${d.company}: ${fmtCHF(d.value)} (${d.stage})`);
+  const calls=callCandidates(5).map(({c,score})=>`${c.company} (Score ${score})`);
+  const prompt=`Du bist Vertriebsassistent für Burak Ücöz, Mobil in Time AG (Aggreko CH). Erstelle ein knackiges Tages-Briefing für ${td}.\nFällige Aufgaben/Fristen 7 Tage:\n${dueTasks.concat(deadlines).join('\n')||'keine'}\nHeisse Deals:\n${hotDeals.join('\n')||'keine'}\nTop-Call-Kandidaten:\n${calls.join('\n')||'keine'}\nFormat: 1) Fokus heute (1 Satz) 2) Wichtigste 3 Aktionen 3) Risiken/Fristen. Kurz, motivierend, deutsch.`;
+  const r=await claude(prompt);if(r)el.textContent=r;
+};
+const autoEnrich=async()=>{
+  const el=g('enrich-out');if(!el)return;
+  const need=(S.contacts||[]).filter(c=>!c.industry||!c._kva).slice(0,12);
+  if(!need.length){el.textContent='✓ Alle Kontakte haben Branche und kVA-Schätzung.';toast('Nichts zu ergänzen','info');return;}
+  el.textContent=`Ergänze ${need.length} Kontakte…`;
+  const ctx=need.map((c,i)=>`${i+1}. ${c.company}${c.industry?' ['+c.industry+']':''}`).join('\n');
+  const r=await claude(`Für jede Firma schätze Branche (aus: Industrie, Pharma/Chemie, Rechenzentrum, Spital/Klinik, EVU, Bau, Gemeinde) und typischen Notstrom-/Temporärenergie-Bedarf in kVA. Antworte NUR als JSON-Array: [{"i":1,"industry":"Industrie","kva":"200 kVA"}, …]. Firmen:\n${ctx}`);
+  if(!r){el.textContent='Keine Antwort.';return;}
+  try{
+    const arr=JSON.parse(r.slice(r.indexOf('['),r.lastIndexOf(']')+1));
+    let n=0;arr.forEach(o=>{const c=need[(+o.i||0)-1];if(!c)return;if(!c.industry&&o.industry){c.industry=o.industry;n++;}if(!c._kva&&o.kva){c._kva=String(o.kva);n++;}});
+    save();renderCtc();renderToday();
+    el.textContent=`✓ ${n} Felder ergänzt für ${arr.length} Firmen.`;toast(`${n} Felder ergänzt`,'ok');
+  }catch(e){el.textContent='Konnte KI-Antwort nicht parsen:\n'+r;}
+};
+
 // ── PIPELINE ───────────────────────────────────────────────────
 const renderKanban=()=>{
   const el=g('kanban');if(!el)return;
@@ -1285,11 +1427,15 @@ const saveDeal=()=>{const t=gv('d-title');if(!t){toast('Titel fehlt','warn');ret
 // ── CONTACTS ───────────────────────────────────────────────────
 const renderCtc=()=>{
   const el=g('ctc-body');if(!el)return;
-  const q=(gv('ctc-q')||'').toLowerCase(),ind=gv('ctc-ind')||'';
+  const q=(gv('ctc-q')||'').toLowerCase(),ind=gv('ctc-ind')||'',sort=gv('ctc-sort')||'score';
   let list=(S.contacts||[]).filter(c=>(!q||(c.company||'').toLowerCase().includes(q)||(c.name||'').toLowerCase().includes(q))&&(!ind||(c.industry||'').includes(ind)));
-  if(!list.length){el.innerHTML=`<tr><td colspan="8"><div class="empty"><div class="eico">👥</div><p>${S.contacts.length?'Keine Treffer':'Noch leer — Excel importieren'}</p></div></td></tr>`;return;}
-  const PC={vip:'tr',high:'ty',normal:'tgr'};const PL={vip:'A',high:'B',normal:'C'};
-  el.innerHTML=list.slice(0,100).map(c=>`<tr><td><div style="font-weight:600;font-size:12px">${c.company}</div></td><td style="font-size:12px">${c.name||'–'}</td><td><span class="tg tb2" style="font-size:10px">${c.industry||'–'}</span></td><td style="font-size:12px">${c.canton||'–'}</td><td style="font-size:12px">${c.tel?`<a href="tel:${c.tel}" style="color:var(--cyn)">${c.tel}</a>`:'–'}</td><td><span class="tg ${c.status==='active'?'tg2':c.status==='lead'?'tb2':'tgr'}" style="font-size:10px">${c.status||'lead'}</span></td><td><span class="tg ${PC[c.prio]||'tgr'}" style="font-size:10px">${PL[c.prio]||'C'}</span></td><td><button class="btn bg sm" onclick="openCtc('${c.id}')">✏️</button></td></tr>`).join('');
+  if(!list.length){el.innerHTML=`<tr><td colspan="9"><div class="empty"><div class="eico">👥</div><p>${S.contacts.length?'Keine Treffer':'Noch leer — Excel importieren'}</p></div></td></tr>`;return;}
+  const PC={vip:'tr',high:'ty',normal:'tgr'};const PL={vip:'A',high:'B',normal:'C'};const PR={vip:3,high:2,normal:1};
+  const scored=list.map(c=>({c,s:leadScore(c)}));
+  if(sort==='company')scored.sort((a,b)=>(a.c.company||'').localeCompare(b.c.company||''));
+  else if(sort==='prio')scored.sort((a,b)=>(PR[b.c.prio]||0)-(PR[a.c.prio]||0)||b.s-a.s);
+  else scored.sort((a,b)=>b.s-a.s);
+  el.innerHTML=scored.slice(0,100).map(({c,s})=>`<tr><td><div style="font-weight:600;font-size:12px">${c.company}</div></td><td style="font-size:12px">${c.name||'–'}</td><td><span class="tg tb2" style="font-size:10px">${c.industry||'–'}</span></td><td style="font-size:12px">${c.canton||'–'}</td><td style="font-size:12px">${c.tel?`<a href="tel:${c.tel}" style="color:var(--cyn)">${c.tel}</a>`:'–'}</td><td><span class="tg ${c.status==='active'?'tg2':c.status==='lead'?'tb2':'tgr'}" style="font-size:10px">${c.status||'lead'}</span></td><td><span style="font-family:var(--fh);font-weight:800;font-size:13px;color:${scoreColor(s)}">${s}</span></td><td><span class="tg ${PC[c.prio]||'tgr'}" style="font-size:10px">${PL[c.prio]||'C'}</span></td><td><button class="btn bg sm" onclick="openCtc('${c.id}')">✏️</button></td></tr>`).join('');
 };
 const openCtc=(id)=>{S._editCtc=id?(S.contacts||[]).find(c=>c.id===id):null;const c=S._editCtc;sv('c-co',c?.company||'');sv('c-name',c?.name||'');sv('c-role',c?.role||'');sv('c-tel',c?.tel||'');sv('c-email',c?.email||'');sv('c-web',c?.web||'');sv('c-kt',c?.canton||'');sv('c-st',c?.status||'lead');sv('c-prio',c?.prio||'normal');sv('c-ind',c?.industry||'Industrie');sv('c-note',c?.note||'');g('m-ctc-t').textContent=c?'Kontakt bearbeiten':'Neuer Kontakt';openM('m-ctc');};
 const saveCtc=()=>{const co=gv('c-co');if(!co){toast('Firma fehlt','warn');return;}if(!S.contacts)S.contacts=[];const c={id:S._editCtc?.id||uid(),company:co,name:gv('c-name'),role:gv('c-role'),tel:gv('c-tel'),email:gv('c-email'),web:gv('c-web'),canton:gv('c-kt'),industry:gv('c-ind'),status:gv('c-st'),prio:gv('c-prio'),note:gv('c-note')};if(S._editCtc){const i=S.contacts.findIndex(x=>x.id===c.id);if(i>=0)S.contacts[i]=c;}else S.contacts.push(c);save();renderCtc();renderDash();closeM();toast('Kontakt gespeichert','ok');};
@@ -1464,6 +1610,80 @@ const el=document.createElement('div');el.style.cssText='position:absolute;top:1
 // ── COPY UTIL ──────────────────────────────────────────────────
 const copyEl=(id)=>{const el=g(id);if(!el)return;const t=el.textContent||el.value||'';navigator.clipboard.writeText(t).then(()=>toast('Kopiert','ok')).catch(()=>{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('Kopiert','ok');});};
 
+// ── INDEXEDDB AUTO-BACKUP ──────────────────────────────────────
+const IDB_NAME='mit_crm_backups',IDB_STORE='snapshots',MAX_SNAPS=20;
+let _idb=null;
+const idbOpen=()=>new Promise((res,rej)=>{
+  if(_idb)return res(_idb);
+  if(!window.indexedDB)return rej(new Error('IndexedDB nicht verfügbar'));
+  const r=indexedDB.open(IDB_NAME,1);
+  r.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains(IDB_STORE))db.createObjectStore(IDB_STORE,{keyPath:'ts'});};
+  r.onsuccess=e=>{_idb=e.target.result;res(_idb);};
+  r.onerror=e=>rej(e.target.error);
+});
+const idbPut=async rec=>{const db=await idbOpen();return new Promise((res,rej)=>{const tx=db.transaction(IDB_STORE,'readwrite');tx.objectStore(IDB_STORE).put(rec);tx.oncomplete=()=>res();tx.onerror=e=>rej(e.target.error);});};
+const idbAll=async()=>{const db=await idbOpen();return new Promise((res,rej)=>{const tx=db.transaction(IDB_STORE,'readonly');const rq=tx.objectStore(IDB_STORE).getAll();rq.onsuccess=()=>res(rq.result||[]);rq.onerror=e=>rej(e.target.error);});};
+const idbDel=async ts=>{const db=await idbOpen();return new Promise((res,rej)=>{const tx=db.transaction(IDB_STORE,'readwrite');tx.objectStore(IDB_STORE).delete(ts);tx.oncomplete=()=>res();tx.onerror=e=>rej(e.target.error);});};
+let _lastSnap=0;
+const autoSnapshot=()=>{ // throttle: max one auto-snapshot per 5 min
+  const now=Date.now();if(now-_lastSnap<3e5)return;_lastSnap=now;
+  writeSnapshot('auto').catch(()=>{});
+};
+const writeSnapshot=async(kind='manual')=>{
+  const rec={ts:Date.now(),kind,data:JSON.stringify(S),counts:{c:(S.contacts||[]).length,d:(S.deals||[]).length,t:(S.tasks||[]).length}};
+  await idbPut(rec);
+  const all=(await idbAll()).sort((a,b)=>b.ts-a.ts);
+  for(const r of all.slice(MAX_SNAPS))await idbDel(r.ts);
+  return rec;
+};
+const snapshotNow=async()=>{try{await writeSnapshot('manual');toast('Snapshot gespeichert','ok');renderSnapList();}catch(e){toast('Snapshot-Fehler: '+e.message,'err');}};
+const openBackup=async()=>{openM('m-backup');renderSnapList();};
+const renderSnapList=async()=>{
+  const el=g('snap-list'),info=g('snap-info');if(!el)return;
+  let all=[];try{all=(await idbAll()).sort((a,b)=>b.ts-a.ts);}catch(e){el.innerHTML=`<div style="font-size:11px;color:var(--acc)">IndexedDB nicht verfügbar (${e.message})</div>`;return;}
+  const le=localStorage.getItem('mit_last_export');
+  if(info)info.textContent=`${all.length} Snapshot(s) · letzter JSON-Export: ${le?new Date(+le).toLocaleString('de-CH'):'nie'}`;
+  if(!all.length){el.innerHTML='<div class="empty" style="padding:1rem"><p>Noch keine Snapshots</p></div>';return;}
+  el.innerHTML=all.map(r=>`<div style="display:flex;align-items:center;gap:.5rem;padding:.42rem 0;border-bottom:1px solid var(--bdr);font-size:12px;"><div style="flex:1"><div style="font-weight:600">${new Date(r.ts).toLocaleString('de-CH')} <span class="tg ${r.kind==='manual'?'tg2':'tgr'}" style="font-size:9px;margin-left:.3rem">${r.kind}</span></div><div style="font-size:10px;color:var(--t2)">${r.counts?.c||0} Kontakte · ${r.counts?.d||0} Deals · ${r.counts?.t||0} Aufgaben</div></div><button class="btn bs sm" onclick="restoreSnapshot(${r.ts})">↺ Laden</button></div>`).join('');
+};
+const restoreSnapshot=async(ts)=>{
+  if(!confirm('Diesen Stand wiederherstellen? Aktuelle Daten werden überschrieben (vorher wird ein Sicherungs-Snapshot angelegt).'))return;
+  try{
+    await writeSnapshot('pre-restore');
+    const all=await idbAll();const r=all.find(x=>x.ts===ts);if(!r){toast('Snapshot nicht gefunden','err');return;}
+    const d=JSON.parse(r.data);
+    ['contacts','deals','tasks','notes','acts','simap','goals','cfg','_angPos','_lastRows','tags'].forEach(k=>{if(d[k]!==undefined)S[k]=d[k];});
+    localStorage.setItem(KEY,JSON.stringify(S));
+    closeM();toast('Stand wiederhergestellt','ok');
+    renderDash();renderCtc();renderKanban();renderTasks();renderToday();
+  }catch(e){toast('Restore-Fehler: '+e.message,'err');}
+};
+
+// ── PWA (manifest + install + offline note) ────────────────────
+let _deferredPrompt=null;
+const initPWA=()=>{
+  // inject manifest as a blob so the app stays a single file
+  try{
+    const icon="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='512' height='512'%3E%3Crect width='512' height='512' rx='96' fill='%23e63329'/%3E%3Ctext x='50%25' y='60%25' font-size='320' text-anchor='middle' fill='white' font-family='sans-serif'%3E%E2%9A%A1%3C/text%3E%3C/svg%3E";
+    const manifest={name:'MiT CRM Pro',short_name:'MiT CRM',start_url:'.',display:'standalone',background_color:'#0d1525',theme_color:'#0d1525',icons:[{src:icon,sizes:'512x512',type:'image/svg+xml',purpose:'any maskable'}]};
+    const blob=new Blob([JSON.stringify(manifest)],{type:'application/manifest+json'});
+    const link=document.createElement('link');link.rel='manifest';link.href=URL.createObjectURL(blob);document.head.appendChild(link);
+  }catch(e){}
+  window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();_deferredPrompt=e;const b=g('install-btn');if(b)b.style.display='';});
+  window.addEventListener('appinstalled',()=>{const b=g('install-btn');if(b)b.style.display='none';toast('App installiert ✅','ok');});
+};
+const doInstall=async()=>{
+  if(!_deferredPrompt){toast('Installation: im Browser-Menü „Zum Startbildschirm / App installieren". Volle Offline-Funktion nur bei gehosteter Version (z.B. Netlify).','info',6000);return;}
+  _deferredPrompt.prompt();const{outcome}=await _deferredPrompt.userChoice;_deferredPrompt=null;
+  const b=g('install-btn');if(b)b.style.display='none';
+  toast(outcome==='accepted'?'Wird installiert…':'Abgebrochen',outcome==='accepted'?'ok':'info');
+};
+const checkExportReminder=()=>{
+  const le=+localStorage.getItem('mit_last_export')||0;
+  const hasData=(S.contacts||[]).length||(S.deals||[]).length;
+  if(hasData&&(!le||Date.now()-le>7*864e5))setTimeout(()=>toast('💾 Letztes Backup ist >7 Tage her — bitte exportieren (🗄️ oben)','warn',6000),1500);
+};
+
 // ── API KEY INIT ────────────────────────────────────────────────
 const initKey=()=>{const ak=g('akey'),dot=g('adot');if(S.cfg.apiKey){ak.value=S.cfg.apiKey.slice(0,8)+'…';if(dot)dot.className='adot ok';}ak.addEventListener('change',()=>{S.cfg.apiKey=ak.value.trim();save();if(dot)dot.className=S.cfg.apiKey.startsWith('sk-ant')?'adot ok':'adot';});};
 
@@ -1487,6 +1707,10 @@ document.addEventListener('DOMContentLoaded', () => {
   try{const op=(S.deals||[]).filter(d=>d.stage!=='won'&&d.stage!=='lost').length,ot=(S.tasks||[]).filter(t=>!t.done).length;const nbp=g('nb-pipe');if(nbp){nbp.textContent=op;nbp.style.display=op?'':'none';}const nbt=g('nb-tasks');if(nbt){nbt.textContent=ot;nbt.style.display=ot?'':'none';}}catch(e){}
   // Render dash
   try { renderDash(); } catch(e) {}
+  // PWA + backup reminder + today badge
+  try { initPWA(); } catch(e) {}
+  try { checkExportReminder(); } catch(e) {}
+  try { renderToday(); } catch(e) {}
   // Keyboard shortcuts
   document.addEventListener('keydown', e => {
     if((e.ctrlKey||e.metaKey)&&e.key==='k'){e.preventDefault();const si=g('si');if(si)si.focus();}
@@ -1610,6 +1834,18 @@ try{window.toggleTheme=toggleTheme;}catch(_){}
 try{window.uid=uid;}catch(_){}
 try{window.updLR=updLR;}catch(_){}
 try{window.updateMap=updateMap;}catch(_){}
+try{window.renderToday=renderToday;}catch(_){}
+try{window.renderCallList=renderCallList;}catch(_){}
+try{window.genCallReasons=genCallReasons;}catch(_){}
+try{window.genBriefing=genBriefing;}catch(_){}
+try{window.autoEnrich=autoEnrich;}catch(_){}
+try{window.leadScore=leadScore;}catch(_){}
+try{window.openBackup=openBackup;}catch(_){}
+try{window.snapshotNow=snapshotNow;}catch(_){}
+try{window.restoreSnapshot=restoreSnapshot;}catch(_){}
+try{window.doInstall=doInstall;}catch(_){}
+try{window.initPWA=initPWA;}catch(_){}
+try{window.checkExportReminder=checkExportReminder;}catch(_){}
 
 </script>
 </body>
