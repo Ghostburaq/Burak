@@ -4573,433 +4573,449 @@ window.generateWbPdf = function(){
   const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
 
   const { mondayISO, sundayISO } = getWeekRange();
-  const todayD = new Date(); todayD.setHours(0,0,0,0);
-  const todayStr = todayD.toISOString().slice(0,10);
+  const todayStr = todayISO();
+  const kw = getKW(new Date(mondayISO + 'T12:00:00'));
 
-  /* ---- collect data ---- */
+  /* ============================================================
+     DATA COLLECTION
+  ============================================================ */
   const weekActs = STATE.activities.filter(a =>
     a.date && a.date.slice(0,10) >= mondayISO && a.date.slice(0,10) <= sundayISO
-  );
+  ).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+
   const typCount = {};
   weekActs.forEach(a => { typCount[a.typ] = (typCount[a.typ]||0)+1; });
 
   const openDeals  = STATE.contacts.filter(c => !['Gewonnen','Verloren','Pausiert'].includes(c.status));
   const pipeTotal  = openDeals.reduce((s,c) => s + (parseFloat(c.chf)||0), 0);
+  const weightedPipe = openDeals.reduce((s,c)=>{
+    const chf = parseFloat(c.chf)||0;
+    const prob = parseFloat(c.prob)||(c.status==='Verhandlung'?70:c.status==='Angebot'?40:c.status==='Kontaktiert'?20:10);
+    return s + chf*(prob/100);
+  },0);
   const wonActs    = weekActs.filter(a => a.newStatus === 'Gewonnen');
+  const lostActs   = weekActs.filter(a => a.newStatus === 'Verloren');
   const wonCHF     = wonActs.reduce((s,a) => {
     const c = STATE.contacts.find(x => x.id === a.contactId);
     return s + (c ? parseFloat(c.chf)||0 : 0);
   }, 0);
-  const overdueList  = openDeals.filter(c => c.wv && c.wv < todayStr);
+  const overdueList  = openDeals.filter(c => c.wv && c.wv.slice(0,10) < todayStr)
+                                .sort((a,b)=>(a.wv||'').localeCompare(b.wv||''));
   const newContacts  = STATE.contacts.filter(c => c.created && c.created.slice(0,10) >= mondayISO);
+  // Top open deals by value for the executive view
+  const topDeals = openDeals.slice().sort((a,b)=>(parseFloat(b.chf)||0)-(parseFloat(a.chf)||0)).slice(0,8);
 
-  /* ---- page constants ---- */
-  const PW  = 210;   // page width  mm
-  const PH  = 297;   // page height mm
-  const ML  = 12;    // margin left
-  const MR  = 12;    // margin right
-  const CW  = PW - ML - MR;  // content width = 186 mm
+  /* ============================================================
+     GEOMETRY
+  ============================================================ */
+  const PW = 210, PH = 297;
+  const ML = 14, MR = 14;
+  const CW = PW - ML - MR;          // content width = 182
+  const HEADER_H = 30;
+  const FOOTER_H = 14;
+  const TOP_Y = HEADER_H + 8;       // first content baseline area
+  const BOTTOM_LIMIT = PH - FOOTER_H - 6;
 
-  /* ---- color helpers ---- */
-  function rgb(r,g,b){ doc.setFillColor(r,g,b); }
-  function rgbD(r,g,b){ doc.setDrawColor(r,g,b); }
-  function rgbT(r,g,b){ doc.setTextColor(r,g,b); }
-  function fillR(x,y,w,h,r,g,b){ doc.setFillColor(r,g,b); doc.rect(x,y,w,h,'F'); }
-  function drawR(x,y,w,h,r,g,b,lw){ doc.setDrawColor(r,g,b); doc.setLineWidth(lw||0.25); doc.rect(x,y,w,h,'S'); }
-  function hline(x1,x2,y,r,g,b,lw){ doc.setDrawColor(r,g,b); doc.setLineWidth(lw||0.2); doc.line(x1,y,x2,y); }
-  function txt(s,x,y,opts){ doc.text(String(s===null||s===undefined?'':s), x, y, opts||{}); }
+  /* ---- palette (executive navy / slate / single red accent) ---- */
+  const NAVY   = [15, 27, 49];
+  const NAVY2  = [26, 42, 71];
+  const RED    = [200, 16, 46];
+  const SLATE  = [90, 105, 130];
+  const SLATE2 = [120, 134, 158];
+  const INK    = [22, 32, 52];
+  const LINE   = [222, 228, 238];
+  const LINE2  = [236, 240, 247];
+  const PAPER  = [248, 250, 253];
+  const GREEN  = [16, 150, 95];
+  const AMBER  = [190, 120, 0];
 
-  /* ---- formatting helpers ---- */
+  /* ---- low-level helpers ---- */
+  function fill(c){ doc.setFillColor(c[0],c[1],c[2]); }
+  function stroke(c){ doc.setDrawColor(c[0],c[1],c[2]); }
+  function ink(c){ doc.setTextColor(c[0],c[1],c[2]); }
+  function box(x,y,w,h,c){ fill(c); doc.rect(x,y,w,h,'F'); }
+  function rbox(x,y,w,h,c,r){ fill(c); doc.roundedRect(x,y,w,h,r||1.5,r||1.5,'F'); }
+  function bdr(x,y,w,h,c,lw){ stroke(c); doc.setLineWidth(lw||0.2); doc.rect(x,y,w,h,'S'); }
+  function rbdr(x,y,w,h,c,lw,r){ stroke(c); doc.setLineWidth(lw||0.2); doc.roundedRect(x,y,w,h,r||1.5,r||1.5,'S'); }
+  function line(x1,y1,x2,y2,c,lw){ stroke(c); doc.setLineWidth(lw||0.2); doc.line(x1,y1,x2,y2); }
+  function T(s,x,y,o){ doc.text(String(s===null||s===undefined?'':s), x, y, o||{}); }
+  function font(style,size){ doc.setFont('helvetica',style); doc.setFontSize(size); }
+  function clip(s,max){ s=String(s||''); return s.length>max ? s.slice(0,max-1).trimEnd()+'…' : s; }
+
   function fmtCHFpdf(n){
-    if(!n && n!==0) return '--';
+    if(n===null||n===undefined||isNaN(n)) return '—';
     n = Math.round(n);
-    if(n >= 1000000) return 'CHF ' + (n/1000000).toFixed(1) + 'M';
-    if(n >= 1000){
-      const t = Math.floor(n/1000);
-      const h = String(n%1000).padStart(3,'0');
-      return "CHF " + t + "'" + h;
+    const neg = n<0; n = Math.abs(n);
+    let str;
+    if(n >= 1000000){ str = (n/1000000).toFixed(n>=10000000?0:1).replace('.',',') + ' Mio'; }
+    else {
+      str = String(n).replace(/\B(?=(\d{3})+(?!\d))/g, "'");
     }
-    return 'CHF ' + n;
-  }
-  function fmtDShort(iso){
-    if(!iso) return '--';
-    const d = new Date((iso+'').slice(0,10)+'T12:00:00');
-    return String(d.getDate()).padStart(2,'0') + '.' + String(d.getMonth()+1).padStart(2,'0') + '.';
+    return (neg?'-':'') + "CHF " + str;
   }
   function fmtDFull(iso){
-    if(!iso) return '--';
+    if(!iso) return '—';
     const d = new Date((iso+'').slice(0,10)+'T12:00:00');
-    return String(d.getDate()).padStart(2,'0') + '.' +
-           String(d.getMonth()+1).padStart(2,'0') + '.' +
-           d.getFullYear();
+    if(isNaN(d)) return '—';
+    return String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+d.getFullYear();
   }
-  function clamp(s, max){ s = String(s||''); return s.length > max ? s.slice(0,max-1)+'.' : s; }
+  function fmtDShort(iso){
+    if(!iso) return '—';
+    const d = new Date((iso+'').slice(0,10)+'T12:00:00');
+    if(isNaN(d)) return '—';
+    return String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0')+'.';
+  }
 
-  let Y = 0;  // running Y cursor
+  const TYP_COLORS = {
+    'Anruf':[37,99,235], 'Mail':[190,120,0], 'Meeting':[5,130,90],
+    'Demo':[120,60,200], 'Angebot':[200,16,46], 'WhatsApp':[30,170,80],
+    'Status':[90,105,130], 'Sonstiges':[110,120,140]
+  };
+  const STATUS_COLORS = {
+    'Gewonnen':GREEN, 'Verloren':[200,50,50], 'Angebot':AMBER,
+    'Verhandlung':[150,80,200], 'Kontaktiert':[37,99,235], 'Lead':[90,105,130],
+    'Pausiert':[120,130,150]
+  };
 
-  /* ================================================================
-     HEADER
-  ================================================================ */
-  // Full-width navy bar
-  fillR(0, 0, PW, 30, 13, 22, 40);
-  // Red left stripe
-  fillR(0, 0, 3, 30, 200, 16, 46);
-  // Bottom red line
-  fillR(0, 28, PW, 2, 200, 16, 46);
+  /* ============================================================
+     HEADER & FOOTER (drawn on every page)
+  ============================================================ */
+  let pageNum = 0;
+  function drawHeader(subtitle){
+    box(0,0,PW,HEADER_H, NAVY);
+    box(0,0,3,HEADER_H, RED);
+    box(0,HEADER_H-1.6,PW,1.6, RED);
 
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(16);
-  rgbT(255,255,255);
-  txt('Mobil in Time AG', ML+3, 11);
+    font('bold',15); ink([255,255,255]);
+    T('Mobil in Time AG', ML+2, 12);
+    font('normal',7.5); ink([150,170,205]);
+    T('An Aggreko Company   ·   Sales Engineer Strom   ·   Schweiz', ML+2, 17.5);
+    T('mobilintime.com', ML+2, 22);
 
-  doc.setFont('helvetica','normal');
-  doc.setFontSize(8);
-  rgbT(160,175,200);
-  txt('An Aggreko Company  |  Sales Engineer Strom', ML+3, 17);
-  txt('Schweiz  |  mobilintime.com', ML+3, 22);
-
-  // Right: report title
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(20);
-  rgbT(255,255,255);
-  txt('WOCHENBERICHT', PW-MR, 12, {align:'right'});
-
-  doc.setFont('helvetica','normal');
-  doc.setFontSize(9);
-  rgbT(200,210,230);
-  const kw = getKW(new Date(mondayISO + 'T12:00:00'));
-  txt('KW ' + kw + '  |  ' + fmtDFull(mondayISO) + ' - ' + fmtDFull(sundayISO), PW-MR, 20, {align:'right'});
-
-  Y = 37;
-
-  /* ================================================================
-     KPI ROW  (6 boxes)
-  ================================================================ */
-  const kpiDefs = [
-    { label:'AKTIVITAETEN', val: weekActs.length,          r:13,  g:22,  b:40  },
-    { label:'ANRUFE',       val: typCount['Anruf']||0,     r:37,  g:99,  b:235 },
-    { label:'MAILS',        val: typCount['Mail']||0,      r:16,  g:82,  b:120 },
-    { label:'MEETINGS',     val: typCount['Meeting']||0,   r:5,   g:100, b:80  },
-    { label:'ANGEBOTE',     val: typCount['Angebot']||0,   r:180, g:100, b:0   },
-    { label:'NEUE LEADS',   val: newContacts.length,       r:100, g:30,  b:150 },
-  ];
-
-  const GAP  = 3;
-  const KPIW = (CW - GAP * 5) / 6;
-  const KPIH = 20;
-
-  kpiDefs.forEach(function(k, i){
-    const bx = ML + i * (KPIW + GAP);
-    const by = Y;
-    // Box background
-    fillR(bx, by, KPIW, KPIH, k.r, k.g, k.b);
-    // Top red accent
-    fillR(bx, by, KPIW, 2, 200, 16, 46);
-
-    // Number - centered
-    doc.setFont('helvetica','bold');
-    doc.setFontSize(18);
-    rgbT(255,255,255);
-    txt(String(k.val), bx + KPIW/2, by + 12.5, {align:'center'});
-
-    // Label - centered, small caps style
-    doc.setFont('helvetica','normal');
-    doc.setFontSize(6);
-    rgbT(200,215,235);
-    txt(k.label, bx + KPIW/2, by + 18, {align:'center'});
-  });
-
-  Y += KPIH + 6;
-
-  /* ================================================================
-     PIPELINE + ACTIVITY BREAKDOWN ROW
-  ================================================================ */
-  const ROW2H  = 28;
-  const PIPE_W = CW * 0.55;
-  const BRKD_W = CW * 0.42;
-  const BRKD_X = ML + PIPE_W + CW * 0.03;
-
-  // -- Pipeline box (left) --
-  fillR(ML, Y, PIPE_W, ROW2H, 240, 243, 248);
-  drawR(ML, Y, PIPE_W, ROW2H, 200, 210, 225);
-  fillR(ML, Y, PIPE_W, 2.5, 200, 16, 46);
-
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(7);
-  rgbT(90,105,130);
-  txt('PIPELINE UEBERSICHT', ML+4, Y+7);
-
-  // Big CHF number
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(17);
-  rgbT(13,22,40);
-  txt(fmtCHFpdf(pipeTotal), ML+4, Y+17);
-
-  doc.setFont('helvetica','normal');
-  doc.setFontSize(7.5);
-  rgbT(100,115,140);
-  txt(openDeals.length + ' offene Deals', ML+4, Y+23);
-
-  // Sub-stats inside pipeline box
-  const subX = ML + PIPE_W * 0.48;
-
-  // Won
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(11);
-  if(wonActs.length > 0){ rgbT(16,160,100); txt(fmtCHFpdf(wonCHF), subX, Y+14); }
-  else { rgbT(160,170,185); txt('--', subX, Y+14); }
-  doc.setFont('helvetica','normal');
-  doc.setFontSize(6.5);
-  rgbT(90,105,130);
-  txt('Gewonnen KW', subX, Y+19);
-
-  // Overdue
-  const odX = ML + PIPE_W * 0.74;
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(11);
-  if(overdueList.length > 0){ rgbT(200,50,50); } else { rgbT(16,160,100); }
-  txt(String(overdueList.length), odX, Y+14);
-  doc.setFont('helvetica','normal');
-  doc.setFontSize(6.5);
-  rgbT(90,105,130);
-  txt('Faellige WV', odX, Y+19);
-
-  // -- Activity breakdown box (right) --
-  fillR(BRKD_X, Y, BRKD_W, ROW2H, 13, 22, 40);
-  drawR(BRKD_X, Y, BRKD_W, ROW2H, 30,45,70);
-  fillR(BRKD_X, Y, BRKD_W, 2.5, 200, 16, 46);
-
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(7);
-  rgbT(140,160,190);
-  txt('AKTIVITAETEN NACH TYP', BRKD_X+4, Y+7);
-
-  const types  = ['Anruf','Mail','Meeting','Demo','Angebot'];
-  const maxCnt = Math.max(1, Math.max.apply(null, types.map(function(t){ return typCount[t]||0; })));
-  const barMaxW= BRKD_W - 36;
-  let barY = Y + 11;
-  types.forEach(function(typ){
-    const cnt  = typCount[typ]||0;
-    const barW = Math.max(cnt > 0 ? 1.5 : 0, (cnt/maxCnt)*barMaxW);
-    doc.setFont('helvetica','normal');
-    doc.setFontSize(7);
-    rgbT(150,165,190);
-    txt(typ, BRKD_X+4, barY);
-    if(barW > 0) fillR(BRKD_X+26, barY-3, barW, 3.5, 200,16,46);
-    doc.setFont('helvetica','bold');
-    doc.setFontSize(7);
-    rgbT(255,255,255);
-    txt(String(cnt), BRKD_X+28+barMaxW, barY, {align:'right'});
-    barY += 4.8;
-  });
-
-  Y += ROW2H + 6;
-
-  /* ================================================================
-     ACTIVITY TABLE
-  ================================================================ */
-  // Section header bar
-  fillR(ML, Y, CW, 8, 13, 22, 40);
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(8.5);
-  rgbT(255,255,255);
-  txt('AKTIVITAETEN DIESE WOCHE', ML+3, Y+5.5);
-  doc.setFont('helvetica','normal');
-  doc.setFontSize(7.5);
-  rgbT(150,170,210);
-  txt(weekActs.length + ' Eintraege', PW-MR, Y+5.5, {align:'right'});
-  Y += 9;
-
-  // Column definitions
-  const C_DATE  = { x: ML,      w: 14  };
-  const C_TYP   = { x: ML+14,   w: 17  };
-  const C_FIRMA = { x: ML+31,   w: 48  };
-  const C_KP    = { x: ML+79,   w: 34  };
-  const C_SUM   = { x: ML+113,  w: CW-101-14 };
-  const C_STATUS= { x: ML+CW-14,w: 14  };
-
-  // Table header
-  fillR(ML, Y, CW, 6.5, 228,232,240);
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(6.5);
-  rgbT(60,75,100);
-  txt('Datum',    C_DATE.x+1,  Y+4.5);
-  txt('Typ',      C_TYP.x+1,   Y+4.5);
-  txt('Firma',    C_FIRMA.x+1, Y+4.5);
-  txt('Kontakt',  C_KP.x+1,    Y+4.5);
-  txt('Zusammenfassung', C_SUM.x+1, Y+4.5);
-  txt('Status',   C_STATUS.x+1, Y+4.5);
-  Y += 7.5;
-
-  const sortedActs = weekActs.slice().sort(function(a,b){ return (b.date||'').localeCompare(a.date||''); });
-  const ROW_H = 6;
-  const MAX_ROWS = 20;
-
-  sortedActs.slice(0, MAX_ROWS).forEach(function(a, idx){
-    const contact = STATE.contacts.find(function(x){ return x.id === a.contactId; });
-
-    // Alternating row background
-    if(idx%2===0) fillR(ML, Y, CW, ROW_H, 248,250,253);
-    else          fillR(ML, Y, CW, ROW_H, 255,255,255);
-
-    // Date
-    doc.setFont('helvetica','normal');
-    doc.setFontSize(7.5);
-    rgbT(80,95,120);
-    txt(fmtDShort(a.date), C_DATE.x+1, Y+4);
-
-    // Type badge (colored rectangle + white text)
-    const typColors = {
-      'Anruf':   [37,99,235],
-      'Mail':    [200,120,0],
-      'Meeting': [5,130,90],
-      'Demo':    [120,60,200],
-      'Angebot': [200,16,46],
-      'WhatsApp':[30,170,80],
-    };
-    const tc = typColors[a.typ] || [90,105,130];
-    fillR(C_TYP.x+1, Y+0.8, 14, 4.2, tc[0],tc[1],tc[2]);
-    doc.setFont('helvetica','bold');
-    doc.setFontSize(5.8);
-    rgbT(255,255,255);
-    txt(clamp(a.typ||'',8), C_TYP.x+2, Y+4);
-
-    // Firma
-    doc.setFont('helvetica','bold');
-    doc.setFontSize(7.5);
-    rgbT(13,22,40);
-    txt(clamp(contact ? contact.firma||'--' : '--', 26), C_FIRMA.x+1, Y+4);
-
-    // Kontaktperson
-    doc.setFont('helvetica','normal');
-    doc.setFontSize(7);
-    rgbT(90,105,130);
-    txt(clamp(contact ? contact.kontakt||'--' : '--', 20), C_KP.x+1, Y+4);
-
-    // Summary
-    const sumClean = (a.sum||'').replace(/\n/g,' ');
-    doc.setFont('helvetica','normal');
-    doc.setFontSize(7);
-    rgbT(60,75,100);
-    txt(clamp(sumClean, 48), C_SUM.x+1, Y+4);
-
-    // Status badge (right edge)
-    if(a.newStatus){
-      const stColors = {
-        'Gewonnen': [16,160,100],
-        'Verloren': [200,50,50],
-        'Angebot':  [180,100,0],
-        'Kontaktiert':[37,99,235],
-      };
-      const sc = stColors[a.newStatus] || [90,105,130];
-      fillR(C_STATUS.x, Y+0.8, 14, 4.2, sc[0],sc[1],sc[2]);
-      doc.setFont('helvetica','bold');
-      doc.setFontSize(5.5);
-      rgbT(255,255,255);
-      txt(clamp(a.newStatus,10), C_STATUS.x+1, Y+4);
+    font('bold',19); ink([255,255,255]);
+    T('WOCHENBERICHT', PW-MR, 12.5, {align:'right'});
+    font('normal',8.5); ink([200,212,232]);
+    T('KW ' + kw + '   |   ' + fmtDFull(mondayISO) + ' – ' + fmtDFull(sundayISO), PW-MR, 18.5, {align:'right'});
+    if(subtitle){ font('normal',7); ink([140,160,195]); T(subtitle, PW-MR, 23.5, {align:'right'}); }
+  }
+  function drawFooter(){
+    box(0,PH-FOOTER_H,PW,FOOTER_H, NAVY);
+    box(0,PH-FOOTER_H,PW,1.4, RED);
+    font('normal',7); ink([150,168,200]);
+    T('Mobil in Time AG  ·  Vertraulich', ML, PH-5.5);
+    const nowStr = new Date().toLocaleDateString('de-CH') + '  ' +
+                   new Date().toLocaleTimeString('de-CH',{hour:'2-digit',minute:'2-digit'});
+    T('Erstellt ' + nowStr, PW-MR, PH-5.5, {align:'right'});
+    font('bold',7.5); ink([255,255,255]);
+    T('Seite ' + pageNum, PW/2, PH-5.5, {align:'center'});
+  }
+  function newPage(subtitle){
+    if(pageNum > 0) doc.addPage();
+    pageNum++;
+    drawHeader(subtitle);
+    drawFooter();
+    return TOP_Y;
+  }
+  // Y cursor + pagination guard
+  let Y = 0;
+  let curSubtitle = '';
+  function ensure(h, subtitle){
+    if(Y + h > BOTTOM_LIMIT){
+      Y = newPage(subtitle || curSubtitle);
     }
+  }
 
-    // Row separator
-    hline(ML, ML+CW, Y+ROW_H, 210,218,230, 0.15);
-    Y += ROW_H;
+  /* ---- section header bar ---- */
+  function sectionBar(label, rightLabel){
+    ensure(11);
+    box(ML, Y, CW, 8, NAVY);
+    box(ML, Y, 2.2, 8, RED);
+    font('bold',9); ink([255,255,255]);
+    T(label, ML+5, Y+5.5);
+    if(rightLabel){ font('normal',7.5); ink([155,172,205]); T(rightLabel, PW-MR-2, Y+5.5, {align:'right'}); }
+    Y += 8 + 3;
+  }
+
+  /* ============================================================
+     PAGE 1 — EXECUTIVE COVER
+  ============================================================ */
+  Y = newPage('Executive Summary');
+
+  // -- Intro line --
+  font('normal',8); ink(SLATE);
+  T('Zusammenfassung der Vertriebsaktivitäten und Pipeline-Entwicklung für die laufende Kalenderwoche.', ML, Y+1);
+  Y += 7;
+
+  /* ---- KPI ROW (6 cards) ---- */
+  const kpiDefs = [
+    { label:'AKTIVITÄTEN', val:String(weekActs.length),        accent:RED   },
+    { label:'ANRUFE',      val:String(typCount['Anruf']||0),   accent:[37,99,235] },
+    { label:'MAILS',       val:String(typCount['Mail']||0),    accent:AMBER },
+    { label:'MEETINGS',    val:String(typCount['Meeting']||0), accent:GREEN },
+    { label:'ANGEBOTE',    val:String(typCount['Angebot']||0), accent:[150,80,200] },
+    { label:'NEUE LEADS',  val:String(newContacts.length),     accent:[90,105,130] },
+  ];
+  const KGAP = 3.2;
+  const KW_ = (CW - KGAP*5)/6;
+  const KH = 22;
+  kpiDefs.forEach((k,i)=>{
+    const x = ML + i*(KW_+KGAP);
+    rbox(x, Y, KW_, KH, [255,255,255], 1.5);
+    rbdr(x, Y, KW_, KH, LINE, 0.3, 1.5);
+    box(x, Y, KW_, 2, k.accent);
+    font('bold',17); ink(INK);
+    T(k.val, x+KW_/2, Y+13, {align:'center'});
+    font('bold',5.6); ink(SLATE2);
+    T(k.label, x+KW_/2, Y+18.5, {align:'center'});
   });
+  Y += KH + 6;
 
-  if(weekActs.length > MAX_ROWS){
+  /* ---- PIPELINE HERO + ACTIVITY MIX (two columns) ---- */
+  const heroH = 40;
+  const leftW = CW*0.56;
+  const rightW = CW*0.40;
+  const rightX = ML + CW - rightW;
+
+  // Left: pipeline hero card
+  rbox(ML, Y, leftW, heroH, NAVY, 2);
+  box(ML, Y, leftW, 2.4, RED);
+  font('bold',7.5); ink([150,170,205]);
+  T('PIPELINE — OFFENE DEALS', ML+6, Y+8);
+  font('bold',24); ink([255,255,255]);
+  T(fmtCHFpdf(pipeTotal), ML+6, Y+20);
+  font('normal',8); ink([170,186,214]);
+  T(openDeals.length + ' aktive Deals  ·  gewichtet ' + fmtCHFpdf(weightedPipe), ML+6, Y+27);
+  // mini stat row inside hero
+  const hsY = Y+34;
+  font('bold',10);
+  ink(wonActs.length? [80,220,150] : [120,140,170]);
+  T(wonActs.length? fmtCHFpdf(wonCHF) : '—', ML+6, hsY);
+  font('normal',6.2); ink([150,170,205]); T('GEWONNEN KW', ML+6, hsY+4);
+  font('bold',10); ink(overdueList.length? [255,140,140] : [80,220,150]);
+  T(String(overdueList.length), ML+leftW*0.42, hsY);
+  font('normal',6.2); ink([150,170,205]); T('ÜBERFÄLLIGE WV', ML+leftW*0.42, hsY+4);
+  font('bold',10); ink([255,255,255]);
+  T(String(newContacts.length), ML+leftW*0.74, hsY);
+  font('normal',6.2); ink([150,170,205]); T('NEUE LEADS', ML+leftW*0.74, hsY+4);
+
+  // Right: activity mix bars
+  rbox(rightX, Y, rightW, heroH, [255,255,255], 2);
+  rbdr(rightX, Y, rightW, heroH, LINE, 0.3, 2);
+  box(rightX, Y, rightW, 2.4, NAVY);
+  font('bold',7.5); ink(SLATE);
+  T('AKTIVITÄTEN NACH TYP', rightX+5, Y+8);
+  const mixTypes = ['Anruf','Mail','Meeting','Demo','Angebot'];
+  const mixMax = Math.max(1, ...mixTypes.map(t=>typCount[t]||0));
+  const mixBarMaxW = rightW - 34;
+  let mY = Y+14.5;
+  mixTypes.forEach(t=>{
+    const cnt = typCount[t]||0;
+    font('normal',7); ink(SLATE);
+    T(t, rightX+5, mY);
+    const bw = (cnt/mixMax)*mixBarMaxW;
+    box(rightX+24, mY-2.6, mixBarMaxW, 3.2, LINE2);
+    if(cnt>0) box(rightX+24, mY-2.6, Math.max(1.2,bw), 3.2, (TYP_COLORS[t]||SLATE));
+    font('bold',7); ink(INK);
+    T(String(cnt), rightX+rightW-4, mY, {align:'right'});
+    mY += 5.4;
+  });
+  Y += heroH + 6;
+
+  /* ---- WON / LOST callouts (only if any) ---- */
+  if(wonActs.length || lostActs.length){
+    const calloutH = 7;
+    if(wonActs.length){
+      const names = wonActs.map(a=>{const c=STATE.contacts.find(x=>x.id===a.contactId);return c?c.firma:null;}).filter(Boolean);
+      rbox(ML, Y, CW, calloutH, [235,248,241], 1.5);
+      box(ML, Y, 2, calloutH, GREEN);
+      font('bold',7.5); ink(GREEN); T('GEWONNEN  ' + fmtCHFpdf(wonCHF), ML+5, Y+4.7);
+      font('normal',7.5); ink(SLATE); T(clip(names.join(', '), 110), ML+48, Y+4.7);
+      Y += calloutH + 2;
+    }
+    if(lostActs.length){
+      const names = lostActs.map(a=>{const c=STATE.contacts.find(x=>x.id===a.contactId);return c?c.firma:null;}).filter(Boolean);
+      rbox(ML, Y, CW, calloutH, [251,238,238], 1.5);
+      box(ML, Y, 2, calloutH, [200,50,50]);
+      font('bold',7.5); ink([200,50,50]); T('VERLOREN (' + lostActs.length + ')', ML+5, Y+4.7);
+      font('normal',7.5); ink(SLATE); T(clip(names.join(', '), 120), ML+40, Y+4.7);
+      Y += calloutH + 2;
+    }
     Y += 2;
-    doc.setFont('helvetica','normal');
-    doc.setFontSize(7);
-    rgbT(130,145,165);
-    txt('+ ' + (weekActs.length - MAX_ROWS) + ' weitere Aktivitaeten im CRM', ML+2, Y+4);
-    Y += 7;
-  } else {
+  }
+
+  /* ---- TOP OFFENE DEALS table (executive focus) ---- */
+  if(topDeals.length){
+    curSubtitle = 'Executive Summary';
+    sectionBar('TOP OFFENE DEALS', topDeals.length + ' von ' + openDeals.length);
+    // columns
+    const dcFirma  = ML+1;
+    const dcKontakt= ML+62;
+    const dcStatus = ML+104;
+    const dcWV     = ML+134;
+    const dcWert   = PW-MR-1;
+    // header
+    box(ML, Y, CW, 6, PAPER);
+    font('bold',6.5); ink(SLATE);
+    T('FIRMA', dcFirma+1, Y+4);
+    T('KONTAKT', dcKontakt, Y+4);
+    T('STATUS', dcStatus, Y+4);
+    T('WIEDERVORLAGE', dcWV, Y+4);
+    T('WERT', dcWert, Y+4, {align:'right'});
+    Y += 6.5;
+    topDeals.forEach((c,idx)=>{
+      ensure(7, 'Executive Summary');
+      if(idx%2===0) box(ML, Y, CW, 6.4, [252,253,255]);
+      font('bold',8); ink(INK);
+      T(clip(c.firma||'—', 34), dcFirma+1, Y+4.3);
+      font('normal',7.5); ink(SLATE);
+      T(clip(c.kontakt||'—', 22), dcKontakt, Y+4.3);
+      // status pill
+      const sc = STATUS_COLORS[c.status]||SLATE;
+      const pillW = 26;
+      rbox(dcStatus, Y+1.4, pillW, 3.6, sc, 1.8);
+      font('bold',5.6); ink([255,255,255]);
+      T(clip((c.status||'').toUpperCase(), 13), dcStatus+pillW/2, Y+3.95, {align:'center'});
+      font('normal',7.5); ink(c.wv && c.wv.slice(0,10)<todayStr ? [200,50,50] : SLATE);
+      T(fmtDFull(c.wv), dcWV, Y+4.3);
+      font('bold',8); ink(INK);
+      T(fmtCHFpdf(c.chf), dcWert, Y+4.3, {align:'right'});
+      line(ML, Y+6.4, ML+CW, Y+6.4, LINE, 0.15);
+      Y += 6.4;
+    });
     Y += 4;
   }
 
-  /* ================================================================
-     OVERDUE WIEDERVORLAGEN
-  ================================================================ */
-  if(overdueList.length > 0 && Y < PH - 48){
-    // Header bar - red
-    fillR(ML, Y, CW, 8, 180, 30, 40);
-    doc.setFont('helvetica','bold');
-    doc.setFontSize(8.5);
-    rgbT(255,255,255);
-    txt('FAELLIGE WIEDERVORLAGEN (' + overdueList.length + ')', ML+3, Y+5.5);
-    Y += 9;
+  /* ============================================================
+     ACTIVITY TABLE — full list, paginated
+  ============================================================ */
+  curSubtitle = 'Aktivitäten';
+  // Force a fresh page for the detailed log so it always starts clean
+  Y = newPage('Aktivitäten');
+  sectionBar('AKTIVITÄTEN DIESE WOCHE', weekActs.length + ' Einträge');
 
-    // Column header
-    fillR(ML, Y, CW, 6, 250, 235, 235);
-    doc.setFont('helvetica','bold');
-    doc.setFontSize(6.5);
-    rgbT(140,60,60);
-    txt('Firma',         ML+3,          Y+4.2);
-    txt('Kontakt',       ML+58,         Y+4.2);
-    txt('Wiedervorlage', ML+110,        Y+4.2);
-    txt('Wert',          PW-MR,         Y+4.2, {align:'right'});
-    Y += 7;
+  // column geometry
+  const aDate   = ML+1;
+  const aTyp    = ML+15;
+  const aFirma  = ML+34;
+  const aKont   = ML+82;
+  const aSum    = ML+116;
+  const aSumW   = CW - 116 - 24;        // remaining width for summary
+  const aStatus = PW-MR-23;
 
-    overdueList.slice(0, 10).forEach(function(c, idx){
-      if(idx%2===0) fillR(ML, Y, CW, 6, 255,248,248);
-      else          fillR(ML, Y, CW, 6, 255,255,255);
+  function activityTableHeader(){
+    box(ML, Y, CW, 6.2, PAPER);
+    font('bold',6.5); ink(SLATE);
+    T('DATUM', aDate, Y+4.1);
+    T('TYP', aTyp, Y+4.1);
+    T('FIRMA', aFirma, Y+4.1);
+    T('KONTAKT', aKont, Y+4.1);
+    T('ZUSAMMENFASSUNG', aSum, Y+4.1);
+    T('STATUS', aStatus, Y+4.1);
+    Y += 6.2;
+  }
+  activityTableHeader();
 
-      // Left red marker
-      fillR(ML, Y+1, 2.5, 4, 200,16,46);
+  if(weekActs.length === 0){
+    font('normal',8); ink(SLATE2);
+    T('Keine Aktivitäten in dieser Woche erfasst.', ML+2, Y+5);
+    Y += 8;
+  } else {
+    const ROW_H = 6.6;
+    weekActs.forEach((a,idx)=>{
+      if(Y + ROW_H > BOTTOM_LIMIT){
+        Y = newPage('Aktivitäten');
+        sectionBar('AKTIVITÄTEN (Fortsetzung)', weekActs.length + ' Einträge gesamt');
+        activityTableHeader();
+      }
+      const contact = STATE.contacts.find(x=>x.id===a.contactId);
+      if(idx%2===0) box(ML, Y, CW, ROW_H, [252,253,255]);
 
-      doc.setFont('helvetica','bold');
-      doc.setFontSize(7.5);
-      rgbT(13,22,40);
-      txt(clamp(c.firma||'--', 32), ML+5, Y+4.3);
+      font('normal',7.5); ink(SLATE);
+      T(fmtDShort(a.date), aDate, Y+4.4);
 
-      doc.setFont('helvetica','normal');
-      doc.setFontSize(7);
-      rgbT(90,105,130);
-      txt(clamp(c.kontakt||'--', 22), ML+58, Y+4.3);
+      // typ pill
+      const tc = TYP_COLORS[a.typ]||SLATE;
+      rbox(aTyp, Y+1.3, 16, 4, tc, 1.8);
+      font('bold',5.8); ink([255,255,255]);
+      T(clip(a.typ||'—', 9), aTyp+8, Y+4.1, {align:'center'});
 
-      // WV date
-      doc.setFont('helvetica','bold');
-      doc.setFontSize(7);
-      rgbT(180,40,40);
-      txt('WV: ' + fmtDFull(c.wv), ML+110, Y+4.3);
+      font('bold',7.6); ink(INK);
+      T(clip(contact?contact.firma||'—':'—', 27), aFirma, Y+4.4);
+      font('normal',7); ink(SLATE);
+      T(clip(contact?contact.kontakt||'—':'—', 20), aKont, Y+4.4);
 
-      // CHF value
-      doc.setFont('helvetica','bold');
-      doc.setFontSize(7.5);
-      if(c.chf){ rgbT(13,22,40); txt(fmtCHFpdf(c.chf), PW-MR, Y+4.3, {align:'right'}); }
-      else { rgbT(160,170,185); txt('--', PW-MR, Y+4.3, {align:'right'}); }
+      font('normal',7); ink([70,84,110]);
+      T(clip((a.sum||'').replace(/\s+/g,' '), Math.floor(aSumW/1.45)), aSum, Y+4.4);
 
-      hline(ML, ML+CW, Y+6, 230,220,220, 0.15);
-      Y += 6;
+      if(a.newStatus){
+        const sc = STATUS_COLORS[a.newStatus]||SLATE;
+        rbox(aStatus, Y+1.3, 23, 4, sc, 1.8);
+        font('bold',5.4); ink([255,255,255]);
+        T(clip(a.newStatus.toUpperCase(), 11), aStatus+11.5, Y+4.1, {align:'center'});
+      }
+      line(ML, Y+ROW_H, ML+CW, Y+ROW_H, LINE, 0.12);
+      Y += ROW_H;
     });
   }
+  Y += 5;
 
-  /* ================================================================
-     FOOTER
-  ================================================================ */
-  // Fill remaining space, then footer bar at page bottom
-  fillR(0, PH-14, PW, 14, 13, 22, 40);
-  fillR(0, PH-14, PW, 2,  200,16,46);
+  /* ============================================================
+     OVERDUE WIEDERVORLAGEN — full list, paginated
+  ============================================================ */
+  if(overdueList.length){
+    curSubtitle = 'Überfällige Wiedervorlagen';
+    ensure(20, curSubtitle);
+    sectionBar('ÜBERFÄLLIGE WIEDERVORLAGEN', overdueList.length + ' offen');
 
-  doc.setFont('helvetica','normal');
-  doc.setFontSize(7.5);
-  rgbT(140,160,195);
-  txt('Mobil in Time AG (An Aggreko Company)  |  Sales Engineer Strom', ML, PH-6);
+    const oFirma = ML+1;
+    const oKont  = ML+58;
+    const oStat  = ML+104;
+    const oWV    = ML+134;
+    const oWert  = PW-MR-1;
+    function overdueHeader(){
+      box(ML, Y, CW, 6.2, [251,238,238]);
+      font('bold',6.5); ink([150,70,70]);
+      T('FIRMA', oFirma+1, Y+4.1);
+      T('KONTAKT', oKont, Y+4.1);
+      T('STATUS', oStat, Y+4.1);
+      T('FÄLLIG SEIT', oWV, Y+4.1);
+      T('WERT', oWert, Y+4.1, {align:'right'});
+      Y += 6.2;
+    }
+    overdueHeader();
+    const ROW_H = 6.6;
+    overdueList.forEach((c,idx)=>{
+      if(Y + ROW_H > BOTTOM_LIMIT){
+        Y = newPage('Überfällige Wiedervorlagen');
+        sectionBar('ÜBERFÄLLIGE WV (Fortsetzung)', overdueList.length + ' gesamt');
+        overdueHeader();
+      }
+      if(idx%2===0) box(ML, Y, CW, ROW_H, [255,250,250]);
+      box(ML, Y+1.2, 1.8, ROW_H-2.4, RED);
+      font('bold',7.8); ink(INK);
+      T(clip(c.firma||'—', 32), oFirma+4, Y+4.4);
+      font('normal',7); ink(SLATE);
+      T(clip(c.kontakt||'—', 22), oKont, Y+4.4);
+      const sc = STATUS_COLORS[c.status]||SLATE;
+      rbox(oStat, Y+1.3, 23, 4, sc, 1.8);
+      font('bold',5.4); ink([255,255,255]);
+      T(clip((c.status||'').toUpperCase(), 11), oStat+11.5, Y+4.1, {align:'center'});
+      font('bold',7); ink([190,40,40]);
+      T(fmtDFull(c.wv), oWV, Y+4.4);
+      font('bold',7.8); ink(INK);
+      T(fmtCHFpdf(c.chf), oWert, Y+4.4, {align:'right'});
+      line(ML, Y+ROW_H, ML+CW, Y+ROW_H, [235,222,222], 0.12);
+      Y += ROW_H;
+    });
+    Y += 4;
+  }
 
-  const nowStr = new Date().toLocaleDateString('de-CH') + '  |  ' +
-                 new Date().toLocaleTimeString('de-CH',{hour:'2-digit',minute:'2-digit'});
-  txt('Erstellt: ' + nowStr, PW-MR, PH-6, {align:'right'});
-
-  // Center page number
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(8);
-  rgbT(255,255,255);
-  txt('1', PW/2, PH-6, {align:'center'});
-
-  /* ================================================================
+  /* ============================================================
      SAVE
-  ================================================================ */
-  const fname = 'MiT-Wochenbericht-KW' + getKW(new Date(mondayISO + 'T12:00:00')) + '-' + new Date().getFullYear() + '.pdf';
+  ============================================================ */
+  const fname = 'MiT-Wochenbericht-KW' + kw + '-' + new Date().getFullYear() + '.pdf';
   doc.save(fname);
-  showToast('PDF gespeichert: ' + fname, 'success');
+  showToast('PDF gespeichert: ' + fname + ' (' + pageNum + ' Seite' + (pageNum>1?'n':'') + ')', 'success');
 };
 
 // Helper: ISO week number
