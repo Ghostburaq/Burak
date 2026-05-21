@@ -3400,7 +3400,7 @@ window.handleExcelFile = function(input){
         firma:    colIdx('firma','company','unternehmen','kunde','société','ragione'),
         kontakt:  colIdx('kontakt','kontaktperson','ansprech','name','person','contact'),
         ort:      colIdx('einsatzort','standort','adress','ort','plz','location','lieu'),
-        datum:    colIdx('datum','date','letzter'),
+        datum:    colIdx('datum','date','letzter kontakt','letzte aktivität','letzter kundenkontakt','last contact'),
         status:   colIdx('status','stufe','phase','stage'),
         chf:      colIdx('angebot','chf','betrag','wert','umsatz','value','montant','revenue','budget'),
         segment:  colIdx('segment','branche','industrie','kategorie','category'),
@@ -3419,6 +3419,8 @@ window.handleExcelFile = function(input){
         if(/letzter anruf|telefonkontakt|anruf gemacht|telefon ja\/nein|appel/i.test(h) && ix.anruf < 0) ix.anruf = i;
         if(/letzter mail|mailkontakt|mail gemacht|mail ja\/nein/i.test(h) && ix.mail < 0) ix.mail = i;
       });
+      // Don't let the date column point at an activity Y/N column
+      if(ix.datum === ix.anruf || ix.datum === ix.mail) ix.datum = -1;
 
       let imported = 0;
       let skipped = 0;
@@ -3491,10 +3493,11 @@ window.handleExcelFile = function(input){
         };
         STATE.contacts.push(c);
 
-        // If date+anruf/mail set, auto-log activity
-        const importDate = ix.datum >= 0 ? parseDate(row[ix.datum]) : null;
-        const wasAnruf = ix.anruf >= 0 && /^ja$/i.test(String(row[ix.anruf]||'').trim());
-        const wasMail = ix.mail >= 0 && /^ja$/i.test(String(row[ix.mail]||'').trim());
+        // If anruf/mail flagged, auto-log activity. Use the contact-date column
+        // if present, otherwise fall back to the Wiedervorlage date or today.
+        const wasAnruf = ix.anruf >= 0 && /^(ja|x|yes|✓|1)$/i.test(String(row[ix.anruf]||'').trim());
+        const wasMail = ix.mail >= 0 && /^(ja|x|yes|✓|1)$/i.test(String(row[ix.mail]||'').trim());
+        const importDate = (ix.datum >= 0 ? parseDate(row[ix.datum]) : null) || c.wv || todayISO();
         if(importDate && (wasAnruf || wasMail)){
           if(wasAnruf){
             STATE.activities.push({
