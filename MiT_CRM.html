@@ -272,6 +272,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .bd-won      {background:var(--good-soft);color:var(--good)}
 .bd-lost     {background:var(--danger-soft);color:var(--danger)}
 .bd-paused   {background:rgba(100,116,139,0.14);color:#475569}
+.bd-done     {background:rgba(13,148,136,0.13);color:#0f766e}
 
 /* Score pill */
 .score{
@@ -482,6 +483,27 @@ input,select,textarea{font-family:inherit;font-size:14px}
   transition:all 0.15s;display:flex;align-items:center;gap:6px;margin-top:4px}
 .add-field-btn:hover{border-color:var(--brand);color:var(--brand)}
 .field-section{border:1px solid var(--line);border-radius:var(--r-md);padding:12px 14px;margin-top:4px}
+.extra-contact-card{border:1px solid var(--line);border-radius:var(--r-md);padding:12px 14px 14px;margin-bottom:10px;background:var(--bg2)}
+.extra-contact-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.extra-contact-num{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:var(--brand);background:var(--brand-soft);padding:2px 8px;border-radius:10px}
+
+/* Turbo quick-follow-up */
+.btn-turbo{background:var(--brand);color:#fff;font-weight:700}
+.btn-turbo:hover{background:var(--brand-2)}
+.turbo-pop{position:fixed;z-index:2000;width:300px;background:var(--bg-card);border:1px solid var(--line-strong);
+  border-radius:var(--r-md);box-shadow:var(--shadow-2);padding:6px;display:none}
+.turbo-pop-h{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--brand);padding:6px 8px 8px}
+.turbo-opt{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;text-align:left;
+  background:transparent;border:none;padding:9px 10px;border-radius:var(--r-sm);font-size:13px;color:var(--text);cursor:pointer;transition:background 0.12s}
+.turbo-opt:hover{background:var(--bg-hover)}
+.turbo-txt{flex:1}
+.turbo-days{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:var(--brand);background:var(--brand-soft);padding:2px 7px;border-radius:9px;flex-shrink:0}
+.turbo-edit{border-top:1px solid var(--line);margin-top:4px;color:var(--text-mute);font-size:12px}
+.turbo-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.turbo-row-text{flex:1;background:var(--bg-input);border:1px solid var(--line2);color:var(--text);padding:7px 10px;border-radius:var(--r-sm);outline:none}
+.turbo-row-text:focus{border-color:var(--brand)}
+.turbo-row-days{width:64px;background:var(--bg-input);border:1px solid var(--line2);color:var(--text);padding:7px 8px;border-radius:var(--r-sm);outline:none}
+.turbo-row-days:focus{border-color:var(--brand)}
 
 /* ── WOCHENBERICHT ────────────────────────────────────────── */
 .wb-section{margin-bottom:18px}
@@ -809,6 +831,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
               <option value="Gewonnen">Gewonnen</option>
               <option value="Verloren">Verloren</option>
               <option value="Pausiert">Pausiert</option>
+              <option value="Erledigt">Erledigt</option>
             </select>
             <select id="filterSegment" onchange="window.renderKontakte()">
               <option value="">Alle Segmente</option>
@@ -1060,6 +1083,17 @@ input,select,textarea{font-family:inherit;font-size:14px}
             </div>
           </div>
           <button class="btn btn-primary mt-md" onclick="window.saveWbSettings()">Einstellungen speichern</button>
+
+          <div class="section-h" id="turboSettings">⚡ Turbo-Nachfass Vorlagen</div>
+          <p class="tx-mute mb-md" style="font-size:12px;line-height:1.6;margin-top:-8px">
+            Mit einem Klick auf das ⚡ neben einer Wiedervorlage wird ein Anruf mit der gewählten Notiz geloggt und die Wiedervorlage automatisch um die angegebene Anzahl Tage verschoben. Ideal für schnelles Abtelefonieren einer Liste.
+          </p>
+          <div id="turboPresetRows"></div>
+          <div class="row gap-md mt-md">
+            <button class="btn btn-ghost btn-sm" onclick="window.addTurboPreset()">＋ Vorlage hinzufügen</button>
+            <button class="btn btn-primary btn-sm" onclick="window.saveTurboSettings()">Turbo-Vorlagen speichern</button>
+          </div>
+
           <div class="section-h">E-Mail Signatur</div>
           <p class="tx-mute mb-md" style="font-size:12px;line-height:1.6;margin-top:-8px">Wird automatisch an generierte Emails angehängt. Die KI fügt danach keine eigene Signatur mehr ein.</p>
           <div class="field">
@@ -1138,10 +1172,16 @@ input,select,textarea{font-family:inherit;font-size:14px}
         <div class="field"><label>Status</label>
           <select id="cStatus">
             <option>Lead</option><option>Kontaktiert</option><option>Angebot</option>
-            <option>Verhandlung</option><option>Gewonnen</option><option>Verloren</option><option>Pausiert</option>
+            <option>Verhandlung</option><option>Gewonnen</option><option>Verloren</option><option>Pausiert</option><option>Erledigt</option>
           </select>
         </div>
       </div>
+
+      <div class="section-h">Weitere Kontaktpersonen</div>
+      <div id="extraContactsList"></div>
+      <button class="add-field-btn" onclick="window.addExtraContact()" style="margin-top:4px">
+        ＋ Weitere Kontaktperson
+      </button>
 
       <div class="section-h">Deal</div>
       <div class="form-grid">
@@ -1227,7 +1267,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
           <select id="aNewStatus">
             <option value="">— nicht ändern —</option>
             <option>Lead</option><option>Kontaktiert</option><option>Angebot</option>
-            <option>Verhandlung</option><option>Gewonnen</option><option>Verloren</option><option>Pausiert</option>
+            <option>Verhandlung</option><option>Gewonnen</option><option>Verloren</option><option>Pausiert</option><option>Erledigt</option>
           </select>
         </div>
       </div>
@@ -1306,7 +1346,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
           <div class="ai-row"><label>Status</label>
             <select id="ai_status">
               <option>Lead</option><option>Kontaktiert</option><option selected>Angebot</option>
-              <option>Verhandlung</option><option>Gewonnen</option><option>Verloren</option>
+              <option>Verhandlung</option><option>Gewonnen</option><option>Verloren</option><option>Erledigt</option>
             </select>
           </div>
           <div class="ai-row"><label>CHF Zwischensumme</label><input id="ai_chf" type="text" placeholder="z.B. 19'000"></div>
@@ -1549,7 +1589,7 @@ function loadState(){
 function leadScore(c){
   const statusW = {
     'Lead':1, 'Kontaktiert':2, 'Angebot':4, 'Verhandlung':5,
-    'Gewonnen':0, 'Verloren':0, 'Pausiert':0.3
+    'Gewonnen':0, 'Verloren':0, 'Pausiert':0.3, 'Erledigt':0
   };
   const sw = statusW[c.status] !== undefined ? statusW[c.status] : 1;
   if(sw === 0) return 0;
@@ -1634,7 +1674,7 @@ function renderToday(){
   const today = new Date(); today.setHours(0,0,0,0);
   const t30 = new Date(today); t30.setDate(t30.getDate()-30);
 
-  const open = STATE.contacts.filter(c => !['Gewonnen','Verloren','Pausiert'].includes(c.status));
+  const open = STATE.contacts.filter(c => !['Gewonnen','Verloren','Pausiert','Erledigt'].includes(c.status));
   const pipelineCHF = open.reduce((s,c)=>s + (parseFloat(c.chf)||0), 0);
   const weightedCHF = open.reduce((s,c)=>{
     const chf = parseFloat(c.chf)||0;
@@ -1695,6 +1735,7 @@ function renderToday(){
           <div class="todo-actions">
             ${c.tel?`<a class="btn btn-tiny btn-ghost" href="tel:${escHtml(c.tel)}">☎</a>`:''}
             ${c.email?`<a class="btn btn-tiny btn-ghost" href="mailto:${escHtml(c.email)}">✉</a>`:''}
+            <button class="btn btn-tiny btn-turbo" onclick="window.openTurbo(event,'${c.id}')" title="Turbo-Nachfass">⚡</button>
             <button class="btn btn-tiny btn-good" onclick="window.quickLog('${c.id}')">Log</button>
           </div>
         </div>`;
@@ -1702,7 +1743,7 @@ function renderToday(){
 
   // Hot leads
   const hot = STATE.contacts
-    .filter(c => !['Verloren','Pausiert'].includes(c.status))
+    .filter(c => !['Verloren','Pausiert','Erledigt'].includes(c.status))
     .map(c => ({...c, score: leadScore(c)}))
     .sort((a,b) => b.score - a.score)
     .slice(0,7);
@@ -1728,7 +1769,7 @@ function renderToday(){
 function statusClass(s){
   return ({
     'Lead':'bd-lead', 'Kontaktiert':'bd-contacted', 'Angebot':'bd-quote',
-    'Verhandlung':'bd-negotiate', 'Gewonnen':'bd-won', 'Verloren':'bd-lost', 'Pausiert':'bd-paused'
+    'Verhandlung':'bd-negotiate', 'Gewonnen':'bd-won', 'Verloren':'bd-lost', 'Pausiert':'bd-paused', 'Erledigt':'bd-done'
   })[s] || 'bd-paused';
 }
 
@@ -1794,7 +1835,8 @@ window.renderKontakte = function renderKontakte(){
     (c.tel||'').toLowerCase().includes(search) ||
     (c.notiz||'').toLowerCase().includes(search) ||
     (c.extraEmails||[]).some(e=>(e.val||'').toLowerCase().includes(search)) ||
-    (c.extraTels||[]).some(t=>(t.val||'').toLowerCase().includes(search))
+    (c.extraTels||[]).some(t=>(t.val||'').toLowerCase().includes(search)) ||
+    (c.extraContacts||[]).some(p=>((p.name||'')+' '+(p.email||'')+' '+(p.tel||'')+' '+(p.position||'')).toLowerCase().includes(search))
   );
   if(stat) list = list.filter(c => c.status === stat);
   if(seg) list = list.filter(c => c.segment === seg);
@@ -1842,7 +1884,7 @@ const PIPE_COLS = ['Lead','Kontaktiert','Angebot','Verhandlung','Gewonnen','Verl
 
 function renderPipeline(){
   // KPIs: all deals shown on board (incl. Verloren so user can move cards back)
-  const allDeals = STATE.contacts.filter(c => c.status !== 'Pausiert');
+  const allDeals = STATE.contacts.filter(c => !['Pausiert','Erledigt'].includes(c.status));
   const open = STATE.contacts.filter(c => !['Verloren','Pausiert','Gewonnen'].includes(c.status));
   const cols = {};
   PIPE_COLS.forEach(s => { cols[s] = []; });
@@ -1963,7 +2005,7 @@ function renderWiedervorlagen(){
   const wEndDate = new Date(today); wEndDate.setDate(wEndDate.getDate()+7);
   const wEndIso = localISO(wEndDate);
 
-  const open = STATE.contacts.filter(c => !['Gewonnen','Verloren','Pausiert'].includes(c.status) && c.wv);
+  const open = STATE.contacts.filter(c => !['Gewonnen','Verloren','Pausiert','Erledigt'].includes(c.status) && c.wv);
 
   const overdue = open.filter(c => c.wv.slice(0,10) < todayIso).sort((a,b)=>(a.wv||'').localeCompare(b.wv||''));
   const todayDue = open.filter(c => c.wv.slice(0,10) === todayIso);
@@ -1983,6 +2025,7 @@ function renderWiedervorlagen(){
       <div class="todo-actions">
         ${c.tel?`<a class="btn btn-tiny btn-ghost" href="tel:${escHtml(c.tel)}">☎</a>`:''}
         ${c.email?`<a class="btn btn-tiny btn-ghost" href="mailto:${escHtml(c.email)}">✉</a>`:''}
+        <button class="btn btn-tiny btn-turbo" onclick="window.openTurbo(event,'${c.id}')" title="Turbo-Nachfass">⚡</button>
         <button class="btn btn-tiny btn-good" onclick="window.quickLog('${c.id}')">Log</button>
         <button class="btn btn-tiny btn-ghost" onclick="window.snooze('${c.id}',7)">+7d</button>
       </div>
@@ -2017,9 +2060,99 @@ window.snooze = function(id, days){
   showToast('Wiedervorlage verschoben auf ' + fmtDate(c.wv), 'success');
 };
 
+// ════════════════════════════════════════════════════════════════════════
+//  TURBO — Schnell-Nachfass (1 Klick: Anruf loggen + Wiedervorlage planen)
+// ════════════════════════════════════════════════════════════════════════
+const TURBO_KEY = 'mit_crm_turbo_presets';
+const TURBO_DEFAULTS = [
+  {text:'Nicht erreicht – keine Combox',                 days:3},
+  {text:'Combox besprochen – Rückruf erbeten',           days:4},
+  {text:'Zuständige Person in den Ferien',               days:14},
+  {text:'Projektleiter erst nächste Woche erreichbar',   days:7},
+  {text:'Kein Interesse aktuell – später nachfassen',    days:30},
+];
+function loadTurboPresets(){
+  try{ const r = JSON.parse(localStorage.getItem(TURBO_KEY)); if(Array.isArray(r) && r.length) return r; }catch(e){}
+  return TURBO_DEFAULTS.map(p=>({...p}));
+}
+function saveTurboPresets(list){ localStorage.setItem(TURBO_KEY, JSON.stringify(list)); }
+
+window.openTurbo = function(ev, contactId){
+  ev.stopPropagation();
+  let pop = document.getElementById('turboPop');
+  if(!pop){ pop = document.createElement('div'); pop.id='turboPop'; pop.className='turbo-pop'; document.body.appendChild(pop); }
+  const presets = loadTurboPresets();
+  pop.innerHTML = '<div class="turbo-pop-h">⚡ Schnell-Nachfass</div>' +
+    presets.map((p,i)=>`<button class="turbo-opt" onclick="window.turboLog('${contactId}',${i})">
+        <span class="turbo-txt">${escHtml(p.text)}</span><span class="turbo-days">+${parseInt(p.days)||7}d</span>
+      </button>`).join('') +
+    '<button class="turbo-opt turbo-edit" onclick="window.closeTurbo();window.nav(\'settings\');setTimeout(()=>{var e=document.getElementById(\'turboSettings\');if(e)e.scrollIntoView({behavior:\'smooth\'})},120)">⚙ Vorlagen bearbeiten</button>';
+  pop.style.display='block';
+  pop.style.visibility='hidden';
+  const r = ev.currentTarget.getBoundingClientRect();
+  const popW = 300;
+  let left = Math.min(r.right - popW, window.innerWidth - popW - 8); if(left < 8) left = 8;
+  let top = r.bottom + 6;
+  if(top + pop.offsetHeight > window.innerHeight - 8) top = Math.max(8, r.top - pop.offsetHeight - 6);
+  pop.style.left = left+'px'; pop.style.top = top+'px';
+  pop.style.visibility='visible';
+  setTimeout(()=>{
+    const closer = (e)=>{ if(!pop.contains(e.target)){ window.closeTurbo(); document.removeEventListener('click', closer); document.removeEventListener('keydown', esc); } };
+    const esc = (e)=>{ if(e.key==='Escape'){ window.closeTurbo(); document.removeEventListener('click', closer); document.removeEventListener('keydown', esc); } };
+    document.addEventListener('click', closer);
+    document.addEventListener('keydown', esc);
+  },0);
+};
+window.closeTurbo = function(){ const pop=document.getElementById('turboPop'); if(pop) pop.style.display='none'; };
+
+window.turboLog = function(contactId, idx){
+  const presets = loadTurboPresets();
+  const p = presets[idx]; if(!p) return;
+  const c = STATE.contacts.find(x=>x.id===contactId); if(!c) return;
+  STATE.activities.push({
+    id: uid(), contactId, date: todayISO(), typ:'Anruf',
+    sum: p.text, next: p.text, newWv:null, newStatus:null, created:new Date().toISOString()
+  });
+  const d = new Date(); d.setDate(d.getDate() + (parseInt(p.days)||7));
+  c.wv = localISO(d);
+  c.next = p.text;
+  if(c.status === 'Lead') c.status = 'Kontaktiert';
+  c.updated = new Date().toISOString();
+  saveState();
+  window.closeTurbo();
+  refreshAll();
+  showToast('⚡ ' + c.firma + ': ' + p.text + ' · WV ' + fmtDate(c.wv), 'success');
+};
+
+// Settings: render + save preset editor
+function renderTurboSettings(){
+  const wrap = document.getElementById('turboPresetRows');
+  if(!wrap) return;
+  const presets = loadTurboPresets();
+  wrap.innerHTML = presets.map((p,i)=>`
+    <div class="turbo-row">
+      <input class="turbo-row-text" value="${escHtml(p.text)}" placeholder="Nachfass-Notiz" oninput="window._turboEdit(${i},'text',this.value)">
+      <input class="turbo-row-days" type="number" min="0" max="365" value="${parseInt(p.days)||7}" oninput="window._turboEdit(${i},'days',this.value)" title="Tage bis Wiedervorlage">
+      <span class="tx-dim" style="font-size:11px">Tage</span>
+      <button class="btn-remove-field" onclick="window._turboRemove(${i})">✕</button>
+    </div>`).join('');
+}
+let _turboDraft = null;
+function turboDraft(){ if(!_turboDraft) _turboDraft = loadTurboPresets(); return _turboDraft; }
+window._turboEdit = (i,field,v)=>{ const d=turboDraft(); if(d[i]) d[i][field] = field==='days' ? (parseInt(v)||0) : v; };
+window._turboRemove = (i)=>{ const d=turboDraft(); d.splice(i,1); _turboDraft=d; saveTurboPresets(d); renderTurboSettings(); };
+window.addTurboPreset = ()=>{ const d=turboDraft(); d.push({text:'',days:7}); _turboDraft=d; renderTurboSettings(); };
+window.saveTurboSettings = ()=>{
+  const d = turboDraft().filter(p=>(p.text||'').trim());
+  if(!d.length){ showToast('Mindestens eine Vorlage nötig', 'error'); return; }
+  saveTurboPresets(d); _turboDraft=null;
+  renderTurboSettings();
+  showToast('✓ Turbo-Vorlagen gespeichert', 'success');
+};
+
 function updateSidebarBadge(){
   const todayIso = todayISO();
-  const open = STATE.contacts.filter(c => !['Gewonnen','Verloren','Pausiert'].includes(c.status) && c.wv);
+  const open = STATE.contacts.filter(c => !['Gewonnen','Verloren','Pausiert','Erledigt'].includes(c.status) && c.wv);
   const due = open.filter(c => c.wv.slice(0,10) <= todayIso).length;
   const badge = document.getElementById('badgeWV');
   if(due > 0){
@@ -2214,6 +2347,7 @@ window.saveContact = function(){
     notiz:   document.getElementById('cNotiz').value.trim(),
     extraEmails: extraEmails.filter(e=>e.val.trim()),
     extraTels:   extraTels.filter(t=>t.val.trim()),
+    extraContacts: extraContacts.filter(p=>(p.name||'').trim() || (p.email||'').trim() || (p.tel||'').trim()),
     updated: new Date().toISOString()
   };
 
@@ -2372,11 +2506,52 @@ window.updateExtraEmailLabel = (i,v) => { if(extraEmails[i]) extraEmails[i].labe
 window.updateExtraTel        = (i,v) => { if(extraTels[i])   extraTels[i].val = v; };
 window.updateExtraTelLabel   = (i,v) => { if(extraTels[i])   extraTels[i].label = v; };
 
+// ─── Additional full contact persons (name + position + email + tel) ───
+let extraContacts = [];
+
+function renderExtraContacts(){
+  const wrap = document.getElementById('extraContactsList');
+  if(!wrap) return;
+  if(extraContacts.length === 0){ wrap.innerHTML=''; return; }
+  wrap.innerHTML = extraContacts.map((p,i) => `
+    <div class="extra-contact-card">
+      <div class="extra-contact-head">
+        <span class="extra-contact-num">#${i+2}</span>
+        <button class="btn-remove-field" onclick="window.removeExtraContact(${i})" title="Entfernen">✕</button>
+      </div>
+      <div class="form-grid">
+        <div class="field"><label>Name</label>
+          <input value="${escHtml(p.name||'')}" placeholder="z.B. Herr Keller" oninput="window.updateExtraContact(${i},'name',this.value)"></div>
+        <div class="field"><label>Position / Rolle</label>
+          <input value="${escHtml(p.position||'')}" placeholder="z.B. Projektleiter" oninput="window.updateExtraContact(${i},'position',this.value)"></div>
+        <div class="field"><label>E-Mail</label>
+          <input type="email" value="${escHtml(p.email||'')}" placeholder="email@firma.ch" oninput="window.updateExtraContact(${i},'email',this.value)"></div>
+        <div class="field"><label>Telefon</label>
+          <input value="${escHtml(p.tel||'')}" placeholder="+41 ..." oninput="window.updateExtraContact(${i},'tel',this.value)"></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+window.addExtraContact = function(){
+  extraContacts.push({name:'',position:'',email:'',tel:''});
+  renderExtraContacts();
+  const inputs = document.querySelectorAll('#extraContactsList .extra-contact-card input');
+  if(inputs.length) inputs[inputs.length-4].focus();
+};
+window.removeExtraContact = function(i){
+  extraContacts.splice(i,1);
+  renderExtraContacts();
+};
+window.updateExtraContact = (i,field,v) => { if(extraContacts[i]) extraContacts[i][field] = v; };
+
 function initExtraContactFields(c){
-  extraEmails = c && c.extraEmails ? [...c.extraEmails] : [];
-  extraTels   = c && c.extraTels   ? [...c.extraTels]   : [];
+  extraEmails   = c && c.extraEmails   ? c.extraEmails.map(e=>({...e}))   : [];
+  extraTels     = c && c.extraTels     ? c.extraTels.map(t=>({...t}))     : [];
+  extraContacts = c && c.extraContacts ? c.extraContacts.map(p=>({...p})) : [];
   renderExtraEmails();
   renderExtraTels();
+  renderExtraContacts();
 }
 
 // ════════════════════════════════════════════════════════════════════════
@@ -2395,7 +2570,8 @@ window.searchGlobal = function(q){
     (c.firma||'').toLowerCase().includes(query) ||
     (c.kontakt||'').toLowerCase().includes(query) ||
     (c.email||'').toLowerCase().includes(query) ||
-    (c.tel||'').toLowerCase().includes(query)
+    (c.tel||'').toLowerCase().includes(query) ||
+    (c.extraContacts||[]).some(p=>((p.name||'')+' '+(p.email||'')+' '+(p.tel||'')).toLowerCase().includes(query))
   ).slice(0, 8);
   if(matches.length === 0){
     wrap.innerHTML = '<div class="gs-empty">Keine Treffer für "' + escHtml(q) + '"</div>';
@@ -3237,7 +3413,7 @@ function validSegment(s){
   return valid.includes(s) ? s : null;
 }
 function validStatus(s){
-  const valid = ['Lead','Kontaktiert','Angebot','Verhandlung','Gewonnen','Verloren','Pausiert'];
+  const valid = ['Lead','Kontaktiert','Angebot','Verhandlung','Gewonnen','Verloren','Pausiert','Erledigt'];
   return valid.includes(s) ? s : null;
 }
 
@@ -3445,7 +3621,7 @@ window.handleExcelFile = function(input){
         let st = ix.status >= 0 ? String(row[ix.status]||'').trim() : 'Lead';
         const stmap = {'Offen':'Kontaktiert','offen':'Kontaktiert','OFFEN':'Kontaktiert'};
         if(stmap[st]) st = stmap[st];
-        if(!['Lead','Kontaktiert','Angebot','Verhandlung','Gewonnen','Verloren','Pausiert'].includes(st)){
+        if(!['Lead','Kontaktiert','Angebot','Verhandlung','Gewonnen','Verloren','Pausiert','Erledigt'].includes(st)){
           st = 'Lead';
         }
 
@@ -3568,11 +3744,12 @@ window.importJsonFile = function(input){
 };
 
 window.exportCSV = function(){
-  const headers = ['Firma','Kontakt','Email','Weitere Emails','Tel','Weitere Tel','Position','Ort','Segment','Status','CHF','Prob','Wiedervorlage','Letzte Aktivität','Notiz','Erstellt'];
+  const headers = ['Firma','Kontakt','Email','Weitere Emails','Tel','Weitere Tel','Weitere Kontaktpersonen','Position','Ort','Segment','Status','CHF','Prob','Wiedervorlage','Letzte Aktivität','Notiz','Erstellt'];
   const rows = STATE.contacts.map(c => [
     c.firma, c.kontakt, c.email,
     (c.extraEmails||[]).map(e=>e.val).join(' | '),
     c.tel, (c.extraTels||[]).map(t=>t.val).join(' | '),
+    (c.extraContacts||[]).map(p=>[p.name,p.position,p.email,p.tel].filter(Boolean).join(' / ')).join(' || '),
     c.position, c.ort, c.segment, c.status,
     c.chf, c.prob, c.wv, lastActivityDate(c.id), c.notiz, c.created
   ].map(v => v === null || v === undefined ? '' : String(v).replace(/[\r\n]+/g,' ').replace(/"/g,'""')));
@@ -3684,7 +3861,7 @@ function calEventsForDate(iso){
 
   // Wiedervorlagen
   STATE.contacts
-    .filter(c => c.wv && c.wv.slice(0,10) === iso && !['Gewonnen','Verloren','Pausiert'].includes(c.status))
+    .filter(c => c.wv && c.wv.slice(0,10) === iso && !['Gewonnen','Verloren','Pausiert','Erledigt'].includes(c.status))
     .forEach(c => {
       const cls = iso < today ? 'overdue' : iso === today ? 'today-ev' : 'future';
       events.push({ label: c.firma, cls, contactId: c.id, typ: 'WV' });
@@ -3806,7 +3983,7 @@ window.calDayClick = function(iso){
   // Populate contact selector
   const sel = document.getElementById('calContact');
   const sorted = [...STATE.contacts]
-    .filter(c => !['Gewonnen','Verloren'].includes(c.status))
+    .filter(c => !['Gewonnen','Verloren','Erledigt'].includes(c.status))
     .sort((a,b) => (a.firma||'').localeCompare(b.firma||'','de'));
   sel.innerHTML = sorted.map(c =>
     `<option value="${c.id}">${escHtml(c.firma)}${c.kontakt?' · '+escHtml(c.kontakt):''}</option>`
@@ -3953,10 +4130,10 @@ function checkWvNotifications(){
   const tomorrowISO = localISO(tomorrow);
 
   const overdue = STATE.contacts.filter(c =>
-    c.wv && c.wv < today && !['Gewonnen','Verloren','Pausiert'].includes(c.status)
+    c.wv && c.wv < today && !['Gewonnen','Verloren','Pausiert','Erledigt'].includes(c.status)
   );
   const dueToday = STATE.contacts.filter(c =>
-    c.wv === today && !['Gewonnen','Verloren','Pausiert'].includes(c.status)
+    c.wv === today && !['Gewonnen','Verloren','Pausiert','Erledigt'].includes(c.status)
   );
 
   if(overdue.length > 0 || dueToday.length > 0){
@@ -4044,7 +4221,7 @@ function generateWochenbericht(){
   const lostThisWeek = statusChanges.filter(a => a.newStatus === 'Verloren');
 
   // Pipeline
-  const openDeals = STATE.contacts.filter(c => !['Gewonnen','Verloren','Pausiert'].includes(c.status));
+  const openDeals = STATE.contacts.filter(c => !['Gewonnen','Verloren','Pausiert','Erledigt'].includes(c.status));
   const pipelineTotal = openDeals.reduce((s,c)=>s+(parseFloat(c.chf)||0),0);
 
   // Overdue WV
@@ -4232,8 +4409,13 @@ window.exportCrmExcel = function(){
   const kontakteHeaders = [
     'ID','Firma','Kontakt','Email','Weitere Emails','Tel','Weitere Tel',
     'Position','Einsatzort','Segment','Status','CHF','Wahrscheinlichkeit %',
-    'Wiedervorlage','Nächster Schritt','Notiz','Erstellt','Aktualisiert'
+    'Wiedervorlage','Nächster Schritt','Notiz','Weitere Kontaktpersonen','Erstellt','Aktualisiert'
   ];
+
+  const serializeExtraContacts = list => (list||[]).map(p=>{
+    const head = [p.name||'', p.position?'('+p.position+')':''].filter(Boolean).join(' ');
+    return [head, p.email?'<'+p.email+'>':'', p.tel||''].filter(Boolean).join(' ');
+  }).join(' || ');
 
   const kontakteRows = STATE.contacts.map(c => [
     c.id || '',
@@ -4252,6 +4434,7 @@ window.exportCrmExcel = function(){
     c.wv || '',
     c.next || '',
     c.notiz || '',
+    serializeExtraContacts(c.extraContacts),
     c.created ? c.created.slice(0,10) : '',
     c.updated ? c.updated.slice(0,10) : ''
   ]);
@@ -4262,7 +4445,7 @@ window.exportCrmExcel = function(){
   wsKontakte['!cols'] = [
     {wch:15},{wch:30},{wch:22},{wch:28},{wch:24},{wch:18},{wch:18},
     {wch:20},{wch:28},{wch:14},{wch:14},{wch:12},{wch:8},
-    {wch:14},{wch:30},{wch:50},{wch:12},{wch:12}
+    {wch:14},{wch:30},{wch:50},{wch:40},{wch:12},{wch:12}
   ];
 
   XLSX.utils.book_append_sheet(wb, wsKontakte, 'Kontakte');
@@ -4388,6 +4571,18 @@ window.importCrmExcelFile = function(input){
           return !isNaN(d) ? localISO(d) : null;
         };
 
+        // Parse additional contact persons: "Name (Position) <email> tel || ..."
+        const extraContactsRaw = String(row['Weitere Kontaktpersonen']||'').trim();
+        const extraContacts = extraContactsRaw ? extraContactsRaw.split('||').map(s=>{
+          let str = s.trim(); if(!str) return null;
+          let email='', tel='', position='';
+          const em = str.match(/<([^>]+)>/); if(em){ email=em[1].trim(); str=str.replace(em[0],' '); }
+          const pos = str.match(/\(([^)]+)\)/); if(pos){ position=pos[1].trim(); str=str.replace(pos[0],' '); }
+          const telM = str.match(/(\+?[\d][\d\s\/().-]{5,})/); if(telM){ tel=telM[1].trim(); str=str.replace(telM[0],' '); }
+          const name = str.replace(/\s+/g,' ').trim();
+          return (name||email||tel) ? {name, position, email, tel} : null;
+        }).filter(Boolean) : [];
+
         const contactData = {
           firma,
           kontakt:   String(row['Kontakt']||'').trim(),
@@ -4395,6 +4590,7 @@ window.importCrmExcelFile = function(input){
           extraEmails,
           tel:       String(row['Tel']||'').trim(),
           extraTels,
+          extraContacts,
           position:  String(row['Position']||'').trim(),
           ort:       String(row['Einsatzort']||'').trim(),
           segment:   String(row['Segment']||'').trim() || 'Sonstige',
@@ -4589,7 +4785,7 @@ window.generateWbPdf = function(){
   const typCount = {};
   weekActs.forEach(a => { typCount[a.typ] = (typCount[a.typ]||0)+1; });
 
-  const openDeals  = STATE.contacts.filter(c => !['Gewonnen','Verloren','Pausiert'].includes(c.status));
+  const openDeals  = STATE.contacts.filter(c => !['Gewonnen','Verloren','Pausiert','Erledigt'].includes(c.status));
   const pipeTotal  = openDeals.reduce((s,c) => s + (parseFloat(c.chf)||0), 0);
   const weightedPipe = openDeals.reduce((s,c)=>{
     const chf = parseFloat(c.chf)||0;
@@ -5065,6 +5261,7 @@ function init(){
     document.getElementById('wbCcEmail').value = wbSettings.ccEmail;
   // Bind backdrop close on all modals now that DOM is complete
   attachBackdropClose();
+  renderTurboSettings();
   renderToday();
   updateSidebarBadge();
   populateKiSelects();
