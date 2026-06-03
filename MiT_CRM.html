@@ -764,6 +764,153 @@ input,select,textarea{font-family:inherit;font-size:14px}
 
 /* Hide field-section when empty */
 .field-section:empty{display:none}
+
+/* ─── Tags ─── */
+.tag-chip{
+  display:inline-block;font-size:10.5px;font-weight:600;
+  background:var(--brand-soft);color:var(--brand);
+  padding:2px 7px;border-radius:9px;margin:1px 3px 1px 0;cursor:pointer;
+  border:1px solid transparent;transition:all 0.12s;
+}
+.tag-chip:hover{border-color:var(--brand);background:#fff}
+.tag-cell{max-width:180px;overflow:hidden}
+
+/* ─── Bulk action bar ─── */
+.bulk-bar{
+  position:fixed;bottom:18px;left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;gap:8px;z-index:1400;
+  background:var(--bg-card);border:1px solid var(--line-strong);
+  padding:8px 14px;border-radius:var(--r-md);box-shadow:var(--shadow-2);
+}
+.bulk-bar.hidden{display:none}
+.bulk-cb,.bulk-cb-all{width:16px;height:16px;cursor:pointer;accent-color:var(--brand)}
+
+/* ─── Command palette ─── */
+.pal-modal{width:600px;max-width:92vw;max-height:78vh;overflow:hidden;padding:0;border-radius:var(--r-md)}
+.pal-search{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line)}
+.pal-search-icon{font-size:18px;color:var(--text-mute)}
+.pal-search input{flex:1;border:none;outline:none;background:transparent;color:var(--text);font-size:15px}
+.pal-hint{font-size:10.5px;color:var(--text-dim)}
+.pal-list{max-height:62vh;overflow-y:auto;padding:6px}
+.pal-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--r-sm);cursor:pointer;transition:background 0.1s}
+.pal-item.active{background:var(--brand-soft)}
+.pal-icon{font-size:16px;width:22px;text-align:center;color:var(--brand)}
+.pal-main{flex:1;min-width:0}
+.pal-label{font-weight:600;font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pal-sub{font-size:11px;color:var(--text-mute);margin-top:1px}
+.pal-type{font-size:9.5px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.06em;background:var(--bg2);padding:2px 7px;border-radius:9px}
+.pal-empty{padding:30px;text-align:center;color:var(--text-mute);font-size:13px}
+
+/* ─── Reason modal ─── */
+.reason-options{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.reason-btn{background:var(--bg2);border:1px solid var(--line);color:var(--text);padding:10px 12px;
+  border-radius:var(--r-sm);cursor:pointer;font-size:12.5px;text-align:left;transition:all 0.12s}
+.reason-btn:hover{border-color:var(--brand);color:var(--brand)}
+
+/* ─── Dedup wizard ─── */
+.dedup-group{border:1px solid var(--line);border-radius:var(--r-md);padding:12px;margin-bottom:12px;background:var(--bg2)}
+.dedup-group-h{font-size:12px;font-weight:700;color:var(--brand);margin-bottom:8px}
+.dedup-row{display:flex;gap:10px;padding:6px 0;align-items:center}
+.dedup-row input[type=radio]{accent-color:var(--brand)}
+.dedup-info{flex:1;min-width:0}
+
+/* ─── Next-Best-Action + call timer ─── */
+.nba-out{background:var(--brand-soft);border:1px solid rgba(200,16,46,0.18);border-radius:var(--r-md);padding:12px 14px;margin-top:8px;font-size:13px;line-height:1.55}
+.nba-out.hidden{display:none}
+.nba-tag{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--brand);margin-bottom:6px}
+.nba-text{color:var(--text)}
+.call-timer{display:inline-flex;align-items:center;gap:8px;padding:5px 12px;background:rgba(15,118,110,0.10);border:1px solid #0f766e;border-radius:var(--r-sm);font-size:12px}
+.call-timer.hidden{display:none}
+
+/* ─── Goal card on Today ─── */
+.goal-card{background:var(--bg-card);border:1px solid var(--line);border-radius:var(--r-md);padding:12px 16px;margin-bottom:14px;box-shadow:var(--shadow-card)}
+.goal-card.hidden{display:none}
+.goal-head{display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:700;margin-bottom:6px}
+.goal-stats{font-size:12px;color:var(--text-mute);font-weight:500}
+.goal-bar{height:10px;background:var(--bg2);border-radius:5px;overflow:hidden}
+.goal-bar-fill{height:100%;background:linear-gradient(90deg,var(--brand),var(--brand-2));transition:width 0.6s ease-out}
+
+/* ─── Stale banner ─── */
+.stale-banner{display:flex;align-items:center;gap:14px;background:rgba(217,119,6,0.07);
+  border:1px solid rgba(217,119,6,0.30);border-left:4px solid var(--warn);
+  border-radius:var(--r-md);padding:12px 16px;margin-bottom:14px}
+.stale-banner.hidden{display:none}
+.stale-icon{font-size:22px}
+.stale-text{flex:1;line-height:1.4}
+.stale-text strong{color:var(--warn);font-size:13.5px;display:block}
+.stale-names{font-size:12px;color:var(--text-mute)}
+
+/* ─── Analytics page ─── */
+.analytics-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:16px}
+.analytics-grid .chart-h{height:240px}
+.funnel-row{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.funnel-label{width:96px;font-size:12px;font-weight:600;color:var(--text)}
+.funnel-bar-wrap{flex:1;height:24px;background:var(--bg2);border-radius:var(--r-sm);position:relative;overflow:hidden}
+.funnel-bar{height:100%;background:linear-gradient(90deg,var(--brand),var(--brand-2));transition:width 0.6s ease-out}
+.funnel-count{position:absolute;left:8px;top:4px;font-weight:700;font-size:11.5px;color:#fff;text-shadow:0 1px 1px rgba(0,0,0,0.18)}
+.funnel-conv{width:46px;text-align:right;font-size:11px;color:var(--text-mute);font-family:'JetBrains Mono',monospace}
+.cycle-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.cycle-row:last-child{border-bottom:none}
+.cycle-stage{font-weight:600;font-size:13px;flex:1}
+.cycle-val{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:18px;color:var(--brand)}
+.cycle-meta{font-size:11px;color:var(--text-dim);font-family:'JetBrains Mono',monospace}
+
+/* ─── Tour overlay ─── */
+#tourOverlay{position:fixed;inset:0;z-index:3000;background:rgba(15,27,49,0.55);pointer-events:auto}
+#tourOverlay.hidden{display:none}
+#tourSpot{position:absolute;border:3px solid var(--brand);border-radius:var(--r-md);box-shadow:0 0 0 9999px rgba(15,27,49,0.55);pointer-events:none;transition:all 0.25s ease-out}
+#tourBox{position:absolute;width:320px;background:var(--bg-card);border:1px solid var(--line-strong);border-radius:var(--r-md);box-shadow:var(--shadow-2);padding:18px 18px 14px}
+.tour-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:18px;color:var(--brand);margin-bottom:6px}
+.tour-text{font-size:13px;color:var(--text);line-height:1.5;margin-bottom:14px}
+.tour-foot{display:flex;align-items:center;gap:8px}
+.tour-dots{display:flex;gap:5px}
+.tour-dot{width:7px;height:7px;border-radius:50%;background:var(--bg3)}
+.tour-dot.active{background:var(--brand);width:18px;border-radius:4px}
+
+/* ─── Mobile responsive ─── */
+@media (max-width: 900px){
+  #app{grid-template-columns:64px 1fr}
+  .brand-name,.brand-sub,.nav-shortcut,.api-status,.api-btn span{display:none}
+  .nav-item{justify-content:center;padding:10px 8px}
+  .nav-item span:not(.nav-icon){display:none}
+  .nav-item .nav-badge,.nav-item .nav-icon{display:inline}
+  .brand-block{padding:14px 8px}
+  .nav-item .nav-icon{font-size:18px}
+}
+@media (max-width: 640px){
+  #app{grid-template-columns:1fr;grid-template-rows:auto 1fr}
+  #sidebar{position:fixed;top:0;left:0;right:0;bottom:auto;border-right:none;border-bottom:1px solid var(--line);
+    flex-direction:row;overflow-x:auto;padding:8px;z-index:50;height:auto}
+  #sidebar::before{display:none}
+  .brand-block{display:none}.sidebar-foot{display:none}
+  .nav{flex-direction:row;flex-wrap:nowrap;overflow-x:auto;padding:0;gap:6px}
+  .nav-item{flex-shrink:0;padding:8px 12px}
+  #main{padding-top:60px}
+  .topbar{position:sticky;top:0;flex-wrap:wrap;height:auto;padding:10px 14px;gap:8px}
+  .tb-search{width:100%}
+  .content{padding:14px}
+  .today-grid{grid-template-columns:1fr}
+  .analytics-grid{grid-template-columns:1fr}
+  .pipe{grid-template-columns:1fr;height:auto;overflow:visible}
+  .modal{width:96vw !important;max-width:96vw}
+  .form-grid{grid-template-columns:1fr}
+  .alarm-panel{width:92vw;max-width:92vw;right:auto;left:50%;transform:translateX(-50%)}
+}
+
+/* ─── Print stylesheet ─── */
+@media print{
+  body{background:#fff !important;overflow:visible !important}
+  #sidebar,.topbar,.fab,#bulkBar,#alarmWrap,.modal-bg:not(.open),#tourOverlay,#overdueBanner,#staleAlert,
+  .turbo-mode-bar,.btn,.kpi-grid + .today-grid .quick-grid,.modal-foot{display:none !important}
+  #main{overflow:visible !important}
+  .content{overflow:visible !important;padding:0 !important;background:#fff}
+  .card,.kpi{box-shadow:none !important;border:1px solid #ccc !important;break-inside:avoid;page-break-inside:avoid}
+  .page{display:block !important}
+  .modal-bg.open{position:static;background:none}
+  .modal-bg.open .modal{box-shadow:none;border:1px solid #ccc;max-width:100%;width:100%}
+  .modal-h .modal-x{display:none}
+  table,tr,td,th{break-inside:avoid;page-break-inside:avoid}
+}
 </style>
 </head>
 <body>
@@ -806,6 +953,10 @@ input,select,textarea{font-family:inherit;font-size:14px}
       <button class="nav-item" data-page="ki" onclick="window.nav('ki')">
         <span class="nav-icon">✦</span> KI-Assist
         <span class="nav-shortcut">7</span>
+      </button>
+      <button class="nav-item" data-page="analytics" onclick="window.nav('analytics')">
+        <span class="nav-icon">📈</span> Analytics
+        <span class="nav-shortcut">8</span>
       </button>
       <button class="nav-item" data-page="settings" onclick="window.nav('settings')">
         <span class="nav-icon">⚙</span> Einstellungen
@@ -869,6 +1020,10 @@ input,select,textarea{font-family:inherit;font-size:14px}
       <div class="page active" id="page-today">
         <!-- Overdue banner (only shown when overdue items exist) -->
         <div id="overdueBanner" class="overdue-banner hidden"></div>
+        <!-- Stale-contact alert -->
+        <div id="staleAlert" class="stale-banner hidden"></div>
+        <!-- Yearly goal progress -->
+        <div id="goalProgress" class="goal-card hidden"></div>
 
         <div class="kpi-grid" id="kpiGrid"></div>
 
@@ -967,7 +1122,9 @@ input,select,textarea{font-family:inherit;font-size:14px}
           <div style="max-height:calc(100vh - 250px);overflow-y:auto">
             <table class="tbl">
               <thead><tr>
+                <th style="width:32px"><input type="checkbox" class="bulk-cb-all" onchange="window.bulkToggleAll(event)" title="Alle auswählen"></th>
                 <th>Score</th><th>Firma</th><th>Kontakt</th><th>Segment</th><th>Status</th>
+                <th>Tags</th>
                 <th class="tx-right">CHF</th><th>Letzte Akt.</th><th>Wiedervorlage</th>
               </tr></thead>
               <tbody id="kontakteBody"></tbody>
@@ -1173,6 +1330,29 @@ input,select,textarea{font-family:inherit;font-size:14px}
         </div>
       </div>
 
+      <!-- ═══ ANALYTICS ═══ -->
+      <div class="page" id="page-analytics">
+        <div class="kpi-grid" id="anKpiGrid"></div>
+        <div class="analytics-grid">
+          <div class="card">
+            <div class="card-h"><div class="card-title">Forecast nach Abschluss-Monat</div><span class="tx-dim" style="font-size:11px">Pipeline gewichtet (CHF × Wahrscheinlichkeit)</span></div>
+            <div class="chart-h"><canvas id="anForecastChart"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-h"><div class="card-title">Conversion Funnel</div><span class="tx-dim" style="font-size:11px">Drop-Off pro Pipeline-Stage</span></div>
+            <div id="anFunnel"></div>
+          </div>
+          <div class="card">
+            <div class="card-h"><div class="card-title">Win-Rate nach Segment</div><span class="tx-dim" style="font-size:11px">Abschlussquote pro Branche</span></div>
+            <div class="chart-h"><canvas id="anSegChart"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-h"><div class="card-title">Ø Cycle-Time pro Stage</div><span class="tx-dim" style="font-size:11px">Tage zwischen Statuswechseln</span></div>
+            <div id="anCycle"></div>
+          </div>
+        </div>
+      </div>
+
       <!-- ═══ SETTINGS ═══ -->
       <div class="page" id="page-settings">
         <div class="card">
@@ -1197,6 +1377,21 @@ input,select,textarea{font-family:inherit;font-size:14px}
             <button class="btn btn-ghost" onclick="window.loadDemo()">Demo-Datensatz laden</button>
             <button class="btn btn-danger btn-sm" onclick="window.resetAll()">⚠ Alles zurücksetzen</button>
           </div>
+
+          <div class="section-h">🎯 Jahresziel (CHF)</div>
+          <p class="tx-mute mb-md" style="font-size:12px;line-height:1.6;margin-top:-8px">Wird auf der Today-Seite und in Analytics als Fortschrittsbalken angezeigt.</p>
+          <div class="row gap-md">
+            <input id="goalInput" placeholder="z.B. 1'500'000" style="max-width:240px">
+            <button class="btn btn-primary" onclick="window.saveGoal()">Speichern</button>
+          </div>
+
+          <div class="section-h">🛠 Werkzeuge</div>
+          <div class="row gap-md">
+            <button class="btn btn-ghost" onclick="window.openDedup()">⚭ Duplikate finden & mergen</button>
+            <button class="btn btn-ghost" onclick="window.openCardScan()">📷 Visitenkarte scannen</button>
+            <button class="btn btn-ghost" onclick="window.startOnboarding(true)">🎓 Onboarding-Tour erneut anzeigen</button>
+          </div>
+
           <div class="section-h">Wochenbericht — Empfänger</div>
           <p class="tx-mute mb-md" style="font-size:12px;line-height:1.6;margin-top:-8px">Jede Woche Montag: Automatisch generierter Bericht an Stefan.</p>
           <div class="form-grid">
@@ -1322,9 +1517,27 @@ input,select,textarea{font-family:inherit;font-size:14px}
           <div id="miniCal" class="mini-cal hidden"></div>
         </div>
         <div class="field"><label>Nächster Schritt</label><input id="cNext" placeholder="z.B. Anruf in 2 Wochen"></div>
+        <div class="field"><label>Voraussichtlicher Abschluss (Close-Date)</label><input id="cCloseDate" type="date" title="Für Forecast nach Monat"></div>
+        <div class="field"><label>Tags (Komma-getrennt)</label><input id="cTags" placeholder="z.B. q3-budget, bess, ferner-osten"></div>
         <div class="field full"><label>Notizen</label>
           <textarea id="cNotiz" rows="3"></textarea>
         </div>
+      </div>
+
+      <!-- KI Next-Best-Action panel (visible only in edit mode) -->
+      <div id="cNextActionWrap" class="hidden">
+        <div class="row" style="gap:8px;flex-wrap:wrap">
+          <button class="btn btn-ghost btn-sm" onclick="window.kiNextAction()" style="border-color:var(--brand);color:var(--brand)">💡 Next-Best-Action mit KI</button>
+          <button class="btn btn-ghost btn-sm" onclick="window.kiTimelineSummary()">✦ KI-Zusammenfassung der Historie</button>
+          <span class="flex1"></span>
+          <button class="btn btn-ghost btn-sm" id="cCallStart" onclick="window.startCallTimer()" title="Anruf-Timer starten">⏱ Anruf starten</button>
+          <div id="cCallTimer" class="hidden call-timer">
+            <span>📞 läuft</span><span class="mono" id="cCallDur">00:00</span>
+            <button class="btn btn-tiny btn-primary" onclick="window.stopCallTimer()">Stoppen & Loggen</button>
+          </div>
+        </div>
+        <div id="cNextActionOut" class="hidden nba-out"></div>
+        <div id="cTimelineSummary" class="hidden nba-out"></div>
       </div>
 
       <!-- PDF Attachments (only in Edit mode) -->
@@ -1779,11 +1992,12 @@ window.nav = function(page){
   const titles = {
     today:'Heute', kontakte:'Kontakte', pipeline:'Pipeline',
     wiedervorlagen:'Wiedervorlagen', aktivitaeten:'Aktivitäten',
-    kalender:'Kalender', ki:'KI-Assist', settings:'Einstellungen'
+    kalender:'Kalender', ki:'KI-Assist', analytics:'Analytics', settings:'Einstellungen'
   };
   document.getElementById('pageTitle').textContent = titles[page] || page;
 
   if(page === 'today') renderToday();
+  else if(page === 'analytics') renderAnalytics();
   else if(page === 'kontakte') renderKontakte();
   else if(page === 'pipeline') renderPipeline();
   else if(page === 'wiedervorlagen') renderWiedervorlagen();
@@ -1890,6 +2104,39 @@ function renderToday(){
 
   // Trend chart
   drawTrendChart();
+  // Goal progress bar + stale alert
+  renderGoalAndStale();
+}
+
+function renderGoalAndStale(){
+  const goal = loadGoal();
+  const wonCHF = STATE.contacts.filter(c=>c.status==='Gewonnen').reduce((s,c)=>s+(parseFloat(c.chf)||0),0);
+  const goalWrap = document.getElementById('goalProgress');
+  if(goalWrap){
+    if(goal > 0){
+      const pct = Math.min(100, (wonCHF/goal)*100);
+      goalWrap.classList.remove('hidden');
+      goalWrap.innerHTML = `
+        <div class="goal-head"><span>🎯 Jahresziel</span>
+          <span class="goal-stats">${fmtCHF(wonCHF)} / ${fmtCHF(goal)} · <strong>${pct.toFixed(0)}%</strong></span></div>
+        <div class="goal-bar"><div class="goal-bar-fill" style="width:${pct}%"></div></div>`;
+    } else {
+      goalWrap.classList.add('hidden');
+    }
+  }
+  const stale = staleContacts();
+  const staleEl = document.getElementById('staleAlert');
+  if(staleEl){
+    if(stale.length > 0){
+      staleEl.classList.remove('hidden');
+      staleEl.innerHTML = `<span class="stale-icon">💤</span>
+        <div class="stale-text"><strong>${stale.length} Kontakte ohne Aktivität >${STALE_DAYS} Tage</strong>
+          <span class="stale-names">${stale.slice(0,3).map(c=>escHtml(c.firma)).join(', ')}${stale.length>3?` … +${stale.length-3}`:''}</span></div>
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('filterSearch').value='';window.nav('kontakte');setTimeout(()=>{document.getElementById('filterSort').value='last';window.renderKontakte()},150)">Anzeigen →</button>`;
+    } else {
+      staleEl.classList.add('hidden');
+    }
+  }
 }
 
 function statusClass(s){
@@ -1947,19 +2194,23 @@ function drawTrendChart(){
 //  RENDER: KONTAKTE
 // ════════════════════════════════════════════════════════════════════════
 window.renderKontakte = function renderKontakte(){
-  const search = (document.getElementById('filterSearch').value || '').toLowerCase().trim();
+  const rawSearch = (document.getElementById('filterSearch').value || '').trim();
+  const tagOnly = rawSearch.startsWith('#') ? rawSearch.slice(1).toLowerCase() : null;
+  const search = (tagOnly ? '' : rawSearch).toLowerCase();
   const stat   = document.getElementById('filterStatus').value;
   const seg    = document.getElementById('filterSegment').value;
   const sort   = document.getElementById('filterSort').value;
 
   let list = STATE.contacts.map(c => ({...c, score: leadScore(c), last: lastActivityDate(c.id)}));
 
-  if(search) list = list.filter(c =>
+  if(tagOnly) list = list.filter(c => parseTags(c.tags).some(t => t.toLowerCase().includes(tagOnly)));
+  else if(search) list = list.filter(c =>
     (c.firma||'').toLowerCase().includes(search) ||
     (c.kontakt||'').toLowerCase().includes(search) ||
     (c.email||'').toLowerCase().includes(search) ||
     (c.tel||'').toLowerCase().includes(search) ||
     (c.notiz||'').toLowerCase().includes(search) ||
+    parseTags(c.tags).some(t=>t.toLowerCase().includes(search)) ||
     (c.extraEmails||[]).some(e=>(e.val||'').toLowerCase().includes(search)) ||
     (c.extraTels||[]).some(t=>(t.val||'').toLowerCase().includes(search)) ||
     (c.extraContacts||[]).some(p=>((p.name||'')+' '+(p.email||'')+' '+(p.tel||'')+' '+(p.position||'')).toLowerCase().includes(search))
@@ -1978,7 +2229,7 @@ window.renderKontakte = function renderKontakte(){
 
   const body = document.getElementById('kontakteBody');
   if(list.length === 0){
-    body.innerHTML = `<tr><td colspan="8">
+    body.innerHTML = `<tr><td colspan="10">
       <div class="empty">
         <div class="empty-icon">⎈</div>
         <h3>${STATE.contacts.length === 0 ? 'Noch keine Kontakte' : 'Keine Treffer für Filter'}</h3>
@@ -1986,21 +2237,25 @@ window.renderKontakte = function renderKontakte(){
         ${STATE.contacts.length === 0 ? '<button class="btn btn-primary" onclick="window.openContactForm()">+ Ersten Kontakt anlegen</button>' : ''}
       </div>
     </td></tr>`;
+    renderBulkBar();
     return;
   }
 
   body.innerHTML = list.map(c => `
     <tr onclick="window.openContact('${c.id}')">
+      <td onclick="event.stopPropagation()"><input type="checkbox" class="bulk-cb" data-id="${c.id}" ${bulkSelected.has(c.id)?'checked':''} onchange="window.bulkToggle('${c.id}',event)"></td>
       <td><span class="score ${scoreClass(c.score)}">${c.score}</span></td>
       <td class="fw-bold">${escHtml(c.firma)}</td>
       <td class="tx-mute">${escHtml(c.kontakt||'—')}<br><span class="tx-dim" style="font-size:11px">${escHtml(c.email||'')}</span></td>
       <td class="tx-mute">${escHtml(c.segment||'—')}</td>
       <td><span class="bd ${statusClass(c.status)}">${c.status}</span></td>
+      <td class="tag-cell">${renderTagChips(c.tags,{max:4,click:true})}</td>
       <td class="tx-right mono">${fmtCHF(c.chf)}</td>
       <td class="tx-mute">${fmtDateShort(c.last)}</td>
       <td class="tx-mute">${fmtDateShort(c.wv)}</td>
     </tr>
   `).join('');
+  renderBulkBar();
 }
 
 // ════════════════════════════════════════════════════════════════════════
@@ -2451,6 +2706,542 @@ function renderOverdueBanner(){
 }
 
 // ════════════════════════════════════════════════════════════════════════
+//  TAGS HELPERS
+// ════════════════════════════════════════════════════════════════════════
+function parseTags(s){ if(Array.isArray(s)) return s.filter(Boolean); if(!s) return []; return String(s).split(/[,;]+/).map(t=>t.trim()).filter(Boolean); }
+function renderTagChips(tags, opts){
+  tags = parseTags(tags);
+  if(!tags.length) return '';
+  return tags.slice(0, opts && opts.max || 99).map(t => `<span class="tag-chip" ${opts && opts.click ? `onclick="event.stopPropagation();window.filterByTag('${escHtml(t).replace(/'/g,"\\'")}')"` : ''}>${escHtml(t)}</span>`).join('');
+}
+window.filterByTag = function(tag){
+  window.nav('kontakte');
+  const inp = document.getElementById('filterSearch'); if(inp){ inp.value = '#'+tag; window.renderKontakte(); }
+};
+
+// ════════════════════════════════════════════════════════════════════════
+//  YEARLY GOAL + STALE + BACKUP
+// ════════════════════════════════════════════════════════════════════════
+const GOAL_KEY = 'mit_crm_yearly_goal';
+const BACKUP_KEY = 'mit_crm_last_backup';
+const ONBOARD_KEY = 'mit_crm_onboard_done';
+const STALE_DAYS = 90;
+
+function loadGoal(){ return parseFloat(localStorage.getItem(GOAL_KEY)) || 0; }
+window.saveGoal = function(){
+  const v = parseCHF(document.getElementById('goalInput').value);
+  if(v === null || v < 0){ showToast('Ungültiger Wert', 'error'); return; }
+  localStorage.setItem(GOAL_KEY, String(v));
+  showToast('✓ Jahresziel gespeichert', 'success');
+  refreshAll();
+};
+
+function staleContacts(){
+  const today = new Date(); today.setHours(0,0,0,0);
+  const cutoff = new Date(today); cutoff.setDate(cutoff.getDate() - STALE_DAYS);
+  const cutoffIso = localISO(cutoff);
+  return STATE.contacts.filter(c => {
+    if(['Gewonnen','Verloren','Pausiert','Erledigt'].includes(c.status)) return false;
+    const last = lastActivityDate(c.id);
+    const ref = last || (c.created||'');
+    return ref && ref.slice(0,10) < cutoffIso;
+  });
+}
+
+function checkBackupReminder(){
+  const last = parseInt(localStorage.getItem(BACKUP_KEY)||'0');
+  const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
+  if(STATE.contacts.length > 5 && Date.now() - last > SEVEN_DAYS){
+    setTimeout(()=> showToast('💾 Backup-Empfehlung: letzter Export ist >7 Tage her — jetzt sichern', 'warn'), 2500);
+  }
+}
+function markBackup(){ localStorage.setItem(BACKUP_KEY, String(Date.now())); }
+
+// ════════════════════════════════════════════════════════════════════════
+//  COMMAND PALETTE  (Ctrl/Cmd + K)
+// ════════════════════════════════════════════════════════════════════════
+const PALETTE_ACTIONS = [
+  {label:'Neuer Kontakt', icon:'+', fn:()=>window.openContactForm(), kw:'kontakt neu add new'},
+  {label:'Aktivität loggen', icon:'☎', fn:()=>window.openLogActivity(), kw:'aktivitat log call'},
+  {label:'KI-Import (PDF/Excel)', icon:'✦', fn:()=>window.openAiImport(), kw:'ai ki import'},
+  {label:'Visitenkarte scannen', icon:'📷', fn:()=>window.openCardScan(), kw:'card business visitenkarte scan'},
+  {label:'Wochenbericht öffnen', icon:'📊', fn:()=>window.openWochenbericht(), kw:'wochenbericht report wb'},
+  {label:'Turbo-Modus (alle fälligen abarbeiten)', icon:'⚡', fn:()=>{window.nav('wiedervorlagen');setTimeout(()=>window.bulkTurbo(),200)}, kw:'turbo bulk'},
+  {label:'CRM-Export (Excel)', icon:'↓', fn:()=>window.exportCrmExcel(), kw:'export excel xlsx'},
+  {label:'CSV exportieren', icon:'↓', fn:()=>window.exportCSV(), kw:'export csv'},
+  {label:'JSON Backup', icon:'💾', fn:()=>window.exportData(), kw:'backup json'},
+  {label:'Import öffnen', icon:'↑', fn:()=>window.openImportModal(), kw:'import upload'},
+  {label:'Duplikate finden', icon:'⚭', fn:()=>window.openDedup(), kw:'dedup duplikate merge'},
+  {label:'Demo-Daten laden', icon:'⊞', fn:()=>window.loadDemo(), kw:'demo'},
+  {label:'Heute', icon:'⊙', fn:()=>window.nav('today'), kw:'home heute dashboard'},
+  {label:'Kontakte', icon:'⎈', fn:()=>window.nav('kontakte'), kw:'kontakte'},
+  {label:'Pipeline', icon:'≡', fn:()=>window.nav('pipeline'), kw:'pipeline kanban'},
+  {label:'Wiedervorlagen', icon:'↻', fn:()=>window.nav('wiedervorlagen'), kw:'wv wiedervorlagen'},
+  {label:'Aktivitäten', icon:'▤', fn:()=>window.nav('aktivitaeten'), kw:'aktivitaten'},
+  {label:'Kalender', icon:'▦', fn:()=>window.nav('kalender'), kw:'kalender calendar'},
+  {label:'KI-Assist', icon:'✦', fn:()=>window.nav('ki'), kw:'ki assist'},
+  {label:'Analytics', icon:'📈', fn:()=>window.nav('analytics'), kw:'analytics charts'},
+  {label:'Einstellungen', icon:'⚙', fn:()=>window.nav('settings'), kw:'einstellungen settings'},
+];
+let _palIdx = 0;
+window.openPalette = function(){
+  const m = document.getElementById('modalPalette'); if(!m) return;
+  m.classList.add('open');
+  document.getElementById('palInput').value = '';
+  _palIdx = 0;
+  renderPalette('');
+  setTimeout(()=>document.getElementById('palInput').focus(), 50);
+};
+window.closePalette = function(){ const m=document.getElementById('modalPalette'); if(m) m.classList.remove('open'); };
+function paletteItems(query){
+  const q = (query||'').toLowerCase().trim();
+  const out = [];
+  // actions
+  PALETTE_ACTIONS.forEach(a => {
+    const hay = (a.label + ' ' + a.kw).toLowerCase();
+    if(!q || hay.includes(q)) out.push({type:'action', ...a});
+  });
+  // contacts (limit 10)
+  if(q){
+    const cs = STATE.contacts.filter(c =>
+      (c.firma||'').toLowerCase().includes(q) ||
+      (c.kontakt||'').toLowerCase().includes(q) ||
+      parseTags(c.tags).some(t=>t.toLowerCase().includes(q)) ||
+      (c.email||'').toLowerCase().includes(q)
+    ).slice(0,10);
+    cs.forEach(c => out.push({type:'contact', label:c.firma, sub:(c.kontakt||'')+' · '+c.status, icon:'⎈', fn:()=>window.openContact(c.id)}));
+  }
+  return out;
+}
+function renderPalette(q){
+  const list = document.getElementById('palList'); if(!list) return;
+  const items = paletteItems(q);
+  if(_palIdx >= items.length) _palIdx = Math.max(0, items.length-1);
+  if(items.length === 0){ list.innerHTML = '<div class="pal-empty">Nichts gefunden</div>'; return; }
+  list.innerHTML = items.map((it,i) => `
+    <div class="pal-item ${i===_palIdx?'active':''}" onmouseenter="window._palSet(${i})" onclick="window._palExec()">
+      <span class="pal-icon">${it.icon||'›'}</span>
+      <div class="pal-main">
+        <div class="pal-label">${escHtml(it.label)}</div>
+        ${it.sub?`<div class="pal-sub">${escHtml(it.sub)}</div>`:''}
+      </div>
+      <span class="pal-type">${it.type==='action'?'Aktion':'Kontakt'}</span>
+    </div>
+  `).join('');
+  window._palItems = items;
+}
+window._palSet = (i)=>{ _palIdx = i; const items = window._palItems||[]; const list = document.getElementById('palList'); if(!list) return;
+  [...list.querySelectorAll('.pal-item')].forEach((el,k)=>el.classList.toggle('active', k===i)); };
+window._palExec = ()=>{ const it = (window._palItems||[])[_palIdx]; if(!it) return; window.closePalette(); setTimeout(it.fn, 50); };
+
+// ════════════════════════════════════════════════════════════════════════
+//  BULK SELECTION on Kontakte page
+// ════════════════════════════════════════════════════════════════════════
+let bulkSelected = new Set();
+window.bulkToggle = function(id, ev){
+  if(ev) ev.stopPropagation();
+  if(bulkSelected.has(id)) bulkSelected.delete(id); else bulkSelected.add(id);
+  renderBulkBar();
+  // sync checkbox state without full re-render
+  const cb = document.querySelector(`.bulk-cb[data-id="${id}"]`);
+  if(cb) cb.checked = bulkSelected.has(id);
+};
+window.bulkToggleAll = function(ev){
+  const checked = ev.target.checked;
+  document.querySelectorAll('.bulk-cb[data-id]').forEach(cb => { cb.checked = checked; if(checked) bulkSelected.add(cb.dataset.id); else bulkSelected.delete(cb.dataset.id); });
+  renderBulkBar();
+};
+function renderBulkBar(){
+  const bar = document.getElementById('bulkBar'); if(!bar) return;
+  if(bulkSelected.size === 0){ bar.classList.add('hidden'); return; }
+  bar.classList.remove('hidden');
+  document.getElementById('bulkCount').textContent = bulkSelected.size;
+}
+window.bulkClear = function(){ bulkSelected.clear(); document.querySelectorAll('.bulk-cb').forEach(cb=>cb.checked=false); renderBulkBar(); };
+window.bulkStatus = function(){
+  const st = prompt('Neuer Status für ' + bulkSelected.size + ' Kontakte:\nLead, Kontaktiert, Angebot, Verhandlung, Gewonnen, Verloren, Pausiert, Erledigt');
+  if(!st) return;
+  const valid = ['Lead','Kontaktiert','Angebot','Verhandlung','Gewonnen','Verloren','Pausiert','Erledigt'];
+  if(!valid.includes(st)){ showToast('Ungültiger Status', 'error'); return; }
+  const now = new Date().toISOString();
+  bulkSelected.forEach(id => { const c = STATE.contacts.find(x=>x.id===id); if(c){ c.status=st; c.updated=now; if(['Gewonnen','Verloren','Erledigt'].includes(st)){ c.wv=null; }}});
+  saveState(); bulkClear(); refreshAll();
+  showToast('✓ Status auf ' + st + ' gesetzt', 'success');
+};
+window.bulkSnooze = function(){
+  const d = prompt('Wiedervorlage um wie viele Tage verschieben?', '14'); const n = parseInt(d); if(!n) return;
+  const dt = new Date(); dt.setDate(dt.getDate()+n); const iso = localISO(dt);
+  bulkSelected.forEach(id => { const c = STATE.contacts.find(x=>x.id===id); if(c){ c.wv=iso; c.updated=new Date().toISOString(); }});
+  saveState(); bulkClear(); refreshAll();
+  showToast('✓ Wiedervorlage auf ' + fmtDate(iso) + ' gesetzt', 'success');
+};
+window.bulkTag = function(){
+  const tag = prompt('Tag hinzufügen zu ' + bulkSelected.size + ' Kontakten:'); if(!tag) return;
+  bulkSelected.forEach(id => { const c = STATE.contacts.find(x=>x.id===id); if(c){ const tags = parseTags(c.tags); if(!tags.includes(tag.trim())) tags.push(tag.trim()); c.tags = tags; c.updated=new Date().toISOString(); }});
+  saveState(); bulkClear(); refreshAll();
+  showToast('✓ Tag "' + tag + '" hinzugefügt', 'success');
+};
+window.bulkDelete = function(){
+  if(!confirm(bulkSelected.size + ' Kontakte UNWIDERRUFLICH löschen?\nAuch alle zugehörigen Aktivitäten werden entfernt.')) return;
+  const ids = new Set(bulkSelected);
+  STATE.contacts = STATE.contacts.filter(c => !ids.has(c.id));
+  STATE.activities = STATE.activities.filter(a => !ids.has(a.contactId));
+  saveState(); bulkClear(); refreshAll();
+  showToast('✓ ' + ids.size + ' Kontakte gelöscht', 'success');
+};
+
+// ════════════════════════════════════════════════════════════════════════
+//  WIN/LOSS REASON capture when status closes
+// ════════════════════════════════════════════════════════════════════════
+const CLOSE_REASONS = {
+  'Verloren': ['Preis zu hoch','Wettbewerber gewählt','Timing nicht passend','Budget abgelehnt','Kein Bedarf mehr','Technische Lösung passte nicht','Kein Entscheid','Sonstiges'],
+  'Erledigt': ['Anderer Anbieter beauftragt','Kunde hat intern gelöst','Projekt verschoben','Kein Bedarf mehr','Sonstiges'],
+  'Gewonnen': ['Standardanfrage','Bestandskunde-Cross-Sell','Empfehlung','Direkt-Anfrage','Sonstiges']
+};
+let _reasonPendingId = null;
+window.askCloseReason = function(contactId, status, cb){
+  if(!CLOSE_REASONS[status]){ cb && cb(); return; }
+  _reasonPendingId = contactId;
+  const reasons = CLOSE_REASONS[status];
+  document.getElementById('reasonTitle').textContent = status === 'Gewonnen' ? '✓ Gewonnen — Grund?' : status === 'Verloren' ? '✕ Verloren — Grund?' : '✓ Erledigt — Grund?';
+  document.getElementById('reasonStatus').value = status;
+  document.getElementById('reasonOptions').innerHTML = reasons.map(r => `<button class="reason-btn" onclick="window.applyReason('${escHtml(r).replace(/'/g,"\\'")}')">${escHtml(r)}</button>`).join('');
+  document.getElementById('reasonNote').value = '';
+  window._reasonCb = cb;
+  openModal('modalReason');
+};
+window.applyReason = function(reason){
+  const note = document.getElementById('reasonNote').value.trim();
+  const full = note ? reason + ' — ' + note : reason;
+  const c = STATE.contacts.find(x=>x.id===_reasonPendingId);
+  if(c){ c.closeReason = full; c.updated = new Date().toISOString(); saveState(); }
+  closeModal('modalReason');
+  if(window._reasonCb) window._reasonCb(full);
+};
+window.skipReason = function(){ closeModal('modalReason'); if(window._reasonCb) window._reasonCb(null); };
+
+// ════════════════════════════════════════════════════════════════════════
+//  CALL-TIMER
+// ════════════════════════════════════════════════════════════════════════
+let _callTimerStart = null; let _callTimerInterval = null;
+window.startCallTimer = function(){
+  if(_callTimerInterval) return;
+  _callTimerStart = Date.now();
+  const el = document.getElementById('cCallTimer'); if(el) el.classList.remove('hidden');
+  _callTimerInterval = setInterval(()=>{
+    const s = Math.floor((Date.now()-_callTimerStart)/1000);
+    const m = Math.floor(s/60), sec = s%60;
+    const dur = document.getElementById('cCallDur'); if(dur) dur.textContent = String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0');
+  }, 500);
+};
+window.stopCallTimer = function(){
+  if(!_callTimerInterval) return;
+  clearInterval(_callTimerInterval); _callTimerInterval = null;
+  const s = Math.floor((Date.now()-_callTimerStart)/1000);
+  const m = Math.floor(s/60), sec = s%60;
+  const el = document.getElementById('cCallTimer'); if(el) el.classList.add('hidden');
+  if(s < 5){ showToast('Anruf zu kurz (<5s) — nicht geloggt', 'info'); return; }
+  if(currentContactId){
+    const cid = currentContactId;
+    closeModal('modalContact');
+    setTimeout(()=>{ window.openLogActivity(cid); const sum = document.getElementById('aSum'); if(sum) sum.value = 'Telefonat ('+m+':'+String(sec).padStart(2,'0')+' min) — '; sum && sum.focus(); }, 200);
+  }
+};
+
+// ════════════════════════════════════════════════════════════════════════
+//  NEXT-BEST-ACTION via Claude
+// ════════════════════════════════════════════════════════════════════════
+window.kiNextAction = async function(){
+  if(!currentContactId) return;
+  const c = STATE.contacts.find(x=>x.id===currentContactId); if(!c) return;
+  const out = document.getElementById('cNextActionOut');
+  out.classList.remove('hidden');
+  out.innerHTML = '<div class="loading"><span></span><span></span><span></span></div> Claude analysiert die Historie…';
+  const acts = STATE.activities.filter(a=>a.contactId===c.id).sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,10);
+  const ctx = `Kontakt: ${c.firma}
+Ansprechpartner: ${c.kontakt||'—'} (${c.position||'—'})
+Segment: ${c.segment||'—'}, Status: ${c.status}, Wert: ${fmtCHF(c.chf)}, Wahrscheinlichkeit: ${c.prob||'?'}%
+Wiedervorlage: ${c.wv?fmtDate(c.wv):'keine'}, Nächster geplanter Schritt: ${c.next||'—'}
+Notiz: ${c.notiz||'—'}
+Tags: ${parseTags(c.tags).join(', ')||'—'}
+
+Letzte Aktivitäten:
+${acts.map(a => `- ${fmtDate(a.date)} [${a.typ}] ${a.sum||''} ${a.next?'→ '+a.next:''}`).join('\n')||'keine'}`;
+  const system = 'Du bist Senior Sales Coach für Mobil in Time AG (Aggreko CH). Liefere die EINE konkret beste nächste Aktion in 2-3 prägnanten Sätzen — kein Preamble, keine generischen Floskeln. Beziehe dich auf die Historie. Schweizer Direktsprache.';
+  const prompt = 'Welche EINE konkret beste nächste Aktion empfiehlst du für diesen Kontakt? Antworte in 2-3 Sätzen.\n\n'+ctx;
+  const resp = await callClaude(prompt, system, 400);
+  if(resp){ out.innerHTML = '<div class="nba-tag">💡 Next-Best-Action</div><div class="nba-text">'+escHtml(resp)+'</div>'; }
+  else out.innerHTML = '<div class="tx-mute">Fehler bei der Generierung — API-Key prüfen.</div>';
+};
+
+// Auto-summary of long timeline
+window.kiTimelineSummary = async function(){
+  if(!currentContactId) return;
+  const acts = STATE.activities.filter(a=>a.contactId===currentContactId).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  if(acts.length < 5){ showToast('Zu wenige Aktivitäten für Zusammenfassung', 'info'); return; }
+  const out = document.getElementById('cTimelineSummary');
+  out.classList.remove('hidden');
+  out.innerHTML = '<div class="loading"><span></span><span></span><span></span></div> Claude fasst zusammen…';
+  const text = acts.slice(0,30).map(a => `- ${fmtDate(a.date)} [${a.typ}] ${a.sum||''} ${a.next?'→ '+a.next:''}`).join('\n');
+  const resp = await callClaude(
+    'Fasse die folgende Verkaufs-Historie eines Kontakts in 3-5 Bulletpoints zusammen — fokussiere auf Status-Entwicklung, offene Punkte, Risiken. Direktsprache, keine Floskeln.\n\n'+text,
+    'Du bist Senior Sales-Analyst. Du fasst Aktivitäts-Verläufe sachlich zusammen.',
+    500
+  );
+  if(resp){ out.innerHTML = '<div class="nba-tag">✦ KI-Zusammenfassung</div><div class="nba-text">'+escHtml(resp).replace(/\n/g,'<br>')+'</div>'; }
+  else out.innerHTML = '<div class="tx-mute">Fehler — API-Key prüfen.</div>';
+};
+
+// ════════════════════════════════════════════════════════════════════════
+//  VISITENKARTEN-SCAN via Claude Vision
+// ════════════════════════════════════════════════════════════════════════
+window.openCardScan = function(){
+  if(!localStorage.getItem(API_KEY)){ showToast('API-Key fehlt', 'error'); window.openApiKey(); return; }
+  document.getElementById('cardFileInput').value = '';
+  document.getElementById('cardScanStatus').textContent = 'Foto der Visitenkarte hochladen — Claude extrahiert Name, Firma, Tel, Email, Position.';
+  document.getElementById('cardScanStatus').className = 'tx-mute';
+  openModal('modalCardScan');
+};
+window.handleCardScan = async function(input){
+  const file = input.files[0]; if(!file) return;
+  if(!/^image\//.test(file.type)){ showToast('Nur Bilder erlaubt', 'error'); return; }
+  const status = document.getElementById('cardScanStatus');
+  status.className = 'tx-mute';
+  status.textContent = 'Bild wird kodiert…';
+  const b64 = await new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result.split(',')[1]); r.onerror=()=>rej(new Error('Lesefehler')); r.readAsDataURL(file); });
+  status.textContent = 'Claude analysiert die Visitenkarte…';
+  const key = localStorage.getItem(API_KEY);
+  try{
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'x-api-key':key,'anthropic-version':'2023-06-01','content-type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-5', max_tokens: 800,
+        system:'Du extrahierst Kontaktdaten aus Visitenkarten-Fotos. Antworte AUSSCHLIESSLICH mit reinem JSON, kein Markdown, kein Text drumherum.',
+        messages:[{role:'user', content:[
+          {type:'image', source:{type:'base64', media_type:file.type, data:b64}},
+          {type:'text', text:'Extrahiere Kontaktdaten aus dieser Visitenkarte. Antworte mit JSON: {"firma":"","kontakt":"Vor- und Nachname","email":"","tel":"mit +41 wenn CH","position":"","ort":""}. Bei nicht vorhanden: leerer String.'}
+        ]}]
+      })
+    });
+    const data = await resp.json();
+    if(data.error) throw new Error(data.error.message);
+    let txt = data.content[0].text.trim().replace(/^```(?:json)?/,'').replace(/```$/,'').trim();
+    const s = txt.indexOf('{'); const e = txt.lastIndexOf('}'); if(s<0||e<0) throw new Error('Kein JSON');
+    const d = JSON.parse(txt.substring(s,e+1));
+    closeModal('modalCardScan');
+    window.openContactForm();
+    setTimeout(()=>{
+      if(d.firma) document.getElementById('cFirma').value = d.firma;
+      if(d.kontakt) document.getElementById('cKontakt').value = d.kontakt;
+      if(d.email) document.getElementById('cEmail').value = d.email;
+      if(d.tel) document.getElementById('cTel').value = d.tel;
+      if(d.position) document.getElementById('cPosition').value = d.position;
+      if(d.ort) document.getElementById('cOrt').value = d.ort;
+    }, 200);
+    showToast('✓ Visitenkarte ausgelesen — bitte prüfen und speichern', 'success');
+  }catch(err){
+    status.className = '';
+    status.style.color = 'var(--danger)';
+    status.textContent = 'Fehler: ' + err.message;
+  }
+  input.value = '';
+};
+
+// ════════════════════════════════════════════════════════════════════════
+//  DEDUP WIZARD
+// ════════════════════════════════════════════════════════════════════════
+function normalizeName(s){ return (s||'').toLowerCase().replace(/\b(ag|gmbh|sa|sàrl|sàrl\.|inc|llc|ltd|the|& co|co\.|kg)\b/g,'').replace(/[^a-z0-9]/g,''); }
+function dedupCandidates(){
+  const cs = STATE.contacts;
+  const groups = {};
+  cs.forEach(c => { const k = normalizeName(c.firma); if(!k) return; (groups[k] = groups[k]||[]).push(c); });
+  return Object.values(groups).filter(g => g.length > 1);
+}
+window.openDedup = function(){
+  const groups = dedupCandidates();
+  const body = document.getElementById('dedupBody');
+  if(groups.length === 0){ body.innerHTML = '<div class="tx-mute" style="padding:20px;text-align:center">✓ Keine Duplikate gefunden.</div>'; openModal('modalDedup'); return; }
+  body.innerHTML = groups.map((g,gi)=>`
+    <div class="dedup-group">
+      <div class="dedup-group-h">Gruppe ${gi+1} — ${g.length} ähnliche Kontakte für "${escHtml(g[0].firma)}"</div>
+      ${g.map((c,i)=>`
+        <div class="dedup-row">
+          <input type="radio" name="dedup-keep-${gi}" value="${c.id}" ${i===0?'checked':''}>
+          <div class="dedup-info">
+            <div class="fw-bold">${escHtml(c.firma)}</div>
+            <div class="tx-mute" style="font-size:11px">${escHtml(c.kontakt||'—')} · ${escHtml(c.email||'')} · ${escHtml(c.tel||'')} · ${c.status} · CHF ${c.chf||0}</div>
+          </div>
+        </div>`).join('')}
+      <div style="text-align:right;margin-top:6px"><button class="btn btn-primary btn-sm" onclick="window.dedupMerge(${gi})">In behaltenen mergen</button></div>
+    </div>
+  `).join('');
+  window._dedupGroups = groups;
+  openModal('modalDedup');
+};
+window.dedupMerge = function(gi){
+  const groups = window._dedupGroups || []; const g = groups[gi]; if(!g) return;
+  const keepId = document.querySelector(`input[name="dedup-keep-${gi}"]:checked`)?.value;
+  const keeper = g.find(c => c.id === keepId); if(!keeper) return;
+  const others = g.filter(c => c.id !== keepId);
+  // Move activities to keeper, merge fields where keeper is empty
+  others.forEach(o => {
+    STATE.activities.filter(a => a.contactId === o.id).forEach(a => { a.contactId = keepId; });
+    ['kontakt','email','tel','position','ort','segment','chf','prob','wv','next','notiz','closeDate'].forEach(f => { if(!keeper[f] && o[f]) keeper[f] = o[f]; });
+    if(o.extraEmails) keeper.extraEmails = [...(keeper.extraEmails||[]), ...o.extraEmails];
+    if(o.extraTels)   keeper.extraTels   = [...(keeper.extraTels||[]), ...o.extraTels];
+    if(o.extraContacts) keeper.extraContacts = [...(keeper.extraContacts||[]), ...o.extraContacts];
+    if(o.tags){ const t = new Set([...parseTags(keeper.tags), ...parseTags(o.tags)]); keeper.tags = [...t]; }
+  });
+  const remove = new Set(others.map(o=>o.id));
+  STATE.contacts = STATE.contacts.filter(c => !remove.has(c.id));
+  keeper.updated = new Date().toISOString();
+  saveState();
+  showToast('✓ ' + others.length + ' Duplikate in "' + keeper.firma + '" gemergt', 'success');
+  window.openDedup();
+  refreshAll();
+};
+
+// ════════════════════════════════════════════════════════════════════════
+//  ONBOARDING TOUR
+// ════════════════════════════════════════════════════════════════════════
+window.startOnboarding = function(force){
+  if(!force && localStorage.getItem(ONBOARD_KEY)) return;
+  const steps = [
+    {sel:'#sidebar', title:'Willkommen im MiT CRM', text:'Hier deine Navigation. Drück Ctrl/⌘+K für die Schnellsuche jederzeit.'},
+    {sel:'[data-page="today"]', title:'Heute', text:'Dein Tagesfokus: KPIs, Hot Leads und fällige Wiedervorlagen — alles auf einen Blick.'},
+    {sel:'[data-page="pipeline"]', title:'Pipeline', text:'Drag & Drop zwischen Spalten — beim Schließen fragt das CRM nach dem Grund (Win/Loss-Analyse).'},
+    {sel:'[data-page="ki"]', title:'KI-Assist', text:'Generiere personalisierte Emails, Anruf-Talking-Points und Einwand-Antworten mit Claude.'},
+    {sel:'[data-page="analytics"]', title:'Analytics', text:'Forecast, Funnel, Win-Rate nach Segment und Cycle-Time — dein strategischer Überblick.'},
+    {sel:'#alarmBtn', title:'🔔 Alarm-Glocke', text:'Fällige Wiedervorlagen pulsieren hier. Klick öffnet die Liste mit Quick-Actions.'},
+    {sel:'.fab', title:'Schnell starten', text:'Großer + Button: neuer Kontakt mit einem Klick. Oder schau im Settings-Menü vorbei.'}
+  ];
+  let i = 0;
+  const showStep = ()=>{
+    const ov = document.getElementById('tourOverlay'); if(!ov) return;
+    if(i >= steps.length){ ov.classList.add('hidden'); localStorage.setItem(ONBOARD_KEY, '1'); return; }
+    const s = steps[i]; const el = document.querySelector(s.sel);
+    if(!el){ i++; showStep(); return; }
+    const r = el.getBoundingClientRect();
+    ov.classList.remove('hidden');
+    document.getElementById('tourBox').innerHTML = `
+      <div class="tour-title">${escHtml(s.title)}</div>
+      <div class="tour-text">${escHtml(s.text)}</div>
+      <div class="tour-foot">
+        <span class="tour-dots">${steps.map((_,k)=>`<span class="tour-dot ${k===i?'active':''}"></span>`).join('')}</span>
+        <span class="flex1"></span>
+        <button class="btn btn-ghost btn-sm" onclick="window._tourSkip()">Überspringen</button>
+        <button class="btn btn-primary btn-sm" onclick="window._tourNext()">${i===steps.length-1?'Fertig':'Weiter →'}</button>
+      </div>`;
+    const spot = document.getElementById('tourSpot');
+    const pad = 6;
+    spot.style.left = (r.left - pad) + 'px';
+    spot.style.top = (r.top - pad) + 'px';
+    spot.style.width = (r.width + 2*pad) + 'px';
+    spot.style.height = (r.height + 2*pad) + 'px';
+    const box = document.getElementById('tourBox');
+    let bx = r.right + 14; if(bx + 320 > window.innerWidth) bx = Math.max(14, r.left - 320 - 14);
+    let by = r.top; if(by + 200 > window.innerHeight) by = window.innerHeight - 220;
+    box.style.left = bx + 'px'; box.style.top = by + 'px';
+  };
+  window._tourNext = ()=>{ i++; showStep(); };
+  window._tourSkip = ()=>{ document.getElementById('tourOverlay').classList.add('hidden'); localStorage.setItem(ONBOARD_KEY, '1'); };
+  showStep();
+};
+
+// ════════════════════════════════════════════════════════════════════════
+//  ANALYTICS PAGE
+// ════════════════════════════════════════════════════════════════════════
+let anForecastChart=null, anSegChart=null;
+function renderAnalytics(){
+  const open = STATE.contacts.filter(c => !['Gewonnen','Verloren','Pausiert','Erledigt'].includes(c.status));
+  const won = STATE.contacts.filter(c=>c.status==='Gewonnen');
+  const lost = STATE.contacts.filter(c=>c.status==='Verloren');
+  const total = STATE.contacts.length;
+  const wonCHF = won.reduce((s,c)=>s+(parseFloat(c.chf)||0),0);
+  const goal = loadGoal();
+  const goalPct = goal > 0 ? Math.min(100, (wonCHF/goal)*100) : 0;
+  const weighted = open.reduce((s,c)=>{ const ch=parseFloat(c.chf)||0; const p=parseFloat(c.prob)||(c.status==='Verhandlung'?70:c.status==='Angebot'?40:c.status==='Kontaktiert'?20:10); return s+ch*(p/100); },0);
+
+  document.getElementById('anKpiGrid').innerHTML = `
+    <div class="kpi acc-good"><div class="kpi-label">Gewonnen YTD</div><div class="kpi-val">${fmtCHF(wonCHF)}</div><div class="kpi-delta">${won.length} Abschlüsse</div></div>
+    <div class="kpi acc-info"><div class="kpi-label">Gewichtete Pipeline</div><div class="kpi-val">${fmtCHF(weighted)}</div></div>
+    <div class="kpi acc-warn"><div class="kpi-label">Win-Rate</div><div class="kpi-val">${total?Math.round(won.length/total*100):0}%</div><div class="kpi-delta">${won.length}/${total}</div></div>
+    <div class="kpi acc-danger"><div class="kpi-label">Loss-Rate</div><div class="kpi-val">${total?Math.round(lost.length/total*100):0}%</div></div>
+    ${goal>0?`<div class="kpi"><div class="kpi-label">Jahresziel</div><div class="kpi-val">${goalPct.toFixed(0)}%</div><div class="kpi-delta">${fmtCHF(wonCHF)} / ${fmtCHF(goal)}</div></div>`:''}`;
+
+  // Forecast: pipeline by month of closeDate (or wv as fallback)
+  const monthsMap = {};
+  const now = new Date();
+  for(let i=0;i<6;i++){ const d = new Date(now.getFullYear(), now.getMonth()+i, 1); const k = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); monthsMap[k] = {label:d.toLocaleDateString('de-CH',{month:'short',year:'2-digit'}), pipe:0, weighted:0}; }
+  open.forEach(c => {
+    const dateStr = c.closeDate || c.wv;
+    if(!dateStr) return;
+    const k = dateStr.slice(0,7);
+    if(monthsMap[k]){
+      const chf = parseFloat(c.chf)||0;
+      const p = parseFloat(c.prob)||(c.status==='Verhandlung'?70:c.status==='Angebot'?40:c.status==='Kontaktiert'?20:10);
+      monthsMap[k].pipe += chf;
+      monthsMap[k].weighted += chf*(p/100);
+    }
+  });
+  const fc = document.getElementById('anForecastChart');
+  if(fc && window.Chart){
+    if(anForecastChart) anForecastChart.destroy();
+    const labels = Object.values(monthsMap).map(m=>m.label);
+    anForecastChart = new Chart(fc, { type:'bar', data:{labels, datasets:[
+      {label:'Gewichtet', data:Object.values(monthsMap).map(m=>m.weighted), backgroundColor:'rgba(200,16,46,0.85)'},
+      {label:'Pipeline brutto', data:Object.values(monthsMap).map(m=>m.pipe-m.weighted), backgroundColor:'rgba(200,16,46,0.25)'}
+    ]}, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom',labels:{color:'#5b6678'}}}, scales:{x:{stacked:true,ticks:{color:'#5b6678'},grid:{display:false}},y:{stacked:true,beginAtZero:true,ticks:{color:'#5b6678',callback:v=>(v/1000).toFixed(0)+'k'},grid:{color:'rgba(20,30,50,0.07)'}}}}});
+  }
+
+  // Funnel
+  const funnelStages = ['Lead','Kontaktiert','Angebot','Verhandlung','Gewonnen'];
+  const stageCounts = funnelStages.map(s => STATE.contacts.filter(c=>{
+    // Did this contact ever reach this stage? Approximate by current status >= or activities
+    const idx = funnelStages.indexOf(s);
+    const curIdx = funnelStages.indexOf(c.status);
+    return curIdx >= idx;
+  }).length);
+  const fmax = Math.max(1, ...stageCounts);
+  document.getElementById('anFunnel').innerHTML = funnelStages.map((s,i)=>{
+    const w = (stageCounts[i]/fmax)*100;
+    const next = stageCounts[i+1]||0; const conv = stageCounts[i]>0 && i<funnelStages.length-1 ? Math.round(next/stageCounts[i]*100) : null;
+    return `<div class="funnel-row"><div class="funnel-label">${s}</div><div class="funnel-bar-wrap"><div class="funnel-bar" style="width:${w}%"></div><span class="funnel-count">${stageCounts[i]}</span></div>${conv!==null?`<div class="funnel-conv">${conv}%</div>`:'<div class="funnel-conv"></div>'}</div>`;
+  }).join('');
+
+  // Win-Rate per segment
+  const segs = {};
+  STATE.contacts.forEach(c => { const s = c.segment||'Sonstige'; if(!segs[s]) segs[s]={total:0,won:0}; segs[s].total++; if(c.status==='Gewonnen') segs[s].won++; });
+  const segLabels = Object.keys(segs);
+  const segRates = segLabels.map(s => segs[s].total>0 ? (segs[s].won/segs[s].total*100) : 0);
+  const sc = document.getElementById('anSegChart');
+  if(sc && window.Chart){
+    if(anSegChart) anSegChart.destroy();
+    anSegChart = new Chart(sc, { type:'bar', data:{labels:segLabels, datasets:[{label:'Win-Rate %', data:segRates, backgroundColor:'rgba(200,16,46,0.75)'}]}, options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}, scales:{x:{beginAtZero:true,max:100,ticks:{color:'#5b6678',callback:v=>v+'%'},grid:{color:'rgba(20,30,50,0.07)'}},y:{ticks:{color:'#5b6678'},grid:{display:false}}}}});
+  }
+
+  // Cycle time: average days between status changes (using activities with newStatus)
+  const stageDur = {Lead:[], Kontaktiert:[], Angebot:[], Verhandlung:[]};
+  STATE.contacts.forEach(c => {
+    const acts = STATE.activities.filter(a=>a.contactId===c.id && a.newStatus).sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+    let prev = {status:c.status, date:c.created};
+    if(c.created) prev = {status:'Lead', date:c.created};
+    acts.forEach(a => {
+      if(stageDur[prev.status] && prev.date && a.date){
+        const d = daysBetween(prev.date, a.date);
+        if(d>=0 && d<400) stageDur[prev.status].push(d);
+      }
+      prev = {status:a.newStatus, date:a.date};
+    });
+  });
+  document.getElementById('anCycle').innerHTML = Object.entries(stageDur).map(([s,arr])=>{
+    const avg = arr.length ? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length) : null;
+    return `<div class="cycle-row"><div class="cycle-stage">${s}</div><div class="cycle-val">${avg!==null?avg+' Tage':'—'}</div><div class="cycle-meta">${arr.length} Übergänge</div></div>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════════════════════════════════
 //  RENDER: AKTIVITÄTEN
 // ════════════════════════════════════════════════════════════════════════
 function renderAktivitaeten(){
@@ -2545,12 +3336,17 @@ window.openContactForm = function(){
   document.getElementById('cProb').value = '';
   document.getElementById('cWv').value = '';
   document.getElementById('cNext').value = '';
+  document.getElementById('cCloseDate').value = '';
+  document.getElementById('cTags').value = '';
   document.getElementById('cNotiz').value = '';
   document.getElementById('cTimelineWrap').classList.add('hidden');
   document.getElementById('cDeleteBtn').classList.add('hidden');
   document.getElementById('cIcsBtn').classList.add('hidden');
   document.getElementById('cDoneBtn').classList.add('hidden');
   document.getElementById('cAttWrap').classList.add('hidden');
+  const naWrap = document.getElementById('cNextActionWrap'); if(naWrap) naWrap.classList.add('hidden');
+  const naOut = document.getElementById('cNextActionOut'); if(naOut){ naOut.classList.add('hidden'); naOut.innerHTML=''; }
+  const tlSum = document.getElementById('cTimelineSummary'); if(tlSum){ tlSum.classList.add('hidden'); tlSum.innerHTML=''; }
   initExtraContactFields(null);
   openModal('modalContact');
   setTimeout(()=>document.getElementById('cFirma').focus(), 100);
@@ -2573,7 +3369,13 @@ window.openContact = function(id){
   document.getElementById('cProb').value = c.prob != null ? String(c.prob) : '';
   document.getElementById('cWv').value = c.wv ? c.wv.slice(0,10) : '';
   document.getElementById('cNext').value = c.next || '';
+  document.getElementById('cCloseDate').value = c.closeDate ? c.closeDate.slice(0,10) : '';
+  document.getElementById('cTags').value = parseTags(c.tags).join(', ');
   document.getElementById('cNotiz').value = c.notiz || '';
+  // Reveal KI / call-timer panel
+  const naWrap = document.getElementById('cNextActionWrap'); if(naWrap) naWrap.classList.remove('hidden');
+  const naOut = document.getElementById('cNextActionOut'); if(naOut){ naOut.classList.add('hidden'); naOut.innerHTML=''; }
+  const tlSum = document.getElementById('cTimelineSummary'); if(tlSum){ tlSum.classList.add('hidden'); tlSum.innerHTML=''; }
 
   // Extra contact fields
   initExtraContactFields(c);
@@ -2623,6 +3425,8 @@ window.saveContact = function(){
   const firma = document.getElementById('cFirma').value.trim();
   if(!firma){ showToast('Firma ist Pflichtfeld', 'error'); return; }
 
+  const newStatus = document.getElementById('cStatus').value;
+  const oldStatus = currentContactId ? (STATE.contacts.find(x=>x.id===currentContactId)||{}).status : null;
   const data = {
     firma,
     kontakt: document.getElementById('cKontakt').value.trim(),
@@ -2631,11 +3435,13 @@ window.saveContact = function(){
     position:document.getElementById('cPosition').value.trim(),
     ort:     document.getElementById('cOrt').value.trim(),
     segment: document.getElementById('cSegment').value,
-    status:  document.getElementById('cStatus').value,
+    status:  newStatus,
     chf:     parseCHF(document.getElementById('cChf').value),
     prob:    (function(){ const v = parseFloat(document.getElementById('cProb').value); return isNaN(v)?null:v; })(),
     wv:      document.getElementById('cWv').value || null,
     next:    document.getElementById('cNext').value.trim(),
+    closeDate: document.getElementById('cCloseDate').value || null,
+    tags:    parseTags(document.getElementById('cTags').value),
     notiz:   document.getElementById('cNotiz').value.trim(),
     extraEmails: extraEmails.filter(e=>e.val.trim()),
     extraTels:   extraTels.filter(t=>t.val.trim()),
@@ -2643,19 +3449,28 @@ window.saveContact = function(){
     updated: new Date().toISOString()
   };
 
-  if(currentContactId){
-    const c = STATE.contacts.find(x=>x.id===currentContactId);
-    Object.assign(c, data);
-    showToast('Kontakt aktualisiert', 'success');
+  const doSave = ()=>{
+    if(currentContactId){
+      const c = STATE.contacts.find(x=>x.id===currentContactId);
+      Object.assign(c, data);
+      showToast('Kontakt aktualisiert', 'success');
+    } else {
+      data.id = uid();
+      data.created = new Date().toISOString();
+      STATE.contacts.push(data);
+      showToast('Kontakt angelegt', 'success');
+    }
+    saveState();
+    closeModal('modalContact');
+    refreshAll();
+  };
+
+  // If status flipped to a closing one, ask for reason (Win/Loss-Analyse)
+  if(currentContactId && oldStatus !== newStatus && CLOSE_REASONS[newStatus]){
+    window.askCloseReason(currentContactId, newStatus, ()=>doSave());
   } else {
-    data.id = uid();
-    data.created = new Date().toISOString();
-    STATE.contacts.push(data);
-    showToast('Kontakt angelegt', 'success');
+    doSave();
   }
-  saveState();
-  closeModal('modalContact');
-  refreshAll();
 };
 
 window.deleteContact = function(){
@@ -4010,6 +4825,7 @@ window.exportData = function(){
   a.href = URL.createObjectURL(blob);
   a.download = 'mit-crm-backup-' + todayISO() + '.json';
   a.click();
+  markBackup();
   showToast('Backup heruntergeladen', 'success');
 };
 
@@ -4323,7 +5139,13 @@ window.saveCalEntry = function(){
 
 
 document.addEventListener('keydown', e => {
-  // Don't trigger when typing in input
+  // Ctrl/Cmd+K → command palette (works even when focused in input)
+  if((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')){
+    e.preventDefault();
+    window.openPalette();
+    return;
+  }
+  // Don't trigger plain-key shortcuts when typing in input
   if(['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)) return;
   if(e.metaKey || e.ctrlKey || e.altKey) return;
 
@@ -4336,8 +5158,8 @@ document.addEventListener('keydown', e => {
   } else if(e.key === 'l'){
     e.preventDefault();
     window.openLogActivity();
-  } else if(e.key >= '1' && e.key <= '7'){
-    const pages = ['today','kontakte','pipeline','wiedervorlagen','aktivitaeten','kalender','ki'];
+  } else if(e.key >= '1' && e.key <= '8'){
+    const pages = ['today','kontakte','pipeline','wiedervorlagen','aktivitaeten','kalender','ki','analytics'];
     window.nav(pages[parseInt(e.key)-1]);
   }
 });
@@ -4790,6 +5612,7 @@ window.exportCrmExcel = function(){
   // Download
   const filename = 'MiT-CRM-Export-' + todayISO() + '.xlsx';
   XLSX.writeFile(wb, filename);
+  markBackup();
   showToast('✓ Excel exportiert: ' + STATE.contacts.length + ' Kontakte, ' + STATE.activities.length + ' Aktivitäten', 'success');
 };
 
@@ -5554,11 +6377,19 @@ function init(){
   // Bind backdrop close on all modals now that DOM is complete
   attachBackdropClose();
   renderTurboSettings();
+  // Yearly goal input prefill
+  const g = loadGoal(); const gi = document.getElementById('goalInput'); if(g && gi){ gi.value = String(g); }
   renderToday();
   updateSidebarBadge();
   populateKiSelects();
   // Periodic alarm bell refresh (every 60s) — catches items becoming due mid-session
   setInterval(()=>{ updateAlarmBell(); renderOverdueBanner(); }, 60*1000);
+  // Backup reminder (toast if last export >7d)
+  checkBackupReminder();
+  // Onboarding tour on very first visit
+  if(!localStorage.getItem(ONBOARD_KEY) && STATE.contacts.length === 0){
+    setTimeout(()=>window.startOnboarding(), 1200);
+  }
   // Init browser notifications (after short delay so page loads first)
   setTimeout(initNotifications, 1500);
   // Re-check notifications when tab becomes visible again
@@ -5670,6 +6501,106 @@ if(document.readyState === 'loading'){
       <button class="btn btn-ghost" onclick="window.closeModal('modalImport')">Schliessen</button>
     </div>
   </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- BULK ACTION BAR                                                          -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<div id="bulkBar" class="bulk-bar hidden">
+  <span><strong id="bulkCount">0</strong> ausgewählt</span>
+  <span class="flex1"></span>
+  <button class="btn btn-ghost btn-sm" onclick="window.bulkStatus()">Status ändern</button>
+  <button class="btn btn-ghost btn-sm" onclick="window.bulkSnooze()">Wiedervorlage +X Tage</button>
+  <button class="btn btn-ghost btn-sm" onclick="window.bulkTag()">Tag hinzufügen</button>
+  <button class="btn btn-danger btn-sm" onclick="window.bulkDelete()">Löschen</button>
+  <button class="btn btn-ghost btn-sm" onclick="window.bulkClear()">✕ Auswahl aufheben</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- MODAL: Command Palette (Ctrl/Cmd + K)                                    -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<div class="modal-bg" id="modalPalette" onclick="if(event.target===this)window.closePalette()">
+  <div class="modal pal-modal" onclick="event.stopPropagation()">
+    <div class="pal-search">
+      <span class="pal-search-icon">⌕</span>
+      <input id="palInput" placeholder="Suche Kontakt, Aktion …  (Ctrl/⌘+K)" autocomplete="off"
+        oninput="renderPalette(this.value)"
+        onkeydown="if(event.key==='Escape'){window.closePalette()} else if(event.key==='ArrowDown'){event.preventDefault();_palIdx=Math.min((window._palItems||[]).length-1,_palIdx+1);renderPalette(this.value)} else if(event.key==='ArrowUp'){event.preventDefault();_palIdx=Math.max(0,_palIdx-1);renderPalette(this.value)} else if(event.key==='Enter'){event.preventDefault();window._palExec()}">
+      <span class="pal-hint">↑↓ wählen · ↵ ausführen · ESC schließen</span>
+    </div>
+    <div id="palList" class="pal-list"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- MODAL: Close Reason (Win/Loss/Erledigt)                                  -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<div class="modal-bg" id="modalReason">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-h">
+      <div class="modal-title" id="reasonTitle">Grund?</div>
+      <button class="modal-x" onclick="window.skipReason()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="reasonStatus">
+      <p class="tx-mute mb-md" style="font-size:12px;line-height:1.6">Hilft bei der späteren Analyse — was hat den Deal entschieden?</p>
+      <div id="reasonOptions" class="reason-options"></div>
+      <div class="field mt-md"><label>Zusatz-Notiz (optional)</label>
+        <input id="reasonNote" placeholder="z.B. Wettbewerber Bimex 12% günstiger">
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="window.skipReason()">Überspringen</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- MODAL: Dedup Wizard                                                      -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<div class="modal-bg" id="modalDedup">
+  <div class="modal lg" style="max-width:640px">
+    <div class="modal-h">
+      <div class="modal-title">⚭ Duplikate finden & mergen</div>
+      <button class="modal-x" onclick="window.closeModal('modalDedup')">✕</button>
+    </div>
+    <div class="modal-body" id="dedupBody"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="window.closeModal('modalDedup')">Schliessen</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- MODAL: Visitenkarten-Scan                                                -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<div class="modal-bg" id="modalCardScan">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-h">
+      <div class="modal-title">📷 Visitenkarte scannen</div>
+      <button class="modal-x" onclick="window.closeModal('modalCardScan')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p id="cardScanStatus" class="tx-mute" style="font-size:13px;line-height:1.6"></p>
+      <label class="dropzone" style="display:block">
+        <div class="dropzone-icon">📷</div>
+        <div class="dropzone-title">Foto auswählen oder ziehen</div>
+        <div class="dropzone-sub">JPG, PNG · Wird an Anthropic Claude Vision gesendet</div>
+        <input type="file" id="cardFileInput" accept="image/*" hidden onchange="window.handleCardScan(this)">
+      </label>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="window.closeModal('modalCardScan')">Abbrechen</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- TOUR OVERLAY                                                              -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<div id="tourOverlay" class="hidden">
+  <div id="tourSpot"></div>
+  <div id="tourBox"></div>
 </div>
 
 </body>
