@@ -855,6 +855,18 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .cycle-val{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:18px;color:var(--brand)}
 .cycle-meta{font-size:11px;color:var(--text-dim);font-family:'JetBrains Mono',monospace}
 
+/* ─── Close Chooser ─── */
+.close-chooser-list{display:flex;flex-direction:column;gap:10px}
+.close-opt{display:flex;align-items:center;gap:14px;background:var(--bg-card);
+  border:1.5px solid var(--line);border-left-width:4px;border-radius:var(--r-md);
+  padding:12px 14px;cursor:pointer;transition:all 0.15s;text-align:left;width:100%}
+.close-opt:hover{background:var(--bg2);transform:translateY(-1px);box-shadow:var(--shadow-1)}
+.close-opt-icon{width:36px;height:36px;border-radius:50%;color:#fff;font-size:18px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.close-opt-main{flex:1;min-width:0}
+.close-opt-title{font-weight:700;font-size:14px;color:var(--text)}
+.close-opt-desc{font-size:12px;color:var(--text-mute);margin-top:2px}
+
 /* ─── Tour overlay ─── */
 #tourOverlay{position:fixed;inset:0;z-index:3000;background:rgba(15,27,49,0.55);pointer-events:auto}
 #tourOverlay.hidden{display:none}
@@ -1509,10 +1521,14 @@ input,select,textarea{font-family:inherit;font-size:14px}
         <div class="field"><label>Wahrscheinlichkeit (%)</label><input id="cProb" type="text" placeholder="z.B. 40"></div>
         <div class="field">
           <label>Wiedervorlage-Datum</label>
-          <input id="cWv" type="date">
+          <div style="display:flex;gap:8px;align-items:center">
+            <input id="cWv" type="date" style="flex:1">
+            <input id="cWvTime" type="time" style="max-width:120px" title="Optional: Uhrzeit für Zeit-Erinnerung mit Alarm">
+          </div>
           <div class="mini-cal-toggle" onclick="window.toggleCal()">
             <span id="calToggleIcon">📅</span>
             <span id="calToggleLabel">Kalender öffnen</span>
+            <span class="tx-dim" style="font-size:11px;margin-left:auto">⏰ Uhrzeit löst Alarm aus</span>
           </div>
           <div id="miniCal" class="mini-cal hidden"></div>
         </div>
@@ -1569,6 +1585,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
       <button class="btn btn-danger btn-sm hidden" id="cDeleteBtn" onclick="window.deleteContact()">Löschen</button>
       <button class="btn btn-ghost btn-sm hidden" id="cIcsBtn" onclick="window.exportContactIcs()" title="Wiedervorlage in Outlook exportieren">📅 → Outlook</button>
       <button class="btn btn-done btn-sm hidden" id="cDoneBtn" onclick="window.markErledigt()" title="Anderer hat den Auftrag — wird nicht mehr als überfällig angezeigt">✓ Auf Erledigt setzen</button>
+      <button class="btn btn-primary btn-sm hidden" id="cCloseBtn" onclick="window.openCloseChooser()" title="Vorgang abschliessen — alle 4 Optionen anzeigen" style="background:#0f1b31">🏁 Vorgang abschliessen</button>
       <span class="flex1"></span>
       <button class="btn btn-ghost" onclick="window.closeModal('modalContact')">Abbrechen</button>
       <button class="btn btn-primary" onclick="window.saveContact()">Speichern</button>
@@ -2758,6 +2775,123 @@ function checkBackupReminder(){
 function markBackup(){ localStorage.setItem(BACKUP_KEY, String(Date.now())); }
 
 // ════════════════════════════════════════════════════════════════════════
+//  TIME-REMINDER — fires when wv-date === today AND wvTime <= now
+// ════════════════════════════════════════════════════════════════════════
+const REMINDER_FIRED_KEY = 'mit_crm_reminders_fired_v1';
+function loadFiredReminders(){
+  try{ return new Set(JSON.parse(localStorage.getItem(REMINDER_FIRED_KEY)||'[]')); }catch(e){ return new Set(); }
+}
+function saveFiredReminders(set){
+  // Keep set bounded — keep only last 200 keys
+  const arr = [...set];
+  localStorage.setItem(REMINDER_FIRED_KEY, JSON.stringify(arr.slice(-200)));
+}
+function reminderKey(c){ return c.id + '|' + (c.wv||'') + '|' + (c.wvTime||''); }
+// Simple beep via WebAudio (no external file)
+function playReminderBeep(){
+  try{
+    const AC = window.AudioContext || window.webkitAudioContext; if(!AC) return;
+    const ctx = new AC();
+    const o = ctx.createOscillator(); const g = ctx.createGain();
+    o.frequency.value = 880; o.type = 'sine';
+    g.gain.setValueAtTime(0.001, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.18, ctx.currentTime + 0.04);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.55);
+    o.connect(g); g.connect(ctx.destination); o.start();
+    o.stop(ctx.currentTime + 0.6);
+    setTimeout(()=>{
+      const o2 = ctx.createOscillator(); const g2 = ctx.createGain();
+      o2.frequency.value = 1320; o2.type='sine';
+      g2.gain.setValueAtTime(0.001, ctx.currentTime);
+      g2.gain.exponentialRampToValueAtTime(0.18, ctx.currentTime + 0.04);
+      g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+      o2.connect(g2); g2.connect(ctx.destination); o2.start(); o2.stop(ctx.currentTime + 0.55);
+    }, 250);
+  }catch(e){}
+}
+function fireReminder(c){
+  showToast('⏰ Erinnerung: ' + c.firma + (c.wvTime?' um '+c.wvTime:''), 'warn');
+  playReminderBeep();
+  if(typeof Notification !== 'undefined' && Notification.permission === 'granted'){
+    try{
+      const n = new Notification('⏰ Wiedervorlage fällig: ' + c.firma, {
+        body: (c.kontakt?c.kontakt+' · ':'') + (c.next || 'Wiedervorlage') + (c.tel?' · '+c.tel:''),
+        tag: 'mit-crm-reminder-' + c.id,
+        requireInteraction: true
+      });
+      n.onclick = () => { window.focus(); window.openContact(c.id); n.close(); };
+    }catch(e){}
+  }
+}
+function checkTimeReminders(){
+  const todayIso = todayISO();
+  const now = new Date();
+  const hhmm = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+  const fired = loadFiredReminders();
+  let anyFired = false;
+  STATE.contacts.forEach(c => {
+    if(['Gewonnen','Verloren','Pausiert','Erledigt'].includes(c.status)) return;
+    if(!c.wv) return;
+    if(c.wv.slice(0,10) !== todayIso) return;
+    const key = reminderKey(c);
+    if(fired.has(key)) return;
+    // If no time set, only fire ONCE at start of day (8:00) approximation
+    const target = c.wvTime || '08:00';
+    if(target <= hhmm){
+      fireReminder(c);
+      fired.add(key); anyFired = true;
+    }
+  });
+  if(anyFired) saveFiredReminders(fired);
+}
+
+// ════════════════════════════════════════════════════════════════════════
+//  "Vorgang abschliessen" — unified close action (chooser modal)
+// ════════════════════════════════════════════════════════════════════════
+const CLOSE_OPTIONS = [
+  {key:'Gewonnen',  icon:'✓', color:'#0f9d58', title:'Gewonnen',  desc:'Wir haben den Auftrag erhalten.'},
+  {key:'Verloren',  icon:'✕', color:'#dc2626', title:'Verloren',  desc:'Anfrage an Wettbewerber verloren (Preis, Timing …).'},
+  {key:'Erledigt',  icon:'⊘', color:'#0f766e', title:'Erledigt',  desc:'Anderer Anbieter hat den Auftrag — wir waren nicht im Rennen.'},
+  {key:'Pausiert',  icon:'⏸', color:'#6b7280', title:'Pausiert',  desc:'Auf Eis, kann später wieder aktiviert werden.'}
+];
+window.openCloseChooser = function(){
+  if(!currentContactId) return;
+  const c = STATE.contacts.find(x=>x.id===currentContactId); if(!c) return;
+  document.getElementById('closeChooserTitle').textContent = 'Vorgang abschliessen: ' + c.firma;
+  document.getElementById('closeChooserList').innerHTML = CLOSE_OPTIONS.map(o => `
+    <button class="close-opt" style="border-color:${o.color}" onclick="window.applyCloseChoice('${o.key}')">
+      <span class="close-opt-icon" style="background:${o.color}">${o.icon}</span>
+      <div class="close-opt-main">
+        <div class="close-opt-title">${escHtml(o.title)}</div>
+        <div class="close-opt-desc">${escHtml(o.desc)}</div>
+      </div>
+    </button>`).join('');
+  openModal('modalCloseChooser');
+};
+window.applyCloseChoice = function(status){
+  const c = STATE.contacts.find(x=>x.id===currentContactId); if(!c) return;
+  closeModal('modalCloseChooser');
+  const finalize = (reason)=>{
+    c.status = status;
+    if(status !== 'Pausiert'){ c.wv = null; c.wvTime = null; c.next = ''; }
+    if(reason) c.closeReason = reason;
+    c.updated = new Date().toISOString();
+    STATE.activities.push({
+      id: uid(), contactId: c.id, date: todayISO(), typ:'Status',
+      sum: 'Vorgang abgeschlossen → ' + status + (reason?' ('+reason+')':''),
+      next:'', newStatus: status, created: new Date().toISOString()
+    });
+    saveState(); closeModal('modalContact'); refreshAll();
+    showToast('✓ ' + c.firma + ' → ' + status, 'success');
+  };
+  if(CLOSE_REASONS[status]){
+    window.askCloseReason(c.id, status, finalize);
+  } else {
+    finalize(null);
+  }
+};
+
+// ════════════════════════════════════════════════════════════════════════
 //  COMMAND PALETTE  (Ctrl/Cmd + K)
 // ════════════════════════════════════════════════════════════════════════
 const PALETTE_ACTIONS = [
@@ -3335,6 +3469,7 @@ window.openContactForm = function(){
   document.getElementById('cChf').value = '';
   document.getElementById('cProb').value = '';
   document.getElementById('cWv').value = '';
+  document.getElementById('cWvTime').value = '';
   document.getElementById('cNext').value = '';
   document.getElementById('cCloseDate').value = '';
   document.getElementById('cTags').value = '';
@@ -3343,6 +3478,7 @@ window.openContactForm = function(){
   document.getElementById('cDeleteBtn').classList.add('hidden');
   document.getElementById('cIcsBtn').classList.add('hidden');
   document.getElementById('cDoneBtn').classList.add('hidden');
+  const closeBtnReset = document.getElementById('cCloseBtn'); if(closeBtnReset) closeBtnReset.classList.add('hidden');
   document.getElementById('cAttWrap').classList.add('hidden');
   const naWrap = document.getElementById('cNextActionWrap'); if(naWrap) naWrap.classList.add('hidden');
   const naOut = document.getElementById('cNextActionOut'); if(naOut){ naOut.classList.add('hidden'); naOut.innerHTML=''; }
@@ -3368,6 +3504,7 @@ window.openContact = function(id){
   document.getElementById('cChf').value = c.chf != null ? String(c.chf) : '';
   document.getElementById('cProb').value = c.prob != null ? String(c.prob) : '';
   document.getElementById('cWv').value = c.wv ? c.wv.slice(0,10) : '';
+  document.getElementById('cWvTime').value = c.wvTime || '';
   document.getElementById('cNext').value = c.next || '';
   document.getElementById('cCloseDate').value = c.closeDate ? c.closeDate.slice(0,10) : '';
   document.getElementById('cTags').value = parseTags(c.tags).join(', ');
@@ -3387,8 +3524,10 @@ window.openContact = function(id){
   else document.getElementById('cIcsBtn').classList.add('hidden');
   // "Auf Erledigt setzen" — only visible for non-closed deals
   const doneBtn = document.getElementById('cDoneBtn');
-  if(['Gewonnen','Verloren','Pausiert','Erledigt'].includes(c.status)) doneBtn.classList.add('hidden');
-  else doneBtn.classList.remove('hidden');
+  const closeBtn = document.getElementById('cCloseBtn');
+  const isClosed = ['Gewonnen','Verloren','Pausiert','Erledigt'].includes(c.status);
+  if(isClosed){ doneBtn.classList.add('hidden'); if(closeBtn) closeBtn.classList.add('hidden'); }
+  else { doneBtn.classList.remove('hidden'); if(closeBtn) closeBtn.classList.remove('hidden'); }
   // Timeline
   document.getElementById('cTimelineWrap').classList.remove('hidden');
   document.getElementById('cDeleteBtn').classList.remove('hidden');
@@ -3439,6 +3578,7 @@ window.saveContact = function(){
     chf:     parseCHF(document.getElementById('cChf').value),
     prob:    (function(){ const v = parseFloat(document.getElementById('cProb').value); return isNaN(v)?null:v; })(),
     wv:      document.getElementById('cWv').value || null,
+    wvTime:  document.getElementById('cWvTime').value || null,
     next:    document.getElementById('cNext').value.trim(),
     closeDate: document.getElementById('cCloseDate').value || null,
     tags:    parseTags(document.getElementById('cTags').value),
@@ -4487,7 +4627,7 @@ function aiShowPreview(d){
   document.getElementById('ai_notiz').value = notiz.trim();
 
   // Match against existing contacts
-  aiMatchedContact = findMatchingContact(d.firma, d.kontakt);
+  aiMatchedContact = findMatchingContact(d.firma, d.kontakt, d.ort);
   const matchInfo = document.getElementById('aiMatchInfo');
   if(aiMatchedContact){
     matchInfo.innerHTML = '<strong>ℹ Bestehender Kontakt erkannt:</strong> ' + escHtml(aiMatchedContact.firma) +
@@ -4500,19 +4640,29 @@ function aiShowPreview(d){
   }
 }
 
-function findMatchingContact(firma, kontakt){
+function findMatchingContact(firma, kontakt, ort){
   if(!firma) return null;
   const f = firma.toLowerCase().trim();
   const k = (kontakt||'').toLowerCase().trim();
-  // Exact firma + kontakt match
-  let m = STATE.contacts.find(c =>
-    (c.firma||'').toLowerCase().trim() === f &&
-    (c.kontakt||'').toLowerCase().trim() === k
-  );
+  const o = (ort||'').toLowerCase().trim();
+  // 1) Same firma + same kontakt + same/empty ort → match
+  let m = STATE.contacts.find(c => {
+    const co = (c.ort||'').toLowerCase().trim();
+    return (c.firma||'').toLowerCase().trim() === f
+        && (c.kontakt||'').toLowerCase().trim() === k
+        && (!o || !co || co === o);
+  });
   if(m) return m;
-  // Just firma match (private person fallback)
-  m = STATE.contacts.find(c => (c.firma||'').toLowerCase().trim() === f);
+  // 2) Same firma + same/empty ort (private person fallback)
+  m = STATE.contacts.find(c => {
+    const co = (c.ort||'').toLowerCase().trim();
+    return (c.firma||'').toLowerCase().trim() === f
+        && (!o || !co || co === o);
+  });
   return m || null;
+  // IMPORTANT: if same firma but DIFFERENT ort (Einsatzort) — treat as new contact,
+  // because Mobil in Time often runs multiple parallel projects per company at
+  // different sites that must be tracked independently.
 }
 
 function validSegment(s){
@@ -4527,6 +4677,12 @@ function validStatus(s){
 window.applyAiImport = function(){
   const firma = document.getElementById('ai_firma').value.trim();
   if(!firma){ showToast('Firma fehlt', 'error'); return; }
+
+  // Re-check match with current edited fields — user may have changed ort,
+  // which means it's a different site → should NOT merge into existing.
+  const editedOrt = document.getElementById('ai_ort').value.trim();
+  const editedKontakt = document.getElementById('ai_kontakt').value.trim();
+  aiMatchedContact = findMatchingContact(firma, editedKontakt, editedOrt);
 
   const chfTotal = parseCHF(document.getElementById('ai_chf_total').value);
   let notizFinal = document.getElementById('ai_notiz').value.trim();
@@ -6383,7 +6539,9 @@ function init(){
   updateSidebarBadge();
   populateKiSelects();
   // Periodic alarm bell refresh (every 60s) — catches items becoming due mid-session
-  setInterval(()=>{ updateAlarmBell(); renderOverdueBanner(); }, 60*1000);
+  setInterval(()=>{ updateAlarmBell(); renderOverdueBanner(); checkTimeReminders(); }, 30*1000);
+  // Run once shortly after load (lets user see anything already pending)
+  setTimeout(checkTimeReminders, 4000);
   // Backup reminder (toast if last export >7d)
   checkBackupReminder();
   // Onboarding tour on very first visit
@@ -6591,6 +6749,25 @@ if(document.readyState === 'loading'){
     </div>
     <div class="modal-foot">
       <button class="btn btn-ghost" onclick="window.closeModal('modalCardScan')">Abbrechen</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- MODAL: Close Chooser (4 closing options)                                 -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<div class="modal-bg" id="modalCloseChooser">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-h">
+      <div class="modal-title" id="closeChooserTitle">Vorgang abschliessen</div>
+      <button class="modal-x" onclick="window.closeModal('modalCloseChooser')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="tx-mute mb-md" style="font-size:12.5px;line-height:1.55">Wähle den passenden Abschluss — „Verloren" ist nicht immer richtig. Bei Gewonnen / Verloren / Erledigt wirst du im nächsten Schritt nach dem Grund gefragt (für die Analyse).</p>
+      <div id="closeChooserList" class="close-chooser-list"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="window.closeModal('modalCloseChooser')">Abbrechen</button>
     </div>
   </div>
 </div>
