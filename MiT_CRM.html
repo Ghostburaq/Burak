@@ -505,6 +505,102 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .turbo-row-days{width:64px;background:var(--bg-input);border:1px solid var(--line2);color:var(--text);padding:7px 8px;border-radius:var(--r-sm);outline:none}
 .turbo-row-days:focus{border-color:var(--brand)}
 
+/* Bulk Turbo bar on Wiedervorlagen */
+.turbo-mode-bar{
+  display:flex;align-items:center;justify-content:space-between;gap:18px;
+  background:linear-gradient(135deg, rgba(200,16,46,0.10), rgba(226,0,26,0.06));
+  border:1px solid rgba(200,16,46,0.25);
+  border-radius:var(--r-lg);padding:18px 22px;margin-bottom:18px;
+  box-shadow:0 2px 14px rgba(200,16,46,0.10);
+}
+.turbo-mode-title{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:20px;color:var(--brand);letter-spacing:0.02em}
+.turbo-mode-sub{font-size:12.5px;color:var(--text-mute);margin-top:3px;max-width:560px}
+.turbo-mode-btn{font-size:14px;padding:11px 22px;box-shadow:0 4px 14px rgba(200,16,46,0.30)}
+
+/* "Auf Erledigt setzen" button */
+.btn-done{background:#0f766e;color:#fff;font-weight:600}
+.btn-done:hover{background:#0d6660;transform:translateY(-1px);box-shadow:0 4px 12px rgba(15,118,110,0.30)}
+
+/* Alarm bell in topbar */
+.alarm-wrap{position:relative}
+.alarm-btn{
+  position:relative;background:transparent;border:1px solid var(--line2);
+  width:38px;height:36px;border-radius:var(--r-sm);
+  display:inline-flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:all 0.15s;
+}
+.alarm-btn:hover{border-color:var(--brand);background:var(--bg-hover)}
+.alarm-btn.alarm-overdue{border-color:var(--brand);background:var(--brand-soft)}
+.alarm-icon{font-size:16px;line-height:1}
+.alarm-badge{
+  position:absolute;top:-6px;right:-6px;
+  background:var(--brand);color:#fff;font-size:10px;font-weight:800;
+  min-width:18px;height:18px;padding:0 5px;border-radius:9px;
+  display:flex;align-items:center;justify-content:center;
+  border:2px solid var(--bg1);box-shadow:0 1px 4px rgba(200,16,46,0.40);
+}
+.alarm-badge.hidden{display:none}
+@keyframes alarmPulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(200,16,46,0.45)}
+  50%   {box-shadow:0 0 0 8px rgba(200,16,46,0)}
+}
+.alarm-btn.alarm-pulsing{animation:alarmPulse 1.6s ease-in-out infinite}
+.alarm-panel{
+  position:absolute;right:0;top:calc(100% + 8px);z-index:1500;
+  width:380px;max-height:520px;overflow-y:auto;
+  background:var(--bg-card);border:1px solid var(--line-strong);
+  border-radius:var(--r-md);box-shadow:var(--shadow-2);
+}
+.alarm-panel.hidden{display:none}
+.alarm-panel-h{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 14px;border-bottom:1px solid var(--line);
+  font-weight:700;font-size:13px;color:var(--text);
+  position:sticky;top:0;background:var(--bg-card);z-index:1;
+}
+.alarm-snooze-all{
+  background:transparent;border:1px solid var(--line2);
+  color:var(--text-mute);font-size:11px;font-weight:600;
+  padding:4px 10px;border-radius:var(--r-sm);cursor:pointer;transition:all 0.12s;
+}
+.alarm-snooze-all:hover{border-color:var(--brand);color:var(--brand)}
+.alarm-empty{padding:30px 14px;text-align:center;color:var(--text-mute);font-size:13px}
+.alarm-item{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 14px;border-bottom:1px solid var(--line);
+  transition:background 0.12s;
+}
+.alarm-item:hover{background:var(--bg2)}
+.alarm-item-main{flex:1;cursor:pointer;min-width:0}
+.alarm-item-tag{
+  display:inline-block;font-size:9.5px;font-weight:800;letter-spacing:0.05em;
+  padding:2px 7px;border-radius:9px;margin-bottom:3px;
+}
+.alarm-item.overdue .alarm-item-tag{background:var(--danger-soft);color:var(--danger)}
+.alarm-item.today .alarm-item-tag{background:var(--warn-soft);color:var(--warn)}
+.alarm-item-firma{font-weight:700;font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.alarm-item-sub{font-size:11px;color:var(--text-mute);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.alarm-item-actions{display:flex;gap:4px;flex-shrink:0}
+.alarm-more{padding:10px 14px;text-align:center;font-size:12px}
+.alarm-more a{color:var(--brand);text-decoration:none;font-weight:600}
+.alarm-more a:hover{text-decoration:underline}
+
+/* Overdue banner on Today */
+.overdue-banner{
+  display:flex;align-items:center;gap:14px;
+  background:linear-gradient(135deg, rgba(220,38,38,0.08), rgba(220,38,38,0.04));
+  border:1px solid rgba(220,38,38,0.30);border-left:4px solid var(--danger);
+  border-radius:var(--r-md);padding:14px 18px;margin-bottom:16px;
+  animation:bannerSlide 0.3s ease-out;
+}
+.overdue-banner.hidden{display:none}
+@keyframes bannerSlide{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.overdue-banner-icon{font-size:24px;color:var(--danger);animation:bannerShake 2s ease-in-out infinite}
+@keyframes bannerShake{0%,100%{transform:rotate(0)}10%,30%{transform:rotate(-8deg)}20%,40%{transform:rotate(8deg)}50%{transform:rotate(0)}}
+.overdue-banner-text{flex:1;line-height:1.4}
+.overdue-banner-text strong{color:var(--danger);font-size:14px;display:block}
+.overdue-banner-names{font-size:12px;color:var(--text-mute)}
+
 /* ── WOCHENBERICHT ────────────────────────────────────────── */
 .wb-section{margin-bottom:18px}
 .wb-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;
@@ -744,6 +840,22 @@ input,select,textarea{font-family:inherit;font-size:14px}
         <kbd>/</kbd>
         <div id="globalSearchResults" class="hidden gs-results"></div>
       </div>
+
+      <!-- Alarm bell with overdue/due-today counter + dropdown panel -->
+      <div class="alarm-wrap" id="alarmWrap">
+        <button class="alarm-btn" id="alarmBtn" onclick="window.toggleAlarmPanel(event)" title="Alarme & fällige Wiedervorlagen">
+          <span class="alarm-icon">🔔</span>
+          <span class="alarm-badge hidden" id="alarmBadge">0</span>
+        </button>
+        <div class="alarm-panel hidden" id="alarmPanel">
+          <div class="alarm-panel-h">
+            <span>🔔 Alarme & Fällig</span>
+            <button class="alarm-snooze-all" onclick="window.snoozeAllAlarms()" title="Alle Alarme 1h pausieren">⏸ 1h</button>
+          </div>
+          <div id="alarmPanelBody"></div>
+        </div>
+      </div>
+
       <div style="position:relative;display:inline-flex;gap:6px">
         <button class="btn btn-ghost btn-sm" onclick="window.exportCrmExcel()" title="CRM-Export als Excel (reimportierbar)">↓ Export</button>
         <button class="btn btn-ghost btn-sm" onclick="window.openImportModal()" title="Daten importieren">↑ Import</button>
@@ -755,6 +867,9 @@ input,select,textarea{font-family:inherit;font-size:14px}
     <div class="content">
       <!-- ═══ TODAY PAGE ═══ -->
       <div class="page active" id="page-today">
+        <!-- Overdue banner (only shown when overdue items exist) -->
+        <div id="overdueBanner" class="overdue-banner hidden"></div>
+
         <div class="kpi-grid" id="kpiGrid"></div>
 
         <div class="today-grid">
@@ -869,6 +984,16 @@ input,select,textarea{font-family:inherit;font-size:14px}
 
       <!-- ═══ WIEDERVORLAGEN ═══ -->
       <div class="page" id="page-wiedervorlagen">
+        <!-- Big Turbo Mode call-to-action -->
+        <div class="turbo-mode-bar">
+          <div>
+            <div class="turbo-mode-title">⚡ Turbo-Modus</div>
+            <div class="turbo-mode-sub">In einem Klick alle überfälligen + heute fälligen Wiedervorlagen mit automatischen Nachfass-Notizen abarbeiten.</div>
+          </div>
+          <button class="btn btn-primary turbo-mode-btn" onclick="window.bulkTurbo()">
+            <span style="font-size:18px">⚡</span> Turbo-Modus starten
+          </button>
+        </div>
         <div class="card">
           <div class="card-h">
             <div class="card-title">Überfällig</div>
@@ -1230,6 +1355,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
     <div class="modal-foot">
       <button class="btn btn-danger btn-sm hidden" id="cDeleteBtn" onclick="window.deleteContact()">Löschen</button>
       <button class="btn btn-ghost btn-sm hidden" id="cIcsBtn" onclick="window.exportContactIcs()" title="Wiedervorlage in Outlook exportieren">📅 → Outlook</button>
+      <button class="btn btn-done btn-sm hidden" id="cDoneBtn" onclick="window.markErledigt()" title="Anderer hat den Auftrag — wird nicht mehr als überfällig angezeigt">✓ Auf Erledigt setzen</button>
       <span class="flex1"></span>
       <button class="btn btn-ghost" onclick="window.closeModal('modalContact')">Abbrechen</button>
       <button class="btn btn-primary" onclick="window.saveContact()">Speichern</button>
@@ -2161,6 +2287,167 @@ function updateSidebarBadge(){
   } else {
     badge.classList.add('hidden');
   }
+  // Also refresh alarm bell + overdue banner
+  updateAlarmBell();
+  renderOverdueBanner();
+}
+
+// ════════════════════════════════════════════════════════════════════════
+//  BULK TURBO + "ERLEDIGT" QUICK ACTION
+// ════════════════════════════════════════════════════════════════════════
+window.markErledigt = function(){
+  if(!currentContactId) return;
+  const c = STATE.contacts.find(x=>x.id===currentContactId); if(!c) return;
+  if(!confirm('"' + c.firma + '" auf ERLEDIGT setzen?\n\nDer Kontakt wird nicht mehr als überfällig angezeigt — verwende dies, wenn ein anderer Anbieter den Auftrag erhalten hat.')) return;
+  c.status = 'Erledigt';
+  c.wv = null;
+  c.next = '';
+  c.updated = new Date().toISOString();
+  STATE.activities.push({
+    id: uid(), contactId: c.id, date: todayISO(), typ:'Status',
+    sum:'Auf Erledigt gesetzt (anderer Anbieter hat den Auftrag erhalten)',
+    next:'', newStatus:'Erledigt', created: new Date().toISOString()
+  });
+  saveState();
+  closeModal('modalContact');
+  refreshAll();
+  showToast('✓ ' + c.firma + ' auf Erledigt gesetzt', 'success');
+};
+
+window.bulkTurbo = function(){
+  const todayIso = todayISO();
+  const due = STATE.contacts.filter(c =>
+    !['Gewonnen','Verloren','Pausiert','Erledigt'].includes(c.status) &&
+    c.wv && c.wv.slice(0,10) <= todayIso
+  ).sort((a,b)=>(a.wv||'').localeCompare(b.wv||''));
+  if(!due.length){ showToast('Keine überfälligen oder heute fälligen Wiedervorlagen', 'warn'); return; }
+  const presets = loadTurboPresets();
+  if(!presets.length){ showToast('Keine Turbo-Vorlagen konfiguriert', 'error'); return; }
+  const preview = due.slice(0,5).map((c,i)=>`  • ${c.firma} → "${presets[i % presets.length].text}" (+${presets[i % presets.length].days}d)`).join('\n');
+  const extra = due.length>5 ? `\n  … und ${due.length-5} weitere` : '';
+  if(!confirm(`⚡ Turbo-Modus\n\n${due.length} fällige Wiedervorlage${due.length>1?'n':''} werden in einem Schritt mit rotierenden Nachfass-Notizen abgearbeitet:\n\n${preview}${extra}\n\nFortfahren?`)) return;
+  const now = new Date().toISOString();
+  due.forEach((c,i)=>{
+    const p = presets[i % presets.length];
+    STATE.activities.push({
+      id: uid(), contactId: c.id, date: todayISO(), typ:'Anruf',
+      sum: p.text, next: p.text, newWv: null, newStatus: null, created: now
+    });
+    const d = new Date(); d.setDate(d.getDate() + (parseInt(p.days)||7));
+    c.wv = localISO(d);
+    c.next = p.text;
+    if(c.status === 'Lead') c.status = 'Kontaktiert';
+    c.updated = now;
+  });
+  saveState();
+  refreshAll();
+  showToast('⚡ Turbo-Modus: ' + due.length + ' Calls geloggt, alle Wiedervorlagen neu terminiert', 'success');
+};
+
+// ════════════════════════════════════════════════════════════════════════
+//  ALARM BELL — overdue/due-today panel in topbar
+// ════════════════════════════════════════════════════════════════════════
+const ALARM_SNOOZE_KEY = 'mit_crm_alarm_snooze_until';
+function isAlarmSnoozed(){ const t = parseInt(localStorage.getItem(ALARM_SNOOZE_KEY)||'0'); return Date.now() < t; }
+window.snoozeAllAlarms = function(){
+  localStorage.setItem(ALARM_SNOOZE_KEY, String(Date.now() + 60*60*1000));
+  updateAlarmBell();
+  const panel = document.getElementById('alarmPanel'); if(panel) panel.classList.add('hidden');
+  showToast('Alarme für 1 Stunde pausiert', 'info');
+};
+
+function getAlarmItems(){
+  const todayIso = todayISO();
+  return STATE.contacts.filter(c =>
+    !['Gewonnen','Verloren','Pausiert','Erledigt'].includes(c.status) &&
+    c.wv && c.wv.slice(0,10) <= todayIso
+  ).map(c => {
+    const days = daysBetween(c.wv, new Date());
+    return {...c, days};
+  }).sort((a,b)=>b.days - a.days);
+}
+
+function updateAlarmBell(){
+  const btn = document.getElementById('alarmBtn');
+  const badge = document.getElementById('alarmBadge');
+  if(!btn || !badge) return;
+  const items = getAlarmItems();
+  const overdue = items.filter(x=>x.days>0).length;
+  const due = items.length;
+  if(due === 0){
+    badge.classList.add('hidden');
+    btn.classList.remove('alarm-pulsing','alarm-overdue');
+  } else {
+    badge.textContent = due;
+    badge.classList.remove('hidden');
+    if(overdue > 0 && !isAlarmSnoozed()){
+      btn.classList.add('alarm-pulsing','alarm-overdue');
+    } else {
+      btn.classList.remove('alarm-pulsing','alarm-overdue');
+    }
+  }
+}
+
+window.toggleAlarmPanel = function(ev){
+  ev && ev.stopPropagation();
+  const panel = document.getElementById('alarmPanel'); if(!panel) return;
+  if(!panel.classList.contains('hidden')){ panel.classList.add('hidden'); return; }
+  renderAlarmPanel();
+  panel.classList.remove('hidden');
+  setTimeout(()=>{
+    const closer = (e)=>{
+      if(!panel.contains(e.target) && e.target.id !== 'alarmBtn' && !document.getElementById('alarmBtn').contains(e.target)){
+        panel.classList.add('hidden');
+        document.removeEventListener('click', closer);
+      }
+    };
+    document.addEventListener('click', closer);
+  },0);
+};
+
+function renderAlarmPanel(){
+  const body = document.getElementById('alarmPanelBody'); if(!body) return;
+  const items = getAlarmItems();
+  if(items.length === 0){
+    body.innerHTML = '<div class="alarm-empty">✓ Keine fälligen Wiedervorlagen.<br><span class="tx-dim" style="font-size:11px">Alles im grünen Bereich!</span></div>';
+    return;
+  }
+  body.innerHTML = items.slice(0,12).map(c => {
+    const cls = c.days > 0 ? 'overdue' : 'today';
+    const tag = c.days > 0 ? `${c.days}d ÜBERFÄLLIG` : 'HEUTE';
+    return `<div class="alarm-item ${cls}">
+      <div class="alarm-item-main" onclick="window.closeAlarmPanel();window.openContact('${c.id}')">
+        <div class="alarm-item-tag">${tag}</div>
+        <div class="alarm-item-firma">${escHtml(c.firma)}</div>
+        <div class="alarm-item-sub">${escHtml(c.kontakt||'')} · ${escHtml(c.status||'')} · ${fmtCHF(c.chf)}</div>
+      </div>
+      <div class="alarm-item-actions">
+        <button class="btn btn-tiny btn-turbo" onclick="event.stopPropagation();window.openTurbo(event,'${c.id}')" title="Turbo-Nachfass">⚡</button>
+        <button class="btn btn-tiny btn-ghost" onclick="event.stopPropagation();window.snooze('${c.id}',7)" title="+7 Tage">+7d</button>
+      </div>
+    </div>`;
+  }).join('') + (items.length>12 ? `<div class="alarm-more"><a href="#" onclick="event.preventDefault();window.closeAlarmPanel();window.nav('wiedervorlagen')">+ ${items.length-12} weitere ansehen</a></div>` : '');
+}
+window.closeAlarmPanel = function(){ const p=document.getElementById('alarmPanel'); if(p) p.classList.add('hidden'); };
+
+function renderOverdueBanner(){
+  const el = document.getElementById('overdueBanner'); if(!el) return;
+  const todayIso = todayISO();
+  const overdue = STATE.contacts.filter(c =>
+    !['Gewonnen','Verloren','Pausiert','Erledigt'].includes(c.status) &&
+    c.wv && c.wv.slice(0,10) < todayIso
+  );
+  if(overdue.length === 0){ el.classList.add('hidden'); el.innerHTML=''; return; }
+  el.classList.remove('hidden');
+  el.innerHTML = `
+    <span class="overdue-banner-icon">⚠</span>
+    <div class="overdue-banner-text">
+      <strong>${overdue.length} überfällige Wiedervorlage${overdue.length>1?'n':''}</strong>
+      <span class="overdue-banner-names">${overdue.slice(0,3).map(c=>escHtml(c.firma)).join(', ')}${overdue.length>3?` … +${overdue.length-3}`:''}</span>
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="window.nav('wiedervorlagen')">Bearbeiten →</button>
+    <button class="btn btn-ghost btn-sm" onclick="window.nav('wiedervorlagen');setTimeout(()=>window.bulkTurbo(),250)">⚡ Turbo-Modus</button>
+  `;
 }
 
 // ════════════════════════════════════════════════════════════════════════
@@ -2262,6 +2549,7 @@ window.openContactForm = function(){
   document.getElementById('cTimelineWrap').classList.add('hidden');
   document.getElementById('cDeleteBtn').classList.add('hidden');
   document.getElementById('cIcsBtn').classList.add('hidden');
+  document.getElementById('cDoneBtn').classList.add('hidden');
   document.getElementById('cAttWrap').classList.add('hidden');
   initExtraContactFields(null);
   openModal('modalContact');
@@ -2295,6 +2583,10 @@ window.openContact = function(id){
   // ICS btn
   if(c.wv) document.getElementById('cIcsBtn').classList.remove('hidden');
   else document.getElementById('cIcsBtn').classList.add('hidden');
+  // "Auf Erledigt setzen" — only visible for non-closed deals
+  const doneBtn = document.getElementById('cDoneBtn');
+  if(['Gewonnen','Verloren','Pausiert','Erledigt'].includes(c.status)) doneBtn.classList.add('hidden');
+  else doneBtn.classList.remove('hidden');
   // Timeline
   document.getElementById('cTimelineWrap').classList.remove('hidden');
   document.getElementById('cDeleteBtn').classList.remove('hidden');
@@ -5265,11 +5557,13 @@ function init(){
   renderToday();
   updateSidebarBadge();
   populateKiSelects();
+  // Periodic alarm bell refresh (every 60s) — catches items becoming due mid-session
+  setInterval(()=>{ updateAlarmBell(); renderOverdueBanner(); }, 60*1000);
   // Init browser notifications (after short delay so page loads first)
   setTimeout(initNotifications, 1500);
   // Re-check notifications when tab becomes visible again
   document.addEventListener('visibilitychange', () => {
-    if(document.visibilityState === 'visible') checkWvNotifications();
+    if(document.visibilityState === 'visible'){ checkWvNotifications(); updateAlarmBell(); renderOverdueBanner(); }
   });
 }
 
