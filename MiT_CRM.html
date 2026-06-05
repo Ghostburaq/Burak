@@ -855,6 +855,26 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .cycle-val{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:18px;color:var(--brand)}
 .cycle-meta{font-size:11px;color:var(--text-dim);font-family:'JetBrains Mono',monospace}
 
+/* ─── Kategorie pills & matrix ─── */
+.kat-pill{display:inline-block;font-size:9.5px;font-weight:700;padding:1px 7px;border-radius:9px;
+  margin-top:3px;letter-spacing:0.04em;text-transform:uppercase}
+.kat-strom{background:rgba(37,99,235,0.13);color:#1d4ed8}
+.kat-waerme{background:rgba(220,38,38,0.13);color:#b91c1c}
+.kat-klte,.kat-kalte{background:rgba(14,165,233,0.16);color:#0369a1}
+.kat-usv{background:rgba(124,58,237,0.13);color:#6d28d9}
+.kat-mix{background:rgba(100,116,139,0.16);color:#475569}
+.kategorie-table{width:100%;border-collapse:collapse;font-size:13px}
+.kategorie-table th{text-align:left;padding:10px 12px;background:var(--bg2);font-weight:700;font-size:11.5px;
+  text-transform:uppercase;letter-spacing:0.06em;color:var(--text-mute);border-bottom:1px solid var(--line)}
+.kategorie-table td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+.kategorie-table tr:last-child td{border-bottom:none}
+.kategorie-row.clickable{cursor:pointer;transition:background 0.12s}
+.kategorie-row.clickable:hover{background:var(--bg-hover)}
+.kategorie-cell-name{font-weight:700;color:var(--text)}
+.kategorie-total{background:var(--bg2)}
+.kat-count{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:17px;color:var(--text)}
+.kat-chf{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--text-mute)}
+
 /* ─── Close Chooser ─── */
 .close-chooser-list{display:flex;flex-direction:column;gap:10px}
 .close-opt{display:flex;align-items:center;gap:14px;background:var(--bg-card);
@@ -1121,6 +1141,13 @@ input,select,textarea{font-family:inherit;font-size:14px}
               <option>Spital/Klinik</option><option>EVU</option><option>Gemeinde</option>
               <option>Bau</option><option>Event</option><option>Cross-Sell</option><option>Sonstige</option>
             </select>
+            <select id="filterKategorie" onchange="window.renderKontakte()" title="Strom / Wärme / Kälte">
+              <option value="">Alle Kategorien</option>
+              <option>Strom</option><option>Wärme</option><option>Kälte</option><option>USV</option><option>Mix</option>
+            </select>
+            <select id="filterSalesRep" onchange="window.renderKontakte()" title="Berater / Außendienst">
+              <option value="">Alle Berater</option>
+            </select>
             <select id="filterSort" onchange="window.renderKontakte()">
               <option value="score">Sortierung: Score (Hot first)</option>
               <option value="last">Letzte Aktivität</option>
@@ -1363,6 +1390,15 @@ input,select,textarea{font-family:inherit;font-size:14px}
             <div id="anCycle"></div>
           </div>
         </div>
+
+        <!-- Kategorie matrix (Strom / Wärme / Kälte) × Status -->
+        <div class="card mt-md">
+          <div class="card-h">
+            <div class="card-title">Kategorie-Übersicht — Strom · Wärme · Kälte</div>
+            <span class="tx-dim" style="font-size:11px">Offen / Gewonnen / Verloren / Erledigt pro Produktlinie · klick auf Kategorie filtert die Kontakte</span>
+          </div>
+          <div id="anKategorieMatrix"></div>
+        </div>
       </div>
 
       <!-- ═══ SETTINGS ═══ -->
@@ -1415,6 +1451,16 @@ input,select,textarea{font-family:inherit;font-size:14px}
             </div>
           </div>
           <button class="btn btn-primary mt-md" onclick="window.saveWbSettings()">Einstellungen speichern</button>
+
+          <div class="section-h">👤 Berater / Außendienst</div>
+          <p class="tx-mute mb-md" style="font-size:12px;line-height:1.6;margin-top:-8px">
+            Liste der Verantwortlichen, die in Kontakten ausgewählt werden können (Auto-Complete). Auf der Kontakte-Seite ist ein Filter „Alle Berater" zum Eingrenzen verfügbar.
+          </p>
+          <div id="repRows"></div>
+          <div class="row gap-md mt-md">
+            <button class="btn btn-ghost btn-sm" onclick="window.addRep()">＋ Berater hinzufügen</button>
+            <button class="btn btn-primary btn-sm" onclick="window.saveRepSettings()">Berater-Liste speichern</button>
+          </div>
 
           <div class="section-h" id="turboSettings">⚡ Turbo-Nachfass Vorlagen</div>
           <p class="tx-mute mb-md" style="font-size:12px;line-height:1.6;margin-top:-8px">
@@ -1500,6 +1546,16 @@ input,select,textarea{font-family:inherit;font-size:14px}
             <option>Spital/Klinik</option><option>EVU</option><option>Gemeinde</option>
             <option>Bau</option><option>Event</option><option>Cross-Sell</option><option>Sonstige</option>
           </select>
+        </div>
+        <div class="field"><label>Kategorie (Produktlinie)</label>
+          <select id="cKategorie">
+            <option value="">— keine —</option>
+            <option>Strom</option><option>Wärme</option><option>Kälte</option><option>USV</option><option>Mix</option>
+          </select>
+        </div>
+        <div class="field"><label>Berater / Verantwortlich</label>
+          <input id="cSalesRep" list="salesRepList" placeholder="z.B. Burak Ücöz">
+          <datalist id="salesRepList"></datalist>
         </div>
         <div class="field"><label>Status</label>
           <select id="cStatus">
@@ -2216,7 +2272,19 @@ window.renderKontakte = function renderKontakte(){
   const search = (tagOnly ? '' : rawSearch).toLowerCase();
   const stat   = document.getElementById('filterStatus').value;
   const seg    = document.getElementById('filterSegment').value;
+  const kat    = (document.getElementById('filterKategorie')||{}).value || '';
+  const rep    = (document.getElementById('filterSalesRep')||{}).value || '';
   const sort   = document.getElementById('filterSort').value;
+
+  // Populate the Berater dropdown from current data + configured list
+  const repSel = document.getElementById('filterSalesRep');
+  if(repSel){
+    const fromContacts = [...new Set(STATE.contacts.map(c=>c.salesRep).filter(Boolean))];
+    const configured = loadSalesReps();
+    const all = [...new Set([...configured, ...fromContacts])].sort((a,b)=>a.localeCompare(b,'de'));
+    const cur = repSel.value;
+    repSel.innerHTML = '<option value="">Alle Berater</option>' + all.map(r=>`<option ${r===cur?'selected':''}>${escHtml(r)}</option>`).join('');
+  }
 
   let list = STATE.contacts.map(c => ({...c, score: leadScore(c), last: lastActivityDate(c.id)}));
 
@@ -2233,6 +2301,8 @@ window.renderKontakte = function renderKontakte(){
     (c.extraContacts||[]).some(p=>((p.name||'')+' '+(p.email||'')+' '+(p.tel||'')+' '+(p.position||'')).toLowerCase().includes(search))
   );
   if(stat) list = list.filter(c => c.status === stat);
+  if(kat)  list = list.filter(c => (c.kategorie||'') === kat);
+  if(rep)  list = list.filter(c => (c.salesRep||'') === rep);
   if(seg) list = list.filter(c => c.segment === seg);
 
   if(sort === 'score') list.sort((a,b)=>b.score-a.score);
@@ -2263,8 +2333,8 @@ window.renderKontakte = function renderKontakte(){
       <td onclick="event.stopPropagation()"><input type="checkbox" class="bulk-cb" data-id="${c.id}" ${bulkSelected.has(c.id)?'checked':''} onchange="window.bulkToggle('${c.id}',event)"></td>
       <td><span class="score ${scoreClass(c.score)}">${c.score}</span></td>
       <td class="fw-bold">${escHtml(c.firma)}</td>
-      <td class="tx-mute">${escHtml(c.kontakt||'—')}<br><span class="tx-dim" style="font-size:11px">${escHtml(c.email||'')}</span></td>
-      <td class="tx-mute">${escHtml(c.segment||'—')}</td>
+      <td class="tx-mute">${escHtml(c.kontakt||'—')}<br><span class="tx-dim" style="font-size:11px">${escHtml(c.email||'')}${c.salesRep?` · 👤 ${escHtml(c.salesRep)}`:''}</span></td>
+      <td class="tx-mute">${escHtml(c.segment||'—')}${c.kategorie?`<br><span class="kat-pill kat-${c.kategorie.toLowerCase().replace(/[^a-z]/g,'')}">${escHtml(c.kategorie)}</span>`:''}</td>
       <td><span class="bd ${statusClass(c.status)}">${c.status}</span></td>
       <td class="tag-cell">${renderTagChips(c.tags,{max:4,click:true})}</td>
       <td class="tx-right mono">${fmtCHF(c.chf)}</td>
@@ -2526,7 +2596,10 @@ window.turboLog = function(contactId, idx){
 function renderTurboSettings(){
   const wrap = document.getElementById('turboPresetRows');
   if(!wrap) return;
-  const presets = loadTurboPresets();
+  // Show the working draft if one exists, otherwise the stored presets.
+  // Without this, "+ Vorlage hinzufügen" pushes to the draft but the re-render
+  // wipes it because it reads from localStorage.
+  const presets = _turboDraft || loadTurboPresets();
   wrap.innerHTML = presets.map((p,i)=>`
     <div class="turbo-row">
       <input class="turbo-row-text" value="${escHtml(p.text)}" placeholder="Nachfass-Notiz" oninput="window._turboEdit(${i},'text',this.value)">
@@ -2773,6 +2846,73 @@ function checkBackupReminder(){
   }
 }
 function markBackup(){ localStorage.setItem(BACKUP_KEY, String(Date.now())); }
+
+// ════════════════════════════════════════════════════════════════════════
+//  SALES REPS (Berater / Außendienst) + KATEGORIE filters
+// ════════════════════════════════════════════════════════════════════════
+const REPS_KEY = 'mit_crm_sales_reps';
+const REP_DEFAULTS = ['Burak Ücöz', 'Stefan Roth'];
+const KATEGORIEN = ['Strom','Wärme','Kälte','USV','Mix'];
+
+function loadSalesReps(){
+  try{ const a = JSON.parse(localStorage.getItem(REPS_KEY)||'[]'); if(Array.isArray(a) && a.length) return a; }catch(e){}
+  return [...REP_DEFAULTS];
+}
+function saveSalesReps(list){ localStorage.setItem(REPS_KEY, JSON.stringify(list)); }
+
+function populateSalesRepDatalist(){
+  const dl = document.getElementById('salesRepList'); if(!dl) return;
+  // Union of configured reps + any rep already present in saved contacts
+  const fromContacts = [...new Set(STATE.contacts.map(c=>c.salesRep).filter(Boolean))];
+  const configured = loadSalesReps();
+  const all = [...new Set([...configured, ...fromContacts])].sort((a,b)=>a.localeCompare(b,'de'));
+  dl.innerHTML = all.map(r=>`<option value="${escHtml(r)}">`).join('');
+}
+
+window.renderRepSettings = function(){
+  const wrap = document.getElementById('repRows'); if(!wrap) return;
+  const list = _repsDraft || loadSalesReps();
+  wrap.innerHTML = list.map((r,i)=>`
+    <div class="turbo-row">
+      <input class="turbo-row-text" value="${escHtml(r)}" placeholder="Name des Beraters" oninput="window._repEdit(${i},this.value)">
+      <button class="btn-remove-field" onclick="window._repRemove(${i})">✕</button>
+    </div>`).join('');
+};
+let _repsDraft = null;
+function repsDraft(){ if(!_repsDraft) _repsDraft = loadSalesReps(); return _repsDraft; }
+window._repEdit = (i,v)=>{ const d=repsDraft(); d[i] = v; };
+window._repRemove = (i)=>{ const d=repsDraft(); d.splice(i,1); _repsDraft=d; renderRepSettings(); };
+window.addRep = ()=>{ const d=repsDraft(); d.push(''); _repsDraft=d; renderRepSettings(); };
+window.saveRepSettings = ()=>{
+  const d = repsDraft().map(r=>r.trim()).filter(Boolean);
+  if(!d.length){ showToast('Mindestens ein Berater nötig', 'error'); return; }
+  saveSalesReps(d); _repsDraft = null;
+  renderRepSettings();
+  populateSalesRepDatalist();
+  refreshAll();
+  showToast('✓ Berater-Liste gespeichert', 'success');
+};
+
+// Build counts/CHF for Kategorie × Status matrix (used on Analytics page)
+function buildKategorieMatrix(){
+  const rows = [...KATEGORIEN, '— Andere —'];
+  const cols = ['Offen','Gewonnen','Verloren','Erledigt'];
+  const data = {};
+  rows.forEach(r => { data[r] = {}; cols.forEach(c => data[r][c] = {count:0, chf:0}); });
+  STATE.contacts.forEach(c => {
+    const rowKey = c.kategorie && KATEGORIEN.includes(c.kategorie) ? c.kategorie : '— Andere —';
+    let colKey;
+    if(c.status === 'Gewonnen') colKey = 'Gewonnen';
+    else if(c.status === 'Verloren') colKey = 'Verloren';
+    else if(c.status === 'Erledigt') colKey = 'Erledigt';
+    else if(c.status === 'Pausiert') return; // ignore paused
+    else colKey = 'Offen';
+    const cell = data[rowKey][colKey];
+    cell.count += 1;
+    cell.chf += parseFloat(c.chf)||0;
+  });
+  return {rows, cols, data};
+}
 
 // ════════════════════════════════════════════════════════════════════════
 //  TIME-REMINDER — fires when wv-date === today AND wvTime <= now
@@ -3373,7 +3513,40 @@ function renderAnalytics(){
     const avg = arr.length ? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length) : null;
     return `<div class="cycle-row"><div class="cycle-stage">${s}</div><div class="cycle-val">${avg!==null?avg+' Tage':'—'}</div><div class="cycle-meta">${arr.length} Übergänge</div></div>`;
   }).join('');
+
+  // Kategorie × Status matrix
+  const matEl = document.getElementById('anKategorieMatrix');
+  if(matEl){
+    const m = buildKategorieMatrix();
+    const colColor = {Offen:'var(--info)', Gewonnen:'var(--good)', Verloren:'var(--danger)', Erledigt:'#0f766e'};
+    let html = '<table class="kategorie-table"><thead><tr><th>Kategorie</th>';
+    m.cols.forEach(col => html += `<th class="tx-right" style="color:${colColor[col]}">${col}</th>`);
+    html += '<th class="tx-right">Total</th></tr></thead><tbody>';
+    m.rows.forEach(r => {
+      const totalC = m.cols.reduce((s,c)=>s+m.data[r][c].count, 0);
+      const totalChf = m.cols.reduce((s,c)=>s+m.data[r][c].chf, 0);
+      const click = r !== '— Andere —' ? `onclick="window.filterByKategorie('${r}')"` : '';
+      const cls = r !== '— Andere —' ? 'kategorie-row clickable' : 'kategorie-row';
+      html += `<tr class="${cls}" ${click}><td class="kategorie-cell-name">${escHtml(r)}</td>`;
+      m.cols.forEach(c => {
+        const cell = m.data[r][c];
+        html += `<td class="tx-right">${cell.count===0?'<span class="tx-dim">—</span>':
+          `<span class="kat-count">${cell.count}</span><br><span class="kat-chf">${cell.chf>0?fmtCHF(cell.chf):''}</span>`}</td>`;
+      });
+      html += `<td class="tx-right kategorie-total"><strong>${totalC}</strong>${totalChf>0?`<br><span class="kat-chf">${fmtCHF(totalChf)}</span>`:''}</td></tr>`;
+    });
+    html += '</tbody></table>';
+    matEl.innerHTML = html;
+  }
 }
+
+window.filterByKategorie = function(kat){
+  window.nav('kontakte');
+  setTimeout(()=>{
+    const f = document.getElementById('filterKategorie');
+    if(f){ f.value = kat; window.renderKontakte(); }
+  }, 100);
+};
 
 // ════════════════════════════════════════════════════════════════════════
 //  RENDER: AKTIVITÄTEN
@@ -3465,6 +3638,9 @@ window.openContactForm = function(){
   document.getElementById('cPosition').value = '';
   document.getElementById('cOrt').value = '';
   document.getElementById('cSegment').value = 'Industrie';
+  document.getElementById('cKategorie').value = '';
+  document.getElementById('cSalesRep').value = '';
+  populateSalesRepDatalist();
   document.getElementById('cStatus').value = 'Lead';
   document.getElementById('cChf').value = '';
   document.getElementById('cProb').value = '';
@@ -3500,6 +3676,9 @@ window.openContact = function(id){
   document.getElementById('cPosition').value = c.position || '';
   document.getElementById('cOrt').value = c.ort || '';
   document.getElementById('cSegment').value = c.segment || 'Industrie';
+  document.getElementById('cKategorie').value = c.kategorie || '';
+  document.getElementById('cSalesRep').value = c.salesRep || '';
+  populateSalesRepDatalist();
   document.getElementById('cStatus').value = c.status || 'Lead';
   document.getElementById('cChf').value = c.chf != null ? String(c.chf) : '';
   document.getElementById('cProb').value = c.prob != null ? String(c.prob) : '';
@@ -3574,6 +3753,8 @@ window.saveContact = function(){
     position:document.getElementById('cPosition').value.trim(),
     ort:     document.getElementById('cOrt').value.trim(),
     segment: document.getElementById('cSegment').value,
+    kategorie: document.getElementById('cKategorie').value || null,
+    salesRep: document.getElementById('cSalesRep').value.trim() || null,
     status:  newStatus,
     chf:     parseCHF(document.getElementById('cChf').value),
     prob:    (function(){ const v = parseFloat(document.getElementById('cProb').value); return isNaN(v)?null:v; })(),
@@ -6533,6 +6714,8 @@ function init(){
   // Bind backdrop close on all modals now that DOM is complete
   attachBackdropClose();
   renderTurboSettings();
+  renderRepSettings();
+  populateSalesRepDatalist();
   // Yearly goal input prefill
   const g = loadGoal(); const gi = document.getElementById('goalInput'); if(g && gi){ gi.value = String(g); }
   renderToday();
