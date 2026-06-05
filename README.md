@@ -40,9 +40,17 @@ Professionelles, vollständig browserbasiertes CRM in einer einzigen HTML-Datei.
 - Notizen mit Suche und Kategorien
 
 **Datenmanagement**
-- Excel/CSV-Import mit automatischer Spaltenerkennung (Firmenname, Ansprechpartner, Telefon, E-Mail, Kanton, Status, Prio, kVA, Produkt etc.) – verteilt auf Kontakte, Karte, Pipeline, Aufgaben
-- Drag-&-Drop-Import
-- JSON-Backup Export/Import
+- **Universal Drop-Zone** – beliebige Dateien (`.xlsx`, `.csv`, `.pdf`, `.docx`, `.json`) ablegen, alles wird automatisch auf die richtigen Tabs verteilt:
+  - **Pipeline-XLSX** (Spalten Kunde/Segment/kW/Status/Volumen): → Deals + Kontakte
+  - **Aggregatliste-XLSX** (Generator/Standort): → Lastliste + Aufgaben
+  - **Kontakte-XLSX** (Firmenname/Ansprechpartner/...): → Kontakte
+  - **Bestellung/Rechnung-PDF** (Feliton-Format etc.): → Deal + Angebotspositionen + Kontakt + Aufgabe
+  - **Ausschreibung-PDF**: → simap-Eintrag + Notiz
+  - **Projekt-Word** (GAM-Stil mit Zonen-/Bestellungstabellen): → Deal + Lastliste + Angebotspositionen + Aufgaben (Lieferung/Demontage)
+  - **JSON-Backup**: → komplettes Restore
+- Live-Vorschau zeigt, was importiert wird (Counts pro Kategorie), bevor man bestätigt
+- Drag-&-Drop oder Klick
+- IndexedDB-Auto-Backup mit Wiederherstellung (siehe oben)
 - Volltext-Suche (Ctrl+K)
 - Light/Dark-Theme
 - Anthropic Claude API für alle KI-Funktionen

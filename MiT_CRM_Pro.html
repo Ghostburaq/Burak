@@ -20,6 +20,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 <style>
 :root{
   --bg0:#0d1525;--bg1:#14202e;--bg2:#1a2c42;--bg3:#1f3455;
@@ -796,9 +798,9 @@ tbody td{padding:.48rem .75rem;font-size:12px;}
       ondrop="event.preventDefault();this.classList.remove('drag');handleDrop(event)"
       onclick="document.getElementById('xl-inp').click()">
       <div style="font-size:2.5rem;margin-bottom:.4rem">📊</div>
-      <div style="font-size:15px;font-weight:700;color:var(--grn);margin-bottom:.25rem">Excel oder CSV ablegen</div>
-      <div style="font-size:11px;color:var(--t2)">oder klicken zum Auswählen · .xlsx · .xls · .csv</div>
-      <input type="file" id="xl-inp" accept=".xlsx,.xls,.csv" style="display:none" onchange="readFile(this.files[0])">
+      <div style="font-size:15px;font-weight:700;color:var(--grn);margin-bottom:.25rem">Excel · PDF · Word · CSV · JSON ablegen</div>
+      <div style="font-size:11px;color:var(--t2)">oder klicken · .xlsx · .csv · .pdf · .docx · .json</div>
+      <input type="file" id="xl-inp" accept=".xlsx,.xls,.csv,.pdf,.docx,.doc,.json" style="display:none" onchange="readFile(this.files[0])">
     </div>
     <div id="imp-prev" style="display:none;margin-top:.9rem;">
       <div id="imp-info" style="font-size:13px;font-weight:700;color:var(--grn);margin-bottom:.5rem;"></div>
@@ -1087,7 +1089,7 @@ const openImport = () => {
   S._impData=[];
   const prev=g('imp-prev'); if(prev) prev.style.display='none';
   const dz=g('imp-dz');
-  if(dz) dz.innerHTML=`<div style="font-size:2.5rem;margin-bottom:.4rem">📊</div><div style="font-size:15px;font-weight:700;color:var(--grn);margin-bottom:.25rem">Excel oder CSV ablegen</div><div style="font-size:11px;color:var(--t2)">oder klicken zum Auswählen · .xlsx · .xls · .csv</div><input type="file" id="xl-inp" accept=".xlsx,.xls,.csv" style="display:none" onchange="readFile(this.files[0])">`;
+  if(dz) dz.innerHTML=`<div style="font-size:2.5rem;margin-bottom:.4rem">📊</div><div style="font-size:15px;font-weight:700;color:var(--grn);margin-bottom:.25rem">Excel · PDF · Word · CSV · JSON ablegen</div><div style="font-size:11px;color:var(--t2)">oder klicken · .xlsx · .csv · .pdf · .docx · .json</div><input type="file" id="xl-inp" accept=".xlsx,.xls,.csv,.pdf,.docx,.doc,.json" style="display:none" onchange="readFile(this.files[0])">`;
   openM('m-import');
 };
 
@@ -1102,7 +1104,7 @@ const handleDrop = e => {
   }
 };
 
-const readFile = async file => {
+const _readContactsXLSX = async file => {
   if(!file) return;
   const dz=g('imp-dz');
   if(dz) dz.innerHTML=`<div style="font-size:1.8rem">⏳</div><div style="font-size:13px;font-weight:700;color:var(--grn);margin-top:.3rem">${file.name}</div><div style="font-size:11px;color:var(--t2)">Lese Datei…</div>`;
@@ -1194,7 +1196,7 @@ const readFile = async file => {
 
     if(!S._impData.length){
       toast('Keine Firmenname-Spalte gefunden — Datei prüfen','err');
-      if(dz)dz.innerHTML=`<div style="font-size:1.5rem">❌</div><div style="font-size:12px;color:var(--acc)">Keine Daten erkannt</div><div style="font-size:11px;color:var(--t2)">Spalte "Firmenname" muss vorhanden sein</div><input type="file" id="xl-inp" accept=".xlsx,.xls,.csv" style="display:none" onchange="readFile(this.files[0])">`;
+      if(dz)dz.innerHTML=`<div style="font-size:1.5rem">❌</div><div style="font-size:12px;color:var(--acc)">Keine Daten erkannt</div><div style="font-size:11px;color:var(--t2)">Spalte "Firmenname" muss vorhanden sein</div><input type="file" id="xl-inp" accept=".xlsx,.xls,.csv,.pdf,.docx,.doc,.json" style="display:none" onchange="readFile(this.files[0])">`;
       return;
     }
 
@@ -1209,14 +1211,14 @@ const readFile = async file => {
     const withXY=S._impData.filter(r=>r._lat).length;
     const info=g('imp-info');
     if(info)info.textContent=`✓ ${S._impData.length} Kontakte erkannt · ${withXY} mit Stadtkoordinaten`;
-    if(dz)dz.innerHTML=`<div style="font-size:1.8rem">✅</div><div style="font-size:13px;font-weight:700;color:var(--grn);margin-top:.3rem">${file.name}</div><div style="font-size:11px;color:var(--t2)">${S._impData.length} Datensätze bereit · klicken zum Wechseln</div><input type="file" id="xl-inp" accept=".xlsx,.xls,.csv" style="display:none" onchange="readFile(this.files[0])">`;
+    if(dz)dz.innerHTML=`<div style="font-size:1.8rem">✅</div><div style="font-size:13px;font-weight:700;color:var(--grn);margin-top:.3rem">${file.name}</div><div style="font-size:11px;color:var(--t2)">${S._impData.length} Datensätze bereit · klicken zum Wechseln</div><input type="file" id="xl-inp" accept=".xlsx,.xls,.csv,.pdf,.docx,.doc,.json" style="display:none" onchange="readFile(this.files[0])">`;
     const prev=g('imp-prev');if(prev)prev.style.display='block';
     toast(`${S._impData.length} Kontakte erkannt`,'ok');
 
   }catch(err){
     toast('Ladefehler: '+err.message,'err');
     console.error('Import error:',err);
-    if(dz)dz.innerHTML=`<div style="font-size:1.5rem">❌</div><div style="font-size:12px;color:var(--acc)">Fehler: ${err.message}</div><div style="font-size:11px;color:var(--t2);margin-top:.3rem">Nochmals versuchen</div><input type="file" id="xl-inp" accept=".xlsx,.xls,.csv" style="display:none" onchange="readFile(this.files[0])">`;
+    if(dz)dz.innerHTML=`<div style="font-size:1.5rem">❌</div><div style="font-size:12px;color:var(--acc)">Fehler: ${err.message}</div><div style="font-size:11px;color:var(--t2);margin-top:.3rem">Nochmals versuchen</div><input type="file" id="xl-inp" accept=".xlsx,.xls,.csv,.pdf,.docx,.doc,.json" style="display:none" onchange="readFile(this.files[0])">`;
   }
 };
 
@@ -1297,6 +1299,452 @@ const doImport = () => {
   toast(`✅ ${added} Kontakte · ${deals} Deals · ${tasks} Aufgaben · ${skipped} Duplikate übersprungen`,'ok');
   setTimeout(()=>nav('dash'),400);
 };
+
+// ════════════════════════════════════════════════════════════════
+// UNIVERSAL FILE DISPATCHER — Excel/CSV/PDF/Word/JSON
+// ════════════════════════════════════════════════════════════════
+
+// Helper: wait for global lib
+const _waitFor=async(name,t=20)=>{let i=0;while(!window[name]&&i<t){await new Promise(r=>setTimeout(r,200));i++;}return !!window[name];};
+
+// Number helpers
+const _num = s => { if(s==null) return 0; const n=String(s).replace(/[’'\s ]/g,'').replace(/\.(?=\d{3}\b)/g,'').replace(',','.'); const v=parseFloat(n.replace(/[^\d\.\-]/g,'')); return isFinite(v)?v:0; };
+const _hdrIdx = (hdrs, ...names) => {
+  const H=hdrs.map(h=>String(h||'').toLowerCase().replace(/\s+/g,' ').trim());
+  for(const n of names){ const i=H.indexOf(n); if(i>=0) return i; }
+  for(const n of names){ const i=H.findIndex(h=>h.startsWith(n)); if(i>=0&&n.length>=3) return i; }
+  for(const n of names){ const i=H.findIndex(h=>h.includes(n)); if(i>=0&&n.length>=4) return i; }
+  return -1;
+};
+const _emptyBundle = () => ({kind:'unknown',source:'',contacts:[],deals:[],tasks:[],notes:[],lastRows:[],angPos:[],simap:[]});
+
+// Pipeline status → CRM stage
+const _PIPE_STAGE = raw => {
+  const s=String(raw||'').toLowerCase().replace(/[^a-zäöü ]/gi,'').trim();
+  if(/won|gewonnen/.test(s)) return 'won';
+  if(/lost|declined|verloren/.test(s)) return 'lost';
+  if(/offer|offerte/.test(s)) return 'proposal';
+  if(/negot|verhand/.test(s)) return 'negotiation';
+  if(/follow.?up|evaluation|hold/.test(s)) return 'qualified';
+  if(/to.?offer|to be offered/.test(s)) return 'prospecting';
+  return 'qualified';
+};
+
+// Detect XLSX/CSV variant by inspecting sheet names + first rows
+const detectSpreadsheetVariant = async file => {
+  const ext=file.name.split('.').pop().toLowerCase();
+  if(ext==='csv'){ // CSVs default to contacts unless headers match
+    const txt=await file.text();
+    const sep=txt.indexOf(';')>-1?';':',';
+    const first = txt.split(/\r?\n/,15).map(l=>l.split(sep).map(c=>c.replace(/^"|"$/g,'')));
+    return _classifyRows(first, '');
+  }
+  if(!(await _waitFor('XLSX'))) throw new Error('SheetJS nicht geladen');
+  const buf=await file.arrayBuffer();
+  const wb=XLSX.read(buf,{type:'array',raw:false,cellDates:true});
+  // Sheet-name hints
+  const names=wb.SheetNames.map(n=>n.toLowerCase());
+  if(names.some(n=>n.includes('pipeline'))) return 'pipeline';
+  if(names.some(n=>n.includes('aggregat'))) return 'aggregatliste';
+  if(names.some(n=>n.match(/gel.?ndeplan|situation/))) return 'geländeplan';
+  // First sheet header inspection
+  const first = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:'',raw:false}).slice(0,15);
+  const namesStr = names.join('|');
+  return _classifyRows(first, namesStr);
+};
+const _classifyRows = (rows, sheetNames) => {
+  for(let i=0;i<Math.min(8,rows.length);i++){
+    const row=rows[i].map(c=>String(c||'').toLowerCase());
+    if(row.some(c=>c.includes('firmenname'))||row.some(c=>c==='ansprechpartner')) return 'contacts';
+    if(row.some(c=>c==='kunde / unternehmen')||(row.some(c=>c.startsWith('kunde'))&&row.some(c=>c==='segment'))) return 'pipeline';
+    if(row.some(c=>c.includes('volumen'))&&row.some(c=>c==='status')) return 'pipeline';
+    if(row.some(c=>c.toLowerCase().includes('geratoren'))||row.some(c=>c.toLowerCase().includes('generatoren'))) return 'aggregatliste';
+  }
+  return 'contacts';
+};
+
+// ── Pipeline XLSX parser ───────────────────────────────────────
+const parsePipelineFile = async file => {
+  if(!(await _waitFor('XLSX'))) throw new Error('SheetJS nicht geladen');
+  const buf=await file.arrayBuffer();
+  const wb=XLSX.read(buf,{type:'array',raw:false,cellDates:true});
+  const sn = wb.SheetNames.find(n=>/pipeline/i.test(n)) || wb.SheetNames[0];
+  const rows = XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,defval:'',raw:false});
+  // Find header row containing 'Kunde'
+  let hi=-1;
+  for(let i=0;i<Math.min(15,rows.length);i++){
+    const r=rows[i].map(c=>String(c||'').toLowerCase());
+    if(r.some(c=>c==='kunde / unternehmen')||(r.some(c=>c.startsWith('kunde'))&&r.some(c=>c==='status'))){hi=i;break;}
+  }
+  if(hi<0) throw new Error('Pipeline-Header (Kunde / Unternehmen + Status) nicht gefunden');
+  const hdrs = rows[hi];
+  const C={
+    co:   _hdrIdx(hdrs,'kunde / unternehmen','kunde'),
+    kt:   _hdrIdx(hdrs,'kt.','kanton','kt'),
+    seg:  _hdrIdx(hdrs,'segment','branche'),
+    leist:_hdrIdx(hdrs,'leistung / fleet','leistung','fleet'),
+    kw:   _hdrIdx(hdrs,'kw'),
+    dauer:_hdrIdx(hdrs,'dauer','tage'),
+    start:_hdrIdx(hdrs,'start','beginn'),
+    vol:  _hdrIdx(hdrs,'volumen chf','volumen','volume'),
+    eq:   _hdrIdx(hdrs,'equip. chf','equip','equipment'),
+    tr:   _hdrIdx(hdrs,'transport chf','transport'),
+    fuel: _hdrIdx(hdrs,'treibst. chf','treibstoff'),
+    marge:_hdrIdx(hdrs,'marge chf','marge'),
+    st:   _hdrIdx(hdrs,'status'),
+    prob: _hdrIdx(hdrs,'wahr. %','wahrscheinlichkeit','wahr'),
+    typ:  _hdrIdx(hdrs,'akquise typ','akquise'),
+  };
+  const b=_emptyBundle();b.kind='pipeline';
+  const contactsSeen=new Set();
+  for(let i=hi+1;i<rows.length;i++){
+    const r=rows[i];
+    const co=String(r[C.co]||'').trim();
+    if(!co||co.length<2||/^total/i.test(co)) continue;
+    const stage=_PIPE_STAGE(r[C.st]);
+    const value=_num(r[C.vol]);
+    const kva=r[C.leist];
+    const kw=_num(r[C.kw]);
+    const dauer=_num(r[C.dauer]);
+    const start=r[C.start];
+    const seg=String(r[C.seg]||'').trim();
+    const kt=String(r[C.kt]||'').trim().toUpperCase();
+    const note=[kva,kw?kw+' kW':'',dauer?dauer+' Tage':'',start?'Start '+start:'',seg].filter(Boolean).join(' · ');
+    b.deals.push({
+      title: co + (kva?' — '+kva:''),
+      company: co, value, stage,
+      prob: _num(r[C.prob])||(stage==='won'?100:stage==='lost'?0:50),
+      note, industry: seg, _kt:kt, _kw:kw, _dauer:dauer, _start:String(start||''),
+      _akquise:String(r[C.typ]||'').trim(),
+    });
+    if(!contactsSeen.has(co.toLowerCase())){
+      contactsSeen.add(co.toLowerCase());
+      b.contacts.push({company:co, canton:kt, industry:seg, _kva:String(kva||''), prio:stage==='won'?'high':'normal', status:stage==='won'?'active':'lead', _src:'pipeline-import'});
+    }
+  }
+  if(!b.deals.length) throw new Error('Keine Datenzeilen im Pipeline-Sheet');
+  return b;
+};
+
+// ── Aggregatliste XLSX parser ──────────────────────────────────
+const parseAggregatFile = async file => {
+  if(!(await _waitFor('XLSX'))) throw new Error('SheetJS nicht geladen');
+  const buf=await file.arrayBuffer();
+  const wb=XLSX.read(buf,{type:'array',raw:false,cellDates:true});
+  const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:'',raw:false});
+  let hi=-1;
+  for(let i=0;i<Math.min(6,rows.length);i++){
+    const a=String(rows[i][0]||'').toLowerCase();
+    if(a.includes('generator')||a.includes('geratoren')){hi=i;break;}
+  }
+  if(hi<0) throw new Error('Aggregatliste: Spaltenkopf "Generator/Standort" nicht gefunden');
+  const b=_emptyBundle();b.kind='aggregatliste';
+  const stations=new Map();
+  for(let i=hi+1;i<rows.length;i++){
+    const r=rows[i];
+    const gen=String(r[0]||'').trim();
+    const loc=String(r[1]||'').trim();
+    if(!gen||gen.length<3) continue;
+    const m=gen.match(/(\d+)\s*kVA/i);
+    const kva=m?+m[1]:0;
+    const kw=Math.round(kva*0.8);
+    b.lastRows.push({name:gen+(loc?' @ '+loc:''),kw,cos:0.85,gz:80});
+    if(loc) stations.set(loc,(stations.get(loc)||0)+kva);
+  }
+  // One task per Standort
+  stations.forEach((kva,loc)=>{
+    b.tasks.push({title:`Aufstellung Generator ${kva} kVA → ${loc}`, company:'Aggregatliste', type:'meeting', prio:'med'});
+  });
+  b.notes.push({title:'Aggregatliste '+(file.name||''), text:`${b.lastRows.length} Generatoren auf ${stations.size} Standorten`, cat:'meeting'});
+  if(!b.lastRows.length) throw new Error('Aggregatliste: keine Generator-Zeilen erkannt');
+  return b;
+};
+
+// ── PDF text extractor + classifier ───────────────────────────
+const extractPDFText = async file => {
+  if(!(await _waitFor('pdfjsLib'))) throw new Error('pdf.js nicht geladen — Netz prüfen');
+  try{ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsLib.GlobalWorkerOptions.workerSrc || 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.js'; }catch(_){}
+  const buf=await file.arrayBuffer();
+  const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+  let text='';
+  for(let i=1;i<=pdf.numPages;i++){
+    const page=await pdf.getPage(i);
+    const tc=await page.getTextContent();
+    text += tc.items.map(it=>it.str).join(' ') + '\n';
+  }
+  return text;
+};
+const parsePDFFile = async file => {
+  const text = await extractPDFText(file);
+  if(!text.trim()) {
+    const b=_emptyBundle();b.kind='pdf-scan';
+    b.notes.push({title:'PDF '+file.name, text:'PDF enthielt keinen extrahierbaren Text (vermutlich gescannt). Per KI-Analyse im simap-Tab vorgehen.', cat:'allg'});
+    return b;
+  }
+  const t = text.toLowerCase();
+  if(/rechnung|bestellung|offerte|invoice|materialmiete|jobsumme/.test(t)) return parseBestellungText(text, file.name);
+  if(/ausschreibung|submission|tender|simap/.test(t)) return parseTenderText(text, file.name);
+  if(/projekt|gampel|openair|aggreko|stage v|kva/.test(t)) return parseProjectText(text, file.name);
+  // Fallback: store as note
+  const b=_emptyBundle();b.kind='pdf-text';
+  b.notes.push({title:'PDF '+file.name, text:text.slice(0,2000), cat:'allg'});
+  return b;
+};
+
+// Bestellung / Rechnung parser
+const parseBestellungText = (text, fname) => {
+  const b=_emptyBundle();b.kind='bestellung';
+  // Normalize: split on newlines OR on Swiss PLZ patterns ("3940 Steg" boundary)
+  const norm=text.replace(/[’]/g,"'");
+  let lines=norm.split(/\n+/).map(l=>l.trim()).filter(Boolean);
+  // If everything on one line, split on hard boundaries
+  if(lines.length<3) lines=norm.replace(/\s*\b(Rechnung|Materialmiete|Pos\.|Position|Bruttosumme|Nettosumme|Summe|Jobsumme|Veranstaltung|Bankverbindung|IBAN|Bitte)\b/g,'\n$1').split(/\n+/).map(l=>l.trim()).filter(Boolean);
+  let customer='',addr='',date='',invoice='',ref='',total=0;
+  // Customer: first non-empty line with letters and no leading digit/date
+  for(const l of lines.slice(0,8)){
+    if(/[A-Za-zÄÖÜäöü]/.test(l)&&!/^\d|^Rechnung|^Materialmiete/i.test(l)&&l.length<60){customer=l;break;}
+  }
+  const ci=lines.indexOf(customer);
+  if(ci>=0) addr=[lines[ci+1],lines[ci+2]].filter(x=>x&&!/rechnung|materialmiete|gampel|openair/i.test(x)).join(', ');
+  for(const l of lines){
+    if(!date){const m=l.match(/\b(\d{1,2}\.\d{1,2}\.\d{2,4})\b/);if(m) date=m[1];}
+    if(!invoice){const m=l.match(/rechnung\s+([\d\-\.\/]+)/i);if(m) invoice=m[1];}
+    if(!ref){const m=l.match(/\b(\d{2}-\d{4}\.?\d*)\b/);if(m && m[1]!==invoice) ref=m[1];}
+    const mt=l.match(/(?:bruttosumme|gesamtsumme|jobsumme|nettosumme|total)\s*(?:CHF)?\s*([\d',. ]+)/i);
+    if(mt){const n=_num(mt[1]); if(n>total) total=n;}
+  }
+  // Positions: regex across whole text (works for line-based AND space-joined extraction).
+  // Pattern: <Pos#>  <Qty>  <Code>  <UnitPrice>  <Factor>  <Total>
+  const posRe=/(?:^|\s)(\d{1,3})\s+(\d{1,4})\s+([A-Z][A-Z0-9]{1,3}[\d.\-]{2,12})\s+([\d',]+\.\d{1,2})\s+([\d',]+\.\d{1,2})\s+([\d',]+\.\d{1,2})/g;
+  let pm; const seenPos=new Set();
+  while((pm=posRe.exec(norm))!==null){
+    const k=pm[1]+'-'+pm[3];
+    if(seenPos.has(k)) continue; seenPos.add(k);
+    // Look for description in the next 200 chars after the match
+    const tail=norm.slice(pm.index+pm[0].length, pm.index+pm[0].length+220);
+    const dm=tail.match(/^\s*([A-ZÄÖÜ][^\d\n]{5,80})/);
+    const desc=(dm?dm[1].trim().replace(/\s+/g,' '):'').slice(0,80);
+    b.angPos.push({id:uid(),desc:pm[3]+(desc?' — '+desc:''),qty:+pm[2],unit:'Stk.',price:_num(pm[4])*_num(pm[5]),disc:0});
+  }
+  // Contact
+  if(customer) b.contacts.push({company:customer, note:addr, _src:'bestellung-pdf'});
+  // Deal
+  b.deals.push({title:`${customer||'Bestellung'} — ${invoice||ref||fname}`, company:customer||fname, value:total||0, stage:'won', prob:100, note:`Rechnung ${invoice||''} ${date||''} · ${b.angPos.length} Positionen`, industry:'Events & Kultur'});
+  // Task: prüfen / archivieren
+  b.tasks.push({title:`Bestellung ${invoice||ref||fname} prüfen / verbuchen`, company:customer||'', type:'offer', prio:'med', note:`Total CHF ${total||0}`});
+  // Note: full text snippet
+  b.notes.push({title:'Bestellung '+(invoice||fname), text:text.slice(0,1500), cat:'kunde'});
+  return b;
+};
+
+// Generic project PDF parser
+const parseProjectText = (text, fname) => {
+  const b=_emptyBundle();b.kind='project-pdf';
+  let customer='',projNr='',period='';
+  const m1=text.match(/MiT-PWR-[\w\-]+/); if(m1) projNr=m1[0];
+  const m2=text.match(/(Gampel\s*OpenAir[^\n]{0,40})/i); if(m2) period=m2[1];
+  const m3=text.match(/Rock\s*Hock\s*Verein/i); if(m3) customer='Rock Hock Verein';
+  if(customer) b.contacts.push({company:customer, _src:'project-pdf'});
+  if(projNr||customer) b.deals.push({title:projNr||fname, company:customer||fname, value:0, stage:'qualified', prob:50, note:period, industry:'Events & Kultur'});
+  b.notes.push({title:'Projekt '+(projNr||fname), text:text.slice(0,2000), cat:'meeting'});
+  return b;
+};
+
+// Tender PDF parser → simap
+const parseTenderText = (text, fname) => {
+  const b=_emptyBundle();b.kind='tender';
+  let title=fname, kt='', dead='', val=0;
+  const mkt=text.match(/\b(ZH|BE|LU|UR|SZ|OW|NW|GL|ZG|FR|SO|BS|BL|SH|AR|AI|SG|GR|AG|TG|TI|VD|VS|NE|GE|JU)\b/);
+  if(mkt) kt=mkt[1];
+  const mD=text.match(/(?:eingabe|abgabe|deadline|frist)[^\d]+(\d{1,2}\.\d{1,2}\.\d{2,4})/i);
+  if(mD) dead=mD[1];
+  const mV=text.match(/(?:volumen|wert|budget)[^\d]+([\d’'\.\s]+)/i);
+  if(mV) val=_num(mV[1]);
+  b.simap.push({title:fname.replace(/\.pdf$/i,''), kt, dead, val:String(val), status:'beobachten', note:text.slice(0,500)});
+  b.notes.push({title:'Ausschreibung '+fname, text:text.slice(0,2000), cat:'strat'});
+  return b;
+};
+
+// ── DOCX parser (mammoth) ──────────────────────────────────────
+const parseDOCXFile = async file => {
+  if(!(await _waitFor('mammoth'))) throw new Error('mammoth.js nicht geladen — Netz prüfen');
+  const buf=await file.arrayBuffer();
+  const raw=await mammoth.extractRawText({arrayBuffer:buf});
+  const htmlRes=await mammoth.convertToHtml({arrayBuffer:buf});
+  const text=raw.value||'';
+  // Parse HTML to extract tables
+  const tables=[];
+  try{
+    const wrap=document.createElement('div'); wrap.innerHTML=htmlRes.value||'';
+    wrap.querySelectorAll('table').forEach(tbl=>{
+      const trs=[...tbl.querySelectorAll('tr')];
+      tables.push(trs.map(tr=>[...tr.querySelectorAll('th,td')].map(c=>c.textContent.trim())));
+    });
+  }catch(_){}
+  return parseProjectDOCX(text, tables, file.name);
+};
+const parseProjectDOCX = (text, tables, fname) => {
+  const b=_emptyBundle();b.kind='project-docx';
+  // Project metadata
+  let projNr='', customer='', location='', start='', end='';
+  const m1=text.match(/MiT-PWR-[\w\-]+/); if(m1) projNr=m1[0];
+  if(/rock\s*hock\s*verein/i.test(text)) customer='Rock Hock Verein';
+  const mL=text.match(/(\d{4}\s+Steg|3945\s+Gampel|niedergampelstrasse[^\n]*)/i); if(mL) location=mL[1];
+  const mP=text.match(/(\d{1,2})\.?\s*[–-]\s*(\d{1,2})\.\s*(?:august|aug)\s*(\d{4})/i);
+  if(mP){ start=`${mP[1].padStart(2,'0')}.08.${mP[3]}`; end=`${mP[2].padStart(2,'0')}.08.${mP[3]}`; }
+  // Zone tables: columns Zone | A-Nr. | kVA | Qty | Konfig.
+  for(const tbl of tables){
+    if(!tbl.length) continue;
+    const hdr=(tbl[0]||[]).map(c=>String(c).toLowerCase());
+    const ci={zone:hdr.indexOf('zone'),anr:hdr.findIndex(h=>h.includes('a-nr')),kva:hdr.indexOf('kva'),qty:hdr.findIndex(h=>h==='qty'||h==='anzahl'),conf:hdr.findIndex(h=>h.includes('konfig')),pos:hdr.indexOf('pos')};
+    // Zone-table (Bühne 1, A01–A06 ...)
+    if(ci.zone>=0 && ci.kva>=0 && ci.qty>=0){
+      for(let i=1;i<tbl.length;i++){
+        const r=tbl[i]; const zone=r[ci.zone], kvaStr=r[ci.kva], qty=+r[ci.qty]||1;
+        if(!zone||!kvaStr) continue;
+        const mk=String(kvaStr).match(/(\d+)/); const kva=mk?+mk[1]:0;
+        if(!kva) continue;
+        const kw=Math.round(kva*0.8);
+        for(let q=0;q<qty;q++) b.lastRows.push({name:`${zone}${r[ci.anr]?' '+r[ci.anr]:''} — ${kva}kVA`,kw,cos:0.85,gz:80});
+      }
+    }
+    // Bestellliste-Table — match either (Pos | Bezeichnung | Code | Qty | Tage) OR (Typ | Code | Qty | Tage | …)
+    const ctyp=hdr.findIndex(h=>h==='typ'||h.includes('typ '));
+    const cdesc=hdr.findIndex(h=>h.includes('bezeichnung')||h.includes('description'));
+    const ccode=hdr.indexOf('code');
+    const cqty=hdr.indexOf('qty');
+    const ctage=hdr.indexOf('tage');
+    const cconf=hdr.findIndex(h=>h.includes('konfig')||h.includes('konfiguration')||h.includes('spezifikation'));
+    if(cqty>=0 && (cdesc>=0||ctyp>=0||ccode>=0)){
+      for(let i=1;i<tbl.length;i++){
+        const r=tbl[i];
+        const desc=(cdesc>=0?r[cdesc]:'')||(ctyp>=0?r[ctyp]:'')||r[1]||'';
+        const qty=+r[cqty]||1; const tage=ctage>=0?+r[ctage]||1:1;
+        if(!desc||String(desc).length<3) continue;
+        const conf=cconf>=0?String(r[cconf]||'').slice(0,60):'';
+        b.angPos.push({id:uid(),desc:String(desc).slice(0,80)+(conf?' ['+conf+']':''),qty,unit:'Tag',price:0,disc:0,_tage:tage,_code:ccode>=0?r[ccode]:''});
+      }
+    }
+  }
+  if(customer) b.contacts.push({company:customer, note:location, _src:'project-docx'});
+  if(projNr||customer){
+    b.deals.push({title:projNr||fname.replace(/\.docx$/i,''), company:customer||fname, value:0, stage:'qualified', prob:60, note:`${location||''} ${start?'· Start '+start:''}`, industry:'Events & Kultur'});
+  }
+  if(start) b.tasks.push({title:`Lieferung ${projNr||fname} → ${location||''}`, company:customer||'', type:'meeting', prio:'high', due:start});
+  if(end) b.tasks.push({title:`Demontage / Rückführung ${projNr||fname}`, company:customer||'', type:'meeting', prio:'med', due:end});
+  b.notes.push({title:'Projektdoss. '+(projNr||fname), text:text.slice(0,3000), cat:'meeting'});
+  return b;
+};
+
+// ── Dispatcher (replaces old readFile) ────────────────────────
+const readFile = async file => {
+  if(!file) return;
+  S._impBundle=null; S._impData=[];
+  const ext=(file.name||'').split('.').pop().toLowerCase();
+  const dz=g('imp-dz');
+  if(dz) dz.innerHTML=`<div style="font-size:1.8rem">⏳</div><div style="font-size:13px;font-weight:700;color:var(--grn);margin-top:.3rem">${file.name}</div><div style="font-size:11px;color:var(--t2)">Erkenne Typ & lese…</div>`;
+  try{
+    if(ext==='json'){
+      const txt=await file.text(); const d=JSON.parse(txt);
+      if(!(d.contacts||d.deals)) throw new Error('Kein gültiges JSON-Backup');
+      if(!confirm('JSON-Backup gefunden. Aktuelle Daten ersetzen?')) return;
+      ['contacts','deals','tasks','notes','acts','simap','goals','cfg','_angPos','_lastRows','tags'].forEach(k=>{if(d[k]!==undefined)S[k]=d[k];});
+      save(); closeM(); toast('Backup geladen','ok'); nav('dash'); return;
+    }
+    if(ext==='pdf'){ S._impBundle = await parsePDFFile(file); }
+    else if(['docx','doc'].includes(ext)){ S._impBundle = await parseDOCXFile(file); }
+    else if(['xlsx','xls','csv'].includes(ext)){
+      const variant = await detectSpreadsheetVariant(file);
+      if(variant==='contacts'){ return _readContactsXLSX(file); }
+      if(variant==='pipeline') S._impBundle = await parsePipelineFile(file);
+      else if(variant==='aggregatliste') S._impBundle = await parseAggregatFile(file);
+      else return _readContactsXLSX(file);
+    } else throw new Error('Dateityp .'+ext+' nicht unterstützt');
+    if(S._impBundle){ S._impBundle.source=file.name; renderBundlePreview(S._impBundle,file); }
+  }catch(err){
+    console.error('Import error:',err); toast('Importfehler: '+err.message,'err');
+    if(dz) dz.innerHTML=`<div style="font-size:1.5rem">❌</div><div style="font-size:12px;color:var(--acc)">Fehler: ${err.message}</div><div style="font-size:11px;color:var(--t2);margin-top:.3rem">Nochmals versuchen</div><input type="file" id="xl-inp" accept=".xlsx,.xls,.csv,.pdf,.docx,.doc,.json" style="display:none" onchange="readFile(this.files[0])">`;
+  }
+};
+
+// ── Bundle preview UI ─────────────────────────────────────────
+const renderBundlePreview = (b,file)=>{
+  const dz=g('imp-dz');
+  const KIND={pipeline:'📊 Pipeline / Sales',aggregatliste:'🔌 Aggregatliste',bestellung:'📄 Bestellung / Rechnung',tender:'🏛️ Ausschreibung','project-pdf':'📋 Projekt-PDF','project-docx':'📋 Projektdoss. (Word)','pdf-scan':'🖼️ Scan-PDF','pdf-text':'📄 PDF-Text',unknown:'❓ Unbekannt'};
+  if(dz) dz.innerHTML=`<div style="font-size:1.8rem">✅</div><div style="font-size:13px;font-weight:700;color:var(--grn);margin-top:.3rem">${file.name}</div><div style="font-size:11px;color:var(--t2)">Typ: ${KIND[b.kind]||b.kind}</div><input type="file" id="xl-inp" accept=".xlsx,.xls,.csv,.pdf,.docx,.doc,.json" style="display:none" onchange="readFile(this.files[0])">`;
+  const cols=g('imp-cols');
+  const counts=[['Kontakte',b.contacts.length,'👥'],['Deals',b.deals.length,'🎯'],['Aufgaben',b.tasks.length,'✅'],['Notizen',b.notes.length,'📝'],['Lastliste-Zeilen',b.lastRows.length,'📋'],['Angebots-Positionen',b.angPos.length,'📄'],['Ausschreibungen',b.simap.length,'🏛️']];
+  if(cols) cols.innerHTML=counts.filter(([,n])=>n).map(([l,n,i])=>`<div style="background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--rs);padding:.28rem .6rem;display:flex;justify-content:space-between;"><span style="color:var(--t2)">${i} ${l}</span><span style="font-weight:600;color:var(--grn)">${n}</span></div>`).join('')||'<div style="font-size:11px;color:var(--t2)">Keine strukturierten Daten gefunden — nur als Notiz importiert.</div>';
+  const info=g('imp-info');
+  const summary=counts.filter(([,n])=>n).map(([l,n])=>`${n} ${l}`).join(' · ');
+  if(info) info.textContent='✓ '+(summary||'als Notiz')+' bereit zum Import';
+  const prev=g('imp-prev'); if(prev) prev.style.display='block';
+  toast(`${KIND[b.kind]||b.kind} erkannt`,'ok');
+};
+
+// ── Bundle apply ──────────────────────────────────────────────
+const applyBundle = b => {
+  if(!b) return null;
+  let cAdd=0,cSkip=0,dAdd=0,tAdd=0,nAdd=0,lrAdd=0,apAdd=0,smAdd=0;
+  if(!S.contacts) S.contacts=[];
+  if(!S.deals) S.deals=[];
+  if(!S.tasks) S.tasks=[];
+  if(!S.notes) S.notes=[];
+  if(!S.simap) S.simap=[];
+  if(!S._angPos) S._angPos=[];
+  if(!S._lastRows) S._lastRows=[];
+  const existing=new Map(S.contacts.map(c=>[(c.company||'').toLowerCase().trim(),c]));
+  // Contacts (merge)
+  for(const c of b.contacts){
+    const key=(c.company||'').toLowerCase().trim();
+    if(!key) continue;
+    const cur=existing.get(key);
+    if(cur){
+      ['canton','industry','tel','email','note','_kva','_src'].forEach(k=>{if(c[k]&&!cur[k])cur[k]=c[k];});
+      cSkip++;
+    } else {
+      const nc={id:uid(),prio:'normal',status:'lead',...c}; S.contacts.push(nc); existing.set(key,nc); cAdd++;
+    }
+  }
+  // Deals + link to contact
+  for(const d of b.deals){
+    const cid=existing.get((d.company||'').toLowerCase().trim())?.id;
+    S.deals.push({id:uid(),...d,contactId:cid||null});
+    dAdd++;
+  }
+  // Tasks
+  for(const t of b.tasks){ S.tasks.push({id:uid(),done:false,prio:'med',type:'todo',...t}); tAdd++; }
+  // Notes
+  for(const n of b.notes){ S.notes.push({id:uid(),date:today(),...n}); nAdd++; }
+  // Last rows
+  for(const lr of b.lastRows){ S._lastRows.push({id:uid(),...lr}); lrAdd++; }
+  // Angebot positions
+  for(const p of b.angPos){ S._angPos.push({id:p.id||uid(),unit:'Tag',disc:0,...p}); apAdd++; }
+  // simap
+  for(const s of b.simap){ S.simap.push({id:uid(),...s}); smAdd++; }
+  return {cAdd,cSkip,dAdd,tAdd,nAdd,lrAdd,apAdd,smAdd};
+};
+
+// ── Override doImport to dispatch on bundle vs legacy data ────
+const _legacyDoImport = doImport;
+const doImport2 = () => {
+  if(S._impBundle){
+    const r=applyBundle(S._impBundle);
+    if(!r){toast('Nichts zu importieren','warn');return;}
+    save(); closeM();
+    try{renderDash();}catch(e){}try{renderCtc();}catch(e){}try{renderKanban();}catch(e){}try{renderTasks();}catch(e){}try{renderNotes();}catch(e){}try{renderSimap();}catch(e){}try{renderLR();}catch(e){}try{renderAngPos();}catch(e){}try{renderToday();}catch(e){}try{if(S._mapInit)updateMap();}catch(e){}
+    const cta=g('imp-cta');if(cta)cta.style.display='none';
+    const parts=[];if(r.dAdd)parts.push(r.dAdd+' Deals');if(r.cAdd)parts.push(r.cAdd+' Kontakte');if(r.tAdd)parts.push(r.tAdd+' Aufgaben');if(r.nAdd)parts.push(r.nAdd+' Notizen');if(r.lrAdd)parts.push(r.lrAdd+' Lastlist-Zeilen');if(r.apAdd)parts.push(r.apAdd+' Positionen');if(r.smAdd)parts.push(r.smAdd+' RFPs');if(r.cSkip)parts.push(r.cSkip+' Dubletten zusammengeführt');
+    toast('✅ Importiert: '+parts.join(' · '),'ok');
+    S._impBundle=null;
+    setTimeout(()=>nav('dash'),400);
+    return;
+  }
+  // Legacy contacts path
+  return _legacyDoImport();
+};
+// Replace global
+window.doImport = doImport2;
 
 // ── DASHBOARD ──────────────────────────────────────────────────
 const renderDash = () => {
@@ -1754,7 +2202,7 @@ try{window.dialLog=dialLog;}catch(_){}
 try{window.dialSkip=dialSkip;}catch(_){}
 try{window.dimTab=dimTab;}catch(_){}
 try{window.doExport=doExport;}catch(_){}
-try{window.doImport=doImport;}catch(_){}
+try{window.doImport=doImport2;}catch(_){}
 try{window.doSearch=doSearch;}catch(_){}
 try{window.el=el;}catch(_){}
 try{window.emailOutlook=emailOutlook;}catch(_){}
@@ -1795,6 +2243,16 @@ try{window.openSimap=openSimap;}catch(_){}
 try{window.openTask=openTask;}catch(_){}
 try{window.openWA=openWA;}catch(_){}
 try{window.readFile=readFile;}catch(_){}
+try{window.applyBundle=applyBundle;}catch(_){}
+try{window.parsePDFFile=parsePDFFile;}catch(_){}
+try{window.parseDOCXFile=parseDOCXFile;}catch(_){}
+try{window.parsePipelineFile=parsePipelineFile;}catch(_){}
+try{window.parseAggregatFile=parseAggregatFile;}catch(_){}
+try{window.detectSpreadsheetVariant=detectSpreadsheetVariant;}catch(_){}
+try{window.extractPDFText=extractPDFText;}catch(_){}
+try{window.parseBestellungText=parseBestellungText;}catch(_){}
+try{window.parseProjectDOCX=parseProjectDOCX;}catch(_){}
+try{window.renderBundlePreview=renderBundlePreview;}catch(_){}
 try{window.renderActChart=renderActChart;}catch(_){}
 try{window.renderAngPos=renderAngPos;}catch(_){}
 try{window.renderComp=renderComp;}catch(_){}
