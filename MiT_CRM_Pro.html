@@ -209,12 +209,35 @@ tbody td{padding:.48rem .75rem;font-size:12px;}
 .marker-cluster-large{background:rgba(230,51,41,.15);border:1.5px solid rgba(230,51,41,.6);}
 .marker-cluster-large div{background:rgba(220,38,38,.92);color:#fff;font-weight:900;}
 ::-webkit-scrollbar{width:4px;height:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:2px;}
+/* ── MOBILE TOUCH POLISH ── */
+#fab-call{position:fixed;right:16px;bottom:16px;z-index:1500;width:56px;height:56px;border-radius:50%;background:var(--acc);color:#fff;border:none;font-size:1.5rem;box-shadow:0 6px 20px rgba(230,51,41,.5);cursor:pointer;display:none;}
+#fab-call:active{transform:scale(.92);}
+.kcard{touch-action:pan-y;}
+@media (max-width:820px){
+  #sb{position:fixed;left:0;top:50px;bottom:0;z-index:1200;transform:translateX(-100%);transition:transform .2s;box-shadow:8px 0 24px rgba(0,0,0,.4);}
+  #sb.open{transform:translateX(0);}
+  #menu-toggle{display:inline-flex!important;}
+  .g2{grid-template-columns:1fr!important;}
+  .krow{grid-template-columns:repeat(2,1fr)!important;}
+  .btn,.hbtn{min-height:38px;}
+  .ni{padding:.7rem 1rem;}
+  .icon-btn,.btn.sm{min-height:32px;min-width:32px;}
+  #fab-call{display:flex;align-items:center;justify-content:center;}
+  .topbar{flex-wrap:wrap;gap:.4rem;}
+  #globalSearch,.srch{max-width:none;width:100%;}
+  table{font-size:13px;}
+  .kcol{min-width:160px;width:80vw;max-width:280px;}
+  #akey,#hookurl{width:110px!important;}
+}
+#menu-toggle{display:none;background:var(--bg3);border:1px solid var(--bdr);color:var(--t1);border-radius:var(--rs);padding:.3rem .55rem;font-size:1rem;cursor:pointer;margin-right:.3rem;}
+
 </style>
 </head>
 <body style="display:flex;flex-direction:column;height:100vh;">
 
 <!-- HEADER -->
 <header id="hdr">
+  <button id="menu-toggle" onclick="toggleMenu()" aria-label="Menü">☰</button>
   <div class="logo" onclick="nav('dash')"><div class="lm">⚡</div><div><div class="lt">MiT CRM</div><div class="ls">Mobil in Time · Aggreko</div></div></div>
   <div class="hdiv"></div>
   <div class="srch"><span class="si">🔍</span><input id="si" placeholder="Suchen… Ctrl+K" autocomplete="off" oninput="doSearch(this.value)"></div>
@@ -244,6 +267,7 @@ tbody td{padding:.48rem .75rem;font-size:12px;}
   <div class="ni" onclick="nav('map')"><span class="ic">🗺️</span>Karte</div>
   <div class="ni" onclick="nav('kt')"><span class="ic">🏔️</span>Kantone CH</div>
   <div class="ni" onclick="nav('fc')"><span class="ic">📈</span>Forecast</div>
+  <div class="ni" onclick="nav('plan')"><span class="ic">📅</span>Planung<span id="nb-plan" class="nbadge" style="display:none">0</span></div>
   <div class="ng">Akquise</div>
   <div class="ni" onclick="nav('dial')"><span class="ic">📞</span>Kaltakquise</div>
   <div class="ni" onclick="nav('email')"><span class="ic">✉️</span>E-Mail Gen</div>
@@ -340,6 +364,7 @@ tbody td{padding:.48rem .75rem;font-size:12px;}
     <div class="pgtitle" style="margin:0">Heute <span>· KI-Cockpit</span></div>
     <button class="btn bp" onclick="genBriefing()">🤖 Tages-Briefing</button>
   </div>
+  <div class="card" style="margin-bottom:1rem"><div class="cb" id="gamify"></div></div>
   <div class="krow">
     <div class="kpi kr"><div class="klbl">Calls heute fällig</div><div class="kval" id="tk-today2">0</div></div>
     <div class="kpi ky"><div class="klbl">Fristen 7 Tage</div><div class="kval" id="tk-soon">0</div></div>
@@ -385,7 +410,9 @@ tbody td{padding:.48rem .75rem;font-size:12px;}
       <select id="ctc-ind" onchange="renderCtc()" style="width:130px"><option value="">Alle Branchen</option><option>Industrie</option><option>Pharma/Chemie</option><option>Rechenzentrum</option><option>Spital/Klinik</option><option>EVU</option><option>Bau</option><option>Gemeinde</option></select>
       <select id="ctc-sort" onchange="renderCtc()" style="width:130px"><option value="score">Sort: Lead-Score</option><option value="company">Sort: Firma A-Z</option><option value="prio">Sort: Priorität</option></select>
       <button class="btn bp" onclick="openCtc()">+ Kontakt</button>
+      <button class="btn bs sm" onclick="scanCard()">📇 Visitenkarte</button>
       <button class="btn bg sm" onclick="exportCtc()">↓ XLSX</button>
+      <input type="file" id="card-inp" accept="image/*" capture="environment" style="display:none" onchange="handleCardImage(this.files[0])">
     </div>
   </div>
   <div class="card"><div class="tw"><table><thead><tr><th>Firma</th><th>Name</th><th>Branche</th><th>Kanton</th><th>Telefon</th><th>Status</th><th>Score</th><th>Prio</th><th></th></tr></thead><tbody id="ctc-body"></tbody></table></div></div>
@@ -395,7 +422,7 @@ tbody td{padding:.48rem .75rem;font-size:12px;}
 <div id="pg-map" class="pg" style="padding:.85rem!important;">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;">
     <div class="pgtitle" style="margin:0">Schweiz <span>Karte</span></div>
-    <div class="brow"><button class="mtgl act" id="ml-c" onclick="toggleML('c',this)">👥 Kunden</button><button class="mtgl act" id="ml-d" onclick="toggleML('d',this)">🎯 Deals</button></div>
+    <div class="brow"><button class="mtgl act" id="ml-c" onclick="toggleML('c',this)">👥 Kunden</button><button class="mtgl act" id="ml-d" onclick="toggleML('d',this)">🎯 Deals</button><button class="mtgl" onclick="planTour()">🚗 Tour planen</button></div>
   </div>
   <div id="the-map" style="height:calc(100vh - 155px);min-height:340px;">
   <div id="map-loading" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:500;background:var(--bg2);border-radius:var(--r);gap:.75rem;">
@@ -429,6 +456,22 @@ tbody td{padding:.48rem .75rem;font-size:12px;}
     <div class="card"><div class="ch"><span class="ct">Fortschritt</span></div><div class="cb" id="fc-prog"><div class="empty"><p>Ziele setzen</p></div></div></div>
   </div>
   <div class="card" style="margin-top:.75rem;"><div class="ch"><span class="ct">Forecast</span></div><div class="cb"><canvas id="ch-fc" height="170"></canvas></div></div>
+</div>
+
+<!-- PLANUNG / VERFÜGBARKEIT -->
+<div id="pg-plan" class="pg">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+    <div class="pgtitle" style="margin:0">Planung <span>· Verfügbarkeit & Touren</span></div>
+    <div class="brow"><button class="btn bg sm" onclick="exportICS()">📅 .ics Export</button><button class="btn bg sm" onclick="document.getElementById('ics-inp').click()">📥 .ics Import</button><input type="file" id="ics-inp" accept=".ics" style="display:none" onchange="importICS(this.files[0])"></div>
+  </div>
+  <div class="card">
+    <div class="ch"><span class="ct">⚠ Geräte-Doppelbuchungen (Verfügbarkeits-Check)</span><span id="avail-info" style="font-size:11px;color:var(--t2)"></span></div>
+    <div class="cb" id="avail-list"><div class="empty"><div class="eico">📅</div><p>Deals mit Start-Datum, Dauer und Leistung werden auf Überschneidungen geprüft</p></div></div>
+  </div>
+  <div class="card" style="margin-top:.85rem;">
+    <div class="ch"><span class="ct">🗓️ Liefer- & Demontage-Termine (nächste 60 Tage)</span></div>
+    <div class="cb" id="cal-list"></div>
+  </div>
 </div>
 
 <!-- DIALER -->
@@ -576,6 +619,14 @@ tbody td{padding:.48rem .75rem;font-size:12px;}
         <div class="ir"><div class="fg"><label>Firma *</label><input id="a-co"></div><div class="fg"><label>Ansprechpartner</label><input id="a-pers"></div></div>
         <div class="ir"><div class="fg"><label>Ort/Kanton</label><input id="a-loc"></div><div class="fg"><label>Datum</label><input id="a-date" type="date"></div></div>
         <div class="fg"><label>Branche</label><select id="a-ind"><option>Industrie</option><option>Pharma/Chemie</option><option>Rechenzentrum</option><option>Spital/Klinik</option><option>EVU</option><option>Bau</option><option>Gemeinde</option></select></div>
+      </div></div>
+      <div class="card"><div class="ch"><span class="ct">Vorlagen & Versionen</span></div><div class="cb">
+        <div class="brow" style="margin-bottom:.4rem">
+          <select id="ang-tmpl" style="flex:1;min-width:140px"><option value="">— Vorlage wählen —</option></select>
+          <button class="btn bs sm" onclick="applyAngTemplate()">+ Einfügen</button>
+        </div>
+        <div class="brow"><button class="btn bg sm" onclick="saveAngVersion()">💾 Version sichern</button><button class="btn bg sm" onclick="renderAngVersions()">🕑 Versionen</button></div>
+        <div id="ang-versions" style="margin-top:.4rem;max-height:130px;overflow-y:auto"></div>
       </div></div>
       <div class="card"><div class="ch"><span class="ct">Positionen</span><button class="btn bp sm" onclick="openAngPos()">+ Position</button></div>
         <div class="cb" id="ang-pos-list"></div>
@@ -945,12 +996,21 @@ tbody td{padding:.48rem .75rem;font-size:12px;}
     <div style="background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--rs);padding:.7rem;font-size:11px;color:var(--t2);margin-bottom:.75rem;line-height:1.7;">
       Automatische Snapshots werden lokal im Browser (IndexedDB) gespeichert — die letzten 20 Stände. Zusätzlich solltest du regelmässig ein JSON-Backup exportieren.
     </div>
-    <div class="brow" style="margin-bottom:.75rem;">
+    <div class="brow" style="margin-bottom:.5rem;">
       <button class="btn bgrn" onclick="doExport()" style="flex:1">💾 JSON exportieren</button>
       <button class="btn bg" onclick="snapshotNow()" style="flex:1">📸 Snapshot jetzt</button>
     </div>
+    <div class="brow" style="margin-bottom:.6rem;">
+      <button class="btn bs sm" onclick="exportReadonly()" style="flex:1">🔗 Read-only HTML</button>
+    </div>
+    <div style="border-top:1px solid var(--bdr);padding-top:.6rem;margin-bottom:.6rem">
+      <div style="font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:1px;margin-bottom:.4rem">☁️ Cloud-Backup (GitHub Gist)</div>
+      <div class="fg"><input id="gist-token" type="password" placeholder="GitHub Token (gist-Scope)" onchange="setGistToken(this.value)"></div>
+      <div class="brow"><button class="btn bg sm" onclick="gistPush()" style="flex:1">⬆ In Gist sichern</button><button class="btn bg sm" onclick="gistPull()" style="flex:1">⬇ Aus Gist laden</button></div>
+      <div id="gist-info" style="font-size:10px;color:var(--t2);margin-top:.3rem"></div>
+    </div>
     <div id="snap-info" style="font-size:11px;color:var(--t2);margin-bottom:.4rem;"></div>
-    <div id="snap-list" style="max-height:280px;overflow-y:auto;"></div>
+    <div id="snap-list" style="max-height:200px;overflow-y:auto;"></div>
   </div>
   <div class="mf"><button class="btn bg" onclick="closeM()">Schliessen</button></div>
 </div>
@@ -974,6 +1034,7 @@ tbody td{padding:.48rem .75rem;font-size:12px;}
 </div>
 
 </div><!-- #mo -->
+<button id="fab-call" onclick="fabCall()" title="Nächsten Top-Lead anrufen">📞</button>
 <div id="toasts"></div>
 <script>
 // ═══════════════════════════════════════════════════════════════
@@ -1022,7 +1083,7 @@ const load = () => {
 };
 
 // ── NAV ────────────────────────────────────────────────────────
-const PAGES=['dash','today','pipe','ctc','map','kt','fc','dial','email','fu','wa','rech','prod','ang','roi','eng','co2','nst','tasks','simap','comp','tig','rap','notes'];
+const PAGES=['dash','today','pipe','ctc','map','kt','fc','plan','dial','email','fu','wa','rech','prod','ang','roi','eng','co2','nst','tasks','simap','comp','tig','rap','notes'];
 const nav = pg => {
   document.querySelectorAll('.ni').forEach(n=>n.classList.remove('act'));
   const btn=document.querySelector(`.ni[onclick*="'${pg}'"]`);
@@ -1040,6 +1101,8 @@ const nav = pg => {
   }
   if(pg==='kt') renderKt();
   if(pg==='fc') renderFc();
+  if(pg==='plan') { try{renderPlan();}catch(e){} }
+  if(pg==='ang') { try{initAngTemplates();renderAngVersions();}catch(e){} }
   if(pg==='rap') { renderRap(); sv('rap-date',today()); }
   if(pg==='tasks') renderTasks();
   if(pg==='notes') renderNotes();
@@ -1047,6 +1110,7 @@ const nav = pg => {
   if(pg==='comp') renderComp();
   if(pg==='prod') renderProd('gen');
   if(pg==='wa') { buildWA(); setTimeout(()=>{const p=g('my-ph');if(p&&S.cfg.myPhone)p.value=S.cfg.myPhone;},50); }
+  const sb=g('sb'); if(sb) sb.classList.remove('open');
 };
 
 // ── MODAL ──────────────────────────────────────────────────────
@@ -2234,6 +2298,7 @@ const renderToday=()=>{
   st('tk-today2',tasksToday);st('tk-soon',soon);st('tk-hot',hot);st('tk-cold',cold);
   const nb=g('nb-today');if(nb){const n=tasksToday+soon;nb.textContent=n;nb.style.display=n?'':'none';}
   renderCallList();
+  try{renderGamify();}catch(e){}
 };
 const callCandidates=(n=8)=>(S.contacts||[]).filter(c=>c.tel).map(c=>({c,score:leadScore(c)})).sort((a,b)=>b.score-a.score).slice(0,n);
 const renderCallList=()=>{
@@ -2286,8 +2351,29 @@ const renderKanban=()=>{
   const nb=g('nb-pipe');if(nb){const n=S.deals.filter(d=>d.stage!=='won'&&d.stage!=='lost').length;nb.textContent=n;nb.style.display=n?'':'none';}
   el.innerHTML=ST.map(s=>{
     const cs=(S.deals||[]).filter(d=>d.stage===s.k);
-    return `<div class="kcol"><div class="kch" style="background:${s.c}22;color:${s.c}"><span>${s.l}</span><span>${cs.length}</span></div><div class="kcb">${cs.map(d=>`<div class="kcard" onclick="openDealView('${d.id}')"><div style="font-size:12px;font-weight:600">${d.company||d.title}${d._editedLocal?' <span title="lokal geändert" style="color:var(--yel)">✎</span>':''}${d._src==='excel-sync'?' <span title="aus Excel" style="color:var(--blu)">🔗</span>':''}</div>${d.value?`<div style="font-size:11px;color:var(--grn);font-family:var(--fh)">${fmtCHF(d.value)}</div>`:''}<div style="font-size:10px;color:var(--t2);margin-top:.15rem">${d.prob||0}% · ${(d.note||'').slice(0,30)}</div></div>`).join('')}</div></div>`;
+    return `<div class="kcol"><div class="kch" style="background:${s.c}22;color:${s.c}"><span>${s.l}</span><span>${cs.length}</span></div><div class="kcb">${cs.map(d=>`<div class="kcard" data-deal="${d.id}" data-stage="${s.k}"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;font-weight:600" onclick="openDealView('${d.id}')">${d.company||d.title}${d._editedLocal?' <span title="lokal geändert" style="color:var(--yel)">✎</span>':''}${d._src==='excel-sync'?' <span title="aus Excel" style="color:var(--blu)">🔗</span>':''}</span><span style="white-space:nowrap"><button class="kmove" onclick="moveDealStage('${d.id}',-1)" style="background:none;border:none;color:var(--t2);cursor:pointer;font-size:13px">◀</button><button class="kmove" onclick="moveDealStage('${d.id}',1)" style="background:none;border:none;color:var(--t2);cursor:pointer;font-size:13px">▶</button></span></div><div onclick="openDealView('${d.id}')">${d.value?`<div style="font-size:11px;color:var(--grn);font-family:var(--fh)">${fmtCHF(d.value)}</div>`:''}<div style="font-size:10px;color:var(--t2);margin-top:.15rem">${d.prob||0}% · ${(d.note||'').slice(0,30)}</div></div></div>`).join('')}</div></div>`;
   }).join('');
+  try{attachKanbanTouch();}catch(e){}
+};
+const KSTAGES=['prospecting','qualified','proposal','negotiation','won','lost'];
+const moveDealStage=(id,dir)=>{
+  const d=(S.deals||[]).find(x=>x.id===id); if(!d) return;
+  const i=KSTAGES.indexOf(d.stage); let ni=Math.max(0,Math.min(KSTAGES.length-1,(i<0?0:i)+dir));
+  if(ni===i) return;
+  const was=d.stage; d.stage=KSTAGES[ni];
+  if(d.stage==='excel-sync'){} if(d._src==='excel-sync') d._editedLocal=true;
+  if(d.stage==='won'&&was!=='won') fireWebhook(`🎉 *WON*: ${d.company} — ${fmtCHF(d.value)}`,{color:'good'});
+  save(); renderKanban(); renderDash(); toast(`→ ${d.stage}`,'ok');
+};
+const attachKanbanTouch=()=>{
+  document.querySelectorAll('#kanban .kcard').forEach(card=>{
+    let x0=null;
+    card.addEventListener('touchstart',e=>{x0=e.touches[0].clientX;},{passive:true});
+    card.addEventListener('touchend',e=>{
+      if(x0==null)return; const dx=e.changedTouches[0].clientX-x0; x0=null;
+      if(Math.abs(dx)>60){ moveDealStage(card.dataset.deal, dx>0?1:-1); }
+    },{passive:true});
+  });
 };
 const openDeal=(id)=>{S._editDeal=id?(S.deals||[]).find(d=>d.id===id):null;const d=S._editDeal;sv('d-title',d?.title||'');sv('d-co',d?.company||'');sv('d-val',d?.value||'');sv('d-stage',d?.stage||'prospecting');sv('d-prob',d?.prob||20);sv('d-note',d?.note||'');g('m-deal-t').textContent=d?'Deal bearbeiten':'Neuer Deal';openM('m-deal');};
 const saveDeal=()=>{const t=gv('d-title');if(!t){toast('Titel fehlt','warn');return;}if(!S.deals)S.deals=[];const ex=S._editDeal;const d={id:ex?.id||uid(),title:t,company:gv('d-co'),value:+gv('d-val')||0,stage:gv('d-stage'),prob:+gv('d-prob')||20,note:gv('d-note')};if(ex){// preserve sync metadata + flag local edit
@@ -2787,6 +2873,10 @@ document.addEventListener('DOMContentLoaded', () => {
   try { initHotkeys(); } catch(e) {}
   // Webhook field prefill + voice support hint
   try { const hu=g('hookurl'); if(hu && S.cfg.webhookUrl) hu.value=S.cfg.webhookUrl.slice(0,12)+'…'; const vb=g('voice-btn'); if(vb && !VOICE_SUPPORTED) vb.disabled=true; } catch(e) {}
+  // Gist token prefill + gamify + ang templates
+  try { const gt=g('gist-token'); if(gt && S.cfg.gistToken) gt.value='••••••••'; } catch(e) {}
+  try { renderGamify(); } catch(e) {}
+  try { initAngTemplates(); } catch(e) {}
   // Keyboard shortcuts
   document.addEventListener('keydown', e => {
     if((e.ctrlKey||e.metaKey)&&e.key==='k'){e.preventDefault();const si=g('si');if(si)si.focus();}
@@ -2800,7 +2890,263 @@ document.addEventListener('DOMContentLoaded', () => {
   console.log('%cMiT CRM Pro — bereit ✅', 'color:#00e5a0;font-weight:bold;font-size:14px;');
 });
 
+// ════════════════════════════════════════════════════════════════
+// TIER 1/2/3 EXTRAS
+// ════════════════════════════════════════════════════════════════
+
+// ── Mobile: menu + floating call ───────────────────────────────
+const toggleMenu = () => { const sb=g('sb'); if(sb) sb.classList.toggle('open'); };
+const fabCall = () => {
+  const list=(typeof callCandidates==='function')?callCandidates(1):[];
+  const c=list[0]?.c;
+  if(c&&c.tel){ window.open('tel:'+c.tel); }
+  else { nav('today'); toast('Kein Lead mit Telefon — Heute-Cockpit geöffnet','info'); }
+};
+// auto-close mobile menu after navigation
+const _origNav = typeof nav==='function'?nav:null;
+
+// ── Tier1 #2: Visitenkarten-Scan (Claude Vision) ───────────────
+const scanCard = () => { const i=g('card-inp'); if(i) i.click(); };
+const _imgB64 = file => new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(',')[1]);r.onerror=rej;r.readAsDataURL(file);});
+const handleCardImage = async file => {
+  if(!file) return;
+  if(!S.cfg.apiKey){ toast('Visitenkarten-Scan braucht API-Key (oben rechts)','warn'); return; }
+  toast('Visitenkarte wird gelesen…','info');
+  try{
+    const data=await _imgB64(file);
+    const mt=file.type||'image/jpeg';
+    const prompt='Dies ist das Foto einer Visitenkarte. Extrahiere die Kontaktdaten und antworte NUR als JSON: {"name":"","company":"","role":"","tel":"","email":"","web":"","canton":""}. Fehlt etwas, leer lassen. Kanton als CH-Kürzel (ZH, BE, …) wenn ableitbar.';
+    const r=await claude([{role:'user',content:[{type:'image',source:{type:'base64',media_type:mt,data}},{type:'text',text:prompt}]}],true);
+    if(!r){ return; }
+    const j=JSON.parse(r.slice(r.indexOf('{'),r.lastIndexOf('}')+1));
+    S._editCtc=null;
+    openCtc();
+    sv('c-co',j.company||j.name||''); sv('c-name',j.name||''); sv('c-role',j.role||'');
+    sv('c-tel',j.tel||''); sv('c-email',j.email||''); sv('c-web',j.web||''); sv('c-kt',(j.canton||'').toUpperCase());
+    toast('Visitenkarte erkannt — bitte prüfen & speichern','ok');
+  }catch(e){ console.error(e); toast('Karte konnte nicht gelesen werden','err'); }
+};
+
+// ── Tier1 #4: ICS calendar export/import ───────────────────────
+const _icsDate = d => { const dt=(d instanceof Date)?d:new Date(d); if(isNaN(dt)) return null; return dt.toISOString().replace(/[-:]/g,'').split('.')[0]+'Z'; };
+const _deDate = s => { // dd.mm.yyyy → Date
+  const m=String(s||'').match(/(\d{1,2})\.(\d{1,2})\.(\d{2,4})/); if(!m) return null;
+  let y=+m[3]; if(y<100)y+=2000; return new Date(y,+m[2]-1,+m[1]);
+};
+const buildICS = () => {
+  const lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//MiT CRM//DE','CALSCALE:GREGORIAN'];
+  const add=(uid_,dt,summary,desc)=>{const ds=_icsDate(dt);if(!ds)return;lines.push('BEGIN:VEVENT','UID:'+uid_+'@mitcrm','DTSTAMP:'+_icsDate(new Date()),'DTSTART:'+ds,'SUMMARY:'+String(summary).replace(/[\n,;]/g,' '),'DESCRIPTION:'+String(desc||'').replace(/[\n,;]/g,' '),'END:VEVENT');};
+  (S.tasks||[]).filter(t=>!t.done&&t.due).forEach(t=>add(t.id,t.due,'☐ '+t.title,(t.company||'')+' '+(t.note||'')));
+  (S.deals||[]).forEach(d=>{const st=_deDate(d._start);if(st)add(d.id+'-s',st,'🚚 Lieferung '+(d.company||d.title),d.note||'');});
+  lines.push('END:VCALENDAR');
+  return lines.join('\r\n');
+};
+const exportICS = () => {
+  const ics=buildICS();
+  const b=new Blob([ics],{type:'text/calendar'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='MiT_CRM_Termine.ics';a.click();
+  toast('Kalender (.ics) exportiert','ok');
+};
+const parseICS = txt => {
+  const ev=[]; let cur=null;
+  txt.split(/\r?\n/).forEach(l=>{
+    if(l==='BEGIN:VEVENT')cur={};
+    else if(l==='END:VEVENT'){if(cur)ev.push(cur);cur=null;}
+    else if(cur){const i=l.indexOf(':');if(i>0){const k=l.slice(0,i).split(';')[0];const v=l.slice(i+1);if(k==='SUMMARY')cur.summary=v;if(k==='DTSTART')cur.start=v;}}
+  });
+  return ev;
+};
+const importICS = async file => {
+  if(!file) return;
+  try{
+    const txt=await file.text();
+    const ev=parseICS(txt);
+    S._icsEvents=ev.map(e=>({summary:e.summary||'(Termin)',start:e.start||''})).slice(0,200);
+    save(); renderPlan();
+    toast(`${S._icsEvents.length} Termine importiert (Read-only)`,'ok');
+  }catch(e){ toast('ICS-Import fehlgeschlagen','err'); }
+};
+
+// ── Tier2 #8: availability / double-booking tracker ────────────
+const _dealWindow = d => {
+  const st=_deDate(d._start); if(!st) return null;
+  const days=+d._dauer||1; const en=new Date(st.getTime()+days*864e5);
+  return {st,en};
+};
+const _kvaTotal = d => { // total kVA across the fleet string like "2×600+2×200 kVA" or "240 kVA"
+  const s=String(d.title||'')+' '+String(d.note||'');
+  let tot=0; const re=/(\d+)\s*[×x*]\s*(\d{2,4})|(\d{2,4})\s*kVA/gi; let m;
+  while((m=re.exec(s))){ if(m[1]&&m[2]) tot+=(+m[1])*(+m[2]); else if(m[3]) tot+=+m[3]; }
+  return tot;
+};
+const computeAvailability = () => {
+  const act=(S.deals||[]).filter(d=>d.stage!=='lost').map(d=>({d,w:_dealWindow(d),kva:_kvaTotal(d)})).filter(x=>x.w&&x.kva>0);
+  const conflicts=[];
+  for(let i=0;i<act.length;i++)for(let j=i+1;j<act.length;j++){
+    const a=act[i],b=act[j];
+    if(a.w.st< b.w.en && b.w.st< a.w.en){ // overlap
+      conflicts.push({a:a.d,b:b.d,overlapStart:new Date(Math.max(a.w.st,b.w.st)),overlapEnd:new Date(Math.min(a.w.en,b.w.en)),kvaA:a.kva,kvaB:b.kva});
+    }
+  }
+  return conflicts;
+};
+const renderPlan = () => {
+  const conflicts=computeAvailability();
+  const el=g('avail-list'),info=g('avail-info');
+  if(info) info.textContent=conflicts.length?conflicts.length+' Überschneidung(en)':'keine Überschneidungen';
+  const nb=g('nb-plan');if(nb){nb.textContent=conflicts.length;nb.style.display=conflicts.length?'':'none';}
+  if(el){
+    if(!conflicts.length) el.innerHTML='<div style="font-size:12px;color:var(--grn);padding:.5rem">✓ Keine zeitlichen Geräte-Überschneidungen erkannt</div>';
+    else el.innerHTML=conflicts.slice(0,20).map(c=>`<div style="padding:.5rem 0;border-bottom:1px solid var(--bdr);font-size:12px"><div style="font-weight:600;color:var(--yel)">⚠ ${c.a.company} ↔ ${c.b.company}</div><div style="font-size:11px;color:var(--t2)">Überschneidung ${c.overlapStart.toLocaleDateString('de-CH')}–${c.overlapEnd.toLocaleDateString('de-CH')} · ${c.kvaA} kVA + ${c.kvaB} kVA parallel</div></div>`).join('');
+  }
+  // calendar list (next 60 days): deliveries + task due
+  const cal=g('cal-list');
+  if(cal){
+    const now=Date.now(),horizon=now+60*864e5,items=[];
+    (S.deals||[]).forEach(d=>{const st=_deDate(d._start);if(st&&st.getTime()>=now-864e5&&st.getTime()<=horizon)items.push({dt:st,t:'🚚 Lieferung '+(d.company||d.title)});});
+    (S.tasks||[]).filter(t=>!t.done&&t.due).forEach(t=>{const dt=new Date(t.due);if(dt.getTime()>=now-864e5&&dt.getTime()<=horizon)items.push({dt,t:'☐ '+t.title});});
+    (S._icsEvents||[]).forEach(e=>{const dt=_icsParseDate(e.start);if(dt&&dt.getTime()>=now-864e5&&dt.getTime()<=horizon)items.push({dt,t:'📅 '+e.summary});});
+    items.sort((a,b)=>a.dt-b.dt);
+    cal.innerHTML=items.length?items.slice(0,40).map(i=>`<div style="display:flex;gap:.6rem;padding:.3rem 0;border-bottom:1px solid var(--bdr);font-size:12px"><span style="color:var(--blu);font-family:var(--fh);font-weight:700;min-width:70px">${i.dt.toLocaleDateString('de-CH',{day:'2-digit',month:'2-digit'})}</span><span>${i.t}</span></div>`).join(''):'<div class="empty" style="padding:.6rem"><p>Keine Termine in den nächsten 60 Tagen</p></div>';
+  }
+};
+const _icsParseDate = s => { const m=String(s||'').match(/(\d{4})(\d{2})(\d{2})/); return m?new Date(+m[1],+m[2]-1,+m[3]):null; };
+
+// ── Tier2 #9: geo tour planning (nearest-neighbour) ────────────
+const planTour = () => {
+  const pts=(S.contacts||[]).filter(c=>c._lat&&c._lng);
+  if(pts.length<2){ toast('Zu wenige Kontakte mit Koordinaten für eine Tour','warn'); return; }
+  // start from Zürich HB by default
+  let start={lat:47.3779,lng:8.5403};
+  const remaining=pts.map(c=>({c,lat:c._lat,lng:c._lng}));
+  const route=[]; let cur=start;
+  const dist=(a,b)=>{const dx=a.lat-b.lat,dy=(a.lng-b.lng)*0.7;return dx*dx+dy*dy;};
+  while(remaining.length && route.length<12){
+    let bi=0,bd=Infinity;
+    remaining.forEach((p,i)=>{const d=dist(cur,p);if(d<bd){bd=d;bi=i;}});
+    cur=remaining[bi]; route.push(remaining[bi].c); remaining.splice(bi,1);
+  }
+  const wp=route.map(c=>`${c._lat},${c._lng}`).join('/');
+  const url=`https://www.google.com/maps/dir/47.3779,8.5403/${wp}`;
+  toast(`Tour über ${route.length} Stopps geöffnet`,'ok');
+  window.open(url,'_blank');
+};
+
+// ── Tier2 #7: Angebots-Templates + Versionierung ───────────────
+const ANG_TEMPLATES = {
+  'Event Single 200kVA':[{desc:'Generator 200 kVA Stage V HVO',qty:1,unit:'Tag',price:480},{desc:'IBC Tank 1000L + Betankung',qty:2,unit:'Stk.',price:180},{desc:'Powerlock-Kabelset 50m',qty:1,unit:'Pauschal',price:350},{desc:'Lieferung / Abholung',qty:1,unit:'Pauschal',price:600}],
+  'Event Twin 2×300kVA + BSV':[{desc:'Generator 300 kVA Stage V HVO',qty:2,unit:'Tag',price:680},{desc:'PLP Synchronisier-Panel',qty:1,unit:'Tag',price:220},{desc:'Baustromverteiler 125A',qty:2,unit:'Tag',price:90},{desc:'IBC Tank 3000L',qty:2,unit:'Stk.',price:420},{desc:'Lieferung / Abholung',qty:1,unit:'Pauschal',price:1200}],
+  'Notstrom Spital 500kVA':[{desc:'Generator 500 kVA Stage V',qty:1,unit:'Monat',price:9800},{desc:'Automatik-Umschaltung ATS',qty:1,unit:'Monat',price:1200},{desc:'24/7 Service & Monitoring',qty:1,unit:'Monat',price:1500},{desc:'Treibstoff-Management',qty:1,unit:'Pauschal',price:2000}],
+  'BESS Hybrid 200kWh':[{desc:'BESS PowerStore 200 kWh LFP',qty:1,unit:'Monat',price:6500},{desc:'Generator 100 kVA Backup',qty:1,unit:'Monat',price:2400},{desc:'Inbetriebnahme & Konfiguration',qty:1,unit:'Pauschal',price:1800}],
+};
+const initAngTemplates = () => {
+  const sel=g('ang-tmpl'); if(!sel) return;
+  const custom=(S.angTemplates||[]).map(t=>t.name);
+  sel.innerHTML='<option value="">— Vorlage wählen —</option>'+Object.keys(ANG_TEMPLATES).map(n=>`<option value="${n}">${n}</option>`).join('')+custom.map(n=>`<option value="custom:${n}">★ ${n}</option>`).join('');
+};
+const applyAngTemplate = () => {
+  const v=gv('ang-tmpl'); if(!v){ toast('Keine Vorlage gewählt','warn'); return; }
+  let items;
+  if(v.startsWith('custom:')) items=(S.angTemplates||[]).find(t=>t.name===v.slice(7))?.items;
+  else items=ANG_TEMPLATES[v];
+  if(!items){ toast('Vorlage leer','warn'); return; }
+  if(!S._angPos)S._angPos=[];
+  items.forEach(p=>S._angPos.push({id:uid(),disc:0,...p}));
+  renderAngPos(); toast(`${items.length} Positionen aus „${v.replace('custom:','')}" eingefügt`,'ok');
+};
+const saveAngVersion = () => {
+  if(!(S._angPos||[]).length){ toast('Keine Positionen zum Sichern','warn'); return; }
+  if(!S.angVersions)S.angVersions=[];
+  const total=(S._angPos||[]).reduce((s,p)=>s+p.qty*p.price*(1-(p.disc||0)/100),0);
+  S.angVersions.unshift({id:uid(),ts:Date.now(),co:gv('a-co')||'',title:gv('a-title')||'',pos:JSON.parse(JSON.stringify(S._angPos)),total});
+  S.angVersions=S.angVersions.slice(0,30);
+  save(); renderAngVersions(); toast('Angebots-Version gesichert','ok');
+};
+const renderAngVersions = () => {
+  const el=g('ang-versions'); if(!el) return;
+  const list=S.angVersions||[];
+  if(!list.length){ el.innerHTML='<div style="font-size:11px;color:var(--t2)">Noch keine Versionen</div>'; return; }
+  el.innerHTML=list.map((v,i)=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:.3rem 0;border-bottom:1px solid var(--bdr);font-size:11px"><div><strong>v${list.length-i}</strong> · ${v.co||'—'} · ${new Date(v.ts).toLocaleString('de-CH',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}<div style="font-size:10px;color:var(--grn)">${fmtCHF(v.total*1.081)} · ${v.pos.length} Pos.</div></div><button class="btn bg sm" onclick="restoreAngVersion('${v.id}')">↺</button></div>`).join('');
+};
+const restoreAngVersion = id => {
+  const v=(S.angVersions||[]).find(x=>x.id===id); if(!v) return;
+  S._angPos=JSON.parse(JSON.stringify(v.pos));
+  if(v.co)sv('a-co',v.co); if(v.title)sv('a-title',v.title);
+  renderAngPos(); toast('Version wiederhergestellt','ok');
+};
+const saveAsTemplate = () => {
+  const name=prompt('Vorlagen-Name:'); if(!name) return;
+  if(!S.angTemplates)S.angTemplates=[];
+  S.angTemplates.push({name,items:(S._angPos||[]).map(({id,...p})=>p)});
+  save(); initAngTemplates(); toast('Als Vorlage „'+name+'" gespeichert','ok');
+};
+
+// ── Tier3 #13: Cloud-Backup via GitHub Gist ────────────────────
+const setGistToken = t => { if(!S.cfg)S.cfg={}; S.cfg.gistToken=(t||'').trim(); save(); toast('Gist-Token gespeichert','ok'); };
+const gistPush = async () => {
+  if(!S.cfg.gistToken){ toast('GitHub Token fehlt','warn'); return; }
+  const info=g('gist-info'); if(info)info.textContent='⏳ Sichere…';
+  try{
+    const payload={files:{'mit_crm_backup.json':{content:JSON.stringify(S,null,2)}},description:'MiT CRM Backup '+new Date().toISOString(),public:false};
+    const method=S.cfg.gistId?'PATCH':'POST';
+    const url='https://api.github.com/gists'+(S.cfg.gistId?'/'+S.cfg.gistId:'');
+    const r=await fetch(url,{method,headers:{'Authorization':'Bearer '+S.cfg.gistToken,'Accept':'application/vnd.github+json'},body:JSON.stringify(payload)});
+    const j=await r.json();
+    if(j.id){ S.cfg.gistId=j.id; save(); if(info)info.textContent='✓ Gesichert in Gist '+j.id.slice(0,8)+' · '+new Date().toLocaleTimeString('de-CH'); toast('Cloud-Backup gesichert','ok'); }
+    else throw new Error(j.message||'Fehler');
+  }catch(e){ if(info)info.textContent='✕ '+e.message; toast('Gist-Push fehlgeschlagen: '+e.message,'err'); }
+};
+const gistPull = async () => {
+  if(!S.cfg.gistToken||!S.cfg.gistId){ toast('Kein Token/Gist-ID — erst sichern','warn'); return; }
+  if(!confirm('Aus Cloud laden? Aktuelle Daten werden ersetzt.')) return;
+  try{
+    const r=await fetch('https://api.github.com/gists/'+S.cfg.gistId,{headers:{'Authorization':'Bearer '+S.cfg.gistToken,'Accept':'application/vnd.github+json'}});
+    const j=await r.json();
+    const content=j.files?.['mit_crm_backup.json']?.content; if(!content) throw new Error('Backup-Datei fehlt im Gist');
+    const d=JSON.parse(content);
+    ['contacts','deals','tasks','notes','acts','simap','goals','cfg','_angPos','_lastRows','tags','angVersions','angTemplates'].forEach(k=>{if(d[k]!==undefined)S[k]=d[k];});
+    save(); toast('Cloud-Backup geladen','ok'); nav('dash');
+  }catch(e){ toast('Gist-Pull fehlgeschlagen: '+e.message,'err'); }
+};
+
+// ── Tier3 #14: Read-only sharing snapshot (standalone HTML) ─────
+const exportReadonly = () => {
+  const deals=(S.deals||[]).filter(d=>d.stage!=='lost');
+  const pipe=deals.filter(d=>d.stage!=='won'&&d.stage!=='lost').reduce((s,d)=>s+(+d.value||0),0);
+  const won=deals.filter(d=>d.stage==='won').reduce((s,d)=>s+(+d.value||0),0);
+  const rows=deals.sort((a,b)=>(+b.value||0)-(+a.value||0)).map(d=>`<tr><td>${(d.company||d.title||'').replace(/</g,'&lt;')}</td><td>${d._kt||''}</td><td>${(d.industry||'').replace(/</g,'&lt;')}</td><td style="text-align:right">${fmtCHF(d.value)}</td><td>${d.stage}</td><td style="text-align:right">${d._margePct!=null?Math.round(d._margePct*100)+'%':''}</td></tr>`).join('');
+  const htmlDoc=`<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MiT Pipeline — Read-only</title><style>body{font-family:system-ui,sans-serif;background:#0d1525;color:#dce8ff;margin:0;padding:1.5rem}h1{font-size:1.3rem}.k{display:inline-block;background:#14202e;border:1px solid #1f3455;border-radius:8px;padding:.6rem 1rem;margin:.3rem .3rem 1rem 0}.k b{display:block;font-size:1.4rem;color:#00e5a0}table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:.45rem .6rem;border-bottom:1px solid #1f3455;text-align:left}th{color:#5d7faa;font-size:11px;text-transform:uppercase}</style></head><body><h1>⚡ MiT Strom — Pipeline (Read-only)</h1><div style="color:#5d7faa;font-size:12px;margin-bottom:1rem">Stand ${new Date().toLocaleString('de-CH')} · ${deals.length} Deals</div><div class="k">Offene Pipeline<b>${fmtCHF(pipe)}</b></div><div class="k">Gewonnen<b>${fmtCHF(won)}</b></div><div class="k">Deals<b>${deals.length}</b></div><table><thead><tr><th>Kunde</th><th>Kt</th><th>Segment</th><th>Volumen</th><th>Phase</th><th>Marge</th></tr></thead><tbody>${rows}</tbody></table></body></html>`;
+  const b=new Blob([htmlDoc],{type:'text/html'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='MiT_Pipeline_Readonly_'+today()+'.html';a.click();
+  toast('Read-only HTML exportiert — teilbar mit Innendienst','ok');
+};
+
+// ── Tier3 #15: Gamification ────────────────────────────────────
+const computeStreak = () => {
+  const days=new Set((S.acts||[]).map(a=>a.date).filter(Boolean));
+  let streak=0; const d=new Date();
+  // allow today to be empty without breaking streak
+  if(!days.has(d.toISOString().slice(0,10))) d.setDate(d.getDate()-1);
+  for(let i=0;i<400;i++){ const ds=d.toISOString().slice(0,10); if(days.has(ds)){streak++;d.setDate(d.getDate()-1);} else break; }
+  return streak;
+};
+const renderGamify = () => {
+  const el=g('gamify'); if(!el) return;
+  const td=today();
+  const callsToday=(S.acts||[]).filter(a=>a.date===td&&a.type==='call').length;
+  const goalCalls=(S.goals||{}).calls? Math.round((S.goals.calls)/22):5; // daily target from monthly goal
+  const streak=computeStreak();
+  // best week (activities in any 7-day window, simple: this iso-week count)
+  const weekAgo=Date.now()-7*864e5;
+  const weekActs=(S.acts||[]).filter(a=>{const t=new Date(a.date).getTime();return t>=weekAgo;}).length;
+  const pct=Math.min(100,Math.round(callsToday/Math.max(goalCalls,1)*100));
+  el.innerHTML=`<div style="display:flex;gap:1rem;flex-wrap:wrap;align-items:center">
+    <div><div style="font-family:var(--fh);font-size:1.6rem;font-weight:800;color:var(--acc)">🔥 ${streak}</div><div style="font-size:9px;color:var(--t2);text-transform:uppercase;letter-spacing:1px">Tage-Streak</div></div>
+    <div style="flex:1;min-width:140px"><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:.2rem"><span>Calls heute</span><span style="color:var(--t2)">${callsToday}/${goalCalls}</span></div><div class="fbar"><div style="width:${pct}%;background:${pct>=100?'var(--grn)':'var(--acc)'}"></div></div>${pct>=100?'<div style="font-size:10px;color:var(--grn);margin-top:.2rem">✓ Tagesziel erreicht!</div>':''}</div>
+    <div><div style="font-family:var(--fh);font-size:1.6rem;font-weight:800;color:var(--grn)">${weekActs}</div><div style="font-size:9px;color:var(--t2);text-transform:uppercase;letter-spacing:1px">Aktivitäten 7T</div></div>
+  </div>`;
+};
+
 // ── WINDOW ASSIGNMENTS ──────────────────────────────────────
+['toggleMenu','fabCall','scanCard','handleCardImage','exportICS','importICS','parseICS','buildICS','renderPlan','computeAvailability','planTour','applyAngTemplate','saveAngVersion','renderAngVersions','restoreAngVersion','saveAsTemplate','initAngTemplates','setGistToken','gistPush','gistPull','exportReadonly','renderGamify','computeStreak','moveDealStage','attachKanbanTouch'].forEach(n=>{try{window[n]=eval(n);}catch(_){}});
 try{window._FNS=_FNS;}catch(_){}
 try{window.addLastRow=addLastRow;}catch(_){}
 try{window.addRap=addRap;}catch(_){}

@@ -63,6 +63,15 @@ Professionelles, vollständig browserbasiertes CRM in einer einzigen HTML-Datei.
 - **Slack/Teams-Webhook**: einmal Webhook-URL oben rechts eintragen → automatische Posts bei *WON*-Übergang, neuer simap-Ausschreibung und größeren Sync-Änderungen. Funktioniert mit Slack-Incoming-Webhooks und Teams-Connector-URLs.
 - **Voice-Notes**: 🎙-Button auf der Heute-Page → Web Speech API (Chrome/Edge) nimmt auf, Claude fasst zusammen und schreibt es als Aktivitätsnotiz; perfekt für Notizen im Auto nach einem Termin.
 - **Quick-Hotkeys**: `g d/p/c/k/m/f/t/x/s/e/r/n` springt zu Dashboard/Pipeline/Kontakte/Kantone/Karte/Forecast/Heute/Aufgaben/simap/E-Mail/Rapport/Notizen, `n d/t/n/c/a` legt Deal/Task/Notiz/Kontakt/Ausschreibung an, `Ctrl+K` Suche, `Esc` schließt.
+- **Visitenkarten-Scan**: 📇-Button (Kontakte) → Foto/Kamera → Claude Vision liest Name/Firma/Tel/Mail/Kanton → Kontaktformular vorausgefüllt.
+- **Kalender (.ics)**: Aufgaben + Liefertermine als `.ics` exportieren (Outlook/Google/Apple), externe `.ics` read-only importieren — alles im Planung-Tab.
+- **Verfügbarkeits-Tracker** (Planung-Tab): erkennt zeitliche Geräte-Doppelbuchungen (Start + Dauer + kVA überlappend) und zeigt eine 60-Tage-Terminliste.
+- **Geo-Tourenplanung** (Karte): „🚗 Tour planen" ordnet Kontakte per Nearest-Neighbour und öffnet eine Google-Maps-Mehrstopp-Route ab Zürich HB.
+- **Angebots-Vorlagen + Versionierung**: vorbereitete Positions-Bausteine (Event Single/Twin, Notstrom Spital, BESS Hybrid) + eigene Vorlagen; jedes Angebot als Version sichern und wiederherstellen.
+- **Cloud-Backup (GitHub Gist)**: privates Gist als Off-Site-Backup — Token eintragen, ⬆ sichern / ⬇ laden.
+- **Read-only-Snapshot**: eigenständige HTML-Pipeline-Übersicht exportieren und mit Innendienst/Vorgesetzten teilen.
+- **Gamification** (Heute): Tages-Streak 🔥, Calls-heute-Ziel mit Fortschritt, 7-Tage-Aktivitäten.
+- **Mobile-Touch**: ausklappbares Menü (☰), Swipe der Deal-Karten zwischen Phasen (+◀▶-Buttons), Floating-Call-Button, responsives Layout.
 - Volltext-Suche (Ctrl+K)
 - Light/Dark-Theme
 - Anthropic Claude API für alle KI-Funktionen
