@@ -3,7 +3,7 @@ from pptx import Presentation
 from pptx.util import Inches, Pt, Emu
 from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_SHAPE
-from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
+from pptx.enum.text import PP_ALIGN, MSO_ANCHOR, MSO_AUTO_SIZE
 from pptx.oxml.ns import qn
 from copy import deepcopy
 from lxml import etree
@@ -74,9 +74,9 @@ def add_bullets(slide, x, y, w, h, items, size=14, color=NAVY, bullet_color=TEAL
         p.alignment = PP_ALIGN.LEFT
         p.space_after = Pt(6)
         r1 = p.add_run()
-        r1.text = "▍  "
+        r1.text = "•  "
         r1.font.name = "Calibri"
-        r1.font.size = Pt(size)
+        r1.font.size = Pt(size + 2)
         r1.font.bold = True
         r1.font.color.rgb = bullet_color
         r2 = p.add_run()
@@ -137,7 +137,8 @@ def kpi_card(slide, x, y, w, h, value, label, accent=TEAL, big=44):
 def build_table(slide, x, y, w, h, headers, rows, header_fill=NAVY,
                 header_color=WHITE, body_size=10, header_size=11,
                 col_widths=None, row_height=None, zebra=True,
-                first_col_bold=True, accent_col=None):
+                first_col_bold=True, accent_col=None,
+                header_row_height=None):
     cols = len(headers)
     n = len(rows) + 1
     tbl_shape = slide.shapes.add_table(n, cols, x, y, w, h)
@@ -146,6 +147,13 @@ def build_table(slide, x, y, w, h, headers, rows, header_fill=NAVY,
         total = sum(col_widths)
         for i, cw in enumerate(col_widths):
             tbl.columns[i].width = int(w * cw / total)
+    # Even row distribution
+    body_h = h - (header_row_height or Inches(0.5))
+    body_row_h = int(body_h / max(len(rows), 1))
+    if header_row_height:
+        tbl.rows[0].height = header_row_height
+    for ri in range(1, n):
+        tbl.rows[ri].height = body_row_h
     # Header
     for j, head in enumerate(headers):
         c = tbl.cell(0, j)
@@ -155,8 +163,10 @@ def build_table(slide, x, y, w, h, headers, rows, header_fill=NAVY,
         c.margin_right = Inches(0.08)
         c.margin_top = Inches(0.04)
         c.margin_bottom = Inches(0.04)
+        c.vertical_anchor = MSO_ANCHOR.MIDDLE
         tf = c.text_frame
         tf.clear()
+        tf.word_wrap = True
         p = tf.paragraphs[0]
         p.alignment = PP_ALIGN.LEFT
         r = p.add_run()
@@ -175,9 +185,11 @@ def build_table(slide, x, y, w, h, headers, rows, header_fill=NAVY,
             c.margin_right = Inches(0.08)
             c.margin_top = Inches(0.04)
             c.margin_bottom = Inches(0.04)
+            c.vertical_anchor = MSO_ANCHOR.MIDDLE
             tf = c.text_frame
             tf.clear()
             tf.word_wrap = True
+            tf.auto_size = MSO_AUTO_SIZE.NONE
             # support multi-line text via \n
             for k, line in enumerate(str(cell_text).split("\n")):
                 p = tf.paragraphs[0] if k == 0 else tf.add_paragraph()
@@ -192,9 +204,6 @@ def build_table(slide, x, y, w, h, headers, rows, header_fill=NAVY,
                 if accent_col is not None and j == accent_col:
                     r.font.bold = True
                     r.font.color.rgb = TEAL
-    if row_height:
-        for i in range(n):
-            tbl.rows[i].height = row_height
     return tbl
 
 
