@@ -51,7 +51,13 @@ Professionelles, vollständig browserbasiertes CRM in einer einzigen HTML-Datei.
 - Live-Vorschau zeigt, was importiert wird (Counts pro Kategorie), bevor man bestätigt
 - Drag-&-Drop oder Klick
 - IndexedDB-Auto-Backup mit Wiederherstellung (siehe oben)
-- **Live-Excel-Sync** (Dashboard-Panel + Header-Button „🔄 Sync"): Excel-Pipeline-Datei einmal verbinden (File System Access API, Chrome/Edge), danach genügt ein Klick, um die Datei neu einzulesen und Deals/Kontakte/Dashboards **bidirektional** abzugleichen — bestehende Deals werden aktualisiert (idempotent, keine Duplikate), neue hinzugefügt. „→ Pipeline nach Excel schreiben" exportiert den aktuellen Stand zurück in dieselbe Datei (oder als Download). Optional Auto-Sync beim Start. Browser ohne die API fallen automatisch auf den Datei-Dialog zurück.
+- **Live-Excel-Sync** (Dashboard-Panel + Header-Button „🔄 Sync"): Excel-Pipeline-Datei einmal verbinden (File System Access API, Chrome/Edge), danach genügt ein Klick, um die Datei neu einzulesen und Deals/Kontakte/Dashboards **bidirektional** abzugleichen — bestehende Deals werden aktualisiert (idempotent, keine Duplikate), neue hinzugefügt. „→ Pipeline nach Excel schreiben" exportiert den aktuellen Stand zurück in dieselbe Datei (oder als Download). Browser ohne die API fallen automatisch auf den Datei-Dialog zurück.
+  - **Sync-Vorschau**: vor dem Übernehmen zeigt ein Dialog genau, was sich ändert (Wert/Phase/Wahrscheinlichkeit pro Deal, neue Deals, neue Kontakte) — kein stilles Überschreiben.
+  - **Konfliktschutz**: manuell im Tool geänderte Deals (Marker ✎) werden beim Sync nicht blind überschrieben, sondern als Konflikt angezeigt — optional gezielt überschreibbar.
+  - **Auto-Sync** alle 10 Minuten (optional, nur bei erteilter Dateifreigabe).
+- **Deal-Detailansicht**: Klick auf einen Deal (Kanban/Dashboard) öffnet eine Vollansicht mit allen Feldern, verknüpftem Kontakt (inkl. Lead-Score), Aufgaben und Aktivitäts-Timeline.
+- **Dashboard-Auswertungen**: Volumen nach Segment (Doughnut), Volumen nach Kanton (Top 8), und Pipeline-Verlauf über Zeit (offene Pipeline + kumuliert Gewonnen, aus den IndexedDB-Snapshots).
+- **Scan-PDF-OCR**: gescannte Bestell-/Rechnungs-PDFs ohne Textebene werden per Claude Vision automatisch ausgelesen (Kunde, Positionen, Total) und verteilt — benötigt API-Key.
 - Volltext-Suche (Ctrl+K)
 - Light/Dark-Theme
 - Anthropic Claude API für alle KI-Funktionen

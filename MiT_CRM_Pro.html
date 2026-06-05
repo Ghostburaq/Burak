@@ -313,6 +313,14 @@ tbody td{padding:.48rem .75rem;font-size:12px;}
     <div class="card"><div class="ch"><span class="ct">Aktivität 7 Tage</span></div><div class="cb"><canvas id="ch-act" height="155"></canvas></div></div>
   </div>
   <div class="g2" style="margin-top:.85rem;">
+    <div class="card"><div class="ch"><span class="ct">💰 Volumen nach Segment</span></div><div class="cb"><canvas id="ch-seg" height="155"></canvas></div></div>
+    <div class="card"><div class="ch"><span class="ct">🗺️ Volumen nach Kanton (Top 8)</span></div><div class="cb"><canvas id="ch-kt" height="155"></canvas></div></div>
+  </div>
+  <div class="card" style="margin-top:.85rem;">
+    <div class="ch"><span class="ct">📈 Pipeline-Verlauf (aus Backups)</span><span id="hist-info" style="font-size:11px;color:var(--t2)"></span></div>
+    <div class="cb"><canvas id="ch-hist" height="120"></canvas></div>
+  </div>
+  <div class="g2" style="margin-top:.85rem;">
     <div class="card"><div class="ch"><span class="ct">Letzte Aktivitäten</span><button class="btn bp sm" onclick="openTask()">+ Aufgabe</button></div><div class="cb" id="dash-feed"><div class="empty"><div class="eico">📭</div><p>Noch keine Aktivitäten</p></div></div></div>
     <div class="card"><div class="ch"><span class="ct">Top Deals</span></div><div class="cb" id="dash-deals"><div class="empty"><div class="eico">🎯</div><p>Noch keine Deals</p></div></div></div>
   </div>
@@ -934,6 +942,24 @@ tbody td{padding:.48rem .75rem;font-size:12px;}
   <div class="mf"><button class="btn bg" onclick="closeM()">Schliessen</button></div>
 </div>
 
+<!-- DEAL DETAIL VIEW -->
+<div class="modal" id="m-dealview" style="display:none;max-width:600px;">
+  <div class="mh"><span class="mt" id="dv-title">Deal</span><button class="mx" onclick="closeM()">✕</button></div>
+  <div class="mb" id="dv-body"></div>
+  <div class="mf"><button class="btn bg" onclick="closeM()">Schliessen</button><button class="btn bp" id="dv-edit">✏️ Bearbeiten</button></div>
+</div>
+
+<!-- SYNC DIFF PREVIEW -->
+<div class="modal" id="m-syncdiff" style="display:none;max-width:640px;">
+  <div class="mh"><span class="mt">🔄 Sync-Vorschau</span><button class="mx" onclick="closeM()">✕</button></div>
+  <div class="mb">
+    <div id="sd-summary" style="font-size:12px;margin-bottom:.6rem;"></div>
+    <div id="sd-conflicts"></div>
+    <div id="sd-list" style="max-height:340px;overflow-y:auto;"></div>
+  </div>
+  <div class="mf"><button class="btn bg" onclick="closeM()">Abbrechen</button><button class="btn bgrn" onclick="confirmSync()">✓ Übernehmen</button></div>
+</div>
+
 </div><!-- #mo -->
 <div id="toasts"></div>
 <script>
@@ -1498,11 +1524,34 @@ const extractPDFText = async file => {
   }
   return text;
 };
+// OCR a scanned PDF via Claude Vision → structured bundle (needs API key)
+const _b64=buf=>{const bytes=new Uint8Array(buf);let bin='';const ch=0x8000;for(let i=0;i<bytes.length;i+=ch){bin+=String.fromCharCode.apply(null,bytes.subarray(i,i+ch));}return btoa(bin);};
+const ocrPDF = async (file) => {
+  if(!S.cfg.apiKey) return null;
+  const buf=await file.arrayBuffer();
+  const data=_b64(buf);
+  const prompt='Dies ist ein gescanntes Geschäftsdokument (Bestellung/Rechnung/Lieferschein) für Mobil in Time AG. Extrahiere strukturiert und antworte NUR mit JSON: {"customer":"Firmenname","date":"TT.MM.JJJJ","invoice":"Nr","total":Zahl,"positions":[{"desc":"...","qty":Zahl,"price":Zahl}]}. Wenn ein Feld fehlt, lass es weg.';
+  const r=await claude([{role:'user',content:[{type:'document',source:{type:'base64',media_type:'application/pdf',data}},{type:'text',text:prompt}]}],true);
+  if(!r) return null;
+  try{
+    const j=JSON.parse(r.slice(r.indexOf('{'),r.lastIndexOf('}')+1));
+    const b=_emptyBundle();b.kind='bestellung';
+    if(j.customer) b.contacts.push({company:j.customer,_src:'ocr-pdf'});
+    (j.positions||[]).forEach(p=>b.angPos.push({id:uid(),desc:String(p.desc||'').slice(0,80),qty:+p.qty||1,unit:'Stk.',price:+p.price||0,disc:0}));
+    b.deals.push({title:`${j.customer||'Bestellung'} — ${j.invoice||file.name}`,company:j.customer||file.name,value:+j.total||0,stage:'won',prob:100,note:`OCR · Rechnung ${j.invoice||''} ${j.date||''} · ${b.angPos.length} Positionen`,industry:'Events & Kultur'});
+    if(j.invoice||j.customer) b.tasks.push({title:`Bestellung ${j.invoice||file.name} prüfen`,company:j.customer||'',type:'offer',prio:'med'});
+    b.notes.push({title:'OCR '+(j.invoice||file.name),text:JSON.stringify(j,null,2),cat:'kunde'});
+    return b;
+  }catch(e){ return null; }
+};
 const parsePDFFile = async file => {
   const text = await extractPDFText(file);
   if(!text.trim()) {
+    // Scanned PDF → try Claude Vision OCR if key present
+    const ocr=await ocrPDF(file);
+    if(ocr){ ocr._ocr=true; return ocr; }
     const b=_emptyBundle();b.kind='pdf-scan';
-    b.notes.push({title:'PDF '+file.name, text:'PDF enthielt keinen extrahierbaren Text (vermutlich gescannt). Per KI-Analyse im simap-Tab vorgehen.', cat:'allg'});
+    b.notes.push({title:'PDF '+file.name, text:'PDF enthielt keinen extrahierbaren Text (vermutlich gescannt). Für automatische OCR-Erkennung bitte API-Key oben rechts eintragen und Datei erneut ablegen.', cat:'allg'});
     return b;
   }
   const t = text.toLowerCase();
@@ -1827,6 +1876,76 @@ const mergeSyncBundle = b => {
   return {updated,added,cAdd,cUpd};
 };
 
+// Compute a diff (no mutation) between current state and an incoming pipeline bundle — TESTABLE
+const computeSyncDiff = b => {
+  const toUpdate=[],toAdd=[],conflicts=[];
+  const dIndex=new Map();
+  (S.deals||[]).forEach(d=>dIndex.set(d._syncKey||_syncKeyOf(d),d));
+  for(const nd of (b.deals||[])){
+    const key=_syncKeyOf(nd);
+    const cur=dIndex.get(key);
+    if(!cur){ toAdd.push({key,nd}); continue; }
+    const changes=[];
+    if((+cur.value||0)!==(+nd.value||0)) changes.push(['Wert',fmtCHF(cur.value),fmtCHF(nd.value)]);
+    if(cur.stage!==nd.stage) changes.push(['Phase',cur.stage,nd.stage]);
+    if((+cur.prob||0)!==(+nd.prob||0)) changes.push(['Wahr.%',(cur.prob||0)+'%',(nd.prob||0)+'%']);
+    if(!changes.length) continue;
+    if(cur._editedLocal) conflicts.push({key,cur,nd,changes});
+    else toUpdate.push({key,cur,nd,changes});
+  }
+  const cIndex=new Set((S.contacts||[]).map(c=>(c.company||'').toLowerCase().trim()));
+  const cAdd=(b.contacts||[]).filter(c=>c.company&&!cIndex.has((c.company||'').toLowerCase().trim())).length;
+  return {toUpdate,toAdd,conflicts,cAdd};
+};
+
+// Apply a precomputed diff (optionally overwriting locally-edited conflicts) + merge contacts — TESTABLE
+const applySyncDiff = (b, diff, overwriteConflicts) => {
+  if(!S.deals)S.deals=[];if(!S.contacts)S.contacts=[];
+  const applyTo=(cur,nd,key)=>{cur.value=nd.value;cur.stage=nd.stage;cur.prob=nd.prob;cur.industry=nd.industry||cur.industry;cur.note=nd.note||cur.note;cur._kt=nd._kt;cur._kw=nd._kw;cur._dauer=nd._dauer;cur._start=nd._start;cur._akquise=nd._akquise;cur._syncKey=key;cur._src='excel-sync';};
+  let updated=0,added=0,kept=0;
+  diff.toUpdate.forEach(({cur,nd,key})=>{applyTo(cur,nd,key);updated++;});
+  diff.toAdd.forEach(({nd,key})=>{S.deals.push({id:uid(),...nd,_syncKey:key,_src:'excel-sync',contactId:null});added++;});
+  diff.conflicts.forEach(({cur,nd,key})=>{ if(overwriteConflicts){applyTo(cur,nd,key);cur._editedLocal=false;updated++;} else kept++; });
+  // contacts merge
+  let cAdd=0,cUpd=0;
+  const cIndex=new Map(S.contacts.map(c=>[(c.company||'').toLowerCase().trim(),c]));
+  for(const nc of (b.contacts||[])){
+    const k=(nc.company||'').toLowerCase().trim(); if(!k) continue;
+    const cur=cIndex.get(k);
+    if(cur){ ['canton','industry','_kva'].forEach(f=>{if(nc[f]&&nc[f]!==cur[f])cur[f]=nc[f];}); cUpd++; }
+    else { const c={id:uid(),prio:'normal',status:'lead',...nc}; S.contacts.push(c); cIndex.set(k,c); cAdd++; }
+  }
+  const cById=new Map(S.contacts.map(c=>[(c.company||'').toLowerCase().trim(),c.id]));
+  S.deals.forEach(d=>{if(!d.contactId){const id=cById.get((d.company||'').toLowerCase().trim());if(id)d.contactId=id;}});
+  return {updated,added,kept,cAdd,cUpd};
+};
+
+const renderSyncDiff = diff => {
+  const total=diff.toUpdate.length+diff.toAdd.length+diff.conflicts.length;
+  st('sd-summary',`${diff.toUpdate.length} Deals werden aktualisiert · ${diff.toAdd.length} neu · ${diff.cAdd} Kontakte neu${diff.conflicts.length?` · ⚠ ${diff.conflicts.length} Konflikt(e)`:''}`);
+  const cEl=g('sd-conflicts');
+  if(cEl) cEl.innerHTML=diff.conflicts.length?`<div style="background:rgba(255,187,51,.08);border:1px solid rgba(255,187,51,.3);border-radius:var(--rs);padding:.5rem;margin-bottom:.6rem;font-size:11px;"><div style="font-weight:700;color:var(--yel);margin-bottom:.3rem">⚠ Lokal geänderte Deals — Excel weicht ab</div>${diff.conflicts.map(c=>`<div style="padding:.2rem 0;border-bottom:1px solid var(--bdr)">${c.cur.company} — ${c.changes.map(ch=>`${ch[0]}: ${ch[1]}→${ch[2]}`).join(', ')}</div>`).join('')}<label style="display:flex;align-items:center;gap:.3rem;margin-top:.4rem;cursor:pointer"><input type="checkbox" id="sd-overwrite" style="width:auto"> Lokale Änderungen mit Excel überschreiben</label></div>`:'';
+  const list=[...diff.toUpdate,...diff.conflicts];
+  const lEl=g('sd-list');
+  if(lEl) lEl.innerHTML=(list.length?list:[]).map(u=>`<div style="padding:.35rem 0;border-bottom:1px solid var(--bdr);font-size:11px;"><div style="font-weight:600">${u.cur.company}</div>${u.changes.map(ch=>`<span style="color:var(--t2)">${ch[0]}: <span style="color:var(--acc)">${ch[1]}</span> → <span style="color:var(--grn)">${ch[2]}</span></span>`).join(' · ')}</div>`).join('')
+    + (diff.toAdd.length?`<div style="padding:.4rem 0;font-size:11px;color:var(--grn)">+ ${diff.toAdd.length} neue Deals: ${diff.toAdd.slice(0,6).map(a=>a.nd.company).join(', ')}${diff.toAdd.length>6?'…':''}</div>`:'')
+    || '<div style="font-size:11px;color:var(--t2);padding:.5rem">Keine Änderungen — alles aktuell ✓</div>';
+};
+
+const confirmSync = () => {
+  const b=S._syncPending; if(!b){closeM();return;}
+  const diff=computeSyncDiff(b);
+  const ow=g('sd-overwrite'); const overwrite=ow&&ow.checked;
+  const r=applySyncDiff(b,diff,overwrite);
+  localStorage.setItem('mit_sync_last',Date.now());
+  save(); S._syncPending=null; closeM();
+  try{renderDash();}catch(e){}try{renderKanban();}catch(e){}try{renderCtc();}catch(e){}try{renderToday();}catch(e){}try{if(S._mapInit)updateMap();}catch(e){}try{renderKt();}catch(e){}
+  _syncRefreshUI();
+  const log=g('sync-log');const msg=`✓ Sync: ${r.updated} aktualisiert · ${r.added} neu · ${r.kept} Konflikt(e) behalten · ${r.cAdd} Kontakte neu`;
+  if(log)log.textContent=msg;
+  toast(`Sync übernommen: ${r.updated} aktual., ${r.added} neu`,'ok');
+};
+
 const _syncRefreshUI = ()=>{
   const synced=(S.deals||[]).filter(d=>d._src==='excel-sync').length;
   st('sync-deals',synced);
@@ -1866,7 +1985,7 @@ const _ensureHandle = async () => {
   return null;
 };
 
-const syncExcel = async () => {
+const syncExcel = async (silent) => {
   const log=g('sync-log');
   // No handle yet → behave like connect (or fall back to import dialog)
   const h=await _ensureHandle();
@@ -1880,14 +1999,17 @@ const syncExcel = async () => {
     if(log)log.textContent='⏳ Lese Datei…';
     const file=await h.getFile();
     const b=await parsePipelineFile(file);
-    const r=mergeSyncBundle(b);
-    localStorage.setItem('mit_sync_last',Date.now());
-    save();
-    try{renderDash();}catch(e){}try{renderKanban();}catch(e){}try{renderCtc();}catch(e){}try{renderToday();}catch(e){}try{if(S._mapInit)updateMap();}catch(e){}try{renderKt();}catch(e){}
-    _syncRefreshUI();
-    const msg=`✓ Sync ${new Date().toLocaleTimeString('de-CH')}: ${r.updated} Deals aktualisiert · ${r.added} neu · ${r.cAdd} Kontakte neu · ${r.cUpd} aktualisiert`;
-    if(log)log.textContent=msg;
-    toast(`Sync: ${r.updated} aktual., ${r.added} neu`,'ok');
+    S._syncPending=b;
+    const diff=computeSyncDiff(b);
+    const nChanges=diff.toUpdate.length+diff.toAdd.length+diff.conflicts.length;
+    if(nChanges===0){
+      localStorage.setItem('mit_sync_last',Date.now()); _syncRefreshUI();
+      if(log)log.textContent='✓ Bereits aktuell — keine Änderungen ('+new Date().toLocaleTimeString('de-CH')+')';
+      if(!silent)toast('Pipeline ist aktuell ✓','ok'); S._syncPending=null; return;
+    }
+    // Show preview modal (always, unless silent auto-sync with no conflicts → apply directly)
+    if(silent && diff.conflicts.length===0){ confirmSync(); return; }
+    renderSyncDiff(diff); openM('m-syncdiff');
   }catch(e){
     console.error('sync',e);
     if(log)log.textContent='✕ Sync-Fehler: '+e.message;
@@ -1905,10 +2027,19 @@ const disconnectExcel = async () => {
   _syncRefreshUI();
 };
 
+let _syncTimer=null;
+const AUTO_SYNC_MS=10*60*1000; // 10 min
+const _startAutoSyncTimer=()=>{
+  if(_syncTimer){clearInterval(_syncTimer);_syncTimer=null;}
+  if(localStorage.getItem('mit_sync_auto')==='1' && _fsHandle){
+    _syncTimer=setInterval(()=>{ syncExcel(true).catch(()=>{}); }, AUTO_SYNC_MS);
+  }
+};
 const toggleAutoSync = () => {
   const a=g('sync-auto');
   localStorage.setItem('mit_sync_auto', a&&a.checked?'1':'0');
-  toast(a&&a.checked?'Auto-Sync aktiviert':'Auto-Sync aus','info');
+  toast(a&&a.checked?'Auto-Sync aktiviert (alle 10 Min.)':'Auto-Sync aus','info');
+  _startAutoSyncTimer();
 };
 
 // Build the canonical pipeline sheet (array-of-arrays) from current deals — TESTABLE
@@ -1957,7 +2088,7 @@ const initSync = async () => {
     // Auto-sync only if permission is ALREADY granted (avoids a permission prompt/error without a user gesture on page load)
     if(localStorage.getItem('mit_sync_auto')==='1' && _fsHandle && _fsHandle.queryPermission){
       const p=await _fsHandle.queryPermission({mode:'read'});
-      if(p==='granted'){ setTimeout(()=>syncExcel(),800); }
+      if(p==='granted'){ setTimeout(()=>syncExcel(true),800); _startAutoSyncTimer(); }
       else { const log=g('sync-log'); if(log) log.textContent='ℹ Auto-Sync bereit — einmal «Sync» klicken, um den Dateizugriff zu bestätigen.'; }
     }
   }catch(e){ console.warn('initSync',e); }
@@ -1976,6 +2107,7 @@ const renderDash = () => {
   st('k-pipe',fmtCHF(pipe));st('k-won',won);st('k-ctc',S.contacts.length);
   st('k-calls',calls);st('k-wr',tot?Math.round(won/tot*100)+'%':'–');
   try{renderFunnelChart();}catch(e){}try{renderActChart();}catch(e){}
+  try{renderSegChart();}catch(e){}try{renderKtChart();}catch(e){}try{renderHistChart();}catch(e){}
   const feed=g('dash-feed');
   if(feed){
     const r=(S.acts||[]).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,6);
@@ -1984,11 +2116,41 @@ const renderDash = () => {
   const de=g('dash-deals');
   if(de){
     const td=deals.filter(d=>d.stage!=='won'&&d.stage!=='lost').sort((a,b)=>(+b.value||0)-(+a.value||0)).slice(0,5);
-    de.innerHTML=td.length?td.map(d=>`<div style="display:flex;justify-content:space-between;padding:.38rem 0;border-bottom:1px solid var(--bdr);font-size:12px;"><div><div style="font-weight:600">${d.company}</div><div style="font-size:10px;color:var(--t2)">${d.stage}</div></div><div style="font-weight:700;color:var(--grn);font-family:var(--fh)">${d.value?fmtCHF(d.value):'–'}</div></div>`).join(''):'<div class="empty"><div class="eico">🎯</div><p>Keine Deals</p></div>';
+    de.innerHTML=td.length?td.map(d=>`<div onclick="openDealView('${d.id}')" style="display:flex;justify-content:space-between;padding:.38rem 0;border-bottom:1px solid var(--bdr);font-size:12px;cursor:pointer"><div><div style="font-weight:600">${d.company}</div><div style="font-size:10px;color:var(--t2)">${d.stage}</div></div><div style="font-weight:700;color:var(--grn);font-family:var(--fh)">${d.value?fmtCHF(d.value):'–'}</div></div>`).join(''):'<div class="empty"><div class="eico">🎯</div><p>Keine Deals</p></div>';
   }
 };
 const renderFunnelChart=()=>{try{const c=g('ch-funnel');if(!c)return;const s=['prospecting','qualified','proposal','negotiation'];const l=['Prospecting','Qualified','Proposal','Negotiation'];const v=s.map(x=>(S.deals||[]).filter(d=>d.stage===x).length);if(window._cf)window._cf.destroy();window._cf=new Chart(c,{type:'bar',data:{labels:l,datasets:[{data:v,backgroundColor:['#4b9ef8','#9b59f5','#f5a623','#e63329'],borderRadius:4}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{color:'#5d7faa',stepSize:1},grid:{color:'rgba(255,255,255,.04)'}},x:{ticks:{color:'#5d7faa'},grid:{display:false}}}}});}catch(e){}};
 const renderActChart=()=>{try{const c=g('ch-act');if(!c)return;const l=[],v=[];for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const ds=d.toISOString().slice(0,10);l.push(ds.slice(5));v.push((S.acts||[]).filter(a=>a.date===ds).length);}if(window._ca)window._ca.destroy();window._ca=new Chart(c,{type:'bar',data:{labels:l,datasets:[{data:v,backgroundColor:'#e63329',borderRadius:3}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{color:'#5d7faa',stepSize:1},grid:{color:'rgba(255,255,255,.04)'}},x:{ticks:{color:'#5d7faa'},grid:{display:false}}}}});}catch(e){}};
+
+// Aggregate deal volume by a key (offene + gewonnene Deals zählen)
+const _volBy = keyFn => {
+  const m={};
+  (S.deals||[]).filter(d=>d.stage!=='lost').forEach(d=>{const k=keyFn(d)||'—';m[k]=(m[k]||0)+(+d.value||0);});
+  return Object.entries(m).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+};
+const _CHART_COLS=['#e63329','#00e5a0','#4b9ef8','#ffbb33','#a66ef5','#00d4f5','#f03e9e','#7facc8'];
+const renderSegChart=()=>{try{const c=g('ch-seg');if(!c)return;const data=_volBy(d=>d.industry).slice(0,8);if(window._cs)window._cs.destroy();window._cs=new Chart(c,{type:'doughnut',data:{labels:data.map(d=>d[0].slice(0,22)),datasets:[{data:data.map(d=>d[1]),backgroundColor:_CHART_COLS,borderWidth:0}]},options:{responsive:true,plugins:{legend:{position:'right',labels:{color:'#5d7faa',font:{size:10},boxWidth:10}},tooltip:{callbacks:{label:ctx=>' '+fmtCHF(ctx.parsed)}}}}});}catch(e){}};
+const renderKtChart=()=>{try{const c=g('ch-kt');if(!c)return;const data=_volBy(d=>d._kt||d._canton).slice(0,8);if(window._ck)window._ck.destroy();window._ck=new Chart(c,{type:'bar',data:{labels:data.map(d=>d[0]),datasets:[{data:data.map(d=>d[1]),backgroundColor:'#4b9ef8',borderRadius:3}]},options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+fmtCHF(ctx.parsed.x)}}},scales:{x:{beginAtZero:true,ticks:{color:'#5d7faa',callback:v=>(v/1000)+'k'},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'#5d7faa'},grid:{display:false}}}}});}catch(e){}};
+
+// Pipeline-Verlauf aus IndexedDB-Snapshots
+const renderHistChart=async()=>{
+  const c=g('ch-hist');if(!c)return;
+  let snaps=[];try{snaps=(await idbAll()).sort((a,b)=>a.ts-b.ts);}catch(e){}
+  // Build series: pipeline value (open) per snapshot
+  const pts=snaps.map(s=>{try{const d=JSON.parse(s.data);const pipe=(d.deals||[]).filter(x=>x.stage!=='won'&&x.stage!=='lost').reduce((a,x)=>a+(+x.value||0),0);const won=(d.deals||[]).filter(x=>x.stage==='won').reduce((a,x)=>a+(+x.value||0),0);return{ts:s.ts,pipe,won};}catch(e){return null;}}).filter(Boolean);
+  // Always append current live state as the last point
+  const nowPipe=(S.deals||[]).filter(x=>x.stage!=='won'&&x.stage!=='lost').reduce((a,x)=>a+(+x.value||0),0);
+  const nowWon=(S.deals||[]).filter(x=>x.stage==='won').reduce((a,x)=>a+(+x.value||0),0);
+  pts.push({ts:Date.now(),pipe:nowPipe,won:nowWon});
+  const info=g('hist-info');
+  if(pts.length<2){if(info)info.textContent='Mehr Snapshots = aussagekräftiger Verlauf (📸 im 🗄️-Menü)';}else if(info)info.textContent=pts.length+' Datenpunkte';
+  const labels=pts.map(p=>new Date(p.ts).toLocaleDateString('de-CH',{day:'2-digit',month:'2-digit'}));
+  if(window._chh)window._chh.destroy();
+  window._chh=new Chart(c,{type:'line',data:{labels,datasets:[
+    {label:'Offene Pipeline',data:pts.map(p=>p.pipe),borderColor:'#4b9ef8',backgroundColor:'rgba(75,158,248,.1)',fill:true,tension:.3,pointRadius:3},
+    {label:'Gewonnen (kumuliert)',data:pts.map(p=>p.won),borderColor:'#00e5a0',backgroundColor:'rgba(0,229,160,.08)',fill:true,tension:.3,pointRadius:3}
+  ]},options:{responsive:true,plugins:{legend:{labels:{color:'#5d7faa',font:{size:11},boxWidth:12}},tooltip:{callbacks:{label:ctx=>' '+ctx.dataset.label+': '+fmtCHF(ctx.parsed.y)}}},scales:{y:{beginAtZero:true,ticks:{color:'#5d7faa',callback:v=>(v/1000)+'k'},grid:{color:'rgba(255,255,255,.04)'}},x:{ticks:{color:'#5d7faa'},grid:{display:false}}}}});
+};
 
 // ── LEAD SCORING (offline) ─────────────────────────────────────
 const daysSince=iso=>{if(!iso)return 99999;const t=new Date(iso).getTime();if(!isFinite(t))return 99999;return Math.floor((Date.now()-t)/864e5);};
@@ -2083,11 +2245,49 @@ const renderKanban=()=>{
   const nb=g('nb-pipe');if(nb){const n=S.deals.filter(d=>d.stage!=='won'&&d.stage!=='lost').length;nb.textContent=n;nb.style.display=n?'':'none';}
   el.innerHTML=ST.map(s=>{
     const cs=(S.deals||[]).filter(d=>d.stage===s.k);
-    return `<div class="kcol"><div class="kch" style="background:${s.c}22;color:${s.c}"><span>${s.l}</span><span>${cs.length}</span></div><div class="kcb">${cs.map(d=>`<div class="kcard" onclick="openDeal('${d.id}')"><div style="font-size:12px;font-weight:600">${d.company||d.title}</div>${d.value?`<div style="font-size:11px;color:var(--grn);font-family:var(--fh)">${fmtCHF(d.value)}</div>`:''}<div style="font-size:10px;color:var(--t2);margin-top:.15rem">${d.prob||0}% · ${(d.note||'').slice(0,30)}</div></div>`).join('')}</div></div>`;
+    return `<div class="kcol"><div class="kch" style="background:${s.c}22;color:${s.c}"><span>${s.l}</span><span>${cs.length}</span></div><div class="kcb">${cs.map(d=>`<div class="kcard" onclick="openDealView('${d.id}')"><div style="font-size:12px;font-weight:600">${d.company||d.title}${d._editedLocal?' <span title="lokal geändert" style="color:var(--yel)">✎</span>':''}${d._src==='excel-sync'?' <span title="aus Excel" style="color:var(--blu)">🔗</span>':''}</div>${d.value?`<div style="font-size:11px;color:var(--grn);font-family:var(--fh)">${fmtCHF(d.value)}</div>`:''}<div style="font-size:10px;color:var(--t2);margin-top:.15rem">${d.prob||0}% · ${(d.note||'').slice(0,30)}</div></div>`).join('')}</div></div>`;
   }).join('');
 };
 const openDeal=(id)=>{S._editDeal=id?(S.deals||[]).find(d=>d.id===id):null;const d=S._editDeal;sv('d-title',d?.title||'');sv('d-co',d?.company||'');sv('d-val',d?.value||'');sv('d-stage',d?.stage||'prospecting');sv('d-prob',d?.prob||20);sv('d-note',d?.note||'');g('m-deal-t').textContent=d?'Deal bearbeiten':'Neuer Deal';openM('m-deal');};
-const saveDeal=()=>{const t=gv('d-title');if(!t){toast('Titel fehlt','warn');return;}if(!S.deals)S.deals=[];const d={id:S._editDeal?.id||uid(),title:t,company:gv('d-co'),value:+gv('d-val')||0,stage:gv('d-stage'),prob:+gv('d-prob')||20,note:gv('d-note')};if(S._editDeal){const i=S.deals.findIndex(x=>x.id===d.id);if(i>=0)S.deals[i]=d;}else S.deals.push(d);save();renderKanban();renderDash();closeM();toast('Deal gespeichert','ok');};
+const saveDeal=()=>{const t=gv('d-title');if(!t){toast('Titel fehlt','warn');return;}if(!S.deals)S.deals=[];const ex=S._editDeal;const d={id:ex?.id||uid(),title:t,company:gv('d-co'),value:+gv('d-val')||0,stage:gv('d-stage'),prob:+gv('d-prob')||20,note:gv('d-note')};if(ex){// preserve sync metadata + flag local edit
+  d._syncKey=ex._syncKey;d._src=ex._src;d.contactId=ex.contactId;d._kt=ex._kt;d._kw=ex._kw;d._dauer=ex._dauer;d._start=ex._start;d._akquise=ex._akquise;d.industry=gv('d-co')?ex.industry:ex.industry;
+  if(ex._src==='excel-sync')d._editedLocal=true;
+  const i=S.deals.findIndex(x=>x.id===d.id);if(i>=0)S.deals[i]=d;}else S.deals.push(d);save();renderKanban();renderDash();closeM();toast('Deal gespeichert','ok');};
+
+// Deal detail view (read-focused, with linked contact/activities/positions)
+const openDealView=(id)=>{
+  const d=(S.deals||[]).find(x=>x.id===id);if(!d){openDeal(id);return;}
+  const STG={prospecting:'Prospecting',qualified:'Qualified',proposal:'Proposal',negotiation:'Negotiation',won:'Won ✅',lost:'Lost ❌'};
+  const ct=d.contactId?(S.contacts||[]).find(c=>c.id===d.contactId):(S.contacts||[]).find(c=>(c.company||'').toLowerCase()===(d.company||'').toLowerCase());
+  const acts=(S.acts||[]).filter(a=>(a.who||'').toLowerCase()===(d.company||'').toLowerCase()).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const tasks=(S.tasks||[]).filter(t=>(t.company||'').toLowerCase()===(d.company||'').toLowerCase());
+  st('dv-title',d.company||d.title);
+  const row=(l,v)=>v?`<div style="display:flex;justify-content:space-between;padding:.3rem 0;border-bottom:1px solid var(--bdr);font-size:12px;"><span style="color:var(--t2)">${l}</span><span style="font-weight:600;text-align:right">${v}</span></div>`:'';
+  const flags=[d._src==='excel-sync'?'<span class="tg tb2" style="font-size:10px">🔗 Excel-Sync</span>':'',d._editedLocal?'<span class="tg ty" style="font-size:10px">✎ lokal geändert</span>':''].filter(Boolean).join(' ');
+  g('dv-body').innerHTML=`
+    <div style="margin-bottom:.6rem">${flags}</div>
+    ${row('Titel',d.title)}
+    ${row('Wert',d.value?fmtCHF(d.value):'–')}
+    ${row('Phase',`<span class="tg" style="background:var(--bg3)">${STG[d.stage]||d.stage}</span>`)}
+    ${row('Wahrscheinlichkeit',(d.prob!=null?d.prob+'%':'–'))}
+    ${row('Segment',d.industry)}
+    ${row('Kanton',d._kt)}
+    ${row('Leistung',d._kw?d._kw+' kW':'')}
+    ${row('Dauer',d._dauer?d._dauer+' Tage':'')}
+    ${row('Start',d._start)}
+    ${row('Akquise',d._akquise)}
+    ${d.note?`<div style="margin:.5rem 0;padding:.5rem;background:var(--bg2);border-radius:var(--rs);font-size:11px;color:var(--t2);white-space:pre-wrap">${d.note}</div>`:''}
+    <div class="sep"></div>
+    <div style="font-family:var(--fh);font-weight:700;font-size:.85rem;text-transform:uppercase;margin-bottom:.4rem">👤 Kontakt</div>
+    ${ct?`<div class="ncard" onclick="closeM();openCtc('${ct.id}')" style="margin-bottom:.5rem"><div style="font-weight:600;font-size:12px">${ct.company}</div><div style="font-size:11px;color:var(--t2)">${[ct.name,ct.role,ct.tel].filter(Boolean).join(' · ')||'keine Details'}</div><div style="font-size:10px;color:var(--blu);margin-top:.2rem">Lead-Score ${leadScore(ct)} → öffnen</div></div>`:'<div style="font-size:11px;color:var(--t2)">Kein verknüpfter Kontakt</div>'}
+    <div style="font-family:var(--fh);font-weight:700;font-size:.85rem;text-transform:uppercase;margin:.6rem 0 .4rem">📋 Aufgaben (${tasks.length})</div>
+    ${tasks.length?tasks.map(t=>`<div style="font-size:11px;padding:.25rem 0;border-bottom:1px solid var(--bdr)">${t.done?'✅':'⬜'} ${t.title}${t.due?' · '+t.due:''}</div>`).join(''):'<div style="font-size:11px;color:var(--t2)">Keine Aufgaben</div>'}
+    <div style="font-family:var(--fh);font-weight:700;font-size:.85rem;text-transform:uppercase;margin:.6rem 0 .4rem">🕑 Aktivitäten (${acts.length})</div>
+    ${acts.length?acts.slice(0,8).map(a=>`<div style="font-size:11px;padding:.25rem 0;border-bottom:1px solid var(--bdr)"><span style="color:var(--t2)">${a.date}</span> · ${a.type} ${a.res?'· '+a.res:''}</div>`).join(''):'<div style="font-size:11px;color:var(--t2)">Keine Aktivitäten</div>'}
+  `;
+  const eb=g('dv-edit');if(eb)eb.onclick=()=>{closeM();openDeal(id);};
+  openM('m-dealview');
+};
 
 // ── CONTACTS ───────────────────────────────────────────────────
 const renderCtc=()=>{
@@ -2478,8 +2678,17 @@ try{window.disconnectExcel=disconnectExcel;}catch(_){}
 try{window.toggleAutoSync=toggleAutoSync;}catch(_){}
 try{window.exportPipelineXLSX=exportPipelineXLSX;}catch(_){}
 try{window.mergeSyncBundle=mergeSyncBundle;}catch(_){}
+try{window.computeSyncDiff=computeSyncDiff;}catch(_){}
+try{window.applySyncDiff=applySyncDiff;}catch(_){}
+try{window.renderSyncDiff=renderSyncDiff;}catch(_){}
+try{window.confirmSync=confirmSync;}catch(_){}
 try{window.buildPipelineSheet=buildPipelineSheet;}catch(_){}
 try{window.initSync=initSync;}catch(_){}
+try{window.openDealView=openDealView;}catch(_){}
+try{window.renderSegChart=renderSegChart;}catch(_){}
+try{window.renderKtChart=renderKtChart;}catch(_){}
+try{window.renderHistChart=renderHistChart;}catch(_){}
+try{window.ocrPDF=ocrPDF;}catch(_){}
 try{window.renderActChart=renderActChart;}catch(_){}
 try{window.renderAngPos=renderAngPos;}catch(_){}
 try{window.renderComp=renderComp;}catch(_){}
