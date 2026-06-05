@@ -51,6 +51,7 @@ Professionelles, vollständig browserbasiertes CRM in einer einzigen HTML-Datei.
 - Live-Vorschau zeigt, was importiert wird (Counts pro Kategorie), bevor man bestätigt
 - Drag-&-Drop oder Klick
 - IndexedDB-Auto-Backup mit Wiederherstellung (siehe oben)
+- **Live-Excel-Sync** (Dashboard-Panel + Header-Button „🔄 Sync"): Excel-Pipeline-Datei einmal verbinden (File System Access API, Chrome/Edge), danach genügt ein Klick, um die Datei neu einzulesen und Deals/Kontakte/Dashboards **bidirektional** abzugleichen — bestehende Deals werden aktualisiert (idempotent, keine Duplikate), neue hinzugefügt. „→ Pipeline nach Excel schreiben" exportiert den aktuellen Stand zurück in dieselbe Datei (oder als Download). Optional Auto-Sync beim Start. Browser ohne die API fallen automatisch auf den Datei-Dialog zurück.
 - Volltext-Suche (Ctrl+K)
 - Light/Dark-Theme
 - Anthropic Claude API für alle KI-Funktionen

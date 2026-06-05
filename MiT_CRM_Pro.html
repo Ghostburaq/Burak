@@ -220,6 +220,7 @@ tbody td{padding:.48rem .75rem;font-size:12px;}
   <div class="srch"><span class="si">🔍</span><input id="si" placeholder="Suchen… Ctrl+K" autocomplete="off" oninput="doSearch(this.value)"></div>
   <div class="hdr-r">
     <button class="hbtn" id="install-btn" onclick="doInstall()" style="display:none">⬇ Installieren</button>
+    <button class="hbtn" id="sync-btn" onclick="syncExcel()" title="Mit verbundener Excel-Liste synchronisieren"><span id="sync-dot" class="adot"></span> 🔄 Sync</button>
     <button class="hbtn" id="backup-btn" onclick="openBackup()" title="Backups & Wiederherstellung">🗄️</button>
     <div class="adot" id="adot"></div>
     <input type="password" id="akey" placeholder="sk-ant-… API Key" autocomplete="off">
@@ -270,6 +271,29 @@ tbody td{padding:.48rem .75rem;font-size:12px;}
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
     <div class="pgtitle" style="margin:0">Dashboard <span id="dgreet"></span></div>
     <button class="btn bgrn" onclick="openImport()">📥 Excel / CSV importieren</button>
+  </div>
+  <!-- LIVE EXCEL SYNC -->
+  <div class="card" id="sync-panel" style="margin-bottom:1rem;border-color:var(--bdr2);">
+    <div class="ch" style="background:linear-gradient(90deg,rgba(0,229,160,.06),transparent)">
+      <span class="ct">🔗 Live-Verbindung · Excel-Pipeline</span>
+      <span id="sync-status" style="font-size:11px;color:var(--t2)">nicht verbunden</span>
+    </div>
+    <div class="cb">
+      <div style="display:flex;gap:1.2rem;flex-wrap:wrap;margin-bottom:.7rem;">
+        <div><div style="font-family:var(--fh);font-size:1.3rem;font-weight:800;" id="sync-file">—</div><div style="font-size:9px;color:var(--t2);text-transform:uppercase;letter-spacing:1px;">Verbundene Datei</div></div>
+        <div><div style="font-family:var(--fh);font-size:1.3rem;font-weight:800;color:var(--blu)" id="sync-last">nie</div><div style="font-size:9px;color:var(--t2);text-transform:uppercase;letter-spacing:1px;">Letzter Sync</div></div>
+        <div><div style="font-family:var(--fh);font-size:1.3rem;font-weight:800;color:var(--grn)" id="sync-deals">0</div><div style="font-size:9px;color:var(--t2);text-transform:uppercase;letter-spacing:1px;">Synchron. Deals</div></div>
+      </div>
+      <div class="brow">
+        <button class="btn bp" onclick="connectExcel()" id="sync-connect">🔌 Excel-Datei verbinden</button>
+        <button class="btn bgrn" onclick="syncExcel()" id="sync-now" style="display:none">🔄 Jetzt synchronisieren</button>
+        <button class="btn bs" onclick="exportPipelineXLSX()" id="sync-write" style="display:none">→ Pipeline nach Excel schreiben</button>
+        <button class="btn bg sm" onclick="disconnectExcel()" id="sync-disc" style="display:none">✕ Trennen</button>
+        <label style="display:flex;align-items:center;gap:.3rem;font-size:11px;color:var(--t2);margin-left:auto;cursor:pointer;"><input type="checkbox" id="sync-auto" style="width:auto" onchange="toggleAutoSync()"> Auto-Sync beim Start</label>
+      </div>
+      <div id="sync-log" style="font-size:11px;color:var(--t2);margin-top:.6rem;"></div>
+      <div id="sync-hint" style="font-size:10px;color:var(--t3);margin-top:.35rem;"></div>
+    </div>
   </div>
   <!-- IMPORT CTA – shown when empty -->
   <div id="imp-cta" onclick="openImport()" ondragover="event.preventDefault();this.style.borderColor='var(--grn)'" ondragleave="this.style.borderColor='rgba(0,229,160,.4)'" ondrop="event.preventDefault();this.style.borderColor='rgba(0,229,160,.4)';handleDrop(event)" style="border:2px dashed rgba(0,229,160,.4);border-radius:var(--r);padding:1.4rem;text-align:center;margin-bottom:1rem;cursor:pointer;background:rgba(0,229,160,.03);transition:all .2s;">
@@ -1746,6 +1770,199 @@ const doImport2 = () => {
 // Replace global
 window.doImport = doImport2;
 
+// ════════════════════════════════════════════════════════════════
+// LIVE EXCEL SYNC — File System Access API (Chromium) + fallback
+// ════════════════════════════════════════════════════════════════
+const FS_SUPPORTED = typeof window!=='undefined' && 'showOpenFilePicker' in window;
+let _fsHandle=null;
+
+// Tiny dedicated IDB for the file handle (separate from backups)
+const _fsIdb=()=>new Promise((res,rej)=>{
+  if(!window.indexedDB)return rej(new Error('IndexedDB fehlt'));
+  const r=indexedDB.open('mit_crm_fs',1);
+  r.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains('h'))db.createObjectStore('h');};
+  r.onsuccess=e=>res(e.target.result); r.onerror=e=>rej(e.target.error);
+});
+const _fsPut=async(k,v)=>{const db=await _fsIdb();return new Promise((res,rej)=>{const tx=db.transaction('h','readwrite');tx.objectStore('h').put(v,k);tx.oncomplete=()=>res();tx.onerror=e=>rej(e.target.error);});};
+const _fsGet=async k=>{const db=await _fsIdb();return new Promise((res,rej)=>{const tx=db.transaction('h','readonly');const rq=tx.objectStore('h').get(k);rq.onsuccess=()=>res(rq.result);rq.onerror=e=>rej(e.target.error);});};
+const _fsDel=async k=>{const db=await _fsIdb();return new Promise((res,rej)=>{const tx=db.transaction('h','readwrite');tx.objectStore('h').delete(k);tx.oncomplete=()=>res();tx.onerror=e=>rej(e.target.error);});};
+
+// Stable key for matching a deal/contact between Excel and CRM
+const _syncKeyOf = o => (String(o.company||o.title||'').toLowerCase().replace(/[^a-z0-9äöü]/gi,'').slice(0,28)+'|'+String(o._kva||o.note||'').toLowerCase().replace(/[^a-z0-9]/gi,'').slice(0,10));
+
+// Merge a freshly parsed pipeline bundle into S — UPDATE existing, ADD new
+const mergeSyncBundle = b => {
+  if(!b) return {updated:0,added:0,cAdd:0,cUpd:0};
+  if(!S.deals)S.deals=[];if(!S.contacts)S.contacts=[];
+  let updated=0,added=0,cAdd=0,cUpd=0;
+  // Index existing synced/known deals by key
+  const dIndex=new Map();
+  S.deals.forEach(d=>{dIndex.set(d._syncKey||_syncKeyOf(d),d);});
+  for(const nd of b.deals){
+    const key=_syncKeyOf(nd);
+    const cur=dIndex.get(key);
+    if(cur){
+      // update mutable fields, keep id/contactId/manual notes flag
+      cur.value=nd.value; cur.stage=nd.stage; cur.prob=nd.prob;
+      cur.industry=nd.industry||cur.industry;
+      cur.note=nd.note||cur.note; cur._kt=nd._kt; cur._kw=nd._kw; cur._dauer=nd._dauer; cur._start=nd._start; cur._akquise=nd._akquise;
+      cur._syncKey=key; cur._src='excel-sync';
+      updated++;
+    } else {
+      S.deals.push({id:uid(),...nd,_syncKey:key,_src:'excel-sync',contactId:null});
+      added++;
+    }
+  }
+  // Contacts merge (update canton/segment/kva, add new)
+  const cIndex=new Map(S.contacts.map(c=>[(c.company||'').toLowerCase().trim(),c]));
+  for(const nc of b.contacts){
+    const k=(nc.company||'').toLowerCase().trim(); if(!k) continue;
+    const cur=cIndex.get(k);
+    if(cur){ ['canton','industry','_kva'].forEach(f=>{if(nc[f]&&nc[f]!==cur[f]){cur[f]=nc[f];}}); cUpd++; }
+    else { const c={id:uid(),prio:'normal',status:'lead',...nc}; S.contacts.push(c); cIndex.set(k,c); cAdd++; }
+  }
+  // Relink deals → contacts
+  const cById=new Map(S.contacts.map(c=>[(c.company||'').toLowerCase().trim(),c.id]));
+  S.deals.forEach(d=>{if(!d.contactId){const id=cById.get((d.company||'').toLowerCase().trim());if(id)d.contactId=id;}});
+  return {updated,added,cAdd,cUpd};
+};
+
+const _syncRefreshUI = ()=>{
+  const synced=(S.deals||[]).filter(d=>d._src==='excel-sync').length;
+  st('sync-deals',synced);
+  const last=+localStorage.getItem('mit_sync_last')||0;
+  st('sync-last',last?new Date(last).toLocaleTimeString('de-CH',{hour:'2-digit',minute:'2-digit'}):'nie');
+  const fn=localStorage.getItem('mit_sync_file')||'';
+  st('sync-file',fn?fn.replace(/\.xlsx?$/i,'').slice(0,16):'—');
+  const connected=!!_fsHandle;
+  const dot=g('sync-dot');if(dot)dot.className='adot'+(connected?' ok':'');
+  st('sync-status',connected?'verbunden':'nicht verbunden');
+  ['sync-now','sync-write','sync-disc'].forEach(id=>{const e=g(id);if(e)e.style.display=connected?'':'none';});
+  const con=g('sync-connect');if(con)con.style.display=connected?'none':'';
+  const hint=g('sync-hint');
+  if(hint)hint.textContent=FS_SUPPORTED?'Tipp: Verbinde die Excel-Datei einmal — danach genügt ein Klick auf «Sync» (auch im Header). Funktioniert in Chrome/Edge.':'⚠ Dein Browser unterstützt keine Live-Dateiverbindung (nur Chrome/Edge). «Sync» öffnet den Datei-Dialog.';
+};
+
+const connectExcel = async () => {
+  if(!FS_SUPPORTED){ openImport(); return; }
+  try{
+    const [h]=await window.showOpenFilePicker({types:[{description:'Excel',accept:{'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':['.xlsx'],'application/vnd.ms-excel':['.xls']}}]});
+    _fsHandle=h;
+    await _fsPut('pipeline',h);
+    localStorage.setItem('mit_sync_file',h.name);
+    toast('Excel verbunden: '+h.name,'ok');
+    _syncRefreshUI();
+    await syncExcel();
+  }catch(e){ if(e.name!=='AbortError') toast('Verbindung abgebrochen: '+e.message,'warn'); }
+};
+
+const _ensureHandle = async () => {
+  if(_fsHandle) return _fsHandle;
+  if(!FS_SUPPORTED) return null;
+  try{
+    const h=await _fsGet('pipeline');
+    if(h){ _fsHandle=h; return h; }
+  }catch(_){}
+  return null;
+};
+
+const syncExcel = async () => {
+  const log=g('sync-log');
+  // No handle yet → behave like connect (or fall back to import dialog)
+  const h=await _ensureHandle();
+  if(!h){ if(FS_SUPPORTED){ return connectExcel(); } openImport(); return; }
+  try{
+    // Re-grant permission if needed
+    if(h.queryPermission){
+      let p=await h.queryPermission({mode:'read'});
+      if(p!=='granted'){ p=await h.requestPermission({mode:'read'}); if(p!=='granted'){ toast('Lesezugriff verweigert','err'); return; } }
+    }
+    if(log)log.textContent='⏳ Lese Datei…';
+    const file=await h.getFile();
+    const b=await parsePipelineFile(file);
+    const r=mergeSyncBundle(b);
+    localStorage.setItem('mit_sync_last',Date.now());
+    save();
+    try{renderDash();}catch(e){}try{renderKanban();}catch(e){}try{renderCtc();}catch(e){}try{renderToday();}catch(e){}try{if(S._mapInit)updateMap();}catch(e){}try{renderKt();}catch(e){}
+    _syncRefreshUI();
+    const msg=`✓ Sync ${new Date().toLocaleTimeString('de-CH')}: ${r.updated} Deals aktualisiert · ${r.added} neu · ${r.cAdd} Kontakte neu · ${r.cUpd} aktualisiert`;
+    if(log)log.textContent=msg;
+    toast(`Sync: ${r.updated} aktual., ${r.added} neu`,'ok');
+  }catch(e){
+    console.error('sync',e);
+    if(log)log.textContent='✕ Sync-Fehler: '+e.message;
+    toast('Sync fehlgeschlagen: '+e.message,'err');
+  }
+};
+
+const disconnectExcel = async () => {
+  _fsHandle=null;
+  try{await _fsDel('pipeline');}catch(_){}
+  localStorage.removeItem('mit_sync_file');
+  localStorage.removeItem('mit_sync_auto');
+  const a=g('sync-auto');if(a)a.checked=false;
+  toast('Excel-Verbindung getrennt','info');
+  _syncRefreshUI();
+};
+
+const toggleAutoSync = () => {
+  const a=g('sync-auto');
+  localStorage.setItem('mit_sync_auto', a&&a.checked?'1':'0');
+  toast(a&&a.checked?'Auto-Sync aktiviert':'Auto-Sync aus','info');
+};
+
+// Build the canonical pipeline sheet (array-of-arrays) from current deals — TESTABLE
+const buildPipelineSheet = () => {
+  const hdr=['#','Kunde / Unternehmen','Kt.','Segment','Leistung / Fleet','kW','Dauer','Start','Volumen CHF','Status','Wahr. %','Akquise Typ'];
+  const STAGE2LBL={won:'WON',lost:'Lost',proposal:'Offerte',negotiation:'Negotiation',qualified:'Follow-Up',prospecting:'To Offer'};
+  const rows=(S.deals||[]).map((d,i)=>[
+    i+1, d.company||d.title||'', d._kt||'', d.industry||'',
+    (d.title||'').replace((d.company||'')+' — ','')||d._leist||'',
+    d._kw||'', d._dauer||'', d._start||'',
+    d.value||0, STAGE2LBL[d.stage]||d.stage||'', (d.prob!=null?d.prob+'%':''), d._akquise||''
+  ]);
+  return [hdr,...rows];
+};
+
+const exportPipelineXLSX = async () => {
+  if(!(await _waitFor('XLSX'))){toast('SheetJS nicht geladen','err');return;}
+  const aoa=buildPipelineSheet();
+  const ws=XLSX.utils.aoa_to_sheet(aoa);
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'MiT Strom Pipeline');
+  // Try to write back to the connected handle if write permission available
+  const h=await _ensureHandle();
+  if(h && h.createWritable){
+    try{
+      let p=await h.queryPermission({mode:'readwrite'});
+      if(p!=='granted') p=await h.requestPermission({mode:'readwrite'});
+      if(p==='granted'){
+        const buf=XLSX.write(wb,{type:'array',bookType:'xlsx'});
+        const w=await h.createWritable(); await w.write(buf); await w.close();
+        toast('✓ Pipeline in verbundene Excel geschrieben','ok'); return;
+      }
+    }catch(e){ console.warn('writeback failed, falling back to download',e); }
+  }
+  // Fallback: download
+  XLSX.writeFile(wb,`MiT_Pipeline_${today()}.xlsx`);
+  toast('Pipeline als XLSX exportiert','ok');
+};
+
+const initSync = async () => {
+  try{
+    const fn=localStorage.getItem('mit_sync_file');
+    if(fn && FS_SUPPORTED){ await _ensureHandle(); }
+    const a=g('sync-auto'); if(a) a.checked=localStorage.getItem('mit_sync_auto')==='1';
+    _syncRefreshUI();
+    // Auto-sync only if permission is ALREADY granted (avoids a permission prompt/error without a user gesture on page load)
+    if(localStorage.getItem('mit_sync_auto')==='1' && _fsHandle && _fsHandle.queryPermission){
+      const p=await _fsHandle.queryPermission({mode:'read'});
+      if(p==='granted'){ setTimeout(()=>syncExcel(),800); }
+      else { const log=g('sync-log'); if(log) log.textContent='ℹ Auto-Sync bereit — einmal «Sync» klicken, um den Dateizugriff zu bestätigen.'; }
+    }
+  }catch(e){ console.warn('initSync',e); }
+};
+
 // ── DASHBOARD ──────────────────────────────────────────────────
 const renderDash = () => {
   const hr=new Date().getHours();
@@ -2159,6 +2376,8 @@ document.addEventListener('DOMContentLoaded', () => {
   try { initPWA(); } catch(e) {}
   try { checkExportReminder(); } catch(e) {}
   try { renderToday(); } catch(e) {}
+  // Live Excel sync
+  try { initSync(); } catch(e) {}
   // Keyboard shortcuts
   document.addEventListener('keydown', e => {
     if((e.ctrlKey||e.metaKey)&&e.key==='k'){e.preventDefault();const si=g('si');if(si)si.focus();}
@@ -2253,6 +2472,14 @@ try{window.extractPDFText=extractPDFText;}catch(_){}
 try{window.parseBestellungText=parseBestellungText;}catch(_){}
 try{window.parseProjectDOCX=parseProjectDOCX;}catch(_){}
 try{window.renderBundlePreview=renderBundlePreview;}catch(_){}
+try{window.connectExcel=connectExcel;}catch(_){}
+try{window.syncExcel=syncExcel;}catch(_){}
+try{window.disconnectExcel=disconnectExcel;}catch(_){}
+try{window.toggleAutoSync=toggleAutoSync;}catch(_){}
+try{window.exportPipelineXLSX=exportPipelineXLSX;}catch(_){}
+try{window.mergeSyncBundle=mergeSyncBundle;}catch(_){}
+try{window.buildPipelineSheet=buildPipelineSheet;}catch(_){}
+try{window.initSync=initSync;}catch(_){}
 try{window.renderActChart=renderActChart;}catch(_){}
 try{window.renderAngPos=renderAngPos;}catch(_){}
 try{window.renderComp=renderComp;}catch(_){}
