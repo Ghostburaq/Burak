@@ -58,6 +58,11 @@ Professionelles, vollständig browserbasiertes CRM in einer einzigen HTML-Datei.
 - **Deal-Detailansicht**: Klick auf einen Deal (Kanban/Dashboard) öffnet eine Vollansicht mit allen Feldern, verknüpftem Kontakt (inkl. Lead-Score), Aufgaben und Aktivitäts-Timeline.
 - **Dashboard-Auswertungen**: Volumen nach Segment (Doughnut), Volumen nach Kanton (Top 8), und Pipeline-Verlauf über Zeit (offene Pipeline + kumuliert Gewonnen, aus den IndexedDB-Snapshots).
 - **Scan-PDF-OCR**: gescannte Bestell-/Rechnungs-PDFs ohne Textebene werden per Claude Vision automatisch ausgelesen (Kunde, Positionen, Total) und verteilt — benötigt API-Key.
+- **Margin-Watchdog**: liest Equip/Transport/Treibstoff/Technik/Übrige/Marge-Spalten aus dem Pipeline-Excel mit, zeigt Ø-Marge als KPI, listet Risiko-Deals unter konfigurierbarer Schwelle (Default 15 %) und zeigt die Margen-Aufschlüsselung in der Deal-Detailansicht; der Sync-Diff flaggt auch Margen-Änderungen.
+- **Document Library**: an jeden Deal beliebig viele Dateien anhängen (PDF/DOCX/Excel/Bilder/Text), gespeichert in IndexedDB (Blob + Metadaten + extrahiertem Volltext bei PDF/DOCX/Text); Inline-Liste in der Detailansicht mit Drop-Zone, Download, Löschen. **Globale Suche durchsucht auch den extrahierten Volltext aller Anhänge.**
+- **Slack/Teams-Webhook**: einmal Webhook-URL oben rechts eintragen → automatische Posts bei *WON*-Übergang, neuer simap-Ausschreibung und größeren Sync-Änderungen. Funktioniert mit Slack-Incoming-Webhooks und Teams-Connector-URLs.
+- **Voice-Notes**: 🎙-Button auf der Heute-Page → Web Speech API (Chrome/Edge) nimmt auf, Claude fasst zusammen und schreibt es als Aktivitätsnotiz; perfekt für Notizen im Auto nach einem Termin.
+- **Quick-Hotkeys**: `g d/p/c/k/m/f/t/x/s/e/r/n` springt zu Dashboard/Pipeline/Kontakte/Kantone/Karte/Forecast/Heute/Aufgaben/simap/E-Mail/Rapport/Notizen, `n d/t/n/c/a` legt Deal/Task/Notiz/Kontakt/Ausschreibung an, `Ctrl+K` Suche, `Esc` schließt.
 - Volltext-Suche (Ctrl+K)
 - Light/Dark-Theme
 - Anthropic Claude API für alle KI-Funktionen

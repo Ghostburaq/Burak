@@ -224,6 +224,7 @@ tbody td{padding:.48rem .75rem;font-size:12px;}
     <button class="hbtn" id="backup-btn" onclick="openBackup()" title="Backups & Wiederherstellung">🗄️</button>
     <div class="adot" id="adot"></div>
     <input type="password" id="akey" placeholder="sk-ant-… API Key" autocomplete="off">
+    <input type="password" id="hookurl" placeholder="Slack/Teams Webhook…" autocomplete="off" style="background:var(--bg3);border:1px solid var(--bdr);color:var(--t1);padding:.28rem .55rem;border-radius:var(--rs);font-size:11px;width:150px;font-family:var(--fb);outline:none" onchange="setWebhook(this.value)">
     <button class="hbtn grn" onclick="openImport()">📥 Excel Import</button>
     <button class="hbtn" onclick="doExport()">↓ Export</button>
     <input type="file" id="json-inp" accept=".json" style="display:none" onchange="loadBackup(this)">
@@ -307,6 +308,7 @@ tbody td{padding:.48rem .75rem;font-size:12px;}
     <div class="kpi kb"><div class="klbl">Kontakte</div><div class="kval" id="k-ctc">0</div></div>
     <div class="kpi ky"><div class="klbl">Anrufe heute</div><div class="kval" id="k-calls">0</div></div>
     <div class="kpi kp"><div class="klbl">Win Rate</div><div class="kval" id="k-wr">–</div></div>
+    <div class="kpi kg"><div class="klbl">Ø Marge</div><div class="kval" id="k-marge">–</div><div class="ksub"><span id="k-margerisk">0</span> Risiko-Deals</div></div>
   </div>
   <div class="g2">
     <div class="card"><div class="ch"><span class="ct">Pipeline Funnel</span></div><div class="cb"><canvas id="ch-funnel" height="155"></canvas></div></div>
@@ -319,6 +321,12 @@ tbody td{padding:.48rem .75rem;font-size:12px;}
   <div class="card" style="margin-top:.85rem;">
     <div class="ch"><span class="ct">📈 Pipeline-Verlauf (aus Backups)</span><span id="hist-info" style="font-size:11px;color:var(--t2)"></span></div>
     <div class="cb"><canvas id="ch-hist" height="120"></canvas></div>
+  </div>
+  <div class="card" style="margin-top:.85rem;" id="margin-card">
+    <div class="ch"><span class="ct">⚠ Marge unter Schwelle (Watchdog)</span>
+      <div class="brow"><label style="font-size:11px;color:var(--t2)">Schwelle <input id="margin-thr" type="number" value="15" min="0" max="50" style="width:54px;padding:.18rem .35rem;font-size:11px" onchange="renderDash()"> %</label></div>
+    </div>
+    <div class="cb" id="margin-list"></div>
   </div>
   <div class="g2" style="margin-top:.85rem;">
     <div class="card"><div class="ch"><span class="ct">Letzte Aktivitäten</span><button class="btn bp sm" onclick="openTask()">+ Aufgabe</button></div><div class="cb" id="dash-feed"><div class="empty"><div class="eico">📭</div><p>Noch keine Aktivitäten</p></div></div></div>
@@ -348,9 +356,14 @@ tbody td{padding:.48rem .75rem;font-size:12px;}
       <div class="cb" style="flex:1;max-height:320px;overflow-y:auto;" id="calllist"><div class="empty"><div class="eico">📞</div><p>„Berechnen" klicken — funktioniert offline (Lead-Score)</p></div></div>
     </div>
   </div>
-  <div class="card" style="margin-top:.85rem;">
-    <div class="ch"><span class="ct">✨ Auto-Enrichment</span><button class="btn bp sm" onclick="autoEnrich()">🤖 Fehlende Felder ergänzen</button></div>
-    <div class="cb"><div style="font-size:11px;color:var(--t2);margin-bottom:.5rem;">Ergänzt fehlende Branche und schätzt Energiebedarf (kVA) für Kontakte ohne diese Angaben — per KI. Bestehende Werte bleiben unangetastet.</div><div class="aibox" id="enrich-out" style="min-height:60px;font-size:11px;">← Bereit. Braucht API-Key.</div></div>
+  <div class="g2" style="margin-top:.85rem;">
+    <div class="card">
+      <div class="ch"><span class="ct">🎙 Sprachnotiz</span><button class="btn bp sm" id="voice-btn" onclick="toggleVoice()">🎙 Aufnahme starten</button></div>
+      <div class="cb"><div style="font-size:11px;color:var(--t2);margin-bottom:.4rem">Im Auto/unterwegs aufnehmen — KI macht eine saubere Aktivitäts-Notiz daraus (Chrome/Edge, braucht Mikro + API-Key für Zusammenfassung).</div><div class="aibox" id="voice-out" style="min-height:90px;font-size:11px;">← „Aufnahme starten" klicken</div></div>
+    </div>
+    <div class="card"><div class="ch"><span class="ct">✨ Auto-Enrichment</span><button class="btn bp sm" onclick="autoEnrich()">🤖 Fehlende Felder ergänzen</button></div>
+      <div class="cb"><div style="font-size:11px;color:var(--t2);margin-bottom:.5rem;">Ergänzt fehlende Branche und schätzt Energiebedarf (kVA) für Kontakte ohne diese Angaben — per KI. Bestehende Werte bleiben unangetastet.</div><div class="aibox" id="enrich-out" style="min-height:60px;font-size:11px;">← Bereit. Braucht API-Key.</div></div>
+    </div>
   </div>
 </div>
 
@@ -1440,7 +1453,10 @@ const parsePipelineFile = async file => {
     eq:   _hdrIdx(hdrs,'equip. chf','equip','equipment'),
     tr:   _hdrIdx(hdrs,'transport chf','transport'),
     fuel: _hdrIdx(hdrs,'treibst. chf','treibstoff'),
+    tech: _hdrIdx(hdrs,'technik. chf','technik'),
+    ueb:  _hdrIdx(hdrs,'übrige chf','übrige','uebrige'),
     marge:_hdrIdx(hdrs,'marge chf','marge'),
+    margePct:_hdrIdx(hdrs,'marge %','marge%','marge \npct'),
     st:   _hdrIdx(hdrs,'status'),
     prob: _hdrIdx(hdrs,'wahr. %','wahrscheinlichkeit','wahr'),
     typ:  _hdrIdx(hdrs,'akquise typ','akquise'),
@@ -1459,6 +1475,13 @@ const parsePipelineFile = async file => {
     const start=r[C.start];
     const seg=String(r[C.seg]||'').trim();
     const kt=String(r[C.kt]||'').trim().toUpperCase();
+    // Margin breakdown
+    const cost={eq:_num(r[C.eq]),tr:_num(r[C.tr]),fuel:_num(r[C.fuel]),tech:_num(r[C.tech]),ueb:_num(r[C.ueb])};
+    const costSum=cost.eq+cost.tr+cost.fuel+cost.tech+cost.ueb;
+    const margeRaw=_num(r[C.marge]); const margeChf=margeRaw||(value-costSum);
+    let pct=_num(r[C.margePct]);
+    if(pct>1) pct=pct/100;          // 24 → 0.24
+    if(!pct && value>0) pct=margeChf/value;
     const note=[kva,kw?kw+' kW':'',dauer?dauer+' Tage':'',start?'Start '+start:'',seg].filter(Boolean).join(' · ');
     b.deals.push({
       title: co + (kva?' — '+kva:''),
@@ -1466,6 +1489,7 @@ const parsePipelineFile = async file => {
       prob: _num(r[C.prob])||(stage==='won'?100:stage==='lost'?0:50),
       note, industry: seg, _kt:kt, _kw:kw, _dauer:dauer, _start:String(start||''),
       _akquise:String(r[C.typ]||'').trim(),
+      _cost:cost, _margeChf:margeChf, _margePct:pct||0,
     });
     if(!contactsSeen.has(co.toLowerCase())){
       contactsSeen.add(co.toLowerCase());
@@ -1855,6 +1879,7 @@ const mergeSyncBundle = b => {
       cur.value=nd.value; cur.stage=nd.stage; cur.prob=nd.prob;
       cur.industry=nd.industry||cur.industry;
       cur.note=nd.note||cur.note; cur._kt=nd._kt; cur._kw=nd._kw; cur._dauer=nd._dauer; cur._start=nd._start; cur._akquise=nd._akquise;
+      cur._cost=nd._cost||cur._cost; cur._margeChf=nd._margeChf!=null?nd._margeChf:cur._margeChf; cur._margePct=nd._margePct!=null?nd._margePct:cur._margePct;
       cur._syncKey=key; cur._src='excel-sync';
       updated++;
     } else {
@@ -1889,6 +1914,8 @@ const computeSyncDiff = b => {
     if((+cur.value||0)!==(+nd.value||0)) changes.push(['Wert',fmtCHF(cur.value),fmtCHF(nd.value)]);
     if(cur.stage!==nd.stage) changes.push(['Phase',cur.stage,nd.stage]);
     if((+cur.prob||0)!==(+nd.prob||0)) changes.push(['Wahr.%',(cur.prob||0)+'%',(nd.prob||0)+'%']);
+    const a=Math.round((cur._margePct||0)*100), c=Math.round((nd._margePct||0)*100);
+    if(a!==c && (cur._margePct||nd._margePct)) changes.push(['Marge',a+'%',c+'%']);
     if(!changes.length) continue;
     if(cur._editedLocal) conflicts.push({key,cur,nd,changes});
     else toUpdate.push({key,cur,nd,changes});
@@ -1901,7 +1928,7 @@ const computeSyncDiff = b => {
 // Apply a precomputed diff (optionally overwriting locally-edited conflicts) + merge contacts — TESTABLE
 const applySyncDiff = (b, diff, overwriteConflicts) => {
   if(!S.deals)S.deals=[];if(!S.contacts)S.contacts=[];
-  const applyTo=(cur,nd,key)=>{cur.value=nd.value;cur.stage=nd.stage;cur.prob=nd.prob;cur.industry=nd.industry||cur.industry;cur.note=nd.note||cur.note;cur._kt=nd._kt;cur._kw=nd._kw;cur._dauer=nd._dauer;cur._start=nd._start;cur._akquise=nd._akquise;cur._syncKey=key;cur._src='excel-sync';};
+  const applyTo=(cur,nd,key)=>{cur.value=nd.value;cur.stage=nd.stage;cur.prob=nd.prob;cur.industry=nd.industry||cur.industry;cur.note=nd.note||cur.note;cur._kt=nd._kt;cur._kw=nd._kw;cur._dauer=nd._dauer;cur._start=nd._start;cur._akquise=nd._akquise;cur._cost=nd._cost||cur._cost;cur._margeChf=nd._margeChf!=null?nd._margeChf:cur._margeChf;cur._margePct=nd._margePct!=null?nd._margePct:cur._margePct;cur._syncKey=key;cur._src='excel-sync';};
   let updated=0,added=0,kept=0;
   diff.toUpdate.forEach(({cur,nd,key})=>{applyTo(cur,nd,key);updated++;});
   diff.toAdd.forEach(({nd,key})=>{S.deals.push({id:uid(),...nd,_syncKey:key,_src:'excel-sync',contactId:null});added++;});
@@ -1943,6 +1970,7 @@ const confirmSync = () => {
   _syncRefreshUI();
   const log=g('sync-log');const msg=`✓ Sync: ${r.updated} aktualisiert · ${r.added} neu · ${r.kept} Konflikt(e) behalten · ${r.cAdd} Kontakte neu`;
   if(log)log.textContent=msg;
+  if(r.added>0||r.updated>5) fireWebhook(`🔄 Excel-Sync: ${r.updated} aktualisiert, ${r.added} neu`);
   toast(`Sync übernommen: ${r.updated} aktual., ${r.added} neu`,'ok');
 };
 
@@ -2106,6 +2134,19 @@ const renderDash = () => {
   const calls=(S.acts||[]).filter(a=>a.date===today()&&a.type==='call').length;
   st('k-pipe',fmtCHF(pipe));st('k-won',won);st('k-ctc',S.contacts.length);
   st('k-calls',calls);st('k-wr',tot?Math.round(won/tot*100)+'%':'–');
+  // Margin Watchdog
+  const thr=(+(g('margin-thr')||{}).value||15)/100;
+  const withMarge=deals.filter(d=>d.stage!=='lost' && d._margePct!=null && d.value>0);
+  const avgMarge=withMarge.length?withMarge.reduce((s,d)=>s+(d._margePct||0)*(d.value||0),0)/withMarge.reduce((s,d)=>s+(d.value||0),1):0;
+  const risk=withMarge.filter(d=>(d._margePct||0)<thr && d.stage!=='won').sort((a,b)=>(b.value||0)-(a.value||0));
+  st('k-marge',withMarge.length?Math.round(avgMarge*100)+'%':'–');
+  st('k-margerisk',risk.length);
+  const mL=g('margin-list');
+  if(mL){
+    if(!withMarge.length) mL.innerHTML='<div class="empty" style="padding:.6rem"><p>Noch keine Margen-Daten — Pipeline-XLSX importieren oder verbinden</p></div>';
+    else if(!risk.length) mL.innerHTML='<div style="font-size:12px;color:var(--grn);padding:.4rem">✓ Alle offenen Deals über '+Math.round(thr*100)+'% Marge</div>';
+    else mL.innerHTML=risk.slice(0,8).map(d=>{const p=Math.round((d._margePct||0)*100);const col=p<5?'var(--acc)':p<10?'#f5a623':'var(--yel)';return `<div onclick="openDealView('${d.id}')" style="display:flex;justify-content:space-between;align-items:center;padding:.4rem 0;border-bottom:1px solid var(--bdr);font-size:12px;cursor:pointer"><div><div style="font-weight:600">${d.company}</div><div style="font-size:10px;color:var(--t2)">${d.stage} · ${fmtCHF(d.value)}${d._margeChf?' · Marge '+fmtCHF(d._margeChf):''}</div></div><span style="font-family:var(--fh);font-weight:800;font-size:1rem;color:${col}">${p}%</span></div>`;}).join('');
+  }
   try{renderFunnelChart();}catch(e){}try{renderActChart();}catch(e){}
   try{renderSegChart();}catch(e){}try{renderKtChart();}catch(e){}try{renderHistChart();}catch(e){}
   const feed=g('dash-feed');
@@ -2250,9 +2291,167 @@ const renderKanban=()=>{
 };
 const openDeal=(id)=>{S._editDeal=id?(S.deals||[]).find(d=>d.id===id):null;const d=S._editDeal;sv('d-title',d?.title||'');sv('d-co',d?.company||'');sv('d-val',d?.value||'');sv('d-stage',d?.stage||'prospecting');sv('d-prob',d?.prob||20);sv('d-note',d?.note||'');g('m-deal-t').textContent=d?'Deal bearbeiten':'Neuer Deal';openM('m-deal');};
 const saveDeal=()=>{const t=gv('d-title');if(!t){toast('Titel fehlt','warn');return;}if(!S.deals)S.deals=[];const ex=S._editDeal;const d={id:ex?.id||uid(),title:t,company:gv('d-co'),value:+gv('d-val')||0,stage:gv('d-stage'),prob:+gv('d-prob')||20,note:gv('d-note')};if(ex){// preserve sync metadata + flag local edit
-  d._syncKey=ex._syncKey;d._src=ex._src;d.contactId=ex.contactId;d._kt=ex._kt;d._kw=ex._kw;d._dauer=ex._dauer;d._start=ex._start;d._akquise=ex._akquise;d.industry=gv('d-co')?ex.industry:ex.industry;
+  d._syncKey=ex._syncKey;d._src=ex._src;d.contactId=ex.contactId;d._kt=ex._kt;d._kw=ex._kw;d._dauer=ex._dauer;d._start=ex._start;d._akquise=ex._akquise;d.industry=ex.industry;d._cost=ex._cost;d._margeChf=ex._margeChf;d._margePct=ex._margePct;
   if(ex._src==='excel-sync')d._editedLocal=true;
-  const i=S.deals.findIndex(x=>x.id===d.id);if(i>=0)S.deals[i]=d;}else S.deals.push(d);save();renderKanban();renderDash();closeM();toast('Deal gespeichert','ok');};
+  const i=S.deals.findIndex(x=>x.id===d.id);if(i>=0)S.deals[i]=d;}else S.deals.push(d);
+  // Slack/Teams webhook on WON transition
+  if(d.stage==='won' && (!ex||ex.stage!=='won')) fireWebhook(`🎉 *WON*: ${d.company} — ${fmtCHF(d.value)}`,{color:'good'});
+  save();renderKanban();renderDash();closeM();toast('Deal gespeichert','ok');};
+
+// ════════════════════════════════════════════════════════════════
+// DOCUMENT LIBRARY — per-deal file attachments in IndexedDB
+// ════════════════════════════════════════════════════════════════
+const FILES_IDB='mit_crm_files',FILES_STORE='files';
+let _filesDb=null;
+const _filesOpen=()=>new Promise((res,rej)=>{
+  if(_filesDb)return res(_filesDb);
+  if(!window.indexedDB)return rej(new Error('IndexedDB fehlt'));
+  const r=indexedDB.open(FILES_IDB,1);
+  r.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains(FILES_STORE)){const s=db.createObjectStore(FILES_STORE,{keyPath:'id'});s.createIndex('dealId','dealId');}};
+  r.onsuccess=e=>{_filesDb=e.target.result;res(_filesDb);}; r.onerror=e=>rej(e.target.error);
+});
+const filesPut=async rec=>{const db=await _filesOpen();return new Promise((res,rej)=>{const tx=db.transaction(FILES_STORE,'readwrite');tx.objectStore(FILES_STORE).put(rec);tx.oncomplete=()=>res();tx.onerror=e=>rej(e.target.error);});};
+const filesByDeal=async dealId=>{const db=await _filesOpen();return new Promise((res,rej)=>{const tx=db.transaction(FILES_STORE,'readonly');const rq=tx.objectStore(FILES_STORE).index('dealId').getAll(dealId);rq.onsuccess=()=>res(rq.result||[]);rq.onerror=e=>rej(e.target.error);});};
+const filesAll=async()=>{const db=await _filesOpen();return new Promise((res,rej)=>{const tx=db.transaction(FILES_STORE,'readonly');const rq=tx.objectStore(FILES_STORE).getAll();rq.onsuccess=()=>res(rq.result||[]);rq.onerror=e=>rej(e.target.error);});};
+const filesDel=async id=>{const db=await _filesOpen();return new Promise((res,rej)=>{const tx=db.transaction(FILES_STORE,'readwrite');tx.objectStore(FILES_STORE).delete(id);tx.oncomplete=()=>res();tx.onerror=e=>rej(e.target.error);});};
+
+const attachFileToDeal = async (dealId, file) => {
+  const buf=await file.arrayBuffer();
+  let text='';
+  const ext=(file.name||'').split('.').pop().toLowerCase();
+  try{
+    if(ext==='pdf' && await _waitFor('pdfjsLib',5)) text=await extractPDFText(file).catch(()=>'');
+    else if((ext==='docx'||ext==='doc') && await _waitFor('mammoth',5)){const r=await mammoth.extractRawText({arrayBuffer:buf});text=r.value||'';}
+    else if(['txt','md','csv','log','json','xml','html'].includes(ext) || buf.byteLength<500000){
+      try{ const dec=new TextDecoder('utf-8',{fatal:false}); const s=dec.decode(buf); if(/^[\x09\x0a\x0d\x20-\x7e -￿]+$/.test(s.slice(0,800))) text=s; }catch(_){}
+    }
+  }catch(_){}
+  const rec={id:uid(),dealId,name:file.name,type:file.type||ext,size:buf.byteLength,addedAt:Date.now(),blob:new Blob([buf],{type:file.type||'application/octet-stream'}),text:text.slice(0,30000)};
+  await filesPut(rec);
+  return rec;
+};
+const downloadFile = async fid => {
+  const all=await filesAll(); const r=all.find(x=>x.id===fid); if(!r) return;
+  const url=URL.createObjectURL(r.blob); const a=document.createElement('a'); a.href=url; a.download=r.name; a.click(); setTimeout(()=>URL.revokeObjectURL(url),1000);
+};
+const removeAttachment = async fid => {
+  if(!confirm('Anhang löschen?')) return;
+  await filesDel(fid); toast('Anhang entfernt','ok');
+  if(S._dvDeal) renderDealAttachments(S._dvDeal);
+};
+const renderDealAttachments = async dealId => {
+  const el=g('dv-files'); if(!el) return;
+  const list=await filesByDeal(dealId).catch(()=>[]);
+  if(!list.length){ el.innerHTML='<div style="font-size:11px;color:var(--t2)">Keine Anhänge — Dateien hierher ziehen oder Button nutzen</div>'; return; }
+  el.innerHTML=list.sort((a,b)=>b.addedAt-a.addedAt).map(f=>`<div style="display:flex;align-items:center;gap:.4rem;padding:.3rem 0;border-bottom:1px solid var(--bdr);font-size:11px"><span style="font-size:14px">${/pdf/i.test(f.type)?'📄':/word|docx/i.test(f.type)?'📝':/sheet|xlsx/i.test(f.type)?'📊':'📎'}</span><div style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><strong>${f.name}</strong><div style="font-size:10px;color:var(--t2)">${(f.size/1024).toFixed(1)} KB · ${new Date(f.addedAt).toLocaleDateString('de-CH')}${f.text?' · '+f.text.length+' Zeichen Text':''}</div></div><button class="btn bg sm" onclick="downloadFile('${f.id}')">↓</button><button class="icon-btn danger" onclick="removeAttachment('${f.id}')" style="background:none;border:none;color:var(--acc);cursor:pointer">✕</button></div>`).join('');
+};
+const pickAndAttach = () => {
+  if(!S._dvDeal){toast('Kein Deal offen','warn');return;}
+  const inp=document.createElement('input'); inp.type='file'; inp.multiple=true;
+  inp.onchange=async()=>{
+    let n=0;
+    for(const f of inp.files||[]){ try{ await attachFileToDeal(S._dvDeal,f); n++; }catch(e){console.error(e);} }
+    toast(`${n} Anhang/Anhänge hinzugefügt`,'ok');
+    renderDealAttachments(S._dvDeal);
+  };
+  inp.click();
+};
+const handleAttachDrop = async ev => {
+  ev.preventDefault();
+  if(!S._dvDeal) return;
+  const files=ev.dataTransfer?.files||[];
+  let n=0;
+  for(const f of files){ try{ await attachFileToDeal(S._dvDeal,f); n++; }catch(e){console.error(e);} }
+  if(n) { toast(`${n} Anhang/Anhänge hinzugefügt`,'ok'); renderDealAttachments(S._dvDeal); }
+};
+const searchAttachmentText = async q => {
+  const all=await filesAll().catch(()=>[]);
+  const lq=q.toLowerCase();
+  return all.filter(f=>(f.text||'').toLowerCase().includes(lq)).slice(0,5);
+};
+
+// ════════════════════════════════════════════════════════════════
+// SLACK / TEAMS / GENERIC WEBHOOK
+// ════════════════════════════════════════════════════════════════
+const setWebhook = url => { if(!S.cfg) S.cfg={}; S.cfg.webhookUrl=(url||'').trim(); save(); toast(S.cfg.webhookUrl?'Webhook gespeichert':'Webhook entfernt','ok'); };
+const fireWebhook = async (text, opts={}) => {
+  const url=(S.cfg||{}).webhookUrl; if(!url) return;
+  // Slack & Teams both accept a JSON payload with "text"; Teams ignores extras.
+  const body={text:'⚡ MiT CRM — '+text};
+  if(opts.color && /slack\.com/.test(url)) body.attachments=[{color:opts.color,text}];
+  try{ await fetch(url,{method:'POST',mode:'no-cors',headers:{'content-type':'application/json'},body:JSON.stringify(body)}); }
+  catch(e){ console.warn('webhook',e); }
+};
+
+// ════════════════════════════════════════════════════════════════
+// VOICE NOTES — Web Speech API + KI-Cleanup
+// ════════════════════════════════════════════════════════════════
+let _voiceRec=null, _voiceText='', _voiceContact=null;
+const VOICE_SUPPORTED = typeof window!=='undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
+const startVoice = (contactId) => {
+  if(!VOICE_SUPPORTED){toast('Mikro/Spracherkennung: dein Browser kann das nicht (nur Chrome/Edge)','warn');return;}
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  _voiceRec=new SR(); _voiceRec.lang='de-CH'; _voiceRec.continuous=true; _voiceRec.interimResults=true;
+  _voiceText=''; _voiceContact=contactId||null;
+  const out=g('voice-out'); if(out) out.textContent='🎙 Aufnahme läuft… sprich frei.';
+  _voiceRec.onresult=e=>{
+    let txt='';
+    for(let i=e.resultIndex;i<e.results.length;i++) txt+=e.results[i][0].transcript;
+    _voiceText+=' '+txt;
+    if(out) out.textContent='🎙 '+_voiceText.trim().slice(-400);
+  };
+  _voiceRec.onerror=e=>{toast('Spracherkennung Fehler: '+e.error,'err');stopVoice();};
+  _voiceRec.onend=()=>{ const b=g('voice-btn'); if(b) b.textContent='🎙 Aufnahme starten'; };
+  _voiceRec.start();
+  const b=g('voice-btn'); if(b) b.textContent='⏹ Stoppen & speichern';
+};
+const stopVoice = async () => {
+  if(!_voiceRec) return;
+  try{_voiceRec.stop();}catch(_){}
+  const raw=_voiceText.trim(); _voiceRec=null;
+  if(!raw){ toast('Nichts aufgenommen','warn'); return; }
+  const out=g('voice-out'); if(out) out.textContent='⏳ KI fasst zusammen…';
+  let summary=raw, subject=raw.slice(0,40);
+  if(S.cfg.apiKey){
+    const r=await claude(`Verarbeite diese Sprachnotiz eines Sales-Engineers (MiT/Aggreko). Antworte als JSON: {"subject":"kurzer Betreff","summary":"klare Zusammenfassung in 2-4 Sätzen","next":"konkreter nächster Schritt (oder leer)"}.\nRohtext: """${raw.slice(0,2000)}"""`);
+    if(r){ try{ const j=JSON.parse(r.slice(r.indexOf('{'),r.lastIndexOf('}')+1)); subject=j.subject||subject; summary=j.summary||raw; if(j.next) summary+='\n→ '+j.next; }catch(_){} }
+  }
+  if(!S.acts) S.acts=[];
+  const ct=_voiceContact?(S.contacts||[]).find(c=>c.id===_voiceContact):null;
+  S.acts.push({id:uid(), type:'note', date:today(), who:ct?.company||'', res:subject.slice(0,80), note:summary, _voice:true});
+  save();
+  if(out) out.textContent='✓ Gespeichert: '+subject+'\n\n'+summary;
+  toast('Sprachnotiz gespeichert','ok');
+  try{renderDash();}catch(e){}try{renderRap();}catch(e){}
+};
+const toggleVoice = () => { if(_voiceRec) stopVoice(); else startVoice(); };
+
+// ════════════════════════════════════════════════════════════════
+// QUICK HOTKEYS
+// ════════════════════════════════════════════════════════════════
+let _hotPrefix=null,_hotTimer=null;
+const _hotMap = {
+  'n':{d:()=>openDeal(),t:()=>openTask(),n:()=>openNote(),c:()=>openCtc(),a:()=>openSimap()},
+  'g':{d:()=>nav('dash'),t:()=>nav('today'),p:()=>nav('pipe'),c:()=>nav('ctc'),k:()=>nav('kt'),m:()=>nav('map'),f:()=>nav('fc'),x:()=>nav('tasks'),s:()=>nav('simap'),e:()=>nav('email'),r:()=>nav('rap'),n:()=>nav('notes')},
+};
+let _hotkeysBound=false;
+const initHotkeys = () => {
+  if(_hotkeysBound) return; _hotkeysBound=true;
+  document.addEventListener('keydown', e => {
+    if(e.ctrlKey||e.metaKey||e.altKey) return;
+    const tag=(e.target.tagName||'').toLowerCase();
+    if(tag==='input'||tag==='textarea'||tag==='select'||e.target.isContentEditable) return;
+    if(g('mo')?.classList.contains('on')) return;
+    const k=e.key.toLowerCase();
+    if(_hotPrefix && _hotMap[_hotPrefix] && _hotMap[_hotPrefix][k]){
+      e.preventDefault(); _hotMap[_hotPrefix][k](); _hotPrefix=null; clearTimeout(_hotTimer); return;
+    }
+    if(k in _hotMap){
+      e.preventDefault(); _hotPrefix=k;
+      const hint=document.createElement('div');hint.className='toast tinfo';hint.textContent=k==='n'?'next: d/t/n/c/a':'next: d/t/p/c/k/m/f/x/s/e/r/n';g('toasts').appendChild(hint);clearTimeout(_hotTimer);_hotTimer=setTimeout(()=>{_hotPrefix=null;hint.remove();},1800);
+    }
+  });
+};
 
 // Deal detail view (read-focused, with linked contact/activities/positions)
 const openDealView=(id)=>{
@@ -2276,6 +2475,8 @@ const openDealView=(id)=>{
     ${row('Dauer',d._dauer?d._dauer+' Tage':'')}
     ${row('Start',d._start)}
     ${row('Akquise',d._akquise)}
+    ${d._margePct!=null?row('Marge',`<span style="color:${(d._margePct||0)<0.10?'var(--acc)':(d._margePct||0)<0.15?'var(--yel)':'var(--grn)'};font-weight:700">${Math.round((d._margePct||0)*100)}%</span>${d._margeChf?' · '+fmtCHF(d._margeChf):''}`):''}
+    ${d._cost?`<div style="margin:.4rem 0;padding:.45rem;background:var(--bg2);border-radius:var(--rs);font-size:11px;display:grid;grid-template-columns:1fr 1fr;gap:.25rem">${[['Equip',d._cost.eq],['Transport',d._cost.tr],['Treibstoff',d._cost.fuel],['Technik',d._cost.tech],['Übrige',d._cost.ueb]].filter(([,v])=>v>0).map(([l,v])=>`<div style="color:var(--t2)">${l}: <span style="color:var(--t1)">${fmtCHF(v)}</span></div>`).join('')}</div>`:''}
     ${d.note?`<div style="margin:.5rem 0;padding:.5rem;background:var(--bg2);border-radius:var(--rs);font-size:11px;color:var(--t2);white-space:pre-wrap">${d.note}</div>`:''}
     <div class="sep"></div>
     <div style="font-family:var(--fh);font-weight:700;font-size:.85rem;text-transform:uppercase;margin-bottom:.4rem">👤 Kontakt</div>
@@ -2284,7 +2485,11 @@ const openDealView=(id)=>{
     ${tasks.length?tasks.map(t=>`<div style="font-size:11px;padding:.25rem 0;border-bottom:1px solid var(--bdr)">${t.done?'✅':'⬜'} ${t.title}${t.due?' · '+t.due:''}</div>`).join(''):'<div style="font-size:11px;color:var(--t2)">Keine Aufgaben</div>'}
     <div style="font-family:var(--fh);font-weight:700;font-size:.85rem;text-transform:uppercase;margin:.6rem 0 .4rem">🕑 Aktivitäten (${acts.length})</div>
     ${acts.length?acts.slice(0,8).map(a=>`<div style="font-size:11px;padding:.25rem 0;border-bottom:1px solid var(--bdr)"><span style="color:var(--t2)">${a.date}</span> · ${a.type} ${a.res?'· '+a.res:''}</div>`).join(''):'<div style="font-size:11px;color:var(--t2)">Keine Aktivitäten</div>'}
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:.7rem 0 .35rem"><span style="font-family:var(--fh);font-weight:700;font-size:.85rem;text-transform:uppercase">📎 Dokumente</span><button class="btn bg sm" onclick="pickAndAttach()">+ Anhang</button></div>
+    <div id="dv-files" ondragover="event.preventDefault();this.style.background='rgba(0,229,160,.06)'" ondragleave="this.style.background=''" ondrop="this.style.background='';handleAttachDrop(event)" style="min-height:50px;border:1.5px dashed var(--bdr);border-radius:var(--rs);padding:.45rem"></div>
   `;
+  S._dvDeal=id;
+  renderDealAttachments(id);
   const eb=g('dv-edit');if(eb)eb.onclick=()=>{closeM();openDeal(id);};
   openM('m-dealview');
 };
@@ -2443,7 +2648,7 @@ const renderTasks=()=>{const el=g('tasks-list');if(!el)return;const fi=gv('tk-fi
 
 // ── SIMAP ──────────────────────────────────────────────────────
 const openSimap=(id)=>{S._editSim=id?(S.simap||[]).find(s=>s.id===id):null;const s=S._editSim;sv('sim-title',s?.title||'');sv('sim-kt',s?.kt||'');sv('sim-dead',s?.dead||'');sv('sim-val',s?.val||'');sv('sim-st',s?.status||'beobachten');sv('sim-note',s?.note||'');openM('m-simap');};
-const saveSimap=()=>{const ti=gv('sim-title');if(!ti){toast('Titel fehlt','warn');return;}if(!S.simap)S.simap=[];const e={id:S._editSim?.id||uid(),title:ti,kt:gv('sim-kt'),dead:gv('sim-dead'),val:gv('sim-val'),status:gv('sim-st')||'beobachten',note:gv('sim-note')};if(S._editSim){const i=S.simap.findIndex(s=>s.id===e.id);if(i>=0)S.simap[i]=e;}else S.simap.push(e);save();renderSimap();closeM();toast('Gespeichert','ok');};
+const saveSimap=()=>{const ti=gv('sim-title');if(!ti){toast('Titel fehlt','warn');return;}if(!S.simap)S.simap=[];const wasNew=!S._editSim;const e={id:S._editSim?.id||uid(),title:ti,kt:gv('sim-kt'),dead:gv('sim-dead'),val:gv('sim-val'),status:gv('sim-st')||'beobachten',note:gv('sim-note')};if(S._editSim){const i=S.simap.findIndex(s=>s.id===e.id);if(i>=0)S.simap[i]=e;}else S.simap.push(e);if(wasNew) fireWebhook(`🏛️ Neue Ausschreibung: ${e.title}${e.kt?' ('+e.kt+')':''}${e.dead?' · Deadline '+e.dead:''}`);save();renderSimap();closeM();toast('Gespeichert','ok');};
 const renderSimap=()=>{const el=g('simap-list');if(!el)return;const l=S.simap||[];if(!l.length){el.innerHTML='<div class="empty"><div class="eico">🏛️</div><p>Ausschreibungen erfassen</p></div>';return;}const SC={beobachten:'var(--blu)',vorbereitung:'var(--yel)',eingereicht:'var(--grn)',gewonnen:'var(--acc)',verloren:'var(--t2)'};el.innerHTML=l.map(s=>`<div class="sime"><div style="display:flex;justify-content:space-between;align-items:flex-start;"><div><div style="font-size:13px;font-weight:600">${s.title}</div><div style="font-size:10px;color:var(--t2)">${s.kt||'CH'}${s.dead?' · Deadline: '+s.dead:''}</div></div><div style="display:flex;gap:.35rem;align-items:center;"><span class="tg" style="background:${SC[s.status]||'var(--t3)'}22;color:${SC[s.status]||'var(--t3)'};font-size:10px">${s.status}</span><button onclick="openSimap('${s.id}')" class="btn bg sm">✏️</button><button onclick="delSimap('${s.id}')" style="background:none;border:none;color:var(--acc);cursor:pointer;font-size:14px">✕</button></div></div>${s.val?`<div style="font-size:11px;color:var(--grn);margin-top:.25rem">CHF ${(+s.val||0).toLocaleString('de-CH')}</div>`:''}</div>`).join('');};
 const delSimap=(id)=>{if(!confirm('Löschen?'))return;S.simap=(S.simap||[]).filter(s=>s.id!==id);save();renderSimap();};
 const handlePDF=(el)=>{const f=el.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{S._pdfB64=e.target.result.split(',')[1];const b=g('pdf-btn');if(b)b.disabled=false;toast('PDF geladen','ok');};r.readAsDataURL(f);};
@@ -2469,7 +2674,7 @@ const saveNote=()=>{const t=gv('n-title')||'Notiz';if(!S.notes)S.notes=[];const 
 const renderNotes=()=>{const el=g('notes-grid');if(!el)return;const q=(gv('note-q')||'').toLowerCase();const l=(S.notes||[]).filter(n=>!q||(n.title||'').toLowerCase().includes(q)||(n.text||'').toLowerCase().includes(q));if(!l.length){el.innerHTML='<div class="empty"><div class="eico">📝</div><p>Keine Notizen</p></div>';return;}el.innerHTML=l.map(n=>`<div class="ncard ${n.pin?'pin':''}" onclick="openNote('${n.id}')"><div style="display:flex;justify-content:space-between;margin-bottom:.3rem"><span style="font-size:12px;font-weight:600">${n.title}</span><span style="font-size:10px;color:var(--t2)">${n.date||''}</span></div><div style="font-size:11px;color:var(--t2);line-height:1.6">${(n.text||'').slice(0,120)}${(n.text||'').length>120?'…':''}</div><div class="brow" style="margin-top:.4rem"><span class="tg tgr" style="font-size:9px">${n.cat||'allg'}</span>${n.pin?'<span class="tg ty" style="font-size:9px">📌</span>':''}</div></div>`).join('');};
 
 // ── SEARCH ─────────────────────────────────────────────────────
-const doSearch=(q)=>{if(!q){g('si').removeAttribute('data-active');return;}const lower=q.toLowerCase();const res=[];(S.contacts||[]).slice(0,50).forEach(c=>{if((c.company||'').toLowerCase().includes(lower)||(c.name||'').toLowerCase().includes(lower))res.push({type:'Kontakt',text:c.company,sub:c.name||c.canton||'',fn:`openCtc('${c.id}');nav('ctc')`});});(S.deals||[]).slice(0,20).forEach(d=>{if((d.company||'').toLowerCase().includes(lower)||(d.title||'').toLowerCase().includes(lower))res.push({type:'Deal',text:d.title||d.company,sub:fmtCHF(d.value),fn:`openDeal('${d.id}');nav('pipe')`});});const drop=g('si'); // reuse as anchor
+const doSearch=async(q)=>{if(!q){g('si').removeAttribute('data-active');return;}const lower=q.toLowerCase();const res=[];(S.contacts||[]).slice(0,50).forEach(c=>{if((c.company||'').toLowerCase().includes(lower)||(c.name||'').toLowerCase().includes(lower))res.push({type:'Kontakt',text:c.company,sub:c.name||c.canton||'',fn:`openCtc('${c.id}');nav('ctc')`});});(S.deals||[]).slice(0,20).forEach(d=>{if((d.company||'').toLowerCase().includes(lower)||(d.title||'').toLowerCase().includes(lower))res.push({type:'Deal',text:d.title||d.company,sub:fmtCHF(d.value),fn:`openDealView('${d.id}')`});});(S.notes||[]).slice(0,10).forEach(n=>{if(((n.title||'')+(n.text||'')).toLowerCase().includes(lower))res.push({type:'Notiz',text:n.title||'Notiz',sub:(n.text||'').slice(0,40),fn:`openNote('${n.id}');nav('notes')`});});try{const hits=await searchAttachmentText(lower);hits.forEach(f=>{const idx=(f.text||'').toLowerCase().indexOf(lower);const snip=idx>=0?'…'+f.text.slice(Math.max(0,idx-15),idx+50)+'…':'';res.push({type:'Anhang',text:f.name,sub:snip,fn:`downloadFile('${f.id}')`});});}catch(_){}const drop=g('si'); // reuse as anchor
 const el=document.createElement('div');el.style.cssText='position:absolute;top:110%;left:0;right:0;background:var(--bg2);border:1px solid var(--bdr2);border-radius:var(--r);z-index:9999;box-shadow:var(--sh);';if(!res.length)el.innerHTML='<div style="padding:.65rem;font-size:12px;color:var(--t2)">Kein Ergebnis</div>';else el.innerHTML=res.slice(0,8).map(r=>`<div onclick="${r.fn};document.getElementById('si').value=''" style="padding:.45rem .75rem;cursor:pointer;border-bottom:1px solid var(--bdr);display:flex;justify-content:space-between;font-size:12px;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''"><div><span style="color:var(--t2);font-size:10px;margin-right:.4rem">${r.type}</span>${r.text}</div><span style="color:var(--t2);font-size:11px">${r.sub}</span></div>`).join('');const si=g('si').parentElement;si.style.position='relative';const old=si.querySelector('.search-drop');if(old)old.remove();el.className='search-drop';si.appendChild(el);setTimeout(()=>document.addEventListener('click',()=>el.remove(),{once:true}),100);};
 
 // ── COPY UTIL ──────────────────────────────────────────────────
@@ -2578,6 +2783,10 @@ document.addEventListener('DOMContentLoaded', () => {
   try { renderToday(); } catch(e) {}
   // Live Excel sync
   try { initSync(); } catch(e) {}
+  // Quick-Hotkeys
+  try { initHotkeys(); } catch(e) {}
+  // Webhook field prefill + voice support hint
+  try { const hu=g('hookurl'); if(hu && S.cfg.webhookUrl) hu.value=S.cfg.webhookUrl.slice(0,12)+'…'; const vb=g('voice-btn'); if(vb && !VOICE_SUPPORTED) vb.disabled=true; } catch(e) {}
   // Keyboard shortcuts
   document.addEventListener('keydown', e => {
     if((e.ctrlKey||e.metaKey)&&e.key==='k'){e.preventDefault();const si=g('si');if(si)si.focus();}
@@ -2689,6 +2898,21 @@ try{window.renderSegChart=renderSegChart;}catch(_){}
 try{window.renderKtChart=renderKtChart;}catch(_){}
 try{window.renderHistChart=renderHistChart;}catch(_){}
 try{window.ocrPDF=ocrPDF;}catch(_){}
+try{window.attachFileToDeal=attachFileToDeal;}catch(_){}
+try{window.pickAndAttach=pickAndAttach;}catch(_){}
+try{window.handleAttachDrop=handleAttachDrop;}catch(_){}
+try{window.downloadFile=downloadFile;}catch(_){}
+try{window.removeAttachment=removeAttachment;}catch(_){}
+try{window.renderDealAttachments=renderDealAttachments;}catch(_){}
+try{window.filesByDeal=filesByDeal;}catch(_){}
+try{window.searchAttachmentText=searchAttachmentText;}catch(_){}
+try{window.setWebhook=setWebhook;}catch(_){}
+try{window.fireWebhook=fireWebhook;}catch(_){}
+try{window.toggleVoice=toggleVoice;}catch(_){}
+try{window.startVoice=startVoice;}catch(_){}
+try{window.stopVoice=stopVoice;}catch(_){}
+try{window.initHotkeys=initHotkeys;}catch(_){}
+try{window.VOICE_SUPPORTED=VOICE_SUPPORTED;}catch(_){}
 try{window.renderActChart=renderActChart;}catch(_){}
 try{window.renderAngPos=renderAngPos;}catch(_){}
 try{window.renderComp=renderComp;}catch(_){}
