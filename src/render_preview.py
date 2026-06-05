@@ -36,7 +36,7 @@ def font(sz, bold):
 
 prs = Presentation(PPTX)
 EW, EH = prs.slide_width, prs.slide_height
-OW = 1422
+OW = int(os.environ.get("PREVIEW_W", "1422"))
 SCALE = OW / EW
 OH = int(EH * SCALE)
 PT2PX = 12700 * SCALE  # pt -> device px
@@ -213,3 +213,10 @@ for i, im in enumerate(imgs):
 sheet.save(os.path.join(OUT, "_contact.png"))
 sheet.resize((tw // 2, th // 2)).save(os.path.join(OUT, "_contact_half.png"))
 print("contact sheet ->", os.path.join(OUT, "_contact.png"))
+
+# optional PDF (one slide per page) for viewing without PowerPoint
+pdf_path = os.environ.get("PREVIEW_PDF")
+if pdf_path:
+    imgs[0].save(pdf_path, "PDF", resolution=150.0, save_all=True,
+                 append_images=imgs[1:])
+    print("pdf ->", pdf_path)

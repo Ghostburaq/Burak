@@ -6,6 +6,7 @@ Das Deck wird vollständig per Python (`python-pptx`) erzeugt — Slide für Sli
 deterministisch und ohne externe Abhängigkeiten zur Laufzeit.
 
 **Ergebnis:** [`Pitch_Burak_AVIA_VOLT.pptx`](Pitch_Burak_AVIA_VOLT.pptx)
+&nbsp;·&nbsp; Ansehen ohne PowerPoint: [PDF-Vorschau](docs/Pitch_Burak_AVIA_VOLT_vorschau.pdf)
 
 ![Übersicht aller Slides](docs/preview.png)
 
@@ -31,9 +32,9 @@ deterministisch und ohne externe Abhängigkeiten zur Laufzeit.
 |-------|-------|
 | `src/make_assets.py`   | Erzeugt Hintergründe + weiß eingefärbte Icon-Varianten |
 | `src/build_deck.py`    | Baut die 10 Slides inkl. Speaker-Notes → `.pptx` |
-| `src/render_preview.py`| Rendert die echte `.pptx` zur visuellen Kontrolle (PNG) |
+| `src/render_preview.py`| Rendert die echte `.pptx` zur visuellen Kontrolle (PNG/PDF) |
 | `assets/`              | Portrait, Original-Icons, generierte Assets |
-| `docs/`                | Vorschaubilder |
+| `docs/`                | Vorschaubilder + PDF-Vorschau |
 
 ## Neu bauen
 
@@ -42,6 +43,10 @@ pip install python-pptx Pillow
 python3 src/make_assets.py     # Assets generieren
 python3 src/build_deck.py      # Deck erzeugen -> Pitch_Burak_AVIA_VOLT.pptx
 python3 src/render_preview.py  # optional: Vorschau-PNGs nach /tmp/preview
+
+# hochaufgeloeste PNGs + PDF-Vorschau erzeugen:
+PREVIEW_W=2600 PREVIEW_PDF=docs/Pitch_Burak_AVIA_VOLT_vorschau.pdf \
+  python3 src/render_preview.py
 ```
 
 ## Hinweise
