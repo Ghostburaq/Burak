@@ -1148,6 +1148,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
             <select id="filterSalesRep" onchange="window.renderKontakte()" title="Berater / Außendienst">
               <option value="">Alle Berater</option>
             </select>
+            <button id="adReportBtn" class="btn btn-ghost btn-sm hidden" onclick="window.generateAdReportPdf(document.getElementById('filterSalesRep').value)" title="PDF-Report für den gewählten Berater" style="border-color:var(--brand);color:var(--brand)">📄 AD-Report PDF</button>
             <select id="filterSort" onchange="window.renderKontakte()">
               <option value="score">Sortierung: Score (Hot first)</option>
               <option value="last">Letzte Aktivität</option>
@@ -1437,6 +1438,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
           <div class="row gap-md">
             <button class="btn btn-ghost" onclick="window.openDedup()">⚭ Duplikate finden & mergen</button>
             <button class="btn btn-ghost" onclick="window.openCardScan()">📷 Visitenkarte scannen</button>
+            <button class="btn btn-ghost" onclick="window.generateAdReportPdf('')">📄 AD-Report PDF (Berater wählen)</button>
             <button class="btn btn-ghost" onclick="window.startOnboarding(true)">🎓 Onboarding-Tour erneut anzeigen</button>
           </div>
 
@@ -2285,6 +2287,12 @@ window.renderKontakte = function renderKontakte(){
     const cur = repSel.value;
     repSel.innerHTML = '<option value="">Alle Berater</option>' + all.map(r=>`<option ${r===cur?'selected':''}>${escHtml(r)}</option>`).join('');
   }
+  // Show "AD-Report PDF" button only when a specific Berater is filtered
+  const adBtn = document.getElementById('adReportBtn');
+  if(adBtn){
+    if(rep){ adBtn.classList.remove('hidden'); adBtn.textContent = '📄 AD-Report ' + rep; }
+    else adBtn.classList.add('hidden');
+  }
 
   let list = STATE.contacts.map(c => ({...c, score: leadScore(c), last: lastActivityDate(c.id)}));
 
@@ -3039,6 +3047,7 @@ const PALETTE_ACTIONS = [
   {label:'Aktivität loggen', icon:'☎', fn:()=>window.openLogActivity(), kw:'aktivitat log call'},
   {label:'KI-Import (PDF/Excel)', icon:'✦', fn:()=>window.openAiImport(), kw:'ai ki import'},
   {label:'Visitenkarte scannen', icon:'📷', fn:()=>window.openCardScan(), kw:'card business visitenkarte scan'},
+  {label:'AD-Report PDF (Berater wählen)', icon:'📄', fn:()=>window.generateAdReportPdf(''), kw:'ad report aussendienst pdf berater'},
   {label:'Wochenbericht öffnen', icon:'📊', fn:()=>window.openWochenbericht(), kw:'wochenbericht report wb'},
   {label:'Turbo-Modus (alle fälligen abarbeiten)', icon:'⚡', fn:()=>{window.nav('wiedervorlagen');setTimeout(()=>window.bulkTurbo(),200)}, kw:'turbo bulk'},
   {label:'CRM-Export (Excel)', icon:'↓', fn:()=>window.exportCrmExcel(), kw:'export excel xlsx'},
@@ -6665,6 +6674,319 @@ window.generateWbPdf = function(){
      SAVE
   ============================================================ */
   const fname = 'MiT-Wochenbericht-KW' + kw + '-' + new Date().getFullYear() + '.pdf';
+  doc.save(fname);
+  showToast('PDF gespeichert: ' + fname + ' (' + pageNum + ' Seite' + (pageNum>1?'n':'') + ')', 'success');
+};
+
+// ════════════════════════════════════════════════════════════════════════
+//  AUSSENDIENST-REPORT PDF — per Berater / SalesRep
+// ════════════════════════════════════════════════════════════════════════
+window.generateAdReportPdf = function(repName){
+  if(typeof window.jspdf === 'undefined'){ showToast('jsPDF nicht geladen', 'error'); return; }
+  repName = (repName||'').trim();
+  if(!repName){
+    // No name passed → ask interactively
+    const reps = [...new Set([...loadSalesReps(), ...STATE.contacts.map(c=>c.salesRep).filter(Boolean)])];
+    if(!reps.length){ showToast('Keine Berater konfiguriert', 'warn'); return; }
+    const name = prompt('Welcher Berater?\n\nVerfügbar: ' + reps.join(', '));
+    if(!name) return;
+    repName = name.trim();
+  }
+  const contacts = STATE.contacts.filter(c => (c.salesRep||'').trim() === repName);
+  if(!contacts.length){
+    showToast('Keine Kontakte für Berater "' + repName + '"', 'warn');
+    return;
+  }
+  showToast('AD-Report wird erstellt …', 'info');
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+
+  /* ============================================================
+     DATA AGGREGATION
+  ============================================================ */
+  const todayStr = todayISO();
+  const cIds = new Set(contacts.map(c=>c.id));
+  const acts = STATE.activities.filter(a => cIds.has(a.contactId));
+  const open = contacts.filter(c => !['Gewonnen','Verloren','Pausiert','Erledigt'].includes(c.status));
+  const won  = contacts.filter(c => c.status === 'Gewonnen');
+  const lost = contacts.filter(c => c.status === 'Verloren');
+  const done = contacts.filter(c => c.status === 'Erledigt');
+  const paus = contacts.filter(c => c.status === 'Pausiert');
+  const pipeTotal = open.reduce((s,c)=>s+(parseFloat(c.chf)||0),0);
+  const weighted  = open.reduce((s,c)=>{
+    const ch=parseFloat(c.chf)||0;
+    const p = parseFloat(c.prob)||(c.status==='Verhandlung'?70:c.status==='Angebot'?40:c.status==='Kontaktiert'?20:10);
+    return s + ch*(p/100);
+  },0);
+  const wonCHF = won.reduce((s,c)=>s+(parseFloat(c.chf)||0),0);
+  const overdue = open.filter(c => c.wv && c.wv.slice(0,10) < todayStr).sort((a,b)=>(a.wv||'').localeCompare(b.wv||''));
+
+  // Activity count last 30 days
+  const cut30 = new Date(); cut30.setDate(cut30.getDate()-30);
+  const cut30Iso = localISO(cut30);
+  const acts30 = acts.filter(a => a.date && a.date.slice(0,10) >= cut30Iso);
+  const typCount = {};
+  acts30.forEach(a => { typCount[a.typ] = (typCount[a.typ]||0)+1; });
+
+  // Kategorie distribution
+  const katDist = {};
+  contacts.forEach(c => { const k = c.kategorie || '—'; katDist[k] = (katDist[k]||0)+1; });
+
+  // Status counts
+  const statCounts = {Lead:0,Kontaktiert:0,Angebot:0,Verhandlung:0,Gewonnen:won.length,Verloren:lost.length,Pausiert:paus.length,Erledigt:done.length};
+  open.forEach(c => { if(statCounts[c.status]!==undefined) statCounts[c.status]++; });
+
+  /* ============================================================
+     PDF SETUP (re-uses executive style from Wochenbericht)
+  ============================================================ */
+  const PW=210, PH=297, ML=14, MR=14, CW=PW-ML-MR;
+  const HEADER_H=30, FOOTER_H=14;
+  const TOP_Y = HEADER_H + 8;
+  const BOTTOM_LIMIT = PH - FOOTER_H - 6;
+  const NAVY=[15,27,49], RED=[200,16,46], SLATE=[90,105,130], SLATE2=[120,134,158];
+  const INK=[22,32,52], LINE=[222,228,238], PAPER=[248,250,253];
+  const GREEN=[16,150,95], AMBER=[190,120,0];
+  function fill(c){doc.setFillColor(c[0],c[1],c[2])} function ink(c){doc.setTextColor(c[0],c[1],c[2])}
+  function box(x,y,w,h,c){fill(c); doc.rect(x,y,w,h,'F')}
+  function rbox(x,y,w,h,c,r){fill(c); doc.roundedRect(x,y,w,h,r||1.5,r||1.5,'F')}
+  function bdr(x,y,w,h,c,lw){doc.setDrawColor(c[0],c[1],c[2]); doc.setLineWidth(lw||0.2); doc.rect(x,y,w,h,'S')}
+  function rbdr(x,y,w,h,c,lw,r){doc.setDrawColor(c[0],c[1],c[2]); doc.setLineWidth(lw||0.2); doc.roundedRect(x,y,w,h,r||1.5,r||1.5,'S')}
+  function line(x1,y1,x2,y2,c,lw){doc.setDrawColor(c[0],c[1],c[2]); doc.setLineWidth(lw||0.2); doc.line(x1,y1,x2,y2)}
+  function T(s,x,y,o){doc.text(String(s==null?'':s),x,y,o||{})}
+  function font(s,sz){doc.setFont('helvetica',s); doc.setFontSize(sz)}
+  function clip(s,m){s=String(s||''); return s.length>m?s.slice(0,m-1).trimEnd()+'…':s}
+  function fmtCHFpdf(n){
+    if(n==null||isNaN(n)) return '—'; n=Math.round(n);
+    if(n>=1000000) return 'CHF '+(n/1000000).toFixed(n>=10000000?0:1).replace('.',',')+' Mio';
+    return 'CHF '+String(n).replace(/\B(?=(\d{3})+(?!\d))/g,"'");
+  }
+  function fmtDFull(iso){ if(!iso) return '—'; const d=new Date(iso.slice(0,10)+'T12:00:00'); return isNaN(d)?'—':String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+d.getFullYear() }
+  function fmtDShort(iso){ if(!iso) return '—'; const d=new Date(iso.slice(0,10)+'T12:00:00'); return isNaN(d)?'—':String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0')+'.' }
+  const TYP_COLORS={'Anruf':[37,99,235],'Mail':[190,120,0],'Meeting':[5,130,90],'Demo':[120,60,200],'Angebot':[200,16,46],'WhatsApp':[30,170,80],'Status':[90,105,130],'Sonstiges':[110,120,140]};
+  const STATUS_COLORS={'Gewonnen':GREEN,'Verloren':[200,50,50],'Angebot':AMBER,'Verhandlung':[150,80,200],'Kontaktiert':[37,99,235],'Lead':[90,105,130],'Pausiert':[120,130,150],'Erledigt':[15,118,110]};
+
+  let pageNum=0;
+  function drawHeader(subtitle){
+    box(0,0,PW,HEADER_H,NAVY); box(0,0,3,HEADER_H,RED); box(0,HEADER_H-1.6,PW,1.6,RED);
+    font('bold',15); ink([255,255,255]); T('Mobil in Time AG', ML+2, 12);
+    font('normal',7.5); ink([150,170,205]);
+    T('An Aggreko Company   ·   Außendienst-Report   ·   Schweiz', ML+2, 17.5);
+    T('mobilintime.com', ML+2, 22);
+    font('bold',17); ink([255,255,255]); T('AUSSENDIENST-REPORT', PW-MR, 11.5, {align:'right'});
+    font('bold',10); ink([255,255,255]); T(repName, PW-MR, 17.5, {align:'right'});
+    font('normal',8); ink([200,212,232]); T('Stand ' + fmtDFull(todayStr), PW-MR, 22.5, {align:'right'});
+    if(subtitle){ font('normal',7); ink([140,160,195]); T(subtitle, PW-MR, 26.5, {align:'right'}); }
+  }
+  function drawFooter(){
+    box(0,PH-FOOTER_H,PW,FOOTER_H,NAVY); box(0,PH-FOOTER_H,PW,1.4,RED);
+    font('normal',7); ink([150,168,200]);
+    T('Mobil in Time AG  ·  Vertraulich  ·  AD-Report ' + repName, ML, PH-5.5);
+    const nowStr=new Date().toLocaleDateString('de-CH')+'  '+new Date().toLocaleTimeString('de-CH',{hour:'2-digit',minute:'2-digit'});
+    T('Erstellt ' + nowStr, PW-MR, PH-5.5, {align:'right'});
+    font('bold',7.5); ink([255,255,255]); T('Seite ' + pageNum, PW/2, PH-5.5, {align:'center'});
+  }
+  function newPage(subtitle){ if(pageNum>0) doc.addPage(); pageNum++; drawHeader(subtitle); drawFooter(); return TOP_Y; }
+  let Y = 0; let curSub = '';
+  function ensure(h, sub){ if(Y + h > BOTTOM_LIMIT){ Y = newPage(sub||curSub); } }
+  function sectionBar(label, right){
+    ensure(11); box(ML,Y,CW,8,NAVY); box(ML,Y,2.2,8,RED);
+    font('bold',9); ink([255,255,255]); T(label, ML+5, Y+5.5);
+    if(right){ font('normal',7.5); ink([155,172,205]); T(right, PW-MR-2, Y+5.5, {align:'right'}); }
+    Y += 8 + 3;
+  }
+
+  /* ============================================================
+     PAGE 1 — Cover with KPIs + Status mix + Kategorie
+  ============================================================ */
+  Y = newPage('Übersicht');
+  font('normal',8); ink(SLATE);
+  T('Persönliche Zusammenfassung für ' + repName + ' — alle zugewiesenen Kontakte, Aktivitäten und Pipeline-Performance.', ML, Y+1);
+  Y += 7;
+
+  // KPI cards
+  const kpis = [
+    {label:'TOTAL KONTAKTE', val:String(contacts.length), accent:NAVY},
+    {label:'OFFENE DEALS',   val:String(open.length),     accent:[37,99,235]},
+    {label:'PIPELINE',       val:fmtCHFpdf(pipeTotal),    accent:RED,     small:true},
+    {label:'GEWICHTET',      val:fmtCHFpdf(weighted),     accent:AMBER,   small:true},
+    {label:'GEWONNEN YTD',   val:fmtCHFpdf(wonCHF),       accent:GREEN,   small:true},
+    {label:'WIN-RATE',       val:contacts.length?Math.round(won.length/contacts.length*100)+'%':'—', accent:[120,60,200]}
+  ];
+  const KGAP=3.2, KW_=(CW-KGAP*5)/6, KH=22;
+  kpis.forEach((k,i)=>{
+    const x = ML + i*(KW_+KGAP);
+    rbox(x,Y,KW_,KH,[255,255,255],1.5); rbdr(x,Y,KW_,KH,LINE,0.3,1.5);
+    box(x,Y,KW_,2,k.accent);
+    font('bold', k.small?11:17); ink(INK);
+    T(k.val, x+KW_/2, Y+13, {align:'center'});
+    font('bold',5.6); ink(SLATE2); T(k.label, x+KW_/2, Y+18.5, {align:'center'});
+  });
+  Y += KH + 6;
+
+  // Status mix bars
+  const allStat = ['Lead','Kontaktiert','Angebot','Verhandlung','Gewonnen','Verloren','Erledigt','Pausiert'];
+  const maxStat = Math.max(1, ...allStat.map(s=>statCounts[s]));
+  const statH = 50;
+  rbox(ML, Y, CW*0.62, statH, [255,255,255], 2); rbdr(ML, Y, CW*0.62, statH, LINE, 0.3, 2);
+  box(ML, Y, CW*0.62, 2.4, NAVY);
+  font('bold',7.5); ink(SLATE); T('STATUS-VERTEILUNG (alle Kontakte)', ML+5, Y+7.5);
+  const barMax = CW*0.62 - 80;
+  let sY = Y + 13;
+  allStat.forEach(s=>{
+    const c = statCounts[s];
+    const w = (c/maxStat)*barMax;
+    font('normal',7); ink(SLATE); T(s, ML+5, sY);
+    if(c>0){ const col=STATUS_COLORS[s]||SLATE; box(ML+38, sY-2.6, Math.max(1.2,w), 3.2, col); }
+    else { box(ML+38, sY-2.6, 1.5, 3.2, [220,225,235]); }
+    font('bold',7); ink(INK); T(String(c), ML+CW*0.62-5, sY, {align:'right'});
+    sY += 4.3;
+  });
+
+  // Kategorie box right
+  const kx = ML + CW*0.64, kw = CW*0.36;
+  rbox(kx, Y, kw, statH, [255,255,255], 2); rbdr(kx, Y, kw, statH, LINE, 0.3, 2);
+  box(kx, Y, kw, 2.4, RED);
+  font('bold',7.5); ink(SLATE); T('KATEGORIE-VERTEILUNG', kx+5, Y+7.5);
+  const katOrder = ['Strom','Wärme','Kälte','USV','Mix','—'];
+  const katMaxC = Math.max(1, ...katOrder.map(k=>katDist[k]||0));
+  const katBarMax = kw - 56;
+  let ky = Y + 13;
+  katOrder.forEach(k=>{
+    if(!katDist[k] && k!=='—') return;
+    const c = katDist[k]||0;
+    if(!c) return;
+    const w = (c/katMaxC)*katBarMax;
+    font('normal',7); ink(SLATE); T(k==='—'?'Keine':k, kx+5, ky);
+    box(kx+34, ky-2.6, Math.max(1.2,w), 3.2, k==='Strom'?[37,99,235]:k==='Wärme'?[200,50,50]:k==='Kälte'?[14,165,233]:k==='USV'?[124,58,237]:[100,116,139]);
+    font('bold',7); ink(INK); T(String(c), kx+kw-5, ky, {align:'right'});
+    ky += 5.3;
+  });
+  Y += statH + 6;
+
+  // Activity 30d summary
+  rbox(ML, Y, CW, 22, [248,250,253], 1.5); rbdr(ML, Y, CW, 22, LINE, 0.3, 1.5);
+  box(ML, Y, CW, 2.4, GREEN);
+  font('bold',7.5); ink(SLATE); T('AKTIVITÄTEN (letzte 30 Tage) — Gesamt: ' + acts30.length, ML+5, Y+8);
+  const typsToShow = ['Anruf','Mail','Meeting','Demo','Angebot','WhatsApp'];
+  let tx = ML + 6;
+  typsToShow.forEach(t=>{
+    const c = typCount[t]||0;
+    const col = TYP_COLORS[t]||SLATE;
+    rbox(tx, Y+11, 12, 4, col, 2); font('bold',5.5); ink([255,255,255]); T(t.slice(0,7), tx+6, Y+13.8, {align:'center'});
+    font('bold',9); ink(INK); T(String(c), tx+16, Y+15);
+    tx += 30;
+  });
+  Y += 22 + 6;
+
+  /* ============================================================
+     ALL CONTACTS TABLE — paginated
+  ============================================================ */
+  curSub = 'Kontakte';
+  Y = newPage('Kontakte');
+  sectionBar('ZUGEWIESENE KONTAKTE', contacts.length + ' Einträge');
+
+  // columns
+  const cFirma=ML+1, cKont=ML+58, cKat=ML+96, cStat=ML+116, cWv=ML+140, cWert=PW-MR-1;
+  function contactsHeader(){
+    box(ML,Y,CW,6.2,PAPER); font('bold',6.5); ink(SLATE);
+    T('FIRMA', cFirma, Y+4.1); T('KONTAKT', cKont, Y+4.1); T('KAT.', cKat, Y+4.1);
+    T('STATUS', cStat, Y+4.1); T('WV', cWv, Y+4.1); T('WERT', cWert, Y+4.1, {align:'right'});
+    Y += 6.2;
+  }
+  contactsHeader();
+  const sortedC = contacts.slice().sort((a,b)=>{
+    // open first by score, then closed
+    const ao = ['Gewonnen','Verloren','Pausiert','Erledigt'].includes(a.status) ? 1 : 0;
+    const bo = ['Gewonnen','Verloren','Pausiert','Erledigt'].includes(b.status) ? 1 : 0;
+    if(ao !== bo) return ao - bo;
+    return (parseFloat(b.chf)||0) - (parseFloat(a.chf)||0);
+  });
+  const ROW_H = 6.5;
+  sortedC.forEach((c,idx)=>{
+    if(Y + ROW_H > BOTTOM_LIMIT){
+      Y = newPage('Kontakte'); sectionBar('KONTAKTE (Fortsetzung)', contacts.length + ' gesamt'); contactsHeader();
+    }
+    if(idx%2===0) box(ML, Y, CW, ROW_H, [252,253,255]);
+    font('bold',7.6); ink(INK); T(clip(c.firma||'—', 30), cFirma, Y+4.3);
+    font('normal',7); ink(SLATE); T(clip(c.kontakt||'—', 20), cKont, Y+4.3);
+    if(c.kategorie){
+      font('bold',5.5); ink([255,255,255]);
+      const kCol = c.kategorie==='Strom'?[37,99,235]:c.kategorie==='Wärme'?[200,50,50]:c.kategorie==='Kälte'?[14,165,233]:c.kategorie==='USV'?[124,58,237]:[100,116,139];
+      rbox(cKat-1, Y+1.4, 16, 3.6, kCol, 1.8);
+      T(clip(c.kategorie.toUpperCase(), 7), cKat+7, Y+3.95, {align:'center'});
+    }
+    const sc = STATUS_COLORS[c.status]||SLATE;
+    rbox(cStat, Y+1.4, 22, 3.6, sc, 1.8);
+    font('bold',5.4); ink([255,255,255]); T(clip((c.status||'').toUpperCase(),11), cStat+11, Y+3.95, {align:'center'});
+    font('normal',7); ink(c.wv && c.wv.slice(0,10)<todayStr ? [200,50,50] : SLATE);
+    T(fmtDShort(c.wv), cWv, Y+4.3);
+    font('bold',7.6); ink(INK); T(fmtCHFpdf(c.chf), cWert, Y+4.3, {align:'right'});
+    line(ML, Y+ROW_H, ML+CW, Y+ROW_H, LINE, 0.12);
+    Y += ROW_H;
+  });
+  Y += 4;
+
+  /* ============================================================
+     OVERDUE WV (if any)
+  ============================================================ */
+  if(overdue.length){
+    curSub = 'Überfällige Wiedervorlagen';
+    ensure(20, curSub);
+    sectionBar('ÜBERFÄLLIGE WIEDERVORLAGEN', overdue.length + ' offen');
+    const oFirma=ML+1, oKont=ML+58, oStat=ML+104, oWV=ML+134, oWert=PW-MR-1;
+    box(ML,Y,CW,6.2,[251,238,238]); font('bold',6.5); ink([150,70,70]);
+    T('FIRMA', oFirma, Y+4.1); T('KONTAKT', oKont, Y+4.1); T('STATUS', oStat, Y+4.1);
+    T('FÄLLIG SEIT', oWV, Y+4.1); T('WERT', oWert, Y+4.1, {align:'right'});
+    Y += 6.2;
+    overdue.forEach((c,idx)=>{
+      if(Y + ROW_H > BOTTOM_LIMIT){ Y = newPage('Überfällige WV'); sectionBar('ÜBERFÄLLIGE WV (Fortsetzung)', overdue.length+' gesamt'); }
+      if(idx%2===0) box(ML, Y, CW, ROW_H, [255,250,250]);
+      box(ML, Y+1.2, 1.8, ROW_H-2.4, RED);
+      font('bold',7.6); ink(INK); T(clip(c.firma||'—',30), oFirma+4, Y+4.3);
+      font('normal',7); ink(SLATE); T(clip(c.kontakt||'—',22), oKont, Y+4.3);
+      const sc = STATUS_COLORS[c.status]||SLATE; rbox(oStat, Y+1.4, 22, 3.6, sc, 1.8);
+      font('bold',5.4); ink([255,255,255]); T(clip((c.status||'').toUpperCase(),11), oStat+11, Y+3.95, {align:'center'});
+      font('bold',7); ink([190,40,40]); T(fmtDFull(c.wv), oWV, Y+4.3);
+      font('bold',7.6); ink(INK); T(fmtCHFpdf(c.chf), oWert, Y+4.3, {align:'right'});
+      line(ML, Y+ROW_H, ML+CW, Y+ROW_H, [235,222,222], 0.12);
+      Y += ROW_H;
+    });
+    Y += 4;
+  }
+
+  /* ============================================================
+     ACTIVITY LOG (last 30 days)
+  ============================================================ */
+  if(acts30.length){
+    curSub = 'Aktivitäten 30 Tage';
+    Y = newPage('Aktivitäten');
+    sectionBar('AKTIVITÄTEN — LETZTE 30 TAGE', acts30.length + ' Einträge');
+    const sorted = acts30.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+    const aDate=ML+1, aTyp=ML+15, aFirma=ML+34, aSum=ML+82;
+    box(ML,Y,CW,6.2,PAPER); font('bold',6.5); ink(SLATE);
+    T('DATUM',aDate,Y+4.1); T('TYP',aTyp,Y+4.1); T('FIRMA',aFirma,Y+4.1); T('ZUSAMMENFASSUNG',aSum,Y+4.1);
+    Y += 6.2;
+    sorted.forEach((a,idx)=>{
+      if(Y + ROW_H > BOTTOM_LIMIT){ Y = newPage('Aktivitäten'); sectionBar('AKTIVITÄTEN (Fortsetzung)', acts30.length + ' gesamt'); }
+      const contact = contacts.find(x=>x.id===a.contactId);
+      if(idx%2===0) box(ML, Y, CW, ROW_H, [252,253,255]);
+      font('normal',7); ink(SLATE); T(fmtDShort(a.date), aDate, Y+4.3);
+      const tc = TYP_COLORS[a.typ]||SLATE;
+      rbox(aTyp, Y+1.3, 16, 4, tc, 1.8);
+      font('bold',5.8); ink([255,255,255]); T(clip(a.typ||'—',9), aTyp+8, Y+4.1, {align:'center'});
+      font('bold',7.4); ink(INK); T(clip(contact?contact.firma||'—':'—', 26), aFirma, Y+4.3);
+      font('normal',7); ink([70,84,110]); T(clip((a.sum||'').replace(/\s+/g,' '), 78), aSum, Y+4.3);
+      line(ML, Y+ROW_H, ML+CW, Y+ROW_H, LINE, 0.12);
+      Y += ROW_H;
+    });
+  }
+
+  /* ============================================================
+     SAVE
+  ============================================================ */
+  const safeName = repName.replace(/[^a-zA-Z0-9]/g,'_');
+  const fname = 'MiT-AD-Report-' + safeName + '-' + todayStr + '.pdf';
   doc.save(fname);
   showToast('PDF gespeichert: ' + fname + ' (' + pageNum + ' Seite' + (pageNum>1?'n':'') + ')', 'success');
 };
