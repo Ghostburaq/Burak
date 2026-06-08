@@ -105,6 +105,31 @@ for i, row in enumerate(cleaned, start=1):
     row[0] = i
 
 report["output"] = len(cleaned)
+
+# Curated additions (Key Accounts + EVUs nach Web-Recherche Juni 2026)
+try:
+    from additional_accounts import ADDITIONAL_ACCOUNTS
+except ImportError:
+    ADDITIONAL_ACCOUNTS = []
+
+existing_keys = {(str(r[3]).strip().lower(),
+                  str(r[4] or "").strip().lower(),
+                  str(r[5] or "").strip()) for r in cleaned}
+appended = 0
+for entry in ADDITIONAL_ACCOUNTS:
+    prio, seg, firma, ort, plz, kt, ansp, funk, email, tel, web, naechs, bedarf, prod, notiz, internes = entry
+    key = (str(firma).strip().lower(), str(ort or "").strip().lower(), str(plz or "").strip())
+    if key in existing_keys:
+        continue
+    existing_keys.add(key)
+    nr = len(cleaned) + 1
+    cleaned.append([nr, prio, seg, firma, ort, plz, kt, ansp, funk, email,
+                    tel, web, "offen", naechs, bedarf, prod, None, notiz, internes])
+    appended += 1
+report["added"] = appended
+report["total"] = len(cleaned)
+print(f"Added {appended} curated accounts (Top-EVUs + Key Accounts).")
+
 print("Cleaning report:", report)
 
 # -- Build destination workbook -------------------------------------------
