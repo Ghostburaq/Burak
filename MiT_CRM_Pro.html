@@ -1295,14 +1295,18 @@ const _readContactsXLSX = async file => {
     };
 
     const M={
-      company: match(['firmenname','firma','company','unternehmen']),
-      name:    match(['ansprechpartner','name','kontakt','contact']),
-      role:    match(['funktion / titel','funktion/titel','funktion','position','rolle']),
-      email:   match(['e-mail','email','mail']),
-      tel:     match(['telefon','telephone','phone','mobile','handy','mobil']),
+      company: match(['firmenname','firma','company','unternehmen','name 1','name1','kunde','kundenname']),
+      name:    match(['ansprechpartner','kontakt','contact','name 2','name2']),
+      firstName:match(['vorname','firstname','first name','ap:vorname']),
+      lastName: match(['nachname','familienname','lastname','last name','ap:nachname']),
+      anrede:  match(['anrede','salutation','ap:anrede']),
+      role:    match(['funktion / titel','funktion/titel','funktion','position','rolle','ap:funktion','ap:position']),
+      email:   match(['ap:email','ap:e-mail','e-mail','email','mail']),
+      tel:     match(['ap:telefon-1','ap:telefon','ap:mobil','telefon-1','telefon','telephone','phone','mobile','handy','mobil']),
       web:     match(['website','homepage','url']),
       city:    match(['ort','stadt','city','gemeinde']),
       plz:     match(['plz','postleitzahl','zip']),
+      street:  match(['straße und hausnr','strasse und hausnr','straße','strasse','street','adresse']),
       canton:  match(['kanton','canton']),
       segment: match(['segment']),
       industry:match(['branche','industrie','industry']),
@@ -1321,16 +1325,21 @@ const _readContactsXLSX = async file => {
       const co=get(row,'company');
       const city=get(row,'city');
       const xy=CITY_XY[city]||null;
-      const kt=(get(row,'canton')||'').toUpperCase().trim();
+      const plz=get(row,'plz');
+      let kt=(get(row,'canton')||'').toUpperCase().trim();
+      if(!kt) kt=plz2canton(plz);
       const ktxy=KT_XY[kt]||null;
+      const name=get(row,'name')||[get(row,'firstName'),get(row,'lastName')].filter(Boolean).join(' ').trim();
+      const street=get(row,'street');
+      const noteParts=[get(row,'note'),street?'Adresse: '+street:''].filter(Boolean);
       return {
-        company:co,name:get(row,'name'),role:get(row,'role'),
+        company:co,name,role:get(row,'role'),
         email:get(row,'email'),tel:get(row,'tel'),web:get(row,'web'),
-        city,plz:get(row,'plz'),canton:get(row,'canton'),
+        city,plz,canton:kt,
         industry:get(row,'industry')||get(row,'segment'),
         segment:get(row,'segment'),
         status:get(row,'status'),prio:get(row,'prio'),
-        note:get(row,'note'),naxt:get(row,'naxt'),
+        note:noteParts.join(' · '),naxt:get(row,'naxt'),
         followup:get(row,'followup'),kva:get(row,'kva'),product:get(row,'product'),
         _lat:xy?xy[0]:(ktxy?ktxy[0]+(Math.random()-.5)*.04:null),
         _lng:xy?xy[1]:(ktxy?ktxy[1]+(Math.random()-.5)*.06:null),
@@ -1421,13 +1430,8 @@ const doImport = () => {
   save();
   closeM();
 
-  // Refresh ALL tabs
-  try{renderDash();}catch(e){}
-  try{renderCtc();}catch(e){}
-  try{renderKanban();}catch(e){}
-  try{renderTasks();}catch(e){}
-  try{renderKt();}catch(e){}
-  try{if(S._mapInit)updateMap();}catch(e){}
+  // Refresh ALL tabs (single source of truth)
+  try{refreshAllViews();}catch(e){console.warn('refresh',e);}
 
   // Update badges
   const op=S.deals.filter(d=>d.stage!=='won'&&d.stage!=='lost').length;
@@ -1459,6 +1463,68 @@ const _hdrIdx = (hdrs, ...names) => {
   for(const n of names){ const i=H.findIndex(h=>h.includes(n)); if(i>=0&&n.length>=4) return i; }
   return -1;
 };
+// Swiss PLZ → Kanton (range-based, heuristic but reliable for most addresses)
+const plz2canton = plz => {
+  const n=+String(plz||'').match(/\d{4}/)?.[0]; if(!n) return '';
+  // Romandie + Wallis
+  if(n>=1000&&n<=1199) return 'VD';
+  if(n>=1200&&n<=1299) return 'GE';
+  if(n>=1300&&n<=1399) return 'VD';
+  if(n>=1400&&n<=1499) return 'VD';
+  if(n>=1500&&n<=1599) return 'FR';
+  if(n>=1600&&n<=1699) return 'FR';
+  if(n>=1700&&n<=1799) return 'FR';
+  if(n>=1800&&n<=1899) return 'VD';
+  if(n>=1900&&n<=1999) return 'VS';
+  // Jura + Neuchâtel + Berner Jura
+  if(n>=2000&&n<=2099) return 'NE';
+  if(n>=2100&&n<=2299) return 'NE';
+  if(n>=2300&&n<=2349) return 'NE';
+  if(n>=2350&&n<=2999) return 'JU';
+  // Bern + Mittelland
+  if(n>=3000&&n<=3999) return 'BE';
+  // Nordwestschweiz
+  if(n>=4000&&n<=4099) return 'BS';
+  if(n>=4100&&n<=4299) return 'BL';
+  if(n>=4300&&n<=4499) return 'AG';
+  if(n>=4500&&n<=4699) return 'SO';
+  if(n>=4700&&n<=4799) return 'BL';
+  if(n>=4800&&n<=4999) return 'AG';
+  if(n>=5000&&n<=5999) return 'AG';
+  // Zentralschweiz + Tessin
+  if(n>=6000&&n<=6099) return 'LU';
+  if(n>=6100&&n<=6299) return 'LU';
+  if(n>=6300&&n<=6399) return 'ZG';
+  if(n>=6400&&n<=6429) return 'SZ';
+  if(n>=6430&&n<=6439) return 'SZ';
+  if(n>=6440&&n<=6449) return 'UR';
+  if(n>=6450&&n<=6469) return 'UR';
+  if(n>=6470&&n<=6499) return 'UR';
+  if(n>=6500&&n<=6999) return 'TI';
+  // Graubünden
+  if(n>=7000&&n<=7999) return 'GR';
+  // Ostschweiz
+  if(n>=8000&&n<=8499) return 'ZH';
+  if(n>=8500&&n<=8599) return 'TG';
+  if(n>=8600&&n<=8999) return 'ZH';
+  if(n>=9000&&n<=9099) return 'SG';
+  if(n>=9100&&n<=9199) return 'AR';
+  if(n>=9200&&n<=9499) return 'SG';
+  if(n>=9500&&n<=9999) return 'SG';
+  return '';
+};
+
+// Refresh every view after a big import / sync — single source of truth
+const refreshAllViews = () => {
+  const tries=['renderDash','renderCtc','renderKanban','renderTasks','renderNotes','renderSimap','renderLR','renderAngPos','renderToday','renderKt','renderFc','renderPlan','renderGamify','renderSegChart','renderKtChart','renderHistChart','renderFunnelChart','renderActChart','renderComp','renderRap'];
+  for(const fn of tries){ try{ if(typeof window[fn]==='function') window[fn](); }catch(e){ /* render is best-effort */ } }
+  try{ if(S._mapInit && typeof updateMap==='function') updateMap(); }catch(_){}
+  try{ const op=(S.deals||[]).filter(d=>d.stage!=='won'&&d.stage!=='lost').length, ot=(S.tasks||[]).filter(t=>!t.done).length;
+    const nbp=g('nb-pipe');if(nbp){nbp.textContent=op;nbp.style.display=op?'':'none';}
+    const nbt=g('nb-tasks');if(nbt){nbt.textContent=ot;nbt.style.display=ot?'':'none';}
+  }catch(_){}
+};
+
 const _emptyBundle = () => ({kind:'unknown',source:'',contacts:[],deals:[],tasks:[],notes:[],lastRows:[],angPos:[],simap:[]});
 
 // Pipeline status → CRM stage
@@ -1909,7 +1975,7 @@ const doImport2 = () => {
     const r=applyBundle(S._impBundle);
     if(!r){toast('Nichts zu importieren','warn');return;}
     save(); closeM();
-    try{renderDash();}catch(e){}try{renderCtc();}catch(e){}try{renderKanban();}catch(e){}try{renderTasks();}catch(e){}try{renderNotes();}catch(e){}try{renderSimap();}catch(e){}try{renderLR();}catch(e){}try{renderAngPos();}catch(e){}try{renderToday();}catch(e){}try{if(S._mapInit)updateMap();}catch(e){}
+    try{refreshAllViews();}catch(e){console.warn('refresh',e);}
     const cta=g('imp-cta');if(cta)cta.style.display='none';
     const parts=[];if(r.dAdd)parts.push(r.dAdd+' Deals');if(r.cAdd)parts.push(r.cAdd+' Kontakte');if(r.tAdd)parts.push(r.tAdd+' Aufgaben');if(r.nAdd)parts.push(r.nAdd+' Notizen');if(r.lrAdd)parts.push(r.lrAdd+' Lastlist-Zeilen');if(r.apAdd)parts.push(r.apAdd+' Positionen');if(r.smAdd)parts.push(r.smAdd+' RFPs');if(r.cSkip)parts.push(r.cSkip+' Dubletten zusammengeführt');
     toast('✅ Importiert: '+parts.join(' · '),'ok');
@@ -2046,7 +2112,7 @@ const confirmSync = () => {
   const r=applySyncDiff(b,diff,overwrite);
   localStorage.setItem('mit_sync_last',Date.now());
   save(); S._syncPending=null; closeM();
-  try{renderDash();}catch(e){}try{renderKanban();}catch(e){}try{renderCtc();}catch(e){}try{renderToday();}catch(e){}try{if(S._mapInit)updateMap();}catch(e){}try{renderKt();}catch(e){}
+  try{refreshAllViews();}catch(e){console.warn('refresh',e);}
   _syncRefreshUI();
   const log=g('sync-log');const msg=`✓ Sync: ${r.updated} aktualisiert · ${r.added} neu · ${r.kept} Konflikt(e) behalten · ${r.cAdd} Kontakte neu`;
   if(log)log.textContent=msg;
@@ -3184,7 +3250,7 @@ const renderGamify = () => {
 };
 
 // ── WINDOW ASSIGNMENTS ──────────────────────────────────────
-['toggleMenu','fabCall','scanCard','handleCardImage','exportICS','importICS','parseICS','buildICS','renderPlan','computeAvailability','planTour','applyAngTemplate','saveAngVersion','renderAngVersions','restoreAngVersion','saveAsTemplate','initAngTemplates','setGistToken','gistPush','gistPull','exportReadonly','renderGamify','computeStreak','moveDealStage','attachKanbanTouch','loadEmbed','reloadEmbed'].forEach(n=>{try{window[n]=eval(n);}catch(_){}});
+['toggleMenu','fabCall','scanCard','handleCardImage','exportICS','importICS','parseICS','buildICS','renderPlan','computeAvailability','planTour','applyAngTemplate','saveAngVersion','renderAngVersions','restoreAngVersion','saveAsTemplate','initAngTemplates','setGistToken','gistPush','gistPull','exportReadonly','renderGamify','computeStreak','moveDealStage','attachKanbanTouch','loadEmbed','reloadEmbed','plz2canton','refreshAllViews'].forEach(n=>{try{window[n]=eval(n);}catch(_){}});
 try{window.addLastRow=addLastRow;}catch(_){}
 try{window.addRap=addRap;}catch(_){}
 try{window.analyzePDF=analyzePDF;}catch(_){}

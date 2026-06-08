@@ -40,7 +40,8 @@ Professionelles, vollständig browserbasiertes CRM in einer einzigen HTML-Datei.
 - Notizen mit Suche und Kategorien
 
 **Datenmanagement**
-- **Universal Drop-Zone** – beliebige Dateien (`.xlsx`, `.csv`, `.pdf`, `.docx`, `.json`) ablegen, alles wird automatisch auf die richtigen Tabs verteilt:
+- **Universal Drop-Zone** – beliebige Dateien (`.xlsx`, `.csv`, `.pdf`, `.docx`, `.json`) ablegen, alles wird automatisch auf die richtigen Tabs verteilt — **bei wiederholtem Import idempotent (kein Duplizieren)**, alle Reiter werden zentral über `refreshAllViews()` neu gerendert:
+  - **Kundenliste-XLSX** (Headers `Name 1`, `AP:Vorname`, `AP:Nachname`, `AP:Telefon-1`, `AP:Mobil`, `AP:Email`, `Straße und Hausnr`, `PLZ`, `Ort`): → Kontakte mit kombiniertem Namen, Karte/Kantone aus **PLZ→Kanton-Lookup** (alle 26 CH-Kantone, getestet auf 4517 Zeilen mit 100 % Kantons-Abdeckung)
   - **Pipeline-XLSX** (Spalten Kunde/Segment/kW/Status/Volumen): → Deals + Kontakte
   - **Aggregatliste-XLSX** (Generator/Standort): → Lastliste + Aufgaben
   - **Kontakte-XLSX** (Firmenname/Ansprechpartner/...): → Kontakte
