@@ -72,6 +72,9 @@ Professionelles, vollständig browserbasiertes CRM in einer einzigen HTML-Datei.
 - **Read-only-Snapshot**: eigenständige HTML-Pipeline-Übersicht exportieren und mit Innendienst/Vorgesetzten teilen.
 - **Gamification** (Heute): Tages-Streak 🔥, Calls-heute-Ziel mit Fortschritt, 7-Tage-Aktivitäten.
 - **Mobile-Touch**: ausklappbares Menü (☰), Swipe der Deal-Karten zwischen Phasen (+◀▶-Buttons), Floating-Call-Button, responsives Layout.
+- **Eingebettete Stand-alone-Tools** (eigene Sidebar-Einträge, laufen in eigenem iframe — keine Kollision mit dem CRM):
+  - **✉️ E-Mail Studio**: vollwertige KI-Email-Suite (Generator · Lead-Datenbank · Produkt-Portfolio · Statistik) — die Netlify-Variante 1:1 eingebettet, eigene Tabs, eigene Datenbank, eigener API-Key.
+  - **🛠️ Power Platform**: 14-Module-Engineering-Workspace (Generator/BESS/Trafo/Lastbank/Kabel/Parallel/USV/IBC/ROI/PQ-Check/Angebot/Schall/Notstrom/Emissionen) mit ISO-3046-Derating, AVR-Klassen, Lastliste, ergänzt das CRM-Engineering.
 - Volltext-Suche (Ctrl+K)
 - Light/Dark-Theme
 - Anthropic Claude API für alle KI-Funktionen
