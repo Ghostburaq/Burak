@@ -1,326 +1,334 @@
 # -*- coding: utf-8 -*-
 """
-Lebenslauf (CV) im Schweizer Format - A4, nuechtern, ss-Schreibweise.
-Erzeugt: bewerbung/Lebenslauf_Burak_Uecoez.docx
+Lebenslauf Burak Üçöz - MODERNES Design, Schweizer Format (A4, ss-Schreibweise).
+Zweispaltiges Layout: farbige Sidebar (Kontakt/Skills/Sprachen) + Hauptspalte
+(Profil/Erfahrung/Ausbildung). Header-Band mit Akzentfarbe.
 
-Platzhalter sind grau hinterlegt und in 〈spitzen Klammern〉 - das sind die
-Stellen, die nur Burak selbst verifizieren/fuellen kann (LinkedIn-deckungsgleich).
+Platzhalter bleiben dezent 〈markiert〉 - nur Burak kann sie verifizieren.
+Erzeugt: bewerbung/Lebenslauf_Burak_Uecoez.docx
 """
 from docx import Document
-from docx.shared import Pt, Cm, RGBColor
+from docx.shared import Pt, Cm, RGBColor, Emu
 from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_TAB_ALIGNMENT
-from docx.enum.table import WD_ALIGN_VERTICAL
+from docx.enum.table import WD_ALIGN_VERTICAL, WD_TABLE_ALIGNMENT
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
 
-# ---- Farben (nuechtern, Schweizer Stil) ----
-INK = RGBColor(0x1A, 0x1A, 0x1A)      # fast schwarz
-ACCENT = RGBColor(0x1F, 0x3A, 0x5F)   # gedecktes Dunkelblau
-GREY = RGBColor(0x6E, 0x6E, 0x6E)     # Sekundaertext
-RULE = "BFBFBF"                        # Linienfarbe
+# ---------- Palette (edel, zurückhaltend) ----------
+NAVY   = RGBColor(0x16, 0x2A, 0x43)   # Header-Band, Akzent dunkel
+STEEL  = RGBColor(0x2C, 0x5F, 0x8A)   # Sekundärakzent
+INK    = RGBColor(0x22, 0x26, 0x2B)   # Fliesstext
+GREY   = RGBColor(0x6B, 0x72, 0x80)   # Sekundärtext
+WHITE  = RGBColor(0xFF, 0xFF, 0xFF)
+LIGHT  = RGBColor(0xE8, 0xEC, 0xF1)   # helle Schrift auf Navy
+PH_COL = RGBColor(0x9A, 0x7A, 0x2E)   # Platzhalter-Text (gedämpftes Gold)
+
+NAVY_HEX  = "162A43"
+SIDE_HEX  = "EEF2F6"   # Sidebar-Hintergrund
+PH_FILL   = "FBF1D8"   # Platzhalter-Highlight (zart)
+LINE_HEX  = "C9D2DC"
 
 FONT = "Calibri"
+FONT_H = "Calibri"   # einheitlich, ruhig
 
 
-def set_font(run, size=10.5, bold=False, color=INK, name=FONT, italic=False):
+# ================= Low-level Helfer =================
+def set_font(run, size=10.5, bold=False, color=INK, name=FONT, italic=False, spacing=None, caps=False):
     run.font.name = name
     run.font.size = Pt(size)
     run.font.bold = bold
     run.font.italic = italic
     run.font.color.rgb = color
-    # Ostasiatische Schrift mitsetzen (sonst Fallback)
     rPr = run._element.get_or_add_rPr()
-    rFonts = rPr.find(qn('w:rFonts'))
-    if rFonts is None:
-        rFonts = OxmlElement('w:rFonts')
-        rPr.append(rFonts)
-    rFonts.set(qn('w:ascii'), name)
-    rFonts.set(qn('w:hAnsi'), name)
+    rF = rPr.find(qn('w:rFonts'))
+    if rF is None:
+        rF = OxmlElement('w:rFonts'); rPr.append(rF)
+    rF.set(qn('w:ascii'), name); rF.set(qn('w:hAnsi'), name)
+    if spacing is not None:
+        sp = OxmlElement('w:spacing'); sp.set(qn('w:val'), str(spacing)); rPr.append(sp)
+    if caps:
+        c = OxmlElement('w:caps'); c.set(qn('w:val'), 'true'); rPr.append(c)
 
 
-def shade(run, hexcolor="D9D9D9"):
-    """Grau hinterlegen -> markiert Platzhalter."""
+def shade_run(run, hexcolor):
     rPr = run._element.get_or_add_rPr()
-    shd = OxmlElement('w:shd')
-    shd.set(qn('w:val'), 'clear')
-    shd.set(qn('w:color'), 'auto')
-    shd.set(qn('w:fill'), hexcolor)
+    shd = OxmlElement('w:shd'); shd.set(qn('w:val'), 'clear')
+    shd.set(qn('w:color'), 'auto'); shd.set(qn('w:fill'), hexcolor)
     rPr.append(shd)
 
 
-def ph(paragraph, text, size=10.5, color=None):
-    """Platzhalter-Run: grau hinterlegt, dunkelgrau."""
-    r = paragraph.add_run("〈" + text + "〉")
-    set_font(r, size=size, color=color or GREY, italic=True)
-    shade(r, "EDE3C8")  # zartes Sandgelb -> faellt auf, druckt aber dezent
-    return r
-
-
-def add_bottom_border(paragraph, color=RULE, size=6):
-    p = paragraph._p
-    pPr = p.get_or_add_pPr()
-    pbdr = OxmlElement('w:pBdr')
-    bottom = OxmlElement('w:bottom')
-    bottom.set(qn('w:val'), 'single')
-    bottom.set(qn('w:sz'), str(size))
-    bottom.set(qn('w:space'), '4')
-    bottom.set(qn('w:color'), color)
-    pbdr.append(bottom)
-    pPr.append(pbdr)
-
-
-def no_space(p, before=0, after=0, line=1.0):
+def sp(p, before=0, after=0, line=1.12):
     pf = p.paragraph_format
-    pf.space_before = Pt(before)
-    pf.space_after = Pt(after)
+    pf.space_before = Pt(before); pf.space_after = Pt(after)
     pf.line_spacing = line
 
 
-def section_title(doc, text):
-    p = doc.add_paragraph()
-    no_space(p, before=10, after=4)
-    r = p.add_run(text.upper())
-    set_font(r, size=11, bold=True, color=ACCENT)
-    # Sperrung (letter spacing) fuer ruhigen Stil
-    rPr = r._element.get_or_add_rPr()
-    spc = OxmlElement('w:spacing')
-    spc.set(qn('w:val'), '20')
-    rPr.append(spc)
-    add_bottom_border(p)
+def run(p, text, **kw):
+    r = p.add_run(text); set_font(r, **kw); return r
+
+
+def ph(p, text, size=10, color=None):
+    r = p.add_run("〈" + text + "〉")
+    set_font(r, size=size, color=color or PH_COL, italic=True)
+    shade_run(r, PH_FILL)
+    return r
+
+
+def cell_bg(cell, hexcolor):
+    tcPr = cell._tc.get_or_add_tcPr()
+    shd = OxmlElement('w:shd'); shd.set(qn('w:val'), 'clear')
+    shd.set(qn('w:color'), 'auto'); shd.set(qn('w:fill'), hexcolor)
+    tcPr.append(shd)
+
+
+def cell_margins(cell, top=120, bottom=120, left=160, right=160):
+    tcPr = cell._tc.get_or_add_tcPr()
+    m = OxmlElement('w:tcMar')
+    for tag, val in (('top', top), ('bottom', bottom), ('start', left),
+                     ('end', right), ('left', left), ('right', right)):
+        e = OxmlElement('w:' + tag); e.set(qn('w:w'), str(val)); e.set(qn('w:type'), 'dxa')
+        m.append(e)
+    tcPr.append(m)
+
+
+def no_borders(table):
+    tblPr = table._tbl.tblPr
+    borders = OxmlElement('w:tblBorders')
+    for edge in ('top', 'left', 'bottom', 'right', 'insideH', 'insideV'):
+        e = OxmlElement('w:' + edge); e.set(qn('w:val'), 'none'); e.set(qn('w:sz'), '0')
+        borders.append(e)
+    tblPr.append(borders)
+
+
+def set_w(cell, cm):
+    cell.width = Cm(cm)
+    tcPr = cell._tc.get_or_add_tcPr()
+    tcW = tcPr.find(qn('w:tcW'))
+    if tcW is None:
+        tcW = OxmlElement('w:tcW'); tcPr.append(tcW)
+    tcW.set(qn('w:w'), str(int(cm * 567))); tcW.set(qn('w:type'), 'dxa')
+
+
+def fixed_layout(table):
+    tblPr = table._tbl.tblPr
+    lay = OxmlElement('w:tblLayout'); lay.set(qn('w:type'), 'fixed'); tblPr.append(lay)
+
+
+def hrule(p, color=LINE_HEX, size=6):
+    pPr = p._p.get_or_add_pPr()
+    pbdr = OxmlElement('w:pBdr'); b = OxmlElement('w:bottom')
+    b.set(qn('w:val'), 'single'); b.set(qn('w:sz'), str(size))
+    b.set(qn('w:space'), '3'); b.set(qn('w:color'), color)
+    pbdr.append(b); pPr.append(pbdr)
+
+
+# ================= Dokument =================
+doc = Document()
+s = doc.sections[0]
+s.page_height = Cm(29.7); s.page_width = Cm(21.0)
+s.top_margin = Cm(0); s.bottom_margin = Cm(1.1)
+s.left_margin = Cm(1.3); s.right_margin = Cm(1.3)
+s.header_distance = Cm(0); s.footer_distance = Cm(0.6)
+
+st = doc.styles['Normal']
+st.font.name = FONT; st.font.size = Pt(10.5); st.font.color.rgb = INK
+st.paragraph_format.space_after = Pt(0)
+st.paragraph_format.line_spacing = 1.12
+
+USABLE = 21.0 - 1.3 - 1.3   # 18.4 cm
+SIDE_W = 6.0
+MAIN_W = USABLE - SIDE_W
+
+# -------- HEADER-BAND (volle Breite, Navy) --------
+htbl = doc.add_table(rows=1, cols=1)
+htbl.alignment = WD_TABLE_ALIGNMENT.CENTER
+fixed_layout(htbl)
+hc = htbl.cell(0, 0)
+set_w(hc, USABLE)
+cell_bg(hc, NAVY_HEX)
+cell_margins(hc, top=300, bottom=260, left=360, right=360)
+# Name
+p = hc.paragraphs[0]; sp(p, after=2, line=1.0)
+run(p, "BURAK ", size=27, bold=True, color=WHITE, spacing=10)
+run(p, "ÜÇÖZ", size=27, bold=True, color=RGBColor(0x8F, 0xB4, 0xD9), spacing=10)
+# Titel
+p = hc.add_paragraph(); sp(p, before=2, after=0, line=1.0)
+run(p, "Technischer Vertrieb im Aussendienst", size=11.5, color=LIGHT, spacing=14, caps=True)
+p = hc.add_paragraph(); sp(p, before=1, after=0, line=1.0)
+run(p, "Gebietsverkauf  ·  Neukundenakquise  ·  Key-Account", size=10, color=RGBColor(0x9F,0xB2,0xC7), spacing=10)
+
+# kleiner Abstand unter Band
+spacer = doc.add_paragraph(); sp(spacer, before=0, after=4, line=0.5)
+
+# -------- ZWEISPALTIGES BODY --------
+body = doc.add_table(rows=1, cols=2)
+body.alignment = WD_TABLE_ALIGNMENT.CENTER
+fixed_layout(body); no_borders(body)
+left = body.cell(0, 0); right = body.cell(0, 1)
+set_w(left, SIDE_W); set_w(right, MAIN_W)
+left.vertical_alignment = WD_ALIGN_VERTICAL.TOP
+right.vertical_alignment = WD_ALIGN_VERTICAL.TOP
+cell_bg(left, SIDE_HEX)
+cell_margins(left, top=240, bottom=240, left=240, right=240)
+cell_margins(right, top=240, bottom=240, left=360, right=200)
+
+
+# ---------- SIDEBAR-Bausteine ----------
+def side_title(cell, text, first=False):
+    p = cell.add_paragraph(); sp(p, before=(0 if first else 14), after=5, line=1.0)
+    run(p, text, size=10.5, bold=True, color=NAVY, spacing=24, caps=True)
+    hrule(p, color="C9D2DC", size=6)
     return p
 
 
-# ====================================================================
-doc = Document()
+def side_line(cell, label, value_ph, val_real=None):
+    p = cell.add_paragraph(); sp(p, before=0, after=3, line=1.05)
+    if label:
+        run(p, label + "\n", size=8.5, bold=True, color=STEEL, spacing=8, caps=True)
+    if val_real:
+        run(p, val_real, size=9.5, color=INK)
+    else:
+        ph(p, value_ph, size=9.5)
+    return p
 
-# A4 + Raender
-sec = doc.sections[0]
-sec.page_height = Cm(29.7)
-sec.page_width = Cm(21.0)
-sec.top_margin = Cm(1.6)
-sec.bottom_margin = Cm(1.5)
-sec.left_margin = Cm(2.0)
-sec.right_margin = Cm(2.0)
 
-# Basisstil
-style = doc.styles['Normal']
-style.font.name = FONT
-style.font.size = Pt(10.5)
-style.font.color.rgb = INK
+# Foto-Platzhalter
+p = left.paragraphs[0]; sp(p, before=0, after=8, line=1.0)
+p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+r = run(p, "  Foto  ", size=10, color=GREY, italic=True)
+# Foto-Box: gerahmtes leeres Feld
+pPr = p._p.get_or_add_pPr()
+pbdr = OxmlElement('w:pBdr')
+for edge in ('top','bottom','left','right'):
+    e = OxmlElement('w:'+edge); e.set(qn('w:val'),'single'); e.set(qn('w:sz'),'6')
+    e.set(qn('w:space'),'18'); e.set(qn('w:color'),'B7C2CE'); pbdr.append(e)
+pPr.append(pbdr)
+cap = left.add_paragraph(); sp(cap, before=0, after=10, line=1.0); cap.alignment=WD_ALIGN_PARAGRAPH.CENTER
+run(cap, "optional · CH-üblich", size=7.5, italic=True, color=GREY)
 
-# -------------------- KOPF: Name + Titel --------------------
-h = doc.add_paragraph()
-no_space(h, after=0)
-r = h.add_run("Burak ")
-set_font(r, size=24, bold=True, color=INK)
-r = h.add_run("Üçöz")
-set_font(r, size=24, bold=True, color=ACCENT)
+# KONTAKT
+side_title(left, "Kontakt", first=False)
+side_line(left, "Adresse", "Strasse Nr.\nPLZ Ort")
+side_line(left, "Telefon", "+41 ...")
+side_line(left, "E-Mail", None, "b.s.uecoez@gmail.com")
+side_line(left, "LinkedIn", "linkedin.com/in/...")
 
-sub = doc.add_paragraph()
-no_space(sub, after=2)
-r = sub.add_run("Technischer Vertrieb im Aussendienst · Gebietsverkauf · Neukundenakquise")
-set_font(r, size=11.5, color=GREY)
+# PERSÖNLICH
+side_title(left, "Persönliches")
+side_line(left, "Geburtsdatum", "TT.MM.JJJJ")
+side_line(left, "Nationalität", "...")
+side_line(left, "Bewilligung / Bürgerort", "...")
+side_line(left, "Führerausweis", "Kat. B")
 
-# Kontaktzeile (Tab-getrennt, Platzhalter)
-add_bottom_border(doc.add_paragraph())  # duenne Trennlinie oben
+# SPRACHEN
+side_title(left, "Sprachen")
+for name, lvl in [("Deutsch","Muttersprache / Niveau"),("Französisch","z. B. B2"),
+                  ("Englisch","z. B. B2/C1"),("Türkisch","Niveau")]:
+    p = left.add_paragraph(); sp(p, before=0, after=4, line=1.0)
+    run(p, name, size=9.5, bold=True, color=INK)
+    run(p, "   ", size=9.5)
+    ph(p, lvl, size=8.5)
 
-contact = doc.add_paragraph()
-no_space(contact, before=4, after=2)
-def kv(p, label, placeholder):
-    r = p.add_run(label + " ")
-    set_font(r, size=9.5, bold=True, color=ACCENT)
-    ph(p, placeholder, size=9.5)
-    r = p.add_run("    ")
-    set_font(r, size=9.5)
+# KOMPETENZEN
+side_title(left, "Kompetenzen")
+for skill in ["Neukundenakquise","Gebiets- & Budgetverantwortung","Technische Beratung",
+              "Verhandlung & Abschluss","CRM / MS Office"]:
+    p = left.add_paragraph(); sp(p, before=0, after=3, line=1.05)
+    run(p, "▪ ", size=9, color=STEEL)
+    if skill == "CRM / MS Office":
+        run(p, "CRM ", size=9.5, color=INK); ph(p, "System", size=8.5); run(p, " · MS Office", size=9.5, color=INK)
+    else:
+        run(p, skill, size=9.5, color=INK)
 
-kv(contact, "Adresse:", "Strasse Nr., PLZ Ort")
-kv(contact, "Tel:", "+41 ...")
-contact2 = doc.add_paragraph()
-no_space(contact2, before=0, after=2)
-kv(contact2, "E-Mail:", "b.s.uecoez@gmail.com")
-kv(contact2, "LinkedIn:", "linkedin.com/in/...")
-contact3 = doc.add_paragraph()
-no_space(contact3, before=0, after=4)
-kv(contact3, "Geburtsdatum:", "TT.MM.JJJJ")
-kv(contact3, "Nationalität:", "...")
-kv(contact3, "Bürgerort/Bewilligung:", "...")
-add_bottom_border(doc.add_paragraph())
+# MILITÄR
+side_title(left, "Militärdienst")
+p = left.add_paragraph(); sp(p, before=0, after=0, line=1.05)
+ph(p, "Funktion / Grad / abgeschlossen", size=9)
 
-note = doc.add_paragraph()
-no_space(note, before=2, after=6)
-r = note.add_run("Hinweis: Alle Kontaktangaben müssen deckungsgleich mit LinkedIn sein – das wird vor dem Gespräch geprüft.")
-set_font(r, size=8, italic=True, color=GREY)
 
-# -------------------- KURZPROFIL --------------------
-section_title(doc, "Kurzprofil")
-p = doc.add_paragraph()
-no_space(p, after=6, line=1.15)
-r = p.add_run(
-    "Technischer Vertriebsprofi mit Schwerpunkt Aussendienst und Gebietsverkauf erklärungs"
-    "bedürftiger Produkte. Eigenverantwortung für ein Gebietsbudget von rund "
-)
-set_font(r)
-r = p.add_run("CHF 2,5 Mio.")
-set_font(r, bold=True)
-r = p.add_run(
-    " Stärken in Neukundenakquise, technischer Beratung und langfristiger Kundenbindung. "
-    "Führungserfahrung vorhanden und als persönliche Reife eingebracht – der Fokus bleibt "
-    "klar auf Gebiets- und Kundenverantwortung. Verlässlich, abschlussstark und auf "
-    "nachhaltige Geschäftsbeziehungen ausgerichtet."
-)
-set_font(r)
+# ---------- HAUPTSPALTE-Bausteine ----------
+def main_title(cell, text, first=False):
+    p = cell.add_paragraph(); sp(p, before=(0 if first else 12), after=5, line=1.0)
+    run(p, text, size=12.5, bold=True, color=NAVY, spacing=18, caps=True)
+    hrule(p, color=NAVY_HEX, size=10)
+    return p
 
-# -------------------- BERUFSERFAHRUNG --------------------
-section_title(doc, "Berufserfahrung")
 
-def job(company, role_default, location, period_ph, bullets, anchor=False):
-    # Zeile 1: Rolle ........ Zeitraum (rechtsbuendig)
-    p = doc.add_paragraph()
-    no_space(p, before=6, after=0)
-    # Tab-Stop rechts
-    p.paragraph_format.tab_stops.add_tab_stop(Cm(17.0), WD_TAB_ALIGNMENT.RIGHT)
-    r = p.add_run(role_default)
-    set_font(r, size=11, bold=True, color=INK)
-    r = p.add_run("\t")
-    set_font(r, size=10)
-    ph(p, period_ph, size=10)
-    # Zeile 2: Firma · Ort
-    p2 = doc.add_paragraph()
-    no_space(p2, before=0, after=2)
-    r = p2.add_run(company)
-    set_font(r, size=10.5, bold=True, color=ACCENT)
-    r = p2.add_run("  ·  ")
-    set_font(r, size=10.5, color=GREY)
-    ph(p2, location, size=10)
+def T(x): return (x, False)
+def PP(x): return (x, True)
+
+def job(cell, role, company, loc_ph, period_ph, bullets, anchor=False):
+    # Rolle + Zeitraum (rechts)
+    p = cell.add_paragraph(); sp(p, before=8, after=0, line=1.05)
+    p.paragraph_format.tab_stops.add_tab_stop(Cm(MAIN_W-0.56), WD_TAB_ALIGNMENT.RIGHT)
+    run(p, role, size=11, bold=True, color=INK)
+    run(p, "\t", size=9.5)
+    ph(p, period_ph, size=9)
+    # Firma · Ort
+    p2 = cell.add_paragraph(); sp(p2, before=0, after=3, line=1.0)
+    run(p2, company, size=10, bold=True, color=STEEL)
+    run(p2, "   ·   ", size=9.5, color=GREY)
+    ph(p2, loc_ph, size=9)
     if anchor:
-        r = p2.add_run("   ")
-        set_font(r, size=9)
-        r = p2.add_run("◆ Ankerstation")
-        set_font(r, size=8.5, bold=True, color=ACCENT)
-    # Bullets
-    for b in bullets:
-        bp = doc.add_paragraph(style=None)
-        bp.paragraph_format.left_indent = Cm(0.5)
-        bp.paragraph_format.first_line_indent = Cm(-0.5)
-        no_space(bp, before=0, after=1, line=1.1)
-        rr = bp.add_run("–  ")
-        set_font(rr, size=10)
-        # Bullet kann Platzhalter enthalten -> als Liste von (text, is_ph)
-        for seg, is_ph in b:
-            if is_ph:
-                ph(bp, seg, size=10)
-            else:
-                rr = bp.add_run(seg)
-                set_font(rr, size=10)
+        run(p2, "    ", size=8)
+        rr = run(p2, " Ankerstation ", size=7.5, bold=True, color=WHITE)
+        shade_run(rr, "2C5F8A")
+    for segs in bullets:
+        bp = cell.add_paragraph(); sp(bp, before=0, after=2, line=1.1)
+        bp.paragraph_format.left_indent = Cm(0.42)
+        bp.paragraph_format.first_line_indent = Cm(-0.42)
+        run(bp, "▪  ", size=9, color=STEEL)
+        for seg, is_ph in segs:
+            if is_ph: ph(bp, seg, size=9.5)
+            else: run(bp, seg, size=9.5)
 
-def T(s):  # normaler Textteil
-    return (s, False)
-def P(s):  # Platzhalter
-    return (s, True)
+# KURZPROFIL
+main_title(right, "Kurzprofil", first=True)
+p = right.add_paragraph(); sp(p, before=0, after=2, line=1.18)
+run(p, "Technischer Vertriebsprofi mit Schwerpunkt Aussendienst und Gebietsverkauf "
+       "erklärungsbedürftiger Produkte. Eigenverantwortung für ein Gebietsbudget von rund ", size=9.8)
+run(p, "CHF 2,5 Mio.", size=9.8, bold=True, color=NAVY)
+run(p, " Stärken in Neukundenakquise, technischer Beratung und langfristiger Kundenbindung. "
+       "Führungserfahrung vorhanden und als persönliche Reife eingebracht – der Fokus bleibt klar "
+       "auf Gebiets- und Kundenverantwortung. Verlässlich, abschlussstark und auf nachhaltige "
+       "Geschäftsbeziehungen ausgerichtet.", size=9.8)
 
-# Cortexia – aktuellste/aktuelle Station (Gebiets-Profi nach vorne)
-job(
-    "Cortexia SA",
-    "Gebietsverkaufsleiter / Area Sales Manager",
-    "Region / Ort",
-    "MM.JJJJ – heute",
-    [
-        [T("Eigenverantwortliche Betreuung und Entwicklung des Verkaufsgebiets mit einem "),
-         T("Budgetvolumen von rund CHF 2,5 Mio.")],
-        [T("Neukundenakquise und Ausbau bestehender Kundenbeziehungen; gewonnen: "),
-         P("Anzahl Neukunden / Volumen einsetzen")],
-        [T("Technische Beratung erklärungsbedürftiger Produkte von der Erstansprache bis zum Abschluss.")],
-        [P("Konkretes Ergebnis / Projekt aus der Cortexia-Zeit ergänzen")],
-    ],
-    anchor=True,
-)
+# BERUFSERFAHRUNG
+main_title(right, "Berufserfahrung")
+job(right, "Gebietsverkaufsleiter / Area Sales Manager", "Cortexia SA", "Region / Ort", "MM.JJJJ – heute",
+    [[T("Eigenverantwortliche Entwicklung des Verkaufsgebiets mit Budgetvolumen von rund "), T("CHF 2,5 Mio.")],
+     [T("Neukundenakquise und Ausbau bestehender Kunden; gewonnen: "), PP("Anzahl Neukunden / Volumen")],
+     [T("Technische Beratung erklärungsbedürftiger Produkte – Erstansprache bis Abschluss.")],
+     [PP("Konkretes Ergebnis / Projekt aus der Cortexia-Zeit")]], anchor=True)
 
-# Camille Bauer – Akquise-Beleg (fuer AGRO Gold besonders relevant)
-job(
-    "Camille Bauer Metrawatt AG",
-    "Aussendienst / Technischer Verkauf",
-    "Region / Ort",
-    "MM.JJJJ – MM.JJJJ",
-    [
-        [T("Betreuung eines definierten Verkaufsgebiets im technischen B2B-Umfeld.")],
-        [T("Neukundengewinnung: "), P("echte Neukundenzahl einsetzen"),
-         T(" – belastbare Zahl statt Prozentangabe.")],
-        [P("Umsatzentwicklung / Marktsituation ergänzen (z. B. Umsatz im rückläufigen Markt gehalten und ausgebaut)")],
-    ],
-)
+job(right, "Aussendienst / Technischer Verkauf", "Camille Bauer Metrawatt AG", "Region / Ort", "MM.JJJJ – MM.JJJJ",
+    [[T("Betreuung eines definierten Verkaufsgebiets im technischen B2B-Umfeld.")],
+     [T("Neukundengewinnung: "), PP("echte Neukundenzahl"), T(" – belastbare Zahl statt Prozent.")],
+     [PP("Umsatzentwicklung / Marktsituation (z. B. Umsatz im rückläufigen Markt gehalten und ausgebaut)")]])
 
-# Weitere Stationen – Geruest mit Platzhaltern (lueckenlos, LinkedIn-deckungsgleich)
-job("MRK", "Funktion / Titel", "Ort", "MM.JJJJ – MM.JJJJ",
-    [[P("Kernaufgabe und ein messbares Ergebnis ergänzen")]])
-job("Manz", "Funktion / Titel", "Ort", "MM.JJJJ – MM.JJJJ",
-    [[P("Kernaufgabe und ein messbares Ergebnis ergänzen")]])
-job("Anadolu", "Funktion / Titel", "Ort", "MM.JJJJ – MM.JJJJ",
-    [[P("Kernaufgabe und ein messbares Ergebnis ergänzen")]])
-job("Pflitsch", "Funktion / Titel", "Ort", "MM.JJJJ – MM.JJJJ",
-    [[P("Kernaufgabe und ein messbares Ergebnis ergänzen")]])
+for comp in ["MRK", "Manz", "Anadolu", "Pflitsch"]:
+    job(right, "Funktion / Titel", comp, "Ort", "MM.JJJJ – MM.JJJJ",
+        [[PP("Kernaufgabe und ein messbares Ergebnis")]])
 
-# Kabuu – Beleg fuer Langfristigkeit (gegen Wechselmuster)
-job("Kabuu", "Funktion / Titel", "Ort", "MM.JJJJ – MM.JJJJ",
+job(right, "Funktion / Titel", "Kabuu", "Ort", "MM.JJJJ – MM.JJJJ",
     [[T("Langjähriges Engagement – Beleg für Beständigkeit und nachhaltige Kundenbeziehungen.")],
-     [P("Tätigkeit konkretisieren")]])
+     [PP("Tätigkeit konkretisieren")]])
 
-# Freelance-Phase
-job("Selbständig / Freelance", "Selbständige Tätigkeit", "Ort", "MM.JJJJ – MM.JJJJ",
-    [[P("Schwerpunkt und Reihenfolge der Freelance-Phase einordnen")]])
+job(right, "Selbständige Tätigkeit", "Selbständig / Freelance", "Ort", "MM.JJJJ – MM.JJJJ",
+    [[PP("Schwerpunkt und Reihenfolge der Freelance-Phase einordnen")]])
 
-# -------------------- AUSBILDUNG --------------------
-section_title(doc, "Ausbildung")
-p = doc.add_paragraph()
-no_space(p, before=4, after=0)
-p.paragraph_format.tab_stops.add_tab_stop(Cm(17.0), WD_TAB_ALIGNMENT.RIGHT)
-ph(p, "Abschluss / Titel", size=10.5)
-r = p.add_run("\t")
-set_font(r)
-ph(p, "JJJJ – JJJJ", size=10)
-p2 = doc.add_paragraph()
-no_space(p2, before=0, after=4)
-ph(p2, "Fachrichtung", size=10)
-r = p2.add_run("  ·  ")
-set_font(r, color=GREY)
-ph(p2, "Hochschule / Institution, Ort", size=10)
+# AUSBILDUNG
+main_title(right, "Ausbildung")
+p = right.add_paragraph(); sp(p, before=2, after=0, line=1.05)
+p.paragraph_format.tab_stops.add_tab_stop(Cm(MAIN_W-0.56), WD_TAB_ALIGNMENT.RIGHT)
+ph(p, "Abschluss / Titel", size=10); run(p, "\t"); ph(p, "JJJJ – JJJJ", size=9)
+p = right.add_paragraph(); sp(p, before=0, after=0, line=1.0)
+ph(p, "Fachrichtung", size=9.5); run(p, "   ·   ", size=9.5, color=GREY); ph(p, "Hochschule / Institution, Ort", size=9.5)
 
-# -------------------- SPRACHEN --------------------
-section_title(doc, "Sprachen")
-langs = [("Deutsch", "Muttersprache / Niveau"),
-         ("Französisch", "Niveau (z. B. B2)"),
-         ("Englisch", "Niveau (z. B. B2/C1)"),
-         ("Türkisch", "Niveau"),
-         ("Weitere", "Sprache / Niveau")]
-for name, lvl in langs:
-    p = doc.add_paragraph()
-    no_space(p, before=0, after=1)
-    p.paragraph_format.tab_stops.add_tab_stop(Cm(4.0), WD_TAB_ALIGNMENT.LEFT)
-    r = p.add_run(name)
-    set_font(r, size=10, bold=True)
-    r = p.add_run("\t")
-    set_font(r, size=10)
-    ph(p, lvl, size=10)
-
-# -------------------- IT / WEITERE --------------------
-section_title(doc, "IT-Kenntnisse & Weiteres")
-for label, val in [("EDV / CRM", "z. B. MS Office, CRM-System einsetzen"),
-                   ("Führerausweis", "Kat. B (für Aussendienst relevant)"),
-                   ("Militärdienst", "Funktion / Grad / abgeschlossen")]:
-    p = doc.add_paragraph()
-    no_space(p, before=0, after=1)
-    p.paragraph_format.tab_stops.add_tab_stop(Cm(4.0), WD_TAB_ALIGNMENT.LEFT)
-    r = p.add_run(label)
-    set_font(r, size=10, bold=True)
-    r = p.add_run("\t")
-    set_font(r, size=10)
-    ph(p, val, size=10)
-
-# -------------------- REFERENZEN --------------------
-section_title(doc, "Referenzen")
-p = doc.add_paragraph()
-no_space(p, before=2, after=0)
-r = p.add_run("Auf Anfrage gerne.")
-set_font(r, size=10, color=GREY)
+# REFERENZEN
+main_title(right, "Referenzen")
+p = right.add_paragraph(); sp(p, before=2, after=0, line=1.0)
+run(p, "Auf Anfrage gerne.", size=9.5, color=GREY)
 
 doc.save("bewerbung/Lebenslauf_Burak_Uecoez.docx")
-print("OK Lebenslauf gespeichert")
+print("OK modernes Layout gespeichert")
