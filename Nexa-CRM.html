@@ -1116,13 +1116,10 @@ input,select,textarea{font-family:inherit;font-size:14px}
             </select>
             <select id="filterSegment" onchange="window.renderKontakte()">
               <option value="">Alle Segmente</option>
-              <option>Industrie</option><option>Pharma</option><option>Rechenzentrum</option>
-              <option>Spital/Klinik</option><option>EVU</option><option>Gemeinde</option>
-              <option>Bau</option><option>Event</option><option>Cross-Sell</option><option>Sonstige</option>
             </select>
-            <select id="filterKategorie" onchange="window.renderKontakte()" title="Strom / Wärme / Kälte">
+            <select id="filterKategorie" onchange="window.renderKontakte()">
               <option value="">Alle Kategorien</option>
-              <option>Strom</option><option>Wärme</option><option>Kälte</option><option>USV</option><option>Mix</option>
+              <option>Akquise</option><option>Bestandskunde</option><option>Partner</option><option>Sonstige</option>
             </select>
             <select id="filterSalesRep" onchange="window.renderKontakte()" title="Berater / Außendienst">
               <option value="">Alle Berater</option>
@@ -1530,16 +1527,13 @@ input,select,textarea{font-family:inherit;font-size:14px}
         <div class="field"><label>Position</label><input id="cPosition"></div>
         <div class="field"><label>Einsatzort / Adresse</label><input id="cOrt"></div>
         <div class="field"><label>Segment</label>
-          <select id="cSegment">
-            <option>Industrie</option><option>Pharma</option><option>Rechenzentrum</option>
-            <option>Spital/Klinik</option><option>EVU</option><option>Gemeinde</option>
-            <option>Bau</option><option>Event</option><option>Cross-Sell</option><option>Sonstige</option>
-          </select>
+          <input id="cSegment" list="cSegmentList" placeholder="z.B. Architekten, Unternehmen, Anlagenbau">
+          <datalist id="cSegmentList"></datalist>
         </div>
-        <div class="field"><label>Kategorie (Produktlinie)</label>
+        <div class="field"><label>Kategorie</label>
           <select id="cKategorie">
             <option value="">— keine —</option>
-            <option>Strom</option><option>Wärme</option><option>Kälte</option><option>USV</option><option>Mix</option>
+            <option>Akquise</option><option>Bestandskunde</option><option>Partner</option><option>Sonstige</option>
           </select>
         </div>
         <div class="field"><label>Berater / Verantwortlich</label>
@@ -2375,6 +2369,7 @@ function drawTrendChart(){
 //  RENDER: KONTAKTE
 // ════════════════════════════════════════════════════════════════════════
 window.renderKontakte = function renderKontakte(){
+  populateSegmentDatalists();
   const rawSearch = (document.getElementById('filterSearch').value || '').trim();
   const tagOnly = rawSearch.startsWith('#') ? rawSearch.slice(1).toLowerCase() : null;
   const search = (tagOnly ? '' : rawSearch).toLowerCase();
@@ -3626,7 +3621,7 @@ window.openContactForm = function(){
   document.getElementById('cTel').value = '';
   document.getElementById('cPosition').value = '';
   document.getElementById('cOrt').value = '';
-  document.getElementById('cSegment').value = 'Industrie';
+  document.getElementById('cSegment').value = '';
   document.getElementById('cKategorie').value = '';
   document.getElementById('cSalesRep').value = '';
   populateSalesRepDatalist();
@@ -3664,7 +3659,7 @@ window.openContact = function(id){
   document.getElementById('cTel').value = c.tel || '';
   document.getElementById('cPosition').value = c.position || '';
   document.getElementById('cOrt').value = c.ort || '';
-  document.getElementById('cSegment').value = c.segment || 'Industrie';
+  document.getElementById('cSegment').value = c.segment || '';
   document.getElementById('cKategorie').value = c.kategorie || '';
   document.getElementById('cSalesRep').value = c.salesRep || '';
   populateSalesRepDatalist();
@@ -4393,11 +4388,21 @@ function populateKiSelects(){
     const el = document.getElementById(id);
     if(el) el.innerHTML = opts;
   });
-  // Branche/Kategorie-Vorschläge aus den tatsächlich vorhandenen Segmenten
-  const dl = document.getElementById('kiSegmentList');
-  if(dl){
-    const segs = [...new Set(STATE.contacts.map(c=>(c.segment||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'de'));
-    dl.innerHTML = segs.map(s=>`<option value="${escHtml(s)}">`).join('');
+  populateSegmentDatalists();
+}
+
+// Füllt alle Segment/Branche-Vorschlagslisten + den Segment-Filter aus den
+// real vorhandenen Werten (so funktionieren beliebige Kategorien aus dem Import).
+function populateSegmentDatalists(){
+  const segs = [...new Set(STATE.contacts.map(c=>(c.segment||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'de'));
+  const dlHtml = segs.map(s=>`<option value="${escHtml(s)}">`).join('');
+  ['kiSegmentList','cSegmentList'].forEach(id=>{ const dl=document.getElementById(id); if(dl) dl.innerHTML = dlHtml; });
+  // Segment-Filter auf der Kontakte-Seite (aktuelle Auswahl beibehalten)
+  const sel = document.getElementById('filterSegment');
+  if(sel){
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">Alle Segmente</option>' + segs.map(s=>`<option${s===cur?' selected':''}>${escHtml(s)}</option>`).join('');
+    if(segs.includes(cur)) sel.value = cur;
   }
 }
 
