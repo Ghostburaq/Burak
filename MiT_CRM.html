@@ -3165,10 +3165,12 @@ window.bulkTag = function(){
   showToast('✓ Tag "' + tag + '" hinzugefügt', 'success');
 };
 window.bulkDelete = function(){
-  if(!confirm(bulkSelected.size + ' Kontakte UNWIDERRUFLICH löschen?\nAuch alle zugehörigen Aktivitäten werden entfernt.')) return;
+  if(!confirm(bulkSelected.size + ' Kontakte UNWIDERRUFLICH löschen?\nAuch alle zugehörigen Aktivitäten und Anhänge werden entfernt.')) return;
   const ids = new Set(bulkSelected);
   STATE.contacts = STATE.contacts.filter(c => !ids.has(c.id));
   STATE.activities = STATE.activities.filter(a => !ids.has(a.contactId));
+  // Cascade attachment cleanup in IndexedDB (best effort)
+  ids.forEach(id => { attDeleteAllForContact(id).catch(()=>{}); });
   saveState(); bulkClear(); refreshAll();
   showToast('✓ ' + ids.size + ' Kontakte gelöscht', 'success');
 };
@@ -3362,20 +3364,37 @@ window.openDedup = function(){
   window._dedupGroups = groups;
   openModal('modalDedup');
 };
-window.dedupMerge = function(gi){
+window.dedupMerge = async function(gi){
   const groups = window._dedupGroups || []; const g = groups[gi]; if(!g) return;
   const keepId = document.querySelector(`input[name="dedup-keep-${gi}"]:checked`)?.value;
   const keeper = g.find(c => c.id === keepId); if(!keeper) return;
   const others = g.filter(c => c.id !== keepId);
-  // Move activities to keeper, merge fields where keeper is empty
-  others.forEach(o => {
+  // Move activities + attachments to keeper, merge fields where keeper is empty
+  for(const o of others){
     STATE.activities.filter(a => a.contactId === o.id).forEach(a => { a.contactId = keepId; });
-    ['kontakt','email','tel','position','ort','segment','chf','prob','wv','next','notiz','closeDate'].forEach(f => { if(!keeper[f] && o[f]) keeper[f] = o[f]; });
+    ['kontakt','email','tel','position','ort','segment','chf','prob','wv','wvTime','next','notiz','closeDate','closeReason','kategorie','salesRep'].forEach(f => { if(!keeper[f] && o[f]) keeper[f] = o[f]; });
     if(o.extraEmails) keeper.extraEmails = [...(keeper.extraEmails||[]), ...o.extraEmails];
     if(o.extraTels)   keeper.extraTels   = [...(keeper.extraTels||[]), ...o.extraTels];
     if(o.extraContacts) keeper.extraContacts = [...(keeper.extraContacts||[]), ...o.extraContacts];
     if(o.tags){ const t = new Set([...parseTags(keeper.tags), ...parseTags(o.tags)]); keeper.tags = [...t]; }
-  });
+    // Move attachments from the losing contact to the keeper (re-key them)
+    try{
+      const oAtts = await attGetAllForContact(o.id);
+      for(const a of oAtts){
+        const existing = await attGetOne(attKey(keepId, a.name));
+        const newName = existing ? a.name.replace(/(\.[^.]+)?$/, '_merged$1') : a.name;
+        await attPutOne({
+          key: attKey(keepId, newName),
+          contactId: keepId,
+          name: newName,
+          dataUrl: a.dataUrl,
+          size: a.size,
+          date: a.date
+        });
+        await attDeleteOne(a.key);
+      }
+    }catch(e){ console.warn('dedup att move', e); }
+  }
   const remove = new Set(others.map(o=>o.id));
   STATE.contacts = STATE.contacts.filter(c => !remove.has(c.id));
   keeper.updated = new Date().toISOString();
@@ -3805,9 +3824,12 @@ window.saveContact = function(){
 
 window.deleteContact = function(){
   if(!currentContactId) return;
-  if(!confirm('Kontakt wirklich löschen? Alle Aktivitäten dazu werden ebenfalls entfernt.')) return;
-  STATE.contacts = STATE.contacts.filter(c => c.id !== currentContactId);
-  STATE.activities = STATE.activities.filter(a => a.contactId !== currentContactId);
+  if(!confirm('Kontakt wirklich löschen? Alle Aktivitäten und Anhänge dazu werden ebenfalls entfernt.')) return;
+  const idToDelete = currentContactId;
+  STATE.contacts = STATE.contacts.filter(c => c.id !== idToDelete);
+  STATE.activities = STATE.activities.filter(a => a.contactId !== idToDelete);
+  // Cascade: remove all IndexedDB attachments for this contact (no orphans)
+  attDeleteAllForContact(idToDelete).catch(e=>console.warn('att cleanup', e));
   saveState();
   closeModal('modalContact');
   refreshAll();
@@ -4267,6 +4289,28 @@ async function attDeleteOne(key){
     tx.oncomplete = ()=>resolve(true);
     tx.onerror = ()=>reject(tx.error);
   });
+}
+
+// Delete every attachment record belonging to a given contact (cascade on
+// contact delete to prevent orphaned IndexedDB records that take up quota
+// forever).
+async function attDeleteAllForContact(contactId){
+  try{
+    const db = await openAttDb();
+    return await new Promise((resolve)=>{
+      const tx = db.transaction(ATT_STORE,'readwrite');
+      const store = tx.objectStore(ATT_STORE);
+      const idx = store.index('contactId');
+      const req = idx.openCursor(IDBKeyRange.only(contactId));
+      let removed = 0;
+      req.onsuccess = (e)=>{
+        const cur = e.target.result;
+        if(cur){ store.delete(cur.primaryKey); removed++; cur.continue(); }
+      };
+      tx.oncomplete = ()=>resolve(removed);
+      tx.onerror = ()=>resolve(0);
+    });
+  }catch(e){ return 0; }
 }
 
 async function attGetOne(key){
