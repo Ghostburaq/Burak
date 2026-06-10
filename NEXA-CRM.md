@@ -50,6 +50,16 @@ Beim Import gilt laut Vorgabe:
 > Feintuning der Spalten-Zuordnung machen wir, sobald deine echten Listen da sind —
 > schick sie einfach rein.
 
+## 📅 Beratung buchen (Calendly)
+Für das kostenlose **30-Min-Erstgespräch per Teams/Zoom**:
+1. Einstellungen → *Branding & Firmenprofil* → **Calendly-Buchungslink** eintragen
+   (z. B. `https://calendly.com/dein-name/30min`; Calendly „Free" genügt).
+2. Nutzen:
+   - Sidebar **„📅 Beratung buchen"** → eingebetteter Kalender im Tool
+   - Im Kontakt: Button **„📅 30-Min Erstgespräch"** → fertige Einladungs-Mail mit Link
+   - KI-Email: Häkchen **„30-Min-Erstgespräch anbieten"** hängt den Buchungslink an
+   - Schnellsuche (Ctrl/⌘+K) → „Beratung buchen"
+
 ## KI-Assist aktivieren (optional)
 Einstellungen → **Anthropic API-Key** eintragen (nur lokal gespeichert).
 Key: console.anthropic.com/settings/keys

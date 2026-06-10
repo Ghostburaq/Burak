@@ -11,6 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
 <!-- Libraries -->
+<link href="https://assets.calendly.com/assets/external/widget.css" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -972,6 +973,9 @@ input,select,textarea{font-family:inherit;font-size:14px}
         <span class="nav-icon">📊</span> Wochenbericht
         <span id="wbNewDot" class="notif-dot" style="display:none"></span>
       </button>
+      <button class="nav-item" onclick="window.openBookingCalendar()" title="30-Min-Erstgespräch buchen (Calendly)">
+        <span class="nav-icon">📅</span> Beratung buchen
+      </button>
     </nav>
     <div class="sidebar-foot">
       <div class="api-status">
@@ -1256,6 +1260,10 @@ input,select,textarea{font-family:inherit;font-size:14px}
                 </select>
               </div>
             </div>
+            <label class="row mt-md" style="gap:8px;align-items:center;cursor:pointer;font-size:13px">
+              <input type="checkbox" id="kiEmBooking" style="width:auto;margin:0">
+              <span>📅 Kostenloses 30-Min-Erstgespräch (Teams/Zoom) anbieten — Calendly-Link wird angehängt</span>
+            </label>
             <div class="row mt-md">
               <button class="btn btn-primary" onclick="window.kiGenEmail()">✦ Email generieren</button>
               <button class="btn btn-ghost btn-sm" onclick="window.kiCopy('kiEmOut')">📋 Kopieren</button>
@@ -1380,7 +1388,18 @@ input,select,textarea{font-family:inherit;font-size:14px}
           <div class="field mt-md"><label>Was bietet ihr an? (Pitch für die KI)</label>
             <textarea id="coPitchInput" rows="3" placeholder="z.B. Wir übernehmen die telefonische und schriftliche Neukunden-Akquise für B2B-Dienstleister in der Schweiz."></textarea>
           </div>
-          <button class="btn btn-primary mt-md" onclick="window.saveBrandSettings()">Branding speichern</button>
+          <div class="field mt-md"><label>📅 Calendly-Buchungslink (30-Min-Erstgespräch)</label>
+            <input id="coCalendlyInput" placeholder="https://calendly.com/dein-name/30min" type="url">
+          </div>
+          <p class="tx-mute" style="font-size:12px;line-height:1.6;margin-top:6px">
+            Dein Calendly-Link für die kostenlose 30-Min-Erstberatung (Teams/Zoom). Wird im Buchungskalender
+            eingebettet und in Einladungs-Mails sowie KI-Emails als Termin-Button verwendet.
+            Calendly „Free" reicht für einen 30-Min-Termintyp. Link findest du in Calendly unter dem Event-Typ → „Share".
+          </p>
+          <div class="row gap-md mt-md">
+            <button class="btn btn-primary" onclick="window.saveBrandSettings()">Branding speichern</button>
+            <button class="btn btn-ghost" onclick="window.openBookingCalendar()">📅 Buchungskalender testen</button>
+          </div>
         </div>
         <div class="card">
           <div class="card-title mb-md">📦 Datenverwaltung & Export</div>
@@ -1603,6 +1622,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
         <div class="row mb-md" style="flex-wrap:wrap;gap:6px">
           <button class="btn btn-ghost btn-sm" onclick="window.logFromContact()">+ Aktivität hinzufügen</button>
           <button class="btn btn-ghost btn-sm" id="cOutlookEmailBtn" onclick="window.openContactInOutlook()" style="display:none;border-color:#0078d4;color:#0078d4">📬 Email in Outlook</button>
+          <button class="btn btn-ghost btn-sm" onclick="window.sendBookingInvite()" style="border-color:var(--good);color:var(--good)" title="Einladung zum kostenlosen 30-Min-Erstgespräch (Teams/Zoom) per E-Mail">📅 30-Min Erstgespräch</button>
         </div>
         <div class="timeline" id="cTimeline"></div>
       </div>
@@ -1847,7 +1867,8 @@ const COMPANY_DEFAULTS = {
   name: 'Nexa',
   pitch: 'B2B-Akquise & Vertrieb — wir gewinnen Neukunden für unsere Auftraggeber.',
   rep: '',
-  recipient: ''   // Empfänger-Anrede im Wochenbericht (z.B. "Team")
+  recipient: '',  // Empfänger-Anrede im Wochenbericht (z.B. "Team")
+  calendly: ''    // Calendly-Buchungslink für das 30-Min-Erstgespräch
 };
 function loadBrand(){
   try{ const b = JSON.parse(localStorage.getItem(BRAND_KEY)||'{}');
@@ -1861,7 +1882,8 @@ function loadCompany(){
       name: c.name || loadBrand().name || COMPANY_DEFAULTS.name,
       pitch: c.pitch || COMPANY_DEFAULTS.pitch,
       rep: c.rep || (loadSalesReps()[0]||COMPANY_DEFAULTS.rep),
-      recipient: c.recipient || COMPANY_DEFAULTS.recipient
+      recipient: c.recipient || COMPANY_DEFAULTS.recipient,
+      calendly: c.calendly || COMPANY_DEFAULTS.calendly
     };
   }catch(e){ return {...COMPANY_DEFAULTS}; }
 }
@@ -1881,6 +1903,7 @@ function applyBrand(){
   const cn = document.getElementById('coNameInput');  if(cn) cn.value = c.name;
   const cp = document.getElementById('coPitchInput'); if(cp) cp.value = c.pitch;
   const cr = document.getElementById('coRecipientInput'); if(cr) cr.value = c.recipient;
+  const cc = document.getElementById('coCalendlyInput'); if(cc) cc.value = c.calendly;
 }
 window.saveBrandSettings = function(){
   const name = (document.getElementById('brandNameInput').value||'').trim() || BRAND_DEFAULTS.name;
@@ -1890,9 +1913,69 @@ window.saveBrandSettings = function(){
   co.name = (document.getElementById('coNameInput').value||'').trim() || name;
   co.pitch = (document.getElementById('coPitchInput').value||'').trim() || COMPANY_DEFAULTS.pitch;
   co.recipient = (document.getElementById('coRecipientInput').value||'').trim();
+  co.calendly = (document.getElementById('coCalendlyInput').value||'').trim();
   saveCompany(co);
   applyBrand();
   showToast('✓ Branding & Firmenprofil gespeichert', 'success');
+};
+
+// ─── Calendly-Buchung (30-Min-Erstgespräch) ───────────────────────────────
+function bookingLink(){ return (loadCompany().calendly||'').trim(); }
+// Fertiger Einladungs-Satz inkl. Link (für KI-Emails / Kontakt-Einladung)
+function bookingCTAline(){
+  const l = bookingLink();
+  if(!l) return '';
+  return `\n\nGerne lade ich Sie zu einem unverbindlichen 30-minütigen Erstgespräch per Teams oder Zoom ein. Wählen Sie einfach Ihren Wunschtermin: ${l}`;
+}
+window.copyBookingLink = function(){
+  const l = bookingLink();
+  if(!l){ showToast('Kein Calendly-Link hinterlegt — Einstellungen → Branding', 'warn'); window.nav('settings'); return; }
+  navigator.clipboard.writeText(l).then(()=>showToast('📅 Buchungslink kopiert', 'success'));
+};
+// Email-Einladung an den aktuellen Kontakt mit Buchungslink
+window.sendBookingInvite = function(){
+  const l = bookingLink();
+  if(!l){ showToast('Bitte zuerst Calendly-Link hinterlegen — Einstellungen → Branding', 'warn'); closeModal('modalContact'); window.nav('settings'); return; }
+  const c = currentContactId ? STATE.contacts.find(x=>x.id===currentContactId) : null;
+  const anrede = c && c.kontakt ? `Guten Tag ${c.kontakt}` : 'Guten Tag';
+  const co = loadCompany();
+  const body =
+`${anrede}
+
+vielen Dank für Ihr Interesse. Für ein erstes Kennenlernen biete ich Ihnen gerne ein kostenloses, unverbindliches 30-minütiges Erstgespräch per Teams oder Zoom an.
+
+Wählen Sie einfach Ihren Wunschtermin – Sie erhalten danach automatisch den Meeting-Link:
+${l}
+
+Ich freue mich auf das Gespräch.` + getSignatureBlock();
+  const to = c && c.email ? encodeURIComponent(c.email) : '';
+  const subject = encodeURIComponent(`Einladung: 30-Min-Erstgespräch${c&&c.firma?' — '+c.firma:''}`);
+  window.location.href = `mailto:${to}?subject=${subject}&body=${encodeURIComponent(body)}`;
+  showToast('📅 E-Mail mit Buchungslink geöffnet', 'success');
+};
+// Eingebetteter Buchungskalender (Calendly Inline-Widget)
+window.openBookingCalendar = function(){
+  const link = bookingLink();
+  if(!link){ showToast('Bitte zuerst Calendly-Link hinterlegen — Einstellungen → Branding', 'warn'); window.nav('settings'); return; }
+  openModal('modalBooking');
+  const host = document.getElementById('calendlyHost');
+  if(!host) return;
+  host.innerHTML = '<div class="tx-mute" style="padding:24px;text-align:center">Buchungskalender wird geladen…</div>';
+  const init = ()=>{
+    if(window.Calendly && host){
+      host.innerHTML = '';
+      window.Calendly.initInlineWidget({ url: link, parentElement: host });
+    }
+  };
+  if(window.Calendly){ init(); return; }
+  const existing = document.getElementById('calendlyScript');
+  if(existing){ existing.addEventListener('load', init); return; }
+  const s = document.createElement('script');
+  s.id = 'calendlyScript';
+  s.src = 'https://assets.calendly.com/assets/external/widget.js';
+  s.async = true; s.onload = init;
+  s.onerror = ()=>{ if(host) host.innerHTML = '<div class="tx-mute" style="padding:24px;text-align:center">Calendly konnte nicht geladen werden (Internet-Verbindung prüfen). Direkt-Link:<br><a href="'+escHtml(link)+'" target="_blank" rel="noopener">'+escHtml(link)+'</a></div>'; };
+  document.body.appendChild(s);
 };
 
 const STATE = {
@@ -2946,6 +3029,7 @@ const PALETTE_ACTIONS = [
   {label:'Visitenkarte scannen', icon:'📷', fn:()=>window.openCardScan(), kw:'card business visitenkarte scan'},
   {label:'AD-Report PDF (Berater wählen)', icon:'📄', fn:()=>window.generateAdReportPdf(''), kw:'ad report aussendienst pdf berater'},
   {label:'Wochenbericht öffnen', icon:'📊', fn:()=>window.openWochenbericht(), kw:'wochenbericht report wb'},
+  {label:'Beratung buchen (Calendly)', icon:'📅', fn:()=>window.openBookingCalendar(), kw:'calendly termin beratung erstgespräch booking meeting'},
   {label:'CRM-Export (Excel)', icon:'↓', fn:()=>window.exportCrmExcel(), kw:'export excel xlsx'},
   {label:'CSV exportieren', icon:'↓', fn:()=>window.exportCSV(), kw:'export csv'},
   {label:'JSON Backup', icon:'💾', fn:()=>window.exportData(), kw:'backup json'},
@@ -4367,9 +4451,14 @@ Kontext: ${kontext||'kein spezifischer Anlass'}
 Stil: ${stil}
 Liefere zuerst BETREFF auf einer Zeile, dann eine Leerzeile, dann den Email-Text. Keine Erklärung dazu, nur die Email.`;
 
+  const wantBooking = document.getElementById('kiEmBooking') && document.getElementById('kiEmBooking').checked;
+  if(wantBooking && !bookingLink()){
+    showToast('Kein Calendly-Link hinterlegt — Einstellungen → Branding', 'warn');
+  }
+
   const resp = await callClaude(prompt, system, 800);
   if(resp){
-    const fullText = resp + getSignatureBlock();
+    const fullText = resp + (wantBooking ? bookingCTAline() : '') + getSignatureBlock();
     out.textContent = fullText;
     // Parse email for Outlook button
     const parsed = parseEmailOutput(fullText);
@@ -7083,6 +7172,32 @@ if(document.readyState === 'loading'){
     </div>
     <div class="modal-foot">
       <button class="btn btn-ghost" onclick="window.closeModal('modalImport')">Schliessen</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- MODAL: Beratung buchen (Calendly)                                       -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<div class="modal-bg" id="modalBooking">
+  <div class="modal" style="max-width:760px;width:96vw">
+    <div class="modal-h">
+      <div class="modal-title">📅 30-Min-Erstgespräch buchen</div>
+      <button class="modal-x" onclick="window.closeModal('modalBooking')">✕</button>
+    </div>
+    <div class="modal-body" style="padding-top:8px">
+      <p class="tx-mute" style="font-size:12.5px;line-height:1.6;margin-top:0">
+        Kostenlose, unverbindliche Erstberatung per Teams oder Zoom. Wähle einen Termin direkt im Kalender —
+        oder schick den Link mit den Buttons unten an einen Kontakt.
+      </p>
+      <div class="row gap-md mb-md">
+        <button class="btn btn-ghost btn-sm" onclick="window.copyBookingLink()">🔗 Buchungslink kopieren</button>
+        <button class="btn btn-ghost btn-sm" onclick="window.sendBookingInvite()">✉ Einladung per E-Mail</button>
+      </div>
+      <div id="calendlyHost" style="min-width:320px;height:640px;border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="window.closeModal('modalBooking')">Schliessen</button>
     </div>
   </div>
 </div>
