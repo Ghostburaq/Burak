@@ -1375,7 +1375,11 @@ const _readContactsXLSX = async file => {
 };
 
 const doImport = () => {
-  if(!S._impData.length){toast('Keine Daten — erst Datei auswählen','warn');return;}
+  // Defensive: if a bundle is in flight (between drop and preview), give a clearer message
+  if(!S._impData.length){
+    if(S._impBundle){ toast('Datei wird noch verarbeitet — bitte einen Moment','info'); return; }
+    toast('Keine Daten — erst Datei auswählen','warn'); return;
+  }
 
   const PMAP={'A':'vip','B':'high','C':'normal','a':'vip','b':'high','c':'normal'};
   const SMAP={'offen':'lead','kontaktiert':'prospect','in gespräch':'active','aktiv':'active','active':'active','lead':'lead'};
@@ -1883,6 +1887,10 @@ const parseProjectDOCX = (text, tables, fname) => {
 const readFile = async file => {
   if(!file) return;
   S._impBundle=null; S._impData=[];
+  // Hide stale preview from a previous file so its Import button cannot be clicked during parse (race fix)
+  const prev0=g('imp-prev'); if(prev0) prev0.style.display='none';
+  const info0=g('imp-info'); if(info0) info0.textContent='';
+  const cols0=g('imp-cols'); if(cols0) cols0.innerHTML='';
   const ext=(file.name||'').split('.').pop().toLowerCase();
   const dz=g('imp-dz');
   if(dz) dz.innerHTML=`<div style="font-size:1.8rem">⏳</div><div style="font-size:13px;font-weight:700;color:var(--grn);margin-top:.3rem">${file.name}</div><div style="font-size:11px;color:var(--t2)">Erkenne Typ & lese…</div>`;
