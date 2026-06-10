@@ -4866,6 +4866,20 @@ window.handleExcelFile = function(input){
   reader.onload = e => {
     try{
       const wb = XLSX.read(e.target.result, {type:'binary', cellDates:true});
+      importDirectoryWorkbook(wb);
+    }catch(err){
+      showToast('Import-Fehler: ' + err.message, 'error');
+      console.error(err);
+    }
+  };
+  reader.readAsBinaryString(file);
+  input.value = '';
+};
+
+// Parse a plain directory/list workbook (not a CRM export) into contacts.
+// Reused by both the toolbar import and the Import-modal fallback so a list
+// only ever needs to be selected ONCE.
+function importDirectoryWorkbook(wb){
       // Smart sheet selection: prefer sheet named "Nachfassen", else pick sheet with most non-empty rows
       let sheetName = wb.SheetNames.find(n => /nachfass/i.test(n));
       if(!sheetName){
@@ -4964,6 +4978,15 @@ window.handleExcelFile = function(input){
       // Don't let the date column point at an activity Y/N column
       if(ix.datum === ix.anruf || ix.datum === ix.mail) ix.datum = -1;
 
+      // Collect ALL email/phone columns — lists often have "E-Mail 1" + "E-Mail2"
+      // or "Telefon Nr. 1" + "Telefon Nr. 2". We take the first non-empty value.
+      const emailCols = headers.map((h,i)=>i).filter(i => /mail/.test(headers[i]) && i!==ix.anruf && i!==ix.mail);
+      const telCols   = headers.map((h,i)=>i).filter(i => /telefon|natel|mobile|handy|phone|\btel\b/.test(headers[i]) && !/anrufen/.test(headers[i]) && i!==ix.anruf);
+      const pickFirst = (row, cols, fallbackIdx) => {
+        for(const i of cols){ const v = String(row[i]||'').trim(); if(v) return v; }
+        return fallbackIdx >= 0 ? String(row[fallbackIdx]||'').trim() : '';
+      };
+
       let imported = 0;
       let skipped = 0;
       for(let r = headerRow + 1; r < aoa.length; r++){
@@ -5011,8 +5034,8 @@ window.handleExcelFile = function(input){
           id: uid(),
           firma,
           kontakt,
-          email: ix.email >= 0 ? String(row[ix.email]||'').trim() : '',
-          tel:   ix.tel >= 0 ? String(row[ix.tel]||'').trim() : '',
+          email: pickFirst(row, emailCols, ix.email),
+          tel:   pickFirst(row, telCols, ix.tel),
           position: '',
           ort: ix.ort >= 0 ? String(row[ix.ort]||'').trim() : '',
           segment: seg,
@@ -5061,14 +5084,7 @@ window.handleExcelFile = function(input){
       saveState();
       showToast(`${imported} Kontakte importiert${skipped?' · '+skipped+' Duplikate übersprungen':''}`, 'success');
       refreshAll();
-    }catch(err){
-      showToast('Import-Fehler: ' + err.message, 'error');
-      console.error(err);
-    }
-  };
-  reader.readAsBinaryString(file);
-  input.value = '';
-};
+}
 
 window.exportData = function(){
   const blob = new Blob([JSON.stringify(STATE, null, 2)], {type:'application/json'});
@@ -5892,10 +5908,11 @@ window.importCrmExcelFile = function(input){
       const hasAktivitaeten = wb.SheetNames.includes('Aktivitäten');
 
       if(!hasKontakte){
-        // Fall through to regular Excel import
-        showToast('Kein CRM-Export erkannt — versuche normalen Import', 'warn');
+        // Not a CRM export — treat it as a normal directory/contact list and
+        // import it directly from the workbook we already loaded (no 2nd dialog).
+        if(progress) progress.textContent = 'Liste wird importiert…';
+        importDirectoryWorkbook(wb);
         closeModal('modalImport');
-        window.importExcel();
         return;
       }
 
