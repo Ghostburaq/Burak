@@ -4198,25 +4198,119 @@ function getSignatureBlock(){
 
 // ════════════════════════════════════════════════════════════════════════
 //  FEATURE 3 — PDF ATTACHMENTS per Kontakt
+//  Storage: IndexedDB (Quota typischerweise ≥ 50–500 MB, im Gegensatz zu
+//  localStorage's ~5 MB). Records werden einzeln gespeichert, nicht als ein
+//  riesiger JSON-Blob — eine 4 MB-Datei verlangt nicht mehr Re-Write der
+//  gesamten Sammlung.
 // ════════════════════════════════════════════════════════════════════════
-function loadAttachments(){
-  try{
-    const raw = localStorage.getItem(ATT_KEY);
-    return raw ? JSON.parse(raw) : {};
-  }catch(e){ return {}; }
+const ATT_DB_NAME = 'mit_crm_attachments';
+const ATT_STORE   = 'files';
+let _attDbPromise = null;
+
+function openAttDb(){
+  if(_attDbPromise) return _attDbPromise;
+  _attDbPromise = new Promise((resolve, reject)=>{
+    if(!window.indexedDB){ reject(new Error('IndexedDB nicht verfügbar')); return; }
+    const req = indexedDB.open(ATT_DB_NAME, 1);
+    req.onupgradeneeded = (ev)=>{
+      const db = ev.target.result;
+      if(!db.objectStoreNames.contains(ATT_STORE)){
+        const store = db.createObjectStore(ATT_STORE, { keyPath:'key' });
+        store.createIndex('contactId', 'contactId', { unique:false });
+      }
+    };
+    req.onsuccess = ()=> resolve(req.result);
+    req.onerror = ()=> reject(req.error || new Error('IndexedDB open failed'));
+    req.onblocked = ()=> reject(new Error('IndexedDB blockiert — bitte andere Tabs schliessen'));
+  });
+  return _attDbPromise;
 }
 
-function saveAttachments(atts){
+async function attGetAllForContact(contactId){
   try{
-    localStorage.setItem(ATT_KEY, JSON.stringify(atts));
+    const db = await openAttDb();
+    return await new Promise((resolve, reject)=>{
+      const tx = db.transaction(ATT_STORE,'readonly');
+      const store = tx.objectStore(ATT_STORE);
+      const idx = store.index('contactId');
+      const out = [];
+      const req = idx.openCursor(IDBKeyRange.only(contactId));
+      req.onsuccess = (e)=>{
+        const cur = e.target.result;
+        if(cur){ out.push(cur.value); cur.continue(); }
+        else resolve(out.sort((a,b)=>(b.date||'').localeCompare(a.date||'')));
+      };
+      req.onerror = ()=>reject(req.error);
+    });
   }catch(e){
-    showToast('Speichern fehlgeschlagen — evtl. zu groß für localStorage. Versuche kleinere Dateien.', 'error');
+    console.warn('att read failed', e);
+    return [];
   }
 }
 
-function getContactAttachments(contactId){
-  const all = loadAttachments();
-  return all[contactId] || [];
+async function attPutOne(rec){
+  const db = await openAttDb();
+  return new Promise((resolve, reject)=>{
+    const tx = db.transaction(ATT_STORE,'readwrite');
+    tx.objectStore(ATT_STORE).put(rec);
+    tx.oncomplete = ()=>resolve(true);
+    tx.onerror = ()=>reject(tx.error);
+    tx.onabort = ()=>reject(tx.error || new Error('Transaction abgebrochen (Quota erreicht?)'));
+  });
+}
+
+async function attDeleteOne(key){
+  const db = await openAttDb();
+  return new Promise((resolve, reject)=>{
+    const tx = db.transaction(ATT_STORE,'readwrite');
+    tx.objectStore(ATT_STORE).delete(key);
+    tx.oncomplete = ()=>resolve(true);
+    tx.onerror = ()=>reject(tx.error);
+  });
+}
+
+async function attGetOne(key){
+  const db = await openAttDb();
+  return new Promise((resolve, reject)=>{
+    const tx = db.transaction(ATT_STORE,'readonly');
+    const req = tx.objectStore(ATT_STORE).get(key);
+    req.onsuccess = ()=>resolve(req.result || null);
+    req.onerror = ()=>reject(req.error);
+  });
+}
+
+function attKey(contactId, name){ return contactId + '|' + name; }
+
+// One-time migration of pre-existing localStorage attachments into IndexedDB
+async function migrateAttachmentsFromLocalStorage(){
+  try{
+    const raw = localStorage.getItem(ATT_KEY);
+    if(!raw) return;
+    const all = JSON.parse(raw); if(!all || typeof all !== 'object') return;
+    let migrated = 0;
+    for(const cid of Object.keys(all)){
+      const list = all[cid] || [];
+      for(const a of list){
+        if(!a || !a.name || !a.dataUrl) continue;
+        await attPutOne({
+          key: attKey(cid, a.name),
+          contactId: cid,
+          name: a.name,
+          dataUrl: a.dataUrl,
+          size: a.size || 0,
+          date: a.date || todayISO()
+        });
+        migrated++;
+      }
+    }
+    if(migrated > 0){
+      // Remove the legacy blob so it doesn't keep eating into localStorage quota
+      localStorage.removeItem(ATT_KEY);
+      showToast(migrated + ' Anhänge in IndexedDB migriert', 'success');
+    }
+  }catch(e){
+    console.warn('attachment migration failed', e);
+  }
 }
 
 window.handleAttDrop = function(ev){
@@ -4235,88 +4329,84 @@ window.handleAttFiles = function(input){
 
 async function attachFiles(files){
   if(!currentContactId){ showToast('Bitte erst Kontakt speichern', 'error'); return; }
-  const MAX = 4 * 1024 * 1024;  // 4MB per file
-  const atts = loadAttachments();
-  if(!atts[currentContactId]) atts[currentContactId] = [];
+  const MAX = 25 * 1024 * 1024;  // 25 MB per file — IndexedDB can handle this
+  const cid = currentContactId;
 
   for(const file of files){
     if(file.size > MAX){
-      showToast(file.name + ' ist zu groß (max. 4 MB)', 'error');
+      showToast(file.name + ' ist zu groß (max. ' + (MAX/1024/1024) + ' MB)', 'error');
       continue;
     }
-    const b64 = await new Promise((res, rej) => {
-      const r = new FileReader();
-      r.onload = () => res(r.result);  // full data-URL with prefix
-      r.onerror = () => rej(new Error('Lesefehler'));
-      r.readAsDataURL(file);
-    });
-    // Check for duplicates by name
-    const exists = atts[currentContactId].find(a => a.name === file.name);
-    if(exists){
-      showToast(file.name + ' bereits vorhanden — überschreibe', 'warn');
-      atts[currentContactId] = atts[currentContactId].filter(a => a.name !== file.name);
+    try{
+      const b64 = await new Promise((res, rej) => {
+        const r = new FileReader();
+        r.onload = () => res(r.result);
+        r.onerror = () => rej(new Error('Lesefehler'));
+        r.readAsDataURL(file);
+      });
+      // Overwrites by key if a file with same name exists for this contact
+      const existing = await attGetOne(attKey(cid, file.name));
+      if(existing){ showToast(file.name + ' bereits vorhanden — überschreibe', 'warn'); }
+      await attPutOne({
+        key: attKey(cid, file.name),
+        contactId: cid,
+        name: file.name,
+        dataUrl: b64,
+        size: file.size,
+        date: todayISO()
+      });
+      showToast('✓ ' + file.name + ' angehängt', 'success');
+    }catch(err){
+      const msg = (err && err.name === 'QuotaExceededError')
+        ? 'Speicherquota erreicht — bitte alte Anhänge löschen oder JSON-Backup machen + Reset'
+        : 'Speichern fehlgeschlagen: ' + (err && err.message || err);
+      showToast(msg, 'error');
     }
-    atts[currentContactId].push({
-      name: file.name,
-      dataUrl: b64,
-      size: file.size,
-      date: todayISO()
-    });
-    showToast('✓ ' + file.name + ' angehängt', 'success');
   }
-  saveAttachments(atts);
-  renderAttachments(currentContactId);
+  await renderAttachments(cid);
 }
 
-function renderAttachments(contactId){
+async function renderAttachments(contactId){
   const list = document.getElementById('cAttList');
   if(!list) return;
-  const atts = getContactAttachments(contactId);
+  const atts = await attGetAllForContact(contactId);
 
   if(atts.length === 0){
     list.innerHTML = '<div class="tx-mute" style="font-size:12px;padding:4px 0">Noch keine Dokumente hinterlegt</div>';
     return;
   }
 
-  list.innerHTML = atts.map((a, i) => `
-    <div class="att-item">
+  list.innerHTML = atts.map((a) => `
+    <div class="att-item" data-key="${escHtml(a.key)}">
       <span class="att-icon">📄</span>
       <div style="flex:1;min-width:0">
         <div class="att-name">${escHtml(a.name)}</div>
         <div class="att-meta">${fmtDate(a.date)} · ${(a.size/1024).toFixed(0)} KB</div>
       </div>
-      <button class="btn btn-tiny btn-ghost" onclick="window.downloadAtt('${escHtml(contactId)}',${i})">↓</button>
-      <button class="btn btn-tiny btn-ghost" onclick="window.previewAtt('${escHtml(contactId)}',${i})">👁</button>
-      <button class="btn btn-tiny btn-danger" onclick="window.deleteAtt('${escHtml(contactId)}',${i})">✕</button>
+      <button class="btn btn-tiny btn-ghost" onclick="window.downloadAtt(this.closest('.att-item').dataset.key)">↓</button>
+      <button class="btn btn-tiny btn-ghost" onclick="window.previewAtt(this.closest('.att-item').dataset.key)">👁</button>
+      <button class="btn btn-tiny btn-danger" onclick="window.deleteAtt(this.closest('.att-item').dataset.key)">✕</button>
     </div>
   `).join('');
 }
 
-window.downloadAtt = function(contactId, idx){
-  const atts = loadAttachments();
-  const a = (atts[contactId] || [])[idx];
-  if(!a) return;
+window.downloadAtt = async function(key){
+  const a = await attGetOne(key); if(!a) return;
   const link = document.createElement('a');
-  link.href = a.dataUrl;
-  link.download = a.name;
-  link.click();
+  link.href = a.dataUrl; link.download = a.name; link.click();
 };
 
-window.previewAtt = function(contactId, idx){
-  const atts = loadAttachments();
-  const a = (atts[contactId] || [])[idx];
-  if(!a) return;
+window.previewAtt = async function(key){
+  const a = await attGetOne(key); if(!a) return;
   const win = window.open();
+  if(!win){ showToast('Popup-Blocker aktiv — bitte erlauben', 'warn'); return; }
   win.document.write(`<iframe src="${a.dataUrl}" style="width:100%;height:100vh;border:none"></iframe>`);
 };
 
-window.deleteAtt = function(contactId, idx){
+window.deleteAtt = async function(key){
   if(!confirm('Dokument löschen?')) return;
-  const atts = loadAttachments();
-  if(!atts[contactId]) return;
-  atts[contactId].splice(idx, 1);
-  saveAttachments(atts);
-  renderAttachments(contactId);
+  await attDeleteOne(key);
+  if(currentContactId) await renderAttachments(currentContactId);
   showToast('Dokument gelöscht', 'success');
 };
 
@@ -7038,6 +7128,8 @@ function init(){
   renderTurboSettings();
   renderRepSettings();
   populateSalesRepDatalist();
+  // One-time migration of legacy localStorage attachments into IndexedDB
+  setTimeout(()=>{ migrateAttachmentsFromLocalStorage().catch(e=>console.warn(e)); }, 500);
   // Yearly goal input prefill
   const g = loadGoal(); const gi = document.getElementById('goalInput'); if(g && gi){ gi.value = String(g); }
   renderToday();
