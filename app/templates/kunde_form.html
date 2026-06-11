@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card" style="max-width:760px">
+    <form method="post" action="/kunden/speichern">
+        <input type="hidden" name="cid" value="{{ customer.id if customer else '' }}">
+        <div class="row">
+            <div class="field"><label>Firma *</label><input name="company" required value="{{ customer.company if customer else '' }}"></div>
+            <div class="field"><label>Ansprechpartner</label><input name="contact" value="{{ customer.contact if customer else '' }}"></div>
+        </div>
+        <div class="row">
+            <div class="field"><label>E-Mail</label><input type="email" name="email" value="{{ customer.email if customer else '' }}"></div>
+            <div class="field"><label>Telefon</label><input name="phone" value="{{ customer.phone if customer else '' }}"></div>
+        </div>
+        <div class="field"><label>Strasse & Nr.</label><input name="street" value="{{ customer.street if customer else '' }}"></div>
+        <div class="row cols-3">
+            <div class="field"><label>PLZ</label><input name="zip" value="{{ customer.zip if customer else '' }}"></div>
+            <div class="field"><label>Ort</label><input name="city" value="{{ customer.city if customer else '' }}"></div>
+            <div class="field"><label>Land</label><input name="country" value="{{ customer.country if customer else 'Deutschland' }}"></div>
+        </div>
+        <div class="field"><label>Notizen</label><textarea name="notes">{{ customer.notes if customer else '' }}</textarea></div>
+        <div class="form-actions">
+            <button class="btn primary" type="submit">Speichern</button>
+            <a class="btn" href="{{ '/kunden/' ~ customer.id if customer else '/kunden' }}">Abbrechen</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

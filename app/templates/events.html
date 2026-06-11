@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block actions %}<a href="/events/neu" class="btn primary">+ Neuer Auftrag</a>{% endblock %}
+{% block content %}
+<div class="pills">
+    <a href="/events" class="{{ 'active' if not status }}">Alle</a>
+    {% for s in statuses %}<a href="/events?status={{ s }}" class="{{ 'active' if status==s }}">{{ s }}</a>{% endfor %}
+</div>
+<div class="card">
+    {% if events %}
+    <div class="table-wrap"><table>
+        <tr><th>Auftrag</th><th>Kunde</th><th>Zeitraum</th><th>Ort</th><th>Status</th><th class="r">Volumen (brutto)</th></tr>
+        {% for e in events %}
+        <tr>
+            <td><a href="/events/{{ e.id }}"><strong>{{ e.title }}</strong></a></td>
+            <td class="muted">{{ e.company or '—' }}</td>
+            <td>{{ e.start_date or '—' }} → {{ e.end_date or '—' }}</td>
+            <td class="muted">{{ e.location or '—' }}</td>
+            <td><span class="badge {{ STATUS_COLORS.get(e.status,'slate') }}">{{ e.status }}</span></td>
+            <td class="r">{{ totals.get(e.id, 0) | eur }}</td>
+        </tr>
+        {% endfor %}
+    </table></div>
+    {% else %}<div class="empty">Keine Auftraege. <a href="/events/neu">Ersten Auftrag anlegen</a></div>{% endif %}
+</div>
+{% endblock %}

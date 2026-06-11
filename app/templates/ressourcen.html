@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="grid cols-2">
+    <div class="card">
+        <h2>Personal</h2>
+        {% if staff %}
+        <table>
+            <tr><th>Name</th><th>Rolle</th><th>Telefon</th><th></th></tr>
+            {% for s in staff %}
+            <tr>
+                <td><strong>{{ s.name }}</strong></td>
+                <td><span class="badge slate">{{ s.role or '—' }}</span></td>
+                <td class="muted">{{ s.phone or '—' }}</td>
+                <td class="r"><form class="inline-form" method="post" action="/personal/{{ s.id }}/loeschen"><button class="btn sm danger">✕</button></form></td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% else %}<div class="empty">Noch kein Personal.</div>{% endif %}
+        <form method="post" action="/personal/speichern" style="margin-top:14px">
+            <div class="row cols-3">
+                <div class="field"><label>Name *</label><input name="name" required></div>
+                <div class="field"><label>Rolle</label>
+                    <select name="role"><option>Fahrer</option><option>Techniker</option><option>Inbetriebnahme</option><option>Auf-/Abbau</option></select>
+                </div>
+                <div class="field"><label>Telefon</label><input name="phone"></div>
+            </div>
+            <button class="btn primary" type="submit">+ Person hinzufügen</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2>Fuhrpark</h2>
+        {% if vehicles %}
+        <table>
+            <tr><th>Fahrzeug</th><th>Kennzeichen</th><th class="r">Nutzlast</th><th class="r">Volumen</th><th></th></tr>
+            {% for v in vehicles %}
+            <tr>
+                <td><strong>{{ v.name }}</strong></td>
+                <td class="muted">{{ v.license_plate or '—' }}</td>
+                <td class="r">{{ '%g'|format(v.payload_kg or 0) }} kg</td>
+                <td class="r">{{ '%g'|format(v.volume_m3 or 0) }} m³</td>
+                <td class="r"><form class="inline-form" method="post" action="/fahrzeug/{{ v.id }}/loeschen"><button class="btn sm danger">✕</button></form></td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% else %}<div class="empty">Noch keine Fahrzeuge.</div>{% endif %}
+        <form method="post" action="/fahrzeug/speichern" style="margin-top:14px">
+            <div class="row cols-2">
+                <div class="field"><label>Bezeichnung *</label><input name="name" required></div>
+                <div class="field"><label>Kennzeichen</label><input name="license_plate"></div>
+            </div>
+            <div class="row cols-3">
+                <div class="field"><label>Nutzlast (kg)</label><input name="payload_kg" value="0"></div>
+                <div class="field"><label>Laderaum (m³)</label><input name="volume_m3" value="0"></div>
+                <div class="field" style="align-self:end"><button class="btn primary" type="submit">+ Fahrzeug</button></div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

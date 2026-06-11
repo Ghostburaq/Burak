@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block actions %}
+<a href="/events/neu" class="btn primary">+ Neuer Auftrag</a>
+{% endblock %}
+{% block content %}
+
+<div class="grid cols-4">
+    <div class="stat"><div class="num">{{ stats.events }}</div><div class="lbl">Auftraege gesamt</div></div>
+    <div class="stat"><div class="num">{{ stats.open_offers }}</div><div class="lbl">Offene Anfragen/Angebote</div></div>
+    <div class="stat"><div class="num">{{ stats.available }}/{{ stats.units }}</div><div class="lbl">Geraete verfuegbar</div></div>
+    <div class="stat"><div class="num">{{ revenue | eur }}</div><div class="lbl">Auftragsvolumen (best./laufend)</div></div>
+</div>
+
+{% if alerts.overdue or alerts.broken %}
+<div class="alert danger">
+    <strong>Achtung:</strong>
+    {% if alerts.overdue %}{{ alerts.overdue|length }} Geraet(e) mit überfälliger Wartung/UVV.{% endif %}
+    {% if alerts.broken %} {{ alerts.broken|length }} Geraet(e) defekt/in Reparatur.{% endif %}
+    <a href="/wartung">→ Wartung ansehen</a>
+</div>
+{% endif %}
+
+<div class="grid cols-2">
+    <div class="card">
+        <h2>Kommende Events</h2>
+        {% if upcoming %}
+        <div class="table-wrap"><table>
+            <tr><th>Event</th><th>Kunde</th><th>Zeitraum</th><th>Status</th></tr>
+            {% for e in upcoming %}
+            <tr>
+                <td><a href="/events/{{ e.id }}">{{ e.title }}</a></td>
+                <td class="muted">{{ e.company or '—' }}</td>
+                <td>{{ e.start_date or '—' }} → {{ e.end_date or '—' }}</td>
+                <td><span class="badge {{ STATUS_COLORS.get(e.status,'slate') }}">{{ e.status }}</span></td>
+            </tr>
+            {% endfor %}
+        </table></div>
+        {% else %}<div class="empty">Keine anstehenden Events.</div>{% endif %}
+    </div>
+
+    <div class="card">
+        <h2>Wartung & Pruefungen</h2>
+        {% set rows = alerts.overdue + alerts.soon %}
+        {% if rows %}
+        <div class="table-wrap"><table>
+            <tr><th>Geraet</th><th>Seriennr.</th><th>Faellig</th></tr>
+            {% for u in rows[:8] %}
+            <tr>
+                <td>{{ u.article_name }}</td>
+                <td class="muted">{{ u.serial_number }}</td>
+                <td>{% if u.next_maintenance < today() %}<span class="badge red">{{ u.next_maintenance }}</span>{% else %}<span class="badge amber">{{ u.next_maintenance }}</span>{% endif %}</td>
+            </tr>
+            {% endfor %}
+        </table></div>
+        {% else %}<div class="empty">Alle Geraete im Wartungsplan ✔</div>{% endif %}
+    </div>
+</div>
+
+{% endblock %}

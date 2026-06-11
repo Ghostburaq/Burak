@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block actions %}
+<a href="/artikel/{{ article.id }}/bearbeiten" class="btn">Bearbeiten</a>
+<form class="inline-form" method="post" action="/artikel/{{ article.id }}/loeschen" onsubmit="return confirm('Artikel inkl. Geraete loeschen?')">
+    <button class="btn danger" type="submit">Loeschen</button>
+</form>
+{% endblock %}
+{% block content %}
+<div class="card">
+    <h2>{{ article.name }} {% if article.is_accessory %}<span class="badge slate">Zubehoer</span>{% endif %}</h2>
+    <p class="muted">{{ article.category }} · {{ article.manufacturer or '' }} {{ article.model or '' }}</p>
+    <div class="spec">
+        {% if article.cooling_kw %}<div class="chip"><b>Kühlleistung</b> {{ article.cooling_kw }} kW</div>{% endif %}
+        {% if article.heating_kw %}<div class="chip"><b>Heizleistung</b> {{ article.heating_kw }} kW</div>{% endif %}
+        {% if article.power_kva %}<div class="chip"><b>Leistung</b> {{ article.power_kva }} kVA</div>{% endif %}
+        {% if article.airflow_m3h %}<div class="chip"><b>Luftvolumen</b> {{ article.airflow_m3h }} m³/h</div>{% endif %}
+        {% if article.fuel_consumption_lph %}<div class="chip"><b>Verbrauch</b> {{ article.fuel_consumption_lph }} l/h {{ article.fuel_type }}</div>{% endif %}
+        {% if article.voltage %}<div class="chip"><b>Spannung</b> {{ article.voltage }}</div>{% endif %}
+        {% if article.connector %}<div class="chip"><b>Anschluss</b> {{ article.connector }}</div>{% endif %}
+        {% if article.weight_kg %}<div class="chip"><b>Gewicht</b> {{ '%g'|format(article.weight_kg) }} kg</div>{% endif %}
+        {% if article.volume_m3 %}<div class="chip"><b>Volumen</b> {{ article.volume_m3 }} m³</div>{% endif %}
+    </div>
+    <h3>Preise</h3>
+    <div class="spec">
+        <div class="chip"><b>Tagesmiete</b> {{ article.daily_rate | eur }}</div>
+        <div class="chip"><b>Wochenende</b> {{ article.weekend_rate | eur }}</div>
+        <div class="chip"><b>Wochenmiete</b> {{ article.weekly_rate | eur }}</div>
+        <div class="chip"><b>Kaution</b> {{ article.deposit | eur }}</div>
+    </div>
+    {% if article.notes %}<h3>Notizen</h3><p class="muted">{{ article.notes }}</p>{% endif %}
+</div>
+
+{% if not article.is_accessory %}
+<div class="card">
+    <h2>Kompatibles Zubehör / Stückliste</h2>
+    <p class="muted">Bei der Auftragserstellung warnt das Tool, wenn nicht kompatibles Zubehör gewählt wird.</p>
+    {% if compat %}
+    <table>
+        {% for c in compat %}
+        <tr>
+            <td><a href="/artikel/{{ c.id }}">{{ c.name }}</a></td>
+            <td class="muted">{{ c.connector or '' }}</td>
+            <td class="r">
+                <form class="inline-form" method="post" action="/artikel/{{ article.id }}/kompatibilitaet/{{ c.id }}/entfernen">
+                    <button class="btn sm danger" type="submit">Entfernen</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% else %}<div class="empty">Noch kein Zubehör verknüpft.</div>{% endif %}
+    <form method="post" action="/artikel/{{ article.id }}/kompatibilitaet" style="margin-top:14px;display:flex;gap:10px">
+        <select name="accessory_id" class="field" style="max-width:360px" required>
+            <option value="">Zubehör wählen…</option>
+            {% for acc in all_accessories %}<option value="{{ acc.id }}">{{ acc.name }}</option>{% endfor %}
+        </select>
+        <button class="btn primary" type="submit">+ Verknüpfen</button>
+    </form>
+</div>
+{% endif %}
+
+<div class="card">
+    <h2>Geräte mit Seriennummer ({{ units|length }})</h2>
+    {% if units %}
+    <table>
+        <tr><th>Seriennr.</th><th>Barcode</th><th>Status</th><th>Betriebsstunden</th><th>Nächste Wartung</th></tr>
+        {% for u in units %}
+        <tr>
+            <td>{{ u.serial_number }}</td>
+            <td class="muted">{{ u.barcode or '—' }}</td>
+            <td><span class="badge {{ STATUS_COLORS.get(u.status,'slate') }}">{{ u.status }}</span></td>
+            <td>{{ '%g'|format(u.operating_hours or 0) }} h</td>
+            <td class="muted">{{ u.next_maintenance or '—' }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% else %}<div class="empty">Noch keine Geräte angelegt. <a href="/geraete">Bestand verwalten</a></div>{% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block actions %}
+<a href="/kunden/{{ customer.id }}/bearbeiten" class="btn">Bearbeiten</a>
+<form class="inline-form" method="post" action="/kunden/{{ customer.id }}/loeschen" onsubmit="return confirm('Kunde wirklich loeschen?')">
+    <button class="btn danger" type="submit">Loeschen</button>
+</form>
+{% endblock %}
+{% block content %}
+<div class="grid cols-2">
+    <div class="card">
+        <h2>Stammdaten</h2>
+        <div class="spec">
+            {% if customer.contact %}<div class="chip"><b>Kontakt</b> {{ customer.contact }}</div>{% endif %}
+            {% if customer.email %}<div class="chip"><b>E-Mail</b> {{ customer.email }}</div>{% endif %}
+            {% if customer.phone %}<div class="chip"><b>Tel</b> {{ customer.phone }}</div>{% endif %}
+        </div>
+        <p style="margin-top:14px">{{ customer.street }}<br>{{ customer.zip }} {{ customer.city }}<br>{{ customer.country }}</p>
+        {% if customer.notes %}<h3>Notizen</h3><p class="muted">{{ customer.notes }}</p>{% endif %}
+    </div>
+    <div class="card">
+        <h2>Auftraege</h2>
+        {% if events %}
+        <table>
+            <tr><th>Event</th><th>Zeitraum</th><th>Status</th></tr>
+            {% for e in events %}
+            <tr>
+                <td><a href="/events/{{ e.id }}">{{ e.title }}</a></td>
+                <td class="muted">{{ e.start_date or '—' }}</td>
+                <td><span class="badge {{ STATUS_COLORS.get(e.status,'slate') }}">{{ e.status }}</span></td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% else %}<div class="empty">Noch keine Auftraege.</div>{% endif %}
+    </div>
+</div>
+{% endblock %}

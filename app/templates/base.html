@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title }} · Burak Rental Suite</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="layout">
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="logo">❄️🔥⚡</div>
+            <div>
+                <strong>Burak</strong>
+                <span>Rental Suite</span>
+            </div>
+        </div>
+        <nav>
+            {% set nav = [
+                ('/', 'Dashboard', '▦'),
+                ('/events', 'Events & Auftraege', '📋'),
+                ('/kunden', 'Kunden', '👥'),
+                ('/artikel', 'Artikeldatenbank', '📦'),
+                ('/geraete', 'Bestand & Disposition', '🔧'),
+                ('/wartung', 'Wartung & UVV', '🛠️'),
+                ('/ressourcen', 'Personal & Fuhrpark', '🚚'),
+                ('/einstellungen', 'Einstellungen', '⚙️'),
+            ] %}
+            {% for url, label, icon in nav %}
+            <a href="{{ url }}" class="{{ 'active' if (request.url.path == url or (url != '/' and request.url.path.startswith(url))) else '' }}">
+                <span class="ic">{{ icon }}</span>{{ label }}
+            </a>
+            {% endfor %}
+        </nav>
+        <div class="sidebar-foot">v1.0 · Vermietungstool</div>
+    </aside>
+    <main class="content">
+        <header class="topbar">
+            <h1>{{ title }}</h1>
+            <div class="topbar-actions">{% block actions %}{% endblock %}</div>
+        </header>
+        <div class="page">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+</div>
+</body>
+</html>

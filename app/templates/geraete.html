@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="pills">
+    {% for s in ['', 'verfuegbar','vermietet','defekt','reparatur','wartung'] %}
+    <a href="/geraete{{ '?status=' ~ s if s }}" class="{{ 'active' if status==s }}">{{ s|capitalize or 'Alle' }}</a>
+    {% endfor %}
+</div>
+
+<div class="card">
+    <h2>Neues Gerät / Seriennummer erfassen</h2>
+    <form method="post" action="/geraete/speichern">
+        <div class="row cols-4">
+            <div class="field"><label>Artikel *</label>
+                <select name="article_id" required>
+                    <option value="">Wählen…</option>
+                    {% for a in articles %}<option value="{{ a.id }}">{{ a.name }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="field"><label>Seriennummer</label><input name="serial_number"></div>
+            <div class="field"><label>Barcode</label><input name="barcode"></div>
+            <div class="field"><label>Status</label>
+                <select name="status">
+                    {% for s in ['verfuegbar','vermietet','defekt','reparatur','wartung'] %}<option>{{ s }}</option>{% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="row cols-3">
+            <div class="field"><label>Betriebsstunden</label><input name="operating_hours" value="0"></div>
+            <div class="field"><label>Letzte Wartung</label><input type="date" name="last_maintenance"></div>
+            <div class="field" style="align-self:end"><button class="btn primary" type="submit">+ Gerät anlegen</button></div>
+        </div>
+    </form>
+</div>
+
+<div class="card">
+    <h2>Bestand ({{ units|length }})</h2>
+    {% if units %}
+    <div class="table-wrap"><table>
+        <tr><th>Artikel</th><th>Seriennr.</th><th>Barcode</th><th>Status</th><th>Betriebsstd.</th><th>Nächste Wartung</th><th class="r">Aktion</th></tr>
+        {% for u in units %}
+        <tr>
+            <td><a href="/artikel/{{ u.article_id }}">{{ u.article_name }}</a><br><span class="muted">{{ u.category }}</span></td>
+            <td>{{ u.serial_number or '—' }}</td>
+            <td class="muted">{{ u.barcode or '—' }}</td>
+            <td>
+                <form class="inline-form row-form" method="post" action="/geraete/{{ u.id }}/status">
+                    <select name="status" onchange="this.form.submit()">
+                        {% for s in ['verfuegbar','vermietet','defekt','reparatur','wartung'] %}
+                        <option {{ 'selected' if u.status==s }}>{{ s }}</option>{% endfor %}
+                    </select>
+                </form>
+            </td>
+            <td>{{ '%g'|format(u.operating_hours or 0) }} h</td>
+            <td class="muted">{% if u.next_maintenance and u.next_maintenance < today() %}<span class="badge red">{{ u.next_maintenance }}</span>{% else %}{{ u.next_maintenance or '—' }}{% endif %}</td>
+            <td class="r">
+                <form class="inline-form" method="post" action="/geraete/{{ u.id }}/wartung" title="Wartung erledigt">
+                    <button class="btn sm" type="submit">✔ Wartung</button>
+                </form>
+                <form class="inline-form" method="post" action="/geraete/{{ u.id }}/loeschen" onsubmit="return confirm('Gerät loeschen?')">
+                    <button class="btn sm danger" type="submit">✕</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </table></div>
+    {% else %}<div class="empty">Keine Geräte in dieser Ansicht.</div>{% endif %}
+</div>
+{% endblock %}

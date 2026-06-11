@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block actions %}<a href="/kunden/neu" class="btn primary">+ Neuer Kunde</a>{% endblock %}
+{% block content %}
+<div class="card">
+    {% if customers %}
+    <div class="table-wrap"><table>
+        <tr><th>Firma</th><th>Ansprechpartner</th><th>Ort</th><th>Kontakt</th><th class="r">Auftraege</th></tr>
+        {% for c in customers %}
+        <tr>
+            <td><a href="/kunden/{{ c.id }}"><strong>{{ c.company }}</strong></a></td>
+            <td>{{ c.contact or '—' }}</td>
+            <td class="muted">{{ c.zip }} {{ c.city }}</td>
+            <td class="muted">{{ c.email or c.phone or '—' }}</td>
+            <td class="r">{{ c.event_count }}</td>
+        </tr>
+        {% endfor %}
+    </table></div>
+    {% else %}<div class="empty">Noch keine Kunden. <a href="/kunden/neu">Ersten Kunden anlegen</a></div>{% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block content %}
+{% macro unit_table(rows, badge) %}
+<div class="table-wrap"><table>
+    <tr><th>Gerät</th><th>Seriennr.</th><th>Letzte Wartung</th><th>Nächste/Status</th><th class="r">Aktion</th></tr>
+    {% for u in rows %}
+    <tr>
+        <td><a href="/artikel/{{ u.article_id }}">{{ u.article_name }}</a></td>
+        <td class="muted">{{ u.serial_number or '—' }}</td>
+        <td class="muted">{{ u.last_maintenance or '—' }}</td>
+        <td><span class="badge {{ badge }}">{{ u.next_maintenance or u.status }}</span></td>
+        <td class="r">
+            <form class="inline-form" method="post" action="/geraete/{{ u.id }}/wartung">
+                <button class="btn sm primary" type="submit">✔ Wartung erledigt</button>
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+</table></div>
+{% endmacro %}
+
+<div class="card">
+    <h2>Überfällige Wartung / UVV-Prüfung</h2>
+    {% if alerts.overdue %}{{ unit_table(alerts.overdue, 'red') }}
+    {% else %}<div class="empty">Keine überfälligen Prüfungen ✔</div>{% endif %}
+</div>
+
+<div class="card">
+    <h2>Bald fällig (60 Tage)</h2>
+    {% if alerts.soon %}{{ unit_table(alerts.soon, 'amber') }}
+    {% else %}<div class="empty">Nichts in den nächsten 60 Tagen.</div>{% endif %}
+</div>
+
+<div class="card">
+    <h2>Defekt / In Reparatur</h2>
+    {% if alerts.broken %}
+    <div class="table-wrap"><table>
+        <tr><th>Gerät</th><th>Seriennr.</th><th>Status</th><th class="r">Aktion</th></tr>
+        {% for u in alerts.broken %}
+        <tr>
+            <td><a href="/artikel/{{ u.article_id }}">{{ u.article_name }}</a></td>
+            <td class="muted">{{ u.serial_number or '—' }}</td>
+            <td><span class="badge {{ STATUS_COLORS.get(u.status,'red') }}">{{ u.status }}</span></td>
+            <td class="r">
+                <form class="inline-form" method="post" action="/geraete/{{ u.id }}/status">
+                    <input type="hidden" name="status" value="verfuegbar">
+                    <button class="btn sm" type="submit">Wieder freigeben</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </table></div>
+    {% else %}<div class="empty">Keine defekten Geräte ✔</div>{% endif %}
+</div>
+{% endblock %}

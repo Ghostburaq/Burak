@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% macro val(field) %}{{ event[field] if event and event[field] is not none else '' }}{% endmacro %}
+{% block content %}
+<div class="card" style="max-width:900px">
+<form method="post" action="/events/speichern">
+    <input type="hidden" name="eid" value="{{ event.id if event else '' }}">
+    <div class="row">
+        <div class="field"><label>Titel / Event *</label><input name="title" required value="{{ val('title') }}"></div>
+        <div class="field"><label>Kunde</label>
+            <select name="customer_id">
+                <option value="">— kein Kunde —</option>
+                {% for c in customers %}<option value="{{ c.id }}" {{ 'selected' if event and event.customer_id==c.id }}>{{ c.company }}</option>{% endfor %}
+            </select>
+        </div>
+    </div>
+    <div class="row cols-3">
+        <div class="field"><label>Status</label>
+            <select name="status">
+                {% for s in ['Anfrage','Angebot','Bestaetigt','Laufend','Abgeschlossen','Storniert'] %}
+                <option {{ 'selected' if event and event.status==s }}>{{ s }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="field"><label>Von</label><input type="date" name="start_date" value="{{ val('start_date') }}"></div>
+        <div class="field"><label>Bis</label><input type="date" name="end_date" value="{{ val('end_date') }}"></div>
+    </div>
+    <div class="row">
+        <div class="field"><label>Veranstaltungsort</label><input name="location" value="{{ val('location') }}"></div>
+        <div class="field"><label>Adresse</label><input name="location_address" value="{{ val('location_address') }}"></div>
+    </div>
+    <div class="field"><label>Beschreibung / Leistungstext</label><textarea name="description" rows="3">{{ val('description') }}</textarea></div>
+    <div class="row cols-3">
+        <div class="field"><label>Transportzeitfenster</label><input name="delivery_window" value="{{ val('delivery_window') }}" placeholder="Anlieferung Mi 08:00…"></div>
+        <div class="field"><label>Fahrzeug</label>
+            <select name="vehicle_id">
+                <option value="">— keins —</option>
+                {% for v in vehicles %}<option value="{{ v.id }}" {{ 'selected' if event and event.vehicle_id==v.id }}>{{ v.name }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="field"><label>Rabatt gesamt (%)</label><input name="discount_pct" value="{{ event.discount_pct if event else 0 }}"></div>
+    </div>
+    <div class="row cols-2">
+        <div class="field"><label>Servicegebühr (€)</label><input name="service_fee" value="{{ event.service_fee if event else 0 }}"></div>
+        <div class="field"><label>Interne Notizen</label><input name="internal_notes" value="{{ val('internal_notes') }}"></div>
+    </div>
+    <div class="form-actions">
+        <button class="btn primary" type="submit">Speichern</button>
+        <a class="btn" href="{{ '/events/' ~ event.id if event else '/events' }}">Abbrechen</a>
+    </div>
+</form>
+</div>
+{% endblock %}

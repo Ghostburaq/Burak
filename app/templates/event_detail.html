@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+{% block actions %}
+<a href="/events/{{ event.id }}/pdf?typ=Angebot" class="btn" target="_blank">📄 Angebot</a>
+<a href="/events/{{ event.id }}/pdf?typ=Mietvertrag" class="btn" target="_blank">📑 Mietvertrag</a>
+<a href="/events/{{ event.id }}/bearbeiten" class="btn">Bearbeiten</a>
+<form class="inline-form" method="post" action="/events/{{ event.id }}/loeschen" onsubmit="return confirm('Auftrag loeschen?')">
+    <button class="btn danger" type="submit">Loeschen</button>
+</form>
+{% endblock %}
+{% block content %}
+
+{% if warnings %}
+<div class="alert warn">
+    <strong>⚠ Kompatibilitäts-Hinweis:</strong>
+    <ul>{% for w in warnings %}<li>{{ w }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
+{% if not logistics.weight_ok or not logistics.volume_ok %}
+<div class="alert danger">
+    <strong>⚠ Transport:</strong> Ladung überschreitet die Kapazität von „{{ logistics.vehicle }}“
+    ({% if not logistics.weight_ok %}Gewicht {{ logistics.weight_kg }} kg > {{ logistics.payload_kg }} kg{% endif %}
+    {% if not logistics.volume_ok %} Volumen {{ logistics.volume_m3 }} m³ > {{ logistics.vehicle_volume }} m³{% endif %}).
+</div>
+{% endif %}
+
+<div class="grid cols-2">
+    <div class="card">
+        <h2>{{ event.title }} <span class="badge {{ STATUS_COLORS.get(event.status,'slate') }}">{{ event.status }}</span></h2>
+        <div class="spec">
+            {% if customer %}<div class="chip"><b>Kunde</b> <a href="/kunden/{{ customer.id }}">{{ customer.company }}</a></div>{% endif %}
+            <div class="chip"><b>Zeitraum</b> {{ event.start_date or '—' }} → {{ event.end_date or '—' }}</div>
+            {% if event.location %}<div class="chip"><b>Ort</b> {{ event.location }}</div>{% endif %}
+        </div>
+        {% if event.location_address %}<p class="muted" style="margin-top:10px">{{ event.location_address }}</p>{% endif %}
+        {% if event.description %}<h3>Leistungstext</h3><p>{{ event.description }}</p>{% endif %}
+        {% if event.internal_notes %}<h3>Interne Notizen</h3><p class="muted">{{ event.internal_notes }}</p>{% endif %}
+    </div>
+
+    <div class="card">
+        <h2>Kalkulation</h2>
+        <table class="totals">
+            <tr><td>Zwischensumme</td><td class="r">{{ calc.subtotal | eur }}</td></tr>
+            {% if calc.discount_amount %}<tr><td>Rabatt {{ '%g'|format(calc.discount_pct) }}%</td><td class="r">−{{ calc.discount_amount | eur }}</td></tr>{% endif %}
+            {% if calc.service_fee %}<tr><td>Servicegebühr</td><td class="r">{{ calc.service_fee | eur }}</td></tr>{% endif %}
+            <tr><td>Netto</td><td class="r">{{ calc.net | eur }}</td></tr>
+            <tr><td>MwSt. {{ '%g'|format(calc.vat_rate) }}%</td><td class="r">{{ calc.vat | eur }}</td></tr>
+            <tr class="grand"><td>Gesamt</td><td class="r">{{ calc.gross | eur }}</td></tr>
+            {% if calc.deposit %}<tr><td class="muted">Kaution (separat)</td><td class="r muted">{{ calc.deposit | eur }}</td></tr>{% endif %}
+        </table>
+    </div>
+</div>
+
+<!-- POSITIONEN -->
+<div class="card" id="positionen">
+    <h2>Positionen</h2>
+    {% if items %}
+    <div class="table-wrap"><table>
+        <tr><th>Beschreibung</th><th>Menge</th><th>Tarif</th><th>Tage</th><th>Einzelpreis</th><th>Rabatt %</th><th class="r">Summe</th><th></th></tr>
+        {% for it in items %}
+        <tr>
+            <form class="row-form" method="post" action="/events/{{ event.id }}/position/{{ it.id }}/update" id="pos{{ it.id }}"></form>
+            <td>{{ it.description or it.name }}{% if it.is_accessory %} <span class="badge slate">Zub.</span>{% endif %}</td>
+            <td><input form="pos{{ it.id }}" name="quantity" value="{{ '%g'|format(it.quantity) }}" style="width:60px"></td>
+            <td><select form="pos{{ it.id }}" name="rate_type" style="width:120px">
+                {% for r in ['daily','weekend','weekly','fixed'] %}<option value="{{ r }}" {{ 'selected' if it.rate_type==r }}>{{ RATE_LABEL[r] }}</option>{% endfor %}
+            </select></td>
+            <td><input form="pos{{ it.id }}" name="days" value="{{ '%g'|format(it.days) }}" style="width:55px"></td>
+            <td><input form="pos{{ it.id }}" name="unit_price" value="{{ '%g'|format(it.unit_price) }}" style="width:80px"></td>
+            <td><input form="pos{{ it.id }}" name="line_discount_pct" value="{{ '%g'|format(it.line_discount_pct) }}" style="width:55px"></td>
+            <td class="r"><strong>{{ it | line_total | eur }}</strong></td>
+            <td class="r" style="white-space:nowrap">
+                <button form="pos{{ it.id }}" class="btn sm" type="submit">↻</button>
+                <form class="inline-form" method="post" action="/events/{{ event.id }}/position/{{ it.id }}/loeschen"><button class="btn sm danger">✕</button></form>
+            </td>
+        </tr>
+        {% endfor %}
+    </table></div>
+    {% else %}<div class="empty">Noch keine Positionen.</div>{% endif %}
+
+    <h3>Position hinzufügen</h3>
+    <form method="post" action="/events/{{ event.id }}/position">
+        <div class="row cols-4">
+            <div class="field"><label>Artikel</label>
+                <select name="article_id">
+                    <option value="">— freie Position —</option>
+                    {% for a in articles %}<option value="{{ a.id }}">{{ a.name }}{{ ' (Zubehör)' if a.is_accessory }}</option>{% endfor %}
+                </select>
+                <div class="hint">Preis wird aus dem Tarif vorbelegt</div>
+            </div>
+            <div class="field"><label>Menge</label><input name="quantity" value="1"></div>
+            <div class="field"><label>Tarif</label>
+                <select name="rate_type">{% for r in ['daily','weekend','weekly','fixed'] %}<option value="{{ r }}">{{ RATE_LABEL[r] }}</option>{% endfor %}</select>
+            </div>
+            <div class="field"><label>Tage</label><input name="days" value="1"></div>
+        </div>
+        <div class="row cols-3">
+            <div class="field"><label>Beschreibung (optional)</label><input name="description" placeholder="überschreibt Artikelname"></div>
+            <div class="field"><label>Einzelpreis (€, optional)</label><input name="unit_price" placeholder="auto"></div>
+            <div class="field" style="align-self:end"><button class="btn primary" type="submit">+ Hinzufügen</button></div>
+        </div>
+    </form>
+</div>
+
+<!-- LOGISTIK -->
+<div class="card" id="logistik">
+    <h2>Logistik & Personal</h2>
+    <div class="spec">
+        <div class="chip"><b>Gesamtgewicht</b> {{ logistics.weight_kg }} kg</div>
+        <div class="chip"><b>Volumen</b> {{ logistics.volume_m3 }} m³</div>
+        {% if logistics.vehicle %}<div class="chip"><b>Fahrzeug</b> {{ logistics.vehicle }} ({{ '%g'|format(logistics.payload_kg) }} kg / {{ '%g'|format(logistics.vehicle_volume) }} m³)</div>{% endif %}
+        {% if event.delivery_window %}<div class="chip"><b>Zeitfenster</b> {{ event.delivery_window }}</div>{% endif %}
+    </div>
+
+    <h3>Eingeteiltes Personal</h3>
+    {% if assigned %}
+    <table>
+        {% for a in assigned %}
+        <tr>
+            <td><strong>{{ a.name }}</strong> <span class="badge slate">{{ a.role or '' }}</span></td>
+            <td class="muted">{{ a.task or '—' }}</td>
+            <td class="muted">{{ a.phone or '' }}</td>
+            <td class="r"><form class="inline-form" method="post" action="/events/{{ event.id }}/personal/{{ a.link_id }}/entfernen"><button class="btn sm danger">✕</button></form></td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% else %}<p class="muted">Noch niemand eingeteilt.</p>{% endif %}
+    <form method="post" action="/events/{{ event.id }}/personal" style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
+        <select name="staff_id" required style="padding:8px;border:1px solid var(--line);border-radius:8px">
+            <option value="">Person wählen…</option>
+            {% for s in all_staff %}<option value="{{ s.id }}">{{ s.name }} ({{ s.role }})</option>{% endfor %}
+        </select>
+        <input name="task" placeholder="Aufgabe (Fahrer, Aufbau, Inbetriebnahme…)" style="padding:8px;border:1px solid var(--line);border-radius:8px;flex:1">
+        <button class="btn primary" type="submit">+ Einteilen</button>
+    </form>
+</div>
+
+<!-- BETRIEBSABRECHNUNG -->
+<div class="card" id="betrieb">
+    <h2>Kraftstoff- & Betriebsabrechnung</h2>
+    {% if op_records %}
+    <div class="table-wrap"><table>
+        <tr><th>Datum</th><th class="r">Std. von</th><th class="r">Std. bis</th><th class="r">Betriebsstd.</th><th class="r">Kraftstoff (l)</th><th class="r">€/l</th><th class="r">Kosten</th><th></th></tr>
+        {% for r in op_records %}
+        <tr>
+            <td class="muted">{{ r.recorded_at }}</td>
+            <td class="r">{{ '%g'|format(r.hours_start or 0) }}</td>
+            <td class="r">{{ '%g'|format(r.hours_end or 0) }}</td>
+            <td class="r">{{ '%g'|format((r.hours_end or 0) - (r.hours_start or 0)) }} h</td>
+            <td class="r">{{ '%g'|format(r.fuel_liters or 0) }}</td>
+            <td class="r">{{ '%.2f'|format(r.fuel_price_per_l or 0) }}</td>
+            <td class="r"><strong>{{ ((r.fuel_liters or 0) * (r.fuel_price_per_l or 0)) | eur }}</strong></td>
+            <td class="r"><form class="inline-form" method="post" action="/events/{{ event.id }}/betrieb/{{ r.id }}/loeschen"><button class="btn sm danger">✕</button></form></td>
+        </tr>
+        {% endfor %}
+        <tr><td colspan="6" class="r"><strong>Kraftstoffkosten gesamt</strong></td><td class="r"><strong>{{ fuel_cost | eur }}</strong></td><td></td></tr>
+    </table></div>
+    {% else %}<p class="muted">Noch keine Betriebsdaten erfasst.</p>{% endif %}
+
+    <h3>Betriebsdaten erfassen</h3>
+    <form method="post" action="/events/{{ event.id }}/betrieb">
+        <div class="row cols-4">
+            <div class="field"><label>Gerät</label>
+                <select name="unit_id">
+                    <option value="">— allgemein —</option>
+                    {% for u in units %}<option value="{{ u.id }}">{{ u.article_name }} · {{ u.serial_number }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="field"><label>Betriebsstd. von</label><input name="hours_start" value="0"></div>
+            <div class="field"><label>Betriebsstd. bis</label><input name="hours_end" value="0"></div>
+            <div class="field"><label>Kraftstoff (l)</label><input name="fuel_liters" value="0"></div>
+        </div>
+        <div class="row cols-3">
+            <div class="field"><label>Preis €/l</label><input name="fuel_price_per_l" value="1.80"></div>
+            <div class="field"><label>Notiz</label><input name="notes"></div>
+            <div class="field" style="align-self:end"><button class="btn primary" type="submit">+ Erfassen</button></div>
+        </div>
+    </form>
+</div>
+{% endblock %}

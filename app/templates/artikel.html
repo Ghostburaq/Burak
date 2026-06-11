@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block actions %}<a href="/artikel/neu" class="btn primary">+ Neuer Artikel</a>{% endblock %}
+{% block content %}
+<div class="pills">
+    <a href="/artikel" class="{{ 'active' if not kategorie }}">Alle</a>
+    {% for c in cats %}<a href="/artikel?kategorie={{ c }}" class="{{ 'active' if kategorie==c }}">{{ c }}</a>{% endfor %}
+</div>
+<div class="card">
+    <div class="table-wrap"><table>
+        <tr><th>Artikel</th><th>Kategorie</th><th>Leistung</th><th class="r">Gewicht</th><th class="r">Tagesmiete</th><th class="r">Bestand</th></tr>
+        {% for a in articles %}
+        <tr>
+            <td><a href="/artikel/{{ a.id }}"><strong>{{ a.name }}</strong></a>{% if a.is_accessory %} <span class="badge slate">Zubehoer</span>{% endif %}<br><span class="muted">{{ a.manufacturer or '' }} {{ a.model or '' }}</span></td>
+            <td>{{ a.category or '—' }}</td>
+            <td class="muted">
+                {%- if a.cooling_kw %}{{ a.cooling_kw }} kW Kälte {% endif -%}
+                {%- if a.heating_kw %}{{ a.heating_kw }} kW Wärme {% endif -%}
+                {%- if a.power_kva %}{{ a.power_kva }} kVA {% endif -%}
+                {%- if not a.cooling_kw and not a.heating_kw and not a.power_kva %}—{% endif -%}
+            </td>
+            <td class="r">{{ '%g'|format(a.weight_kg) if a.weight_kg else '—' }} kg</td>
+            <td class="r">{{ a.daily_rate | eur }}</td>
+            <td class="r">{{ counts.get(a.id, 0) }}</td>
+        </tr>
+        {% endfor %}
+    </table></div>
+</div>
+{% endblock %}

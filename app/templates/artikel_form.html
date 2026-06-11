@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% macro val(field) %}{{ article[field] if article and article[field] is not none else '' }}{% endmacro %}
+{% block content %}
+<div class="card" style="max-width:900px">
+<form method="post" action="/artikel/speichern">
+    <input type="hidden" name="aid" value="{{ article.id if article else '' }}">
+    <h3>Allgemein</h3>
+    <div class="row">
+        <div class="field"><label>Bezeichnung *</label><input name="name" required value="{{ val('name') }}"></div>
+        <div class="field"><label>Kategorie</label>
+            <select name="category">
+                {% for c in ['Kaelte','Waerme','Power','Zubehoer','Kabel','Verteiler'] %}
+                <option {{ 'selected' if article and article.category==c }}>{{ c }}</option>{% endfor %}
+            </select>
+        </div>
+    </div>
+    <div class="row">
+        <div class="field"><label>Hersteller</label><input name="manufacturer" value="{{ val('manufacturer') }}"></div>
+        <div class="field"><label>Modell</label><input name="model" value="{{ val('model') }}"></div>
+    </div>
+
+    <h3>Technische Spezifikationen</h3>
+    <div class="row cols-3">
+        <div class="field"><label>Kühlleistung (kW)</label><input name="cooling_kw" value="{{ val('cooling_kw') }}"></div>
+        <div class="field"><label>Heizleistung (kW)</label><input name="heating_kw" value="{{ val('heating_kw') }}"></div>
+        <div class="field"><label>Generatorleistung (kVA)</label><input name="power_kva" value="{{ val('power_kva') }}"></div>
+    </div>
+    <div class="row cols-3">
+        <div class="field"><label>Luftvolumenstrom (m³/h)</label><input name="airflow_m3h" value="{{ val('airflow_m3h') }}"></div>
+        <div class="field"><label>Kraftstoffverbrauch (l/h)</label><input name="fuel_consumption_lph" value="{{ val('fuel_consumption_lph') }}"></div>
+        <div class="field"><label>Kraftstoffart</label><input name="fuel_type" value="{{ val('fuel_type') }}" placeholder="Diesel / Heizoel / Strom"></div>
+    </div>
+    <div class="row cols-3">
+        <div class="field"><label>Spannung</label><input name="voltage" value="{{ val('voltage') }}" placeholder="230V / 400V"></div>
+        <div class="field"><label>Anschluss/Stecker</label><input name="connector" value="{{ val('connector') }}" placeholder="CEE 63A / Schuko"></div>
+        <div class="field"><label>Gewicht (kg)</label><input name="weight_kg" value="{{ val('weight_kg') }}"></div>
+    </div>
+    <div class="row cols-4">
+        <div class="field"><label>Länge (cm)</label><input name="length_cm" value="{{ val('length_cm') }}"></div>
+        <div class="field"><label>Breite (cm)</label><input name="width_cm" value="{{ val('width_cm') }}"></div>
+        <div class="field"><label>Höhe (cm)</label><input name="height_cm" value="{{ val('height_cm') }}"></div>
+        <div class="field"><label>Volumen (m³)</label><input name="volume_m3" value="{{ val('volume_m3') }}"><div class="hint">für Transportplanung</div></div>
+    </div>
+
+    <h3>Preise & Vermietung</h3>
+    <div class="row cols-4">
+        <div class="field"><label>Tagesmiete (€)</label><input name="daily_rate" value="{{ val('daily_rate') }}"></div>
+        <div class="field"><label>Wochenend-Tarif (€)</label><input name="weekend_rate" value="{{ val('weekend_rate') }}"></div>
+        <div class="field"><label>Wochenmiete (€)</label><input name="weekly_rate" value="{{ val('weekly_rate') }}"></div>
+        <div class="field"><label>Kaution (€)</label><input name="deposit" value="{{ val('deposit') }}"></div>
+    </div>
+
+    <h3>Wartung & Typ</h3>
+    <div class="row cols-3">
+        <div class="field"><label>Wartungsintervall (Tage)</label><input name="maintenance_interval_days" value="{{ article.maintenance_interval_days if article else 365 }}"></div>
+        <div class="field"><label class="checkbox"><input type="checkbox" name="needs_maintenance" {{ 'checked' if article and article.needs_maintenance }}> Wartungspflichtig (UVV)</label></div>
+        <div class="field"><label class="checkbox"><input type="checkbox" name="is_accessory" {{ 'checked' if article and article.is_accessory }}> Ist Zubehör/Kabel</label></div>
+    </div>
+    <div class="field"><label>Notizen</label><textarea name="notes">{{ val('notes') }}</textarea></div>
+
+    <div class="form-actions">
+        <button class="btn primary" type="submit">Speichern</button>
+        <a class="btn" href="{{ '/artikel/' ~ article.id if article else '/artikel' }}">Abbrechen</a>
+    </div>
+</form>
+</div>
+{% endblock %}
