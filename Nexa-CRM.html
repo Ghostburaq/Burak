@@ -834,11 +834,10 @@ input,select,textarea{font-family:inherit;font-size:14px}
 /* ─── Kategorie pills & matrix ─── */
 .kat-pill{display:inline-block;font-size:9.5px;font-weight:700;padding:1px 7px;border-radius:9px;
   margin-top:3px;letter-spacing:0.04em;text-transform:uppercase}
-.kat-strom{background:rgba(37,99,235,0.13);color:#1d4ed8}
-.kat-waerme{background:rgba(220,38,38,0.13);color:#b91c1c}
-.kat-klte,.kat-kalte{background:rgba(14,165,233,0.16);color:#0369a1}
-.kat-usv{background:rgba(124,58,237,0.13);color:#6d28d9}
-.kat-mix{background:rgba(100,116,139,0.16);color:#475569}
+.kat-akquise{background:rgba(37,99,235,0.13);color:#1d4ed8}
+.kat-bestandskunde{background:rgba(15,157,88,0.14);color:#0f7a44}
+.kat-partner{background:rgba(124,58,237,0.13);color:#6d28d9}
+.kat-sonstige{background:rgba(100,116,139,0.16);color:#475569}
 .kategorie-table{width:100%;border-collapse:collapse;font-size:13px}
 .kategorie-table th{text-align:left;padding:10px 12px;background:var(--bg2);font-weight:700;font-size:11.5px;
   text-transform:uppercase;letter-spacing:0.06em;color:var(--text-mute);border-bottom:1px solid var(--line)}
@@ -1355,11 +1354,11 @@ input,select,textarea{font-family:inherit;font-size:14px}
           </div>
         </div>
 
-        <!-- Kategorie matrix (Strom / Wärme / Kälte) × Status -->
+        <!-- Kategorie matrix × Status -->
         <div class="card mt-md">
           <div class="card-h">
-            <div class="card-title">Kategorie-Übersicht — Strom · Wärme · Kälte</div>
-            <span class="tx-dim" style="font-size:11px">Offen / Gewonnen / Verloren / Erledigt pro Produktlinie · klick auf Kategorie filtert die Kontakte</span>
+            <div class="card-title">Kategorie-Übersicht</div>
+            <span class="tx-dim" style="font-size:11px">Offen / Gewonnen / Verloren / Erledigt pro Kategorie · klick auf Kategorie filtert die Kontakte</span>
           </div>
           <div id="anKategorieMatrix"></div>
         </div>
@@ -1534,7 +1533,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
           </button>
         </div>
         <div class="field"><label>Position</label><input id="cPosition"></div>
-        <div class="field"><label>Einsatzort / Adresse</label><input id="cOrt"></div>
+        <div class="field"><label>Standort / Adresse</label><input id="cOrt"></div>
         <div class="field"><label>Segment</label>
           <input id="cSegment" list="cSegmentList" placeholder="z.B. Architekten, Unternehmen, Anlagenbau">
           <datalist id="cSegmentList"></datalist>
@@ -1736,13 +1735,9 @@ input,select,textarea{font-family:inherit;font-size:14px}
           <div class="ai-row"><label>Email</label><input id="ai_email"></div>
           <div class="ai-row"><label>Telefon</label><input id="ai_tel"></div>
           <div class="ai-row"><label>Position</label><input id="ai_position"></div>
-          <div class="ai-row"><label>Einsatzort</label><input id="ai_ort"></div>
+          <div class="ai-row"><label>Standort / Ort</label><input id="ai_ort"></div>
           <div class="ai-row"><label>Segment</label>
-            <select id="ai_segment">
-              <option>Industrie</option><option>Pharma</option><option>Rechenzentrum</option>
-              <option>Spital/Klinik</option><option>EVU</option><option>Gemeinde</option>
-              <option>Bau</option><option>Event</option><option>Cross-Sell</option><option>Sonstige</option>
-            </select>
+            <input id="ai_segment" list="cSegmentList" placeholder="z.B. Architekten">
           </div>
         </div>
 
@@ -2847,6 +2842,8 @@ function markBackup(){ localStorage.setItem(BACKUP_KEY, String(Date.now())); }
 const REPS_KEY = 'nexa_crm_sales_reps';
 const REP_DEFAULTS = [];
 const KATEGORIEN = ['Akquise','Bestandskunde','Partner','Sonstige'];
+const KATCOLORS = { 'Akquise':[37,99,235], 'Bestandskunde':[15,157,88], 'Partner':[124,58,237], 'Sonstige':[100,116,139] };
+function katColor(k){ return KATCOLORS[k] || [100,116,139]; }
 
 function loadSalesReps(){
   try{ const a = JSON.parse(localStorage.getItem(REPS_KEY)||'[]'); if(Array.isArray(a) && a.length) return a; }catch(e){}
@@ -3117,6 +3114,7 @@ window.bulkToggle = function(id, ev){
   if(cb) cb.checked = bulkSelected.has(id);
 };
 window.bulkToggleAll = function(ev){
+  if(!ev || !ev.target) return;
   const checked = ev.target.checked;
   document.querySelectorAll('.bulk-cb[data-id]').forEach(cb => { cb.checked = checked; if(checked) bulkSelected.add(cb.dataset.id); else bulkSelected.delete(cb.dataset.id); });
   renderBulkBar();
@@ -4878,7 +4876,7 @@ function aiExtractionUserPrompt(){
   "email": "Email oder leer",
   "tel": "Telefon mit Ländervorwahl wenn möglich",
   "position": "Funktion/Rolle wenn ersichtlich",
-  "ort": "Einsatzort/Adresse oder Ort",
+  "ort": "Standort/Adresse oder Ort",
   "segment": "Branche/Kategorie des Kunden in 1-2 Wörtern (frei), oder 'Sonstige'",
   "status": "Lead, Kontaktiert, Angebot, Verhandlung, Gewonnen, oder Verloren — bei einem Angebot meist 'Angebot'",
   "chf_zwischen": "Zwischensumme exkl. MwSt als Zahl, oder null",
@@ -4999,8 +4997,9 @@ function findMatchingContact(firma, kontakt, ort){
 }
 
 function validSegment(s){
-  const valid = ['Industrie','Pharma','Rechenzentrum','Spital/Klinik','EVU','Gemeinde','Bau','Event','Cross-Sell','Sonstige'];
-  return valid.includes(s) ? s : null;
+  // Segmente sind frei (z.B. "Architekten") — beliebigen nicht-leeren Wert akzeptieren.
+  s = (s == null ? '' : String(s)).trim();
+  return s || null;
 }
 function validStatus(s){
   const valid = ['Lead','Kontaktiert','Angebot','Verhandlung','Gewonnen','Verloren','Pausiert','Erledigt'];
@@ -6027,7 +6026,7 @@ window.exportCrmExcel = function(){
   // ── Sheet 1: Kontakte ──
   const kontakteHeaders = [
     'ID','Firma','Kontakt','Email','Weitere Emails','Tel','Weitere Tel',
-    'Position','Einsatzort','Segment','Status','CHF','Wahrscheinlichkeit %',
+    'Position','Standort','Segment','Status','CHF','Wahrscheinlichkeit %',
     'Wiedervorlage','Nächster Schritt','Notiz','Weitere Kontaktpersonen','Erstellt','Aktualisiert'
   ];
 
@@ -6213,7 +6212,7 @@ window.importCrmExcelFile = function(input){
           extraTels,
           extraContacts,
           position:  String(row['Position']||'').trim(),
-          ort:       String(row['Einsatzort']||'').trim(),
+          ort:       String(row['Standort']||row['Einsatzort']||'').trim(),
           segment:   String(row['Segment']||'').trim() || 'Sonstige',
           status:    String(row['Status']||'').trim() || 'Lead',
           chf:       parseCHF(row['CHF']),
@@ -7006,7 +7005,7 @@ window.generateAdReportPdf = function(repName){
   rbox(kx, Y, kw, statH, [255,255,255], 2); rbdr(kx, Y, kw, statH, LINE, 0.3, 2);
   box(kx, Y, kw, 2.4, RED);
   font('bold',7.5); ink(SLATE); T('KATEGORIE-VERTEILUNG', kx+5, Y+7.5);
-  const katOrder = ['Strom','Wärme','Kälte','USV','Mix','—'];
+  const katOrder = [...KATEGORIEN, '—'];
   const katMaxC = Math.max(1, ...katOrder.map(k=>katDist[k]||0));
   const katBarMax = kw - 56;
   let ky = Y + 13;
@@ -7016,7 +7015,7 @@ window.generateAdReportPdf = function(repName){
     if(!c) return;
     const w = (c/katMaxC)*katBarMax;
     font('normal',7); ink(SLATE); T(k==='—'?'Keine':k, kx+5, ky);
-    box(kx+34, ky-2.6, Math.max(1.2,w), 3.2, k==='Strom'?[37,99,235]:k==='Wärme'?[200,50,50]:k==='Kälte'?[14,165,233]:k==='USV'?[124,58,237]:[100,116,139]);
+    box(kx+34, ky-2.6, Math.max(1.2,w), 3.2, katColor(k));
     font('bold',7); ink(INK); T(String(c), kx+kw-5, ky, {align:'right'});
     ky += 5.3;
   });
@@ -7070,7 +7069,7 @@ window.generateAdReportPdf = function(repName){
     font('normal',7); ink(SLATE); T(clip(c.kontakt||'—', 20), cKont, Y+4.3);
     if(c.kategorie){
       font('bold',5.5); ink([255,255,255]);
-      const kCol = c.kategorie==='Strom'?[37,99,235]:c.kategorie==='Wärme'?[200,50,50]:c.kategorie==='Kälte'?[14,165,233]:c.kategorie==='USV'?[124,58,237]:[100,116,139];
+      const kCol = katColor(c.kategorie);
       rbox(cKat-1, Y+1.4, 16, 3.6, kCol, 1.8);
       T(clip(c.kategorie.toUpperCase(), 7), cKat+7, Y+3.95, {align:'center'});
     }
