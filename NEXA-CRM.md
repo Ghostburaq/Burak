@@ -50,6 +50,14 @@ Beim Import gilt laut Vorgabe:
 > Feintuning der Spalten-Zuordnung machen wir, sobald deine echten Listen da sind —
 > schick sie einfach rein.
 
+## 🎯 Vertriebs-Playbook (Sidebar / Taste 9)
+Dein Spickzettel fürs Telefon – fertig aufbereitet und mit dem CRM verzahnt:
+- **Telefon-Opener** (mit deinem Namen/Firma aus den Einstellungen) → 📋 Kopieren
+- **Einwandbehandlung**: 5 typische Einwände + schlagfertige Antworten →
+  📋 Kopieren oder **✦ KI** (öffnet KI-Assist und übernimmt den Einwand für 3 Antwortvarianten)
+- **Preismodell** (Setup / SaaS / KI), **Verkaufsprozess** (Calendly → Zoom → Vor Ort) und **USPs**
+- Button **📅 Erstgespräch buchen** direkt im Playbook
+
 ## 📅 Beratung buchen (Calendly)
 Für das kostenlose **30-Min-Erstgespräch per Teams/Zoom**:
 1. Einstellungen → *Branding & Firmenprofil* → **Calendly-Buchungslink** eintragen

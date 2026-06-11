@@ -966,6 +966,10 @@ input,select,textarea{font-family:inherit;font-size:14px}
         <span class="nav-icon">📈</span> Analytics
         <span class="nav-shortcut">8</span>
       </button>
+      <button class="nav-item" data-page="playbook" onclick="window.nav('playbook')">
+        <span class="nav-icon">🎯</span> Playbook
+        <span class="nav-shortcut">9</span>
+      </button>
       <button class="nav-item" data-page="settings" onclick="window.nav('settings')">
         <span class="nav-icon">⚙</span> Einstellungen
       </button>
@@ -1359,6 +1363,11 @@ input,select,textarea{font-family:inherit;font-size:14px}
           </div>
           <div id="anKategorieMatrix"></div>
         </div>
+      </div>
+
+      <!-- ═══ PLAYBOOK ═══ -->
+      <div class="page" id="page-playbook">
+        <div id="playbookContent"></div>
       </div>
 
       <!-- ═══ SETTINGS ═══ -->
@@ -1859,7 +1868,7 @@ const COMPANY_KEY = 'nexa_crm_company';   // {name, pitch, rep, recipient}
 const BRAND_DEFAULTS   = { name: 'Nexa', sub: 'Acquisition Suite' };
 const COMPANY_DEFAULTS = {
   name: 'Nexa',
-  pitch: 'B2B-Akquise & Vertrieb — wir gewinnen Neukunden für unsere Auftraggeber.',
+  pitch: 'Wir entwickeln massgeschneiderte, KI-gestützte CRM-Lösungen für KMU – schlank, DSGVO-konform in CH/DE gehostet, ohne die Kosten und Komplexität der grossen Standard-Anbieter.',
   rep: '',
   recipient: '',  // Empfänger-Anrede im Wochenbericht (z.B. "Team")
   calendly: ''    // Calendly-Buchungslink für das 30-Min-Erstgespräch
@@ -2168,7 +2177,8 @@ window.nav = function(page){
   const titles = {
     today:'Heute', kontakte:'Kontakte', pipeline:'Pipeline',
     wiedervorlagen:'Wiedervorlagen', aktivitaeten:'Aktivitäten',
-    kalender:'Kalender', ki:'KI-Assist', analytics:'Analytics', settings:'Einstellungen'
+    kalender:'Kalender', ki:'KI-Assist', analytics:'Analytics',
+    playbook:'Vertriebs-Playbook', settings:'Einstellungen'
   };
   document.getElementById('pageTitle').textContent = titles[page] || page;
 
@@ -2180,6 +2190,7 @@ window.nav = function(page){
   else if(page === 'aktivitaeten') renderAktivitaeten();
   else if(page === 'kalender'){ calDate = calDate || new Date(); renderCalendar(); }
   else if(page === 'ki') populateKiSelects();
+  else if(page === 'playbook') renderPlaybook();
 };
 
 // ════════════════════════════════════════════════════════════════════════
@@ -3025,6 +3036,7 @@ const PALETTE_ACTIONS = [
   {label:'AD-Report PDF (Berater wählen)', icon:'📄', fn:()=>window.generateAdReportPdf(''), kw:'ad report aussendienst pdf berater'},
   {label:'Wochenbericht öffnen', icon:'📊', fn:()=>window.openWochenbericht(), kw:'wochenbericht report wb'},
   {label:'Beratung buchen (Calendly)', icon:'📅', fn:()=>window.openBookingCalendar(), kw:'calendly termin beratung erstgespräch booking meeting'},
+  {label:'Playbook öffnen', icon:'🎯', fn:()=>window.nav('playbook'), kw:'playbook pitch einwand preise prozess script skript'},
   {label:'CRM-Export (Excel)', icon:'↓', fn:()=>window.exportCrmExcel(), kw:'export excel xlsx'},
   {label:'CSV exportieren', icon:'↓', fn:()=>window.exportCSV(), kw:'export csv'},
   {label:'JSON Backup', icon:'💾', fn:()=>window.exportData(), kw:'backup json'},
@@ -4406,6 +4418,137 @@ function populateSegmentDatalists(){
   }
 }
 
+// ════════════════════════════════════════════════════════════════════════
+//  VERTRIEBS-PLAYBOOK — Pitch, Einwandbehandlung, Preise, Prozess, USPs
+// ════════════════════════════════════════════════════════════════════════
+const PB_OBJECTIONS = [
+  { q:'Wir haben schon ein CRM.',
+    a:'Verständlich. Die entscheidende Frage: Nutzt Ihr Team wirklich alle Funktionen – oder zahlen Sie für 80 %, die niemand anfasst? Wir liefern genau das, was Ihre Leute täglich brauchen. Genau das wird dann auch verwendet.' },
+  { q:'Das ist uns zu teuer / wir haben kein Budget.',
+    a:'Genau deshalb lohnt der Vergleich: keine Power-User-Aufschläge, keine versteckten API-Kosten. Sie zahlen eine planbare Pauschale – in der Regel unter dem, was Sie heute pro Nutzer bei den grossen Anbietern zahlen.' },
+  { q:'Ihr seid doch nur ein Startup.',
+    a:'Stimmt – und das ist Ihr Vorteil: Sie sprechen direkt mit den Entwicklern statt mit einer Hotline, bekommen Anpassungen in Tagen statt Monaten, und die Lösung wächst mit Ihnen.' },
+  { q:'Ich habe gerade keine Zeit / kein Interesse.',
+    a:'Kein Problem – ich brauche nur 15 Minuten per Video, um zu zeigen, wie Ihr Prozess bei uns aussieht. Passt es nicht, wissen Sie es nach 15 Minuten. Fairer Deal?' },
+  { q:'Wo liegen unsere Daten? (Datenschutz)',
+    a:'Berechtigte Frage. Wir hosten in der Schweiz bzw. Deutschland – DSGVO-konform. Ihre Daten bleiben bei Ihnen, kein Abfluss in US-Clouds.' }
+];
+const PB_PRICING = [
+  { k:'Setup (einmalig)', v:'2.500 – 10.000 €', d:'Individuelle Anpassung + Implementierung – deckt die Entwicklungszeit.' },
+  { k:'SaaS (pro Nutzer / Monat)', v:'30 – 60 €', d:'Hosting, Support, Wartung & KI – bewusst unter den Enterprise-Preisen der Grossen.' },
+  { k:'KI-Kosten', v:'inkl. / Pass-Through', d:'Entweder in die Pauschale eingepreist oder transparent als Token-Pass-Through weitergegeben.' }
+];
+const PB_PROCESS = [
+  { t:'1 · Calendly', d:'Kurzer Erstkontakt-Slot (15–20 Min.). Bedarf grob qualifizieren, Termin automatisch buchen lassen.' },
+  { t:'2 · Zoom / Teams', d:'Live-Demo des Prototyps. Fokus: „So sieht Ihr Prozess bei uns aus." Konkret, nicht generisch.' },
+  { t:'3 · Vor Ort', d:'Nur für den Abschluss bei grösseren Teams (ab ~10–15 Nutzern) – Reisezeit ist für ein Startup teuer.' }
+];
+const PB_USPS = [
+  ['Keine Feature-Überladung', 'Nur was wirklich gebraucht wird → höhere Akzeptanz im Team.'],
+  ['Tiefe Prozess-Integration', 'Eigene Kalkulationslogik & Branchen-Schnittstellen statt teurer Plugins.'],
+  ['Datensouveränität', 'Hosting in CH/DE, DSGVO-konform – ein starkes Verkaufsargument.'],
+  ['Preisflexibilität', 'Keine versteckten Kosten für API-Zugriffe oder „Power-User"-Aufschläge.']
+];
+function pbPitchText(){
+  const co = loadCompany();
+  const rep = co.rep || '[Dein Name]';
+  return `Guten Tag [Name], ${rep} von ${co.name}. Wir helfen Vertriebsteams, ihre Abläufe mit einem massgeschneiderten, KI-gestützten CRM zu automatisieren – genau auf Ihre Prozesse zugeschnitten, ohne die hohen Lizenzkosten und die Überladung der grossen Standard-Tools. Hätten Sie kurz zwei Minuten?`;
+}
+function renderPlaybook(){
+  const host = document.getElementById('playbookContent');
+  if(!host) return;
+  const hasLink = !!bookingLink();
+  host.innerHTML = `
+    <div class="card mb-md">
+      <div class="card-h">
+        <div>
+          <div class="card-sub">Positionierung</div>
+          <div class="card-title">Telefon-Opener</div>
+        </div>
+        <div class="row gap-md">
+          <button class="btn btn-ghost btn-sm" onclick="window.pbCopyPitch()">📋 Kopieren</button>
+          <button class="btn btn-primary btn-sm" onclick="window.openBookingCalendar()">📅 Erstgespräch buchen</button>
+        </div>
+      </div>
+      <div id="pbPitch" style="background:var(--bg2);border:1px solid var(--line);border-radius:var(--r-md);padding:16px;line-height:1.7;font-size:14.5px">${escHtml(pbPitchText())}</div>
+      <p class="tx-mute" style="font-size:12px;margin-top:10px;margin-bottom:0">Tipp: [Name] ersetzen, dann direkt ins Gespräch. „Dein Name" & Firma kommen automatisch aus den Einstellungen → Branding.${hasLink?'':' <strong>Calendly-Link noch nicht hinterlegt</strong> – Einstellungen → Branding.'}</p>
+    </div>
+
+    <div class="card mb-md">
+      <div class="card-sub">Schlagfertig bleiben</div>
+      <div class="card-title mb-md">Einwandbehandlung</div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        ${PB_OBJECTIONS.map((o,i)=>`
+          <div style="border:1px solid var(--line);border-radius:var(--r-md);padding:14px">
+            <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start">
+              <div style="font-weight:700;color:var(--brand)">„${escHtml(o.q)}"</div>
+              <div class="row gap-md" style="flex-shrink:0">
+                <button class="btn btn-ghost btn-tiny" onclick="window.pbCopyResp(${i})" title="Antwort kopieren">📋</button>
+                <button class="btn btn-ghost btn-tiny" onclick="window.pbToKi(${i})" title="In KI-Assist 3 Antwortvarianten generieren">✦ KI</button>
+              </div>
+            </div>
+            <div id="pbResp${i}" style="margin-top:8px;line-height:1.6">${escHtml(o.a)}</div>
+          </div>`).join('')}
+      </div>
+    </div>
+
+    <div class="card mb-md">
+      <div class="card-sub">Mischkalkulation</div>
+      <div class="card-title mb-md">Preismodell</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        ${PB_PRICING.map(p=>`
+          <div style="display:flex;gap:14px;align-items:baseline;border-bottom:1px solid var(--line);padding-bottom:10px">
+            <div style="min-width:190px;font-weight:600">${escHtml(p.k)}</div>
+            <div class="mono" style="min-width:140px;font-weight:700;color:var(--brand)">${escHtml(p.v)}</div>
+            <div class="tx-mute" style="font-size:13px">${escHtml(p.d)}</div>
+          </div>`).join('')}
+      </div>
+      <p class="tx-mute" style="font-size:12px;margin-top:12px;margin-bottom:0">Richtwerte – an Komplexität & Teamgrösse anpassen. Setup deckt den Cashflow, SaaS die langfristige Bindung.</p>
+    </div>
+
+    <div class="card mb-md">
+      <div class="card-sub">Vom Erstkontakt zum Abschluss</div>
+      <div class="card-title mb-md">Verkaufsprozess</div>
+      <div class="kpi-grid" style="margin-bottom:0">
+        ${PB_PROCESS.map(s=>`
+          <div class="kpi acc-info">
+            <div style="font-weight:700;font-size:15px;margin-bottom:6px">${escHtml(s.t)}</div>
+            <div class="tx-mute" style="font-size:13px;line-height:1.55">${escHtml(s.d)}</div>
+          </div>`).join('')}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-sub">Warum massgeschneidert schlägt Standard</div>
+      <div class="card-title mb-md">Eure USPs</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px">
+        ${PB_USPS.map(u=>`
+          <div style="border:1px solid var(--line);border-radius:var(--r-md);padding:14px">
+            <div style="font-weight:700;margin-bottom:4px">✓ ${escHtml(u[0])}</div>
+            <div class="tx-mute" style="font-size:13px;line-height:1.55">${escHtml(u[1])}</div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+}
+window.pbCopyPitch = function(){
+  navigator.clipboard.writeText(pbPitchText()).then(()=>showToast('📋 Opener kopiert','success'));
+};
+window.pbCopyResp = function(i){
+  const o = PB_OBJECTIONS[i]; if(!o) return;
+  navigator.clipboard.writeText(o.a).then(()=>showToast('📋 Antwort kopiert','success'));
+};
+window.pbToKi = function(i){
+  const o = PB_OBJECTIONS[i]; if(!o) return;
+  window.nav('ki');
+  setTimeout(()=>{
+    if(window.kiTab) window.kiTab('objection');
+    const ein = document.getElementById('kiObjEin');
+    if(ein) ein.value = o.q;
+    showToast('Einwand übernommen — auf „Antwort-Strategien generieren" klicken', 'info');
+    if(ein) ein.scrollIntoView({behavior:'smooth', block:'center'});
+  }, 80);
+};
+
 window.fillKiContact = function(prefix){
   const sel = prefix === 'em' ? 'kiEmKontakt' : 'kiCallKontakt';
   const id = document.getElementById(sel).value;
@@ -5519,8 +5662,8 @@ document.addEventListener('keydown', e => {
   } else if(e.key === 'l'){
     e.preventDefault();
     window.openLogActivity();
-  } else if(e.key >= '1' && e.key <= '8'){
-    const pages = ['today','kontakte','pipeline','wiedervorlagen','aktivitaeten','kalender','ki','analytics'];
+  } else if(e.key >= '1' && e.key <= '9'){
+    const pages = ['today','kontakte','pipeline','wiedervorlagen','aktivitaeten','kalender','ki','analytics','playbook'];
     window.nav(pages[parseInt(e.key)-1]);
   }
 });
