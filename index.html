@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lotto-Wahrscheinlichkeitsrechner — Swiss Lotto &amp; mehr</title>
+<style>
+  :root{
+    --bg:#0b1020; --panel:#141b33; --panel2:#1c2647; --line:#27314f;
+    --txt:#e7ecff; --muted:#9aa6c8; --accent:#4f8cff; --accent2:#22d3a6;
+    --warn:#ffb020; --bad:#ff5a6e; --good:#22d3a6; --gold:#ffd34d;
+    --shadow:0 10px 30px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:radial-gradient(1200px 600px at 20% -10%, #16204a 0%, var(--bg) 55%) fixed;
+    color:var(--txt);
+    font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    min-height:100vh;
+  }
+  a{color:var(--accent)}
+  .wrap{max-width:1080px;margin:0 auto;padding:24px 18px 80px}
+  header.top{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
+  header.top h1{margin:0;font-size:26px;letter-spacing:.2px}
+  header.top .sub{color:var(--muted);font-size:14px}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);
+    color:var(--muted);border-radius:999px;padding:3px 10px;font-size:12px;margin-right:6px}
+
+  .disclaimer{
+    margin:16px 0;border:1px solid #4a3b13;background:linear-gradient(0deg,#241c08,#2c2310);
+    border-radius:14px;padding:14px 16px;color:#ffe7ad;box-shadow:var(--shadow)}
+  .disclaimer b{color:var(--gold)}
+
+  nav.tabs{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 14px}
+  nav.tabs button{
+    background:var(--panel);border:1px solid var(--line);color:var(--txt);
+    padding:9px 14px;border-radius:11px;cursor:pointer;font-size:14px;transition:.15s}
+  nav.tabs button:hover{border-color:var(--accent)}
+  nav.tabs button.active{background:linear-gradient(180deg,#2b3c73,#22305e);border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;
+    padding:18px;margin:14px 0;box-shadow:var(--shadow)}
+  .card h2{margin:0 0 4px;font-size:19px}
+  .card h3{margin:18px 0 8px;font-size:15px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;font-weight:700}
+  .muted{color:var(--muted)}
+  .row{display:flex;flex-wrap:wrap;gap:14px}
+  .col{flex:1 1 220px;min-width:200px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:680px){.grid2{grid-template-columns:1fr}}
+
+  label.fld{display:block;font-size:13px;color:var(--muted);margin:8px 0 4px}
+  input[type=text],input[type=number],select,textarea{
+    width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--txt);
+    border-radius:10px;padding:10px 12px;font-size:14px;outline:none}
+  input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+  textarea{min-height:90px;resize:vertical;font-family:ui-monospace,Menlo,Consolas,monospace}
+
+  button.btn{background:linear-gradient(180deg,var(--accent),#3a72d8);border:none;color:#fff;
+    padding:10px 16px;border-radius:10px;cursor:pointer;font-size:14px;font-weight:600;transition:.15s}
+  button.btn:hover{filter:brightness(1.08)}
+  button.btn.sec{background:var(--panel2);border:1px solid var(--line)}
+  button.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--txt)}
+  .btnrow{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;align-items:center}
+
+  table{width:100%;border-collapse:collapse;font-size:14px;margin-top:6px}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line)}
+  th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.5px}
+  tr.top td{background:rgba(255,211,77,.08)}
+  td.num{font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+  .pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600}
+  .pill.g{background:rgba(34,211,166,.15);color:var(--good)}
+  .pill.y{background:rgba(255,176,32,.15);color:var(--warn)}
+  .pill.r{background:rgba(255,90,110,.15);color:var(--bad)}
+
+  .balls{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+  .ball{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-weight:700;background:radial-gradient(circle at 30% 25%,#7aa6ff,#2f5fc0);color:#fff;
+    box-shadow:0 4px 10px rgba(0,0,0,.3);font-variant-numeric:tabular-nums}
+  .ball.luck{background:radial-gradient(circle at 30% 25%,#ffd97a,#e0a318);color:#3a2a00}
+  .ball.sm{width:34px;height:34px;font-size:13px}
+  .ball.cold{background:radial-gradient(circle at 30% 25%,#8fd0ff,#2f7fb8)}
+  .ball.hot{background:radial-gradient(circle at 30% 25%,#ff9a7a,#d8482f)}
+
+  .kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:6px}
+  .kpi .box{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px}
+  .kpi .box .v{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums}
+  .kpi .box .l{font-size:12px;color:var(--muted);margin-top:2px}
+
+  canvas{width:100%;max-width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:12px}
+  .hidden{display:none !important}
+  .note{font-size:13px;color:var(--muted);margin-top:8px}
+  .ok{color:var(--good)} .err{color:var(--bad)} .warnc{color:var(--warn)}
+  details{border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin:10px 0;background:var(--panel2)}
+  summary{cursor:pointer;font-weight:600}
+  code{background:rgba(255,255,255,.06);padding:1px 6px;border-radius:6px;font-size:13px}
+  .src{font-size:12px;color:var(--muted)}
+  .bar{height:10px;background:var(--panel2);border-radius:999px;overflow:hidden;border:1px solid var(--line)}
+  .bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+  footer{color:var(--muted);font-size:12px;text-align:center;margin-top:30px;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <h1>🎰 Lotto-Wahrscheinlichkeitsrechner</h1>
+    <div class="sub">Exakte Kombinatorik · Live-Datenarchiv · Statistik · Chi-Quadrat-Fairnesstest · Monte-Carlo-Simulation · Erwartungswert</div>
+    <div style="margin-top:6px">
+      <span class="badge" id="presetBadge">Swiss Lotto · 6 aus 42 + Glückszahl</span>
+      <span class="badge">100% offline lauffähig</span>
+      <span class="badge">keine Tracker</span>
+    </div>
+  </header>
+
+  <div class="disclaimer">
+    <b>Ehrlich &amp; mathematisch korrekt:</b> Lotto ist ein reines Glücksspiel. Jede Ziehung ist
+    <b>statistisch unabhängig</b> von allen vorherigen — die Kugeln haben kein Gedächtnis.
+    „Heisse&ldquo;, „kalte&ldquo; oder „überfällige&ldquo; Zahlen verändern deine Gewinnchance <b>nicht</b> (Spielerfehlschluss).
+    Der erwartete Wert eines Tipps ist <b>negativ</b>. Der einzige real existierende mathematische Hebel:
+    <b>seltene/unbeliebte Zahlen wählen</b> — das ändert die Gewinnchance nicht, erhöht aber den
+    <b>erwarteten Auszahlungsbetrag im Gewinnfall</b>, weil du den Topf mit weniger Mitspielern teilst.
+    Spiel verantwortungsvoll. Hilfe: <a href="https://www.sos-spielsucht.ch" target="_blank" rel="noopener">sos-spielsucht.ch</a>.
+  </div>
+
+  <nav class="tabs" id="tabs">
+    <button data-tab="prob" class="active">Wahrscheinlichkeiten</button>
+    <button data-tab="check">Tipp prüfen</button>
+    <button data-tab="data">Historische Daten &amp; Statistik</button>
+    <button data-tab="gen">Generator &amp; Simulation</button>
+    <button data-tab="ev">Erwartungswert</button>
+    <button data-tab="info">Wissen</button>
+  </nav>
+
+  <!-- ====================== KONFIGURATION ====================== -->
+  <div class="card">
+    <h2>Spiel-Konfiguration</h2>
+    <div class="row">
+      <div class="col">
+        <label class="fld">Voreinstellung (Preset)</label>
+        <select id="preset">
+          <option value="swisslotto">🇨🇭 Swiss Lotto — 6 aus 42 + Glückszahl 1–6</option>
+          <option value="de649">🇩🇪 Lotto 6aus49 + Superzahl 0–9</option>
+          <option value="euromillions">🇪🇺 EuroMillions — 5 aus 50 + 2 aus 12 Sterne</option>
+          <option value="custom">⚙️ Eigenes Format</option>
+        </select>
+      </div>
+      <div class="col">
+        <label class="fld">Zahlenpool (Hauptzahlen 1…N)</label>
+        <input type="number" id="mainMax" value="42" min="3" max="99">
+      </div>
+      <div class="col">
+        <label class="fld">Anzahl getippter Hauptzahlen</label>
+        <input type="number" id="mainPick" value="6" min="1" max="12">
+      </div>
+    </div>
+    <div class="row">
+      <div class="col">
+        <label class="fld">Zusatzzahl-Pool (0 = keine)</label>
+        <input type="number" id="bonusMax" value="6" min="0" max="50">
+      </div>
+      <div class="col">
+        <label class="fld">Anzahl Zusatzzahlen</label>
+        <input type="number" id="bonusPick" value="1" min="0" max="5">
+      </div>
+      <div class="col">
+        <label class="fld">Bezeichnung Zusatzzahl</label>
+        <input type="text" id="bonusName" value="Glückszahl">
+      </div>
+    </div>
+    <div class="row">
+      <div class="col">
+        <label class="fld">Preis pro Tipp (CHF)</label>
+        <input type="number" id="ticketPrice" value="2.5" min="0" step="0.10">
+      </div>
+      <div class="col" style="flex:2 1 400px">
+        <label class="fld">&nbsp;</label>
+        <div class="note" id="cfgNote"></div>
+      </div>
+    </div>
+    <div class="btnrow"><button class="btn" id="applyCfg">Konfiguration anwenden</button></div>
+  </div>
+
+  <!-- ====================== TAB: WAHRSCHEINLICHKEITEN ====================== -->
+  <section data-panel="prob">
+    <div class="card">
+      <h2>Gewinnwahrscheinlichkeiten (exakt)</h2>
+      <p class="muted">Berechnet mit der <b>hypergeometrischen Verteilung</b> — die exakte und einzig
+        korrekte Methode. Jede mögliche Kombination ist <b>gleich wahrscheinlich</b>.</p>
+      <div class="kpi" id="probKpi"></div>
+      <h3>Offizielle Gewinnränge</h3>
+      <table id="rankTable"><thead><tr>
+        <th>Rang</th><th>Trefferbild</th><th class="num">Wahrscheinlichkeit</th>
+        <th class="num">1 zu …</th><th class="num">in Prozent</th>
+      </tr></thead><tbody></tbody></table>
+      <h3>Vollständige Trefferverteilung (jede mögliche Anzahl Richtige)</h3>
+      <table id="fullTable"><thead><tr>
+        <th>Hauptzahlen richtig</th><th id="bonusColHead">+ Zusatz</th>
+        <th class="num">Wahrscheinlichkeit</th><th class="num">1 zu …</th><th class="num">%</th>
+      </tr></thead><tbody></tbody></table>
+      <p class="note">Summe über alle Ränge = Wahrscheinlichkeit, <i>überhaupt irgendetwas</i> zu gewinnen:
+        <b id="anyWin"></b>.</p>
+    </div>
+  </section>
+
+  <!-- ====================== TAB: TIPP PRÜFEN ====================== -->
+  <section data-panel="check" class="hidden">
+    <div class="card">
+      <h2>Eigenen Tipp prüfen</h2>
+      <div class="grid2">
+        <div>
+          <label class="fld">Deine Hauptzahlen (durch Leer-/Komma getrennt)</label>
+          <input type="text" id="userMain" placeholder="z. B. 4 11 17 23 31 38">
+        </div>
+        <div>
+          <label class="fld" id="userBonusLbl">Deine Glückszahl</label>
+          <input type="text" id="userBonus" placeholder="z. B. 3">
+        </div>
+      </div>
+      <div class="btnrow">
+        <button class="btn" id="checkBtn">Tipp analysieren</button>
+        <button class="btn ghost" id="qpBtn">Zufallstipp einsetzen</button>
+      </div>
+      <div id="checkOut"></div>
+    </div>
+  </section>
+
+  <!-- ====================== TAB: DATEN & STATISTIK ====================== -->
+  <section data-panel="data" class="hidden">
+    <div class="card">
+      <h2>Historische Ziehungen laden</h2>
+      <p class="muted">Lade das komplette Archiv aller bisherigen Ziehungen. Drei Wege —
+        der einfachste zuerst:</p>
+
+      <h3>1 · Live aus dem Web laden</h3>
+      <label class="fld">Daten-URL (CSV/Text). Vorbelegt: öffentliches Swiss-Lotto-Archiv seit 1970.</label>
+      <input type="text" id="dataUrl" value="https://gist.githubusercontent.com/gamba/e606ce5d2ffb47b80b0fd4478f0b091f/raw">
+      <div class="btnrow">
+        <button class="btn" id="fetchBtn">Vom Web laden</button>
+        <span class="note" id="fetchNote"></span>
+      </div>
+      <p class="note">Hinweis: Browser blockieren manche Quellen per <b>CORS</b>. Klappt der Web-Abruf nicht,
+        nutze Weg 2 oder 3 — das Ergebnis ist identisch.</p>
+
+      <h3>2 · Datei hochladen</h3>
+      <input type="file" id="fileInp" accept=".csv,.txt,.tsv">
+
+      <h3>3 · Zahlen einfügen</h3>
+      <label class="fld">Eine Ziehung pro Zeile. Zahlen werden automatisch erkannt
+        (erste <span id="pasteN">6</span> Zahlen im gültigen Bereich = Hauptzahlen, die nächste = Zusatzzahl).</label>
+      <textarea id="pasteArea" placeholder="2024-12-28; 4 11 17 23 31 38; 3&#10;3 9 14 22 29 41 5&#10;..."></textarea>
+      <div class="btnrow">
+        <button class="btn" id="pasteBtn">Eingefügte Daten verarbeiten</button>
+        <button class="btn sec" id="demoBtn">Demo-Daten erzeugen (synthetisch)</button>
+        <button class="btn ghost" id="clearBtn">Zurücksetzen</button>
+      </div>
+      <p class="note" id="loadStatus"></p>
+    </div>
+
+    <div class="card hidden" id="statCard">
+      <h2>Statistische Auswertung</h2>
+      <div class="kpi" id="statKpi"></div>
+
+      <h3>Ziehungshäufigkeit der Hauptzahlen</h3>
+      <canvas id="freqCanvas" height="240"></canvas>
+      <div class="row" style="margin-top:10px">
+        <div class="col"><b>🔥 Am häufigsten</b><div class="balls" id="hotBalls"></div></div>
+        <div class="col"><b>❄️ Am seltensten</b><div class="balls" id="coldBalls"></div></div>
+      </div>
+
+      <h3 id="bonusStatHead">Häufigkeit der Zusatzzahl</h3>
+      <div class="balls" id="bonusBalls"></div>
+
+      <h3>Überfälligkeit (Ziehungen seit letztem Erscheinen)</h3>
+      <p class="note">Reine Statistik — sagt <b>nichts</b> über die nächste Ziehung aus.</p>
+      <div class="balls" id="overdueBalls"></div>
+
+      <h3>Fairness-Test (Chi-Quadrat auf Gleichverteilung)</h3>
+      <div id="chiOut"></div>
+
+      <h3>Weitere Muster</h3>
+      <div class="kpi" id="patternKpi"></div>
+    </div>
+  </section>
+
+  <!-- ====================== TAB: GENERATOR & SIMULATION ====================== -->
+  <section data-panel="gen" class="hidden">
+    <div class="card">
+      <h2>Tipp-Generator</h2>
+      <div class="row">
+        <div class="col">
+          <label class="fld">Strategie</label>
+          <select id="genStrat">
+            <option value="random">Reiner Zufall (Quick-Pick) — empfohlen</option>
+            <option value="unpopular">Unbeliebte Zahlen (höhere Netto-Auszahlung im Gewinnfall)</option>
+            <option value="cold">Selten gezogene Zahlen (nur Spass, kein realer Vorteil)</option>
+            <option value="hot">Häufig gezogene Zahlen (nur Spass, kein realer Vorteil)</option>
+          </select>
+        </div>
+        <div class="col">
+          <label class="fld">Anzahl Tipps</label>
+          <input type="number" id="genCount" value="5" min="1" max="50">
+        </div>
+      </div>
+      <div class="btnrow"><button class="btn" id="genBtn">Tipps generieren</button></div>
+      <div id="genOut"></div>
+      <p class="note" id="genExplain"></p>
+    </div>
+
+    <div class="card">
+      <h2>Monte-Carlo-Simulation</h2>
+      <p class="muted">Simuliert echte Ziehungen gegen einen festen Tipp und zeigt, wie sich die
+        empirische Trefferrate der <b>theoretischen</b> Wahrscheinlichkeit annähert (Gesetz der grossen Zahlen).</p>
+      <div class="row">
+        <div class="col">
+          <label class="fld">Anzahl simulierter Ziehungen</label>
+          <input type="number" id="simN" value="1000000" min="1000" max="50000000" step="1000">
+        </div>
+        <div class="col">
+          <label class="fld">Tipp (leer = Zufall)</label>
+          <input type="text" id="simTicket" placeholder="z. B. 4 11 17 23 31 38">
+        </div>
+      </div>
+      <div class="btnrow">
+        <button class="btn" id="simBtn">Simulation starten</button>
+        <span class="note" id="simNote"></span>
+      </div>
+      <div id="simOut"></div>
+    </div>
+  </section>
+
+  <!-- ====================== TAB: ERWARTUNGSWERT ====================== -->
+  <section data-panel="ev" class="hidden">
+    <div class="card">
+      <h2>Erwartungswert-Rechner</h2>
+      <p class="muted">Der Erwartungswert (EV) sagt, wie viel ein Tipp <i>im Durchschnitt</i> wert ist.
+        Bei Lotto ist er strukturell negativ. Gib die typischen Auszahlungen je Rang ein
+        (Swiss Lotto ist <b>Toto-/Pari-mutuel</b>: Quoten schwanken je Ziehung).</p>
+      <table id="evTable"><thead><tr>
+        <th>Rang</th><th>Trefferbild</th><th class="num">Wahrscheinlichkeit</th>
+        <th class="num">Auszahlung (CHF)</th><th class="num">Beitrag zum EV</th>
+      </tr></thead><tbody></tbody></table>
+      <div class="kpi" id="evKpi"></div>
+      <div class="btnrow"><button class="btn" id="evBtn">EV neu berechnen</button></div>
+      <p class="note">„Beitrag zum EV&ldquo; = Wahrscheinlichkeit × Auszahlung. Summe minus Tipppreis = Netto-EV.
+        Der <b>Hausvorteil</b> ist der Anteil des Einsatzes, den du im Schnitt verlierst.</p>
+    </div>
+  </section>
+
+  <!-- ====================== TAB: WISSEN ====================== -->
+  <section data-panel="info" class="hidden">
+    <div class="card">
+      <h2>Die Mathematik dahinter</h2>
+
+      <details open><summary>Wie wird die Jackpot-Chance berechnet?</summary>
+        <p>Du wählst 6 aus 42 Zahlen. Die Anzahl möglicher Kombinationen ist der Binomialkoeffizient:</p>
+        <p style="font-size:18px;text-align:center">C(42,6) = 42! / (6! · 36!) = <b>5&nbsp;245&nbsp;786</b></p>
+        <p>Pro Kombination gibt es 6 mögliche Glückszahlen, also
+          5&nbsp;245&nbsp;786 × 6 = <b>31&nbsp;474&nbsp;716</b> gleich wahrscheinliche Ausgänge.
+          Genau <b>einer</b> ist der Jackpot → Chance <b>1 : 31&nbsp;474&nbsp;716</b>.</p>
+      </details>
+
+      <details><summary>Hypergeometrische Verteilung (für „k Richtige&ldquo;)</summary>
+        <p>Die Wahrscheinlichkeit, genau <i>k</i> der 6 gezogenen Zahlen zu treffen, wenn man 6 aus 42 tippt:</p>
+        <p style="text-align:center;font-size:16px">P(k) = [ C(6,k) · C(36, 6−k) ] / C(42,6)</p>
+        <p>Die Zusatzzahl ist unabhängig: Glückszahl trifft mit Wahrscheinlichkeit 1/6.</p>
+      </details>
+
+      <details><summary>Warum „heisse/kalte Zahlen&ldquo; nicht funktionieren</summary>
+        <p>Jede Ziehung ist unabhängig und gedächtnislos. Dass eine Zahl lange nicht kam,
+          macht sie <b>nicht</b> wahrscheinlicher (oder unwahrscheinlicher). Das ist der
+          <b>Spielerfehlschluss</b> (Gambler's Fallacy). Über sehr viele Ziehungen <i>gleichen</i> sich
+          Häufigkeiten an — aber nicht, weil die Vergangenheit „ausgeglichen&ldquo; wird, sondern weil neue
+          Ziehungen frühere Abweichungen relativ verkleinern (Gesetz der grossen Zahlen).</p>
+      </details>
+
+      <details><summary>Der einzige echte mathematische Vorteil</summary>
+        <p>Du kannst deine <b>Gewinnchance nicht erhöhen</b>. Aber du kannst den
+          <b>erwarteten Auszahlungsbetrag</b> erhöhen, indem du Zahlen wählst, die <i>wenige andere</i>
+          spielen. Bei pari-mutuellen Lotterien wird der Jackpot unter allen Gewinnern <i>geteilt</i>.
+          Viele tippen Geburtstage (1–31), Muster oder „Glückszahlen&ldquo;. Wer unbeliebte Zahlen wählt
+          (z. B. &gt; 31, gestreut, keine Muster), gewinnt <b>gleich oft</b>, muss den Topf aber im Erfolgsfall
+          mit weniger Leuten teilen → höhere erwartete Netto-Auszahlung.</p>
+      </details>
+
+      <details><summary>Erwartungswert &amp; Hausvorteil</summary>
+        <p>EV = Σ P(Rang) · Auszahlung(Rang) − Einsatz. Bei staatlichen Lotterien fliesst typischerweise
+          ~50% des Einsatzes in Gewinne, der Rest in Steuern/gemeinnützige Zwecke/Betrieb.
+          Der EV pro Tipp ist daher deutlich negativ — nur in seltenen, sehr hohen Jackpot-Situationen
+          (mit wenig Mitspielern) nähert er sich theoretisch null.</p>
+      </details>
+
+      <h3>Quellen</h3>
+      <ul class="src">
+        <li>Offizielle Spielregeln: <a href="https://www.swisslos.ch" target="_blank" rel="noopener">swisslos.ch</a></li>
+        <li>Wahrscheinlichkeiten (hypergeometrisch): <a href="https://www.mathematik.ch/spiele/swisslotto/swisslotto.html" target="_blank" rel="noopener">mathematik.ch</a></li>
+        <li>Historisches Archiv (CSV seit 1970): <a href="https://gist.github.com/gamba/e606ce5d2ffb47b80b0fd4478f0b091f" target="_blank" rel="noopener">GitHub Gist</a> · <a href="https://www.6richtige.ch/liste_ch.html" target="_blank" rel="noopener">6richtige.ch</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>
+    Erstellt als eigenständiger, quelloffener Rechner — eine einzige HTML-Datei, keine externen Abhängigkeiten.<br>
+    Glücksspiel kann süchtig machen. Spiele nie mehr, als du verlieren kannst.
+  </footer>
+</div>
+
+<script>
+"use strict";
+
+/* ================= Mathematische Kernfunktionen ================= */
+
+// Binomialkoeffizient C(n,k) – exakt im Ganzzahlbereich (multiplikativ, gerundet)
+function comb(n, k){
+  if(k < 0 || k > n) return 0;
+  if(k === 0 || k === n) return 1;
+  k = Math.min(k, n - k);
+  let r = 1;
+  for(let i = 0; i < k; i++){ r = r * (n - i) / (i + 1); }
+  return Math.round(r);
+}
+
+// P(genau j Haupttreffer): hypergeometrisch
+function pMain(j, mainMax, mainPick){
+  const drawn = mainPick;                 // gezogene Gewinnzahlen = Tippanzahl
+  return comb(drawn, j) * comb(mainMax - drawn, mainPick - j) / comb(mainMax, mainPick);
+}
+
+// P(genau g Zusatztreffer): hypergeometrisch (Spezialfall 1 aus M => 1/M)
+function pBonus(g, bonusMax, bonusPick){
+  if(bonusMax <= 0 || bonusPick <= 0) return g === 0 ? 1 : 0;
+  return comb(bonusPick, g) * comb(bonusMax - bonusPick, bonusPick - g) / comb(bonusMax, bonusPick);
+}
+
+// Regularisierte untere unvollständige Gammafunktion P(a,x) – für Chi-Quadrat-p-Wert
+function gammaln(x){
+  const c=[76.18009172947146,-86.50532032941677,24.01409824083091,
+           -1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5];
+  let y=x, tmp=x+5.5; tmp-=(x+0.5)*Math.log(tmp);
+  let ser=1.000000000190015;
+  for(let j=0;j<6;j++){ y++; ser+=c[j]/y; }
+  return -tmp+Math.log(2.5066282746310005*ser/x);
+}
+function lowerRegGamma(a, x){
+  if(x <= 0) return 0;
+  if(x < a+1){ // Reihenentwicklung
+    let ap=a, sum=1/a, del=sum;
+    for(let n=0;n<500;n++){ ap++; del*=x/ap; sum+=del; if(Math.abs(del)<Math.abs(sum)*1e-12) break; }
+    return sum*Math.exp(-x+a*Math.log(x)-gammaln(a));
+  } else {       // Kettenbruch
+    let b=x+1-a, c=1e30, d=1/b, h=d;
+    for(let i=1;i<500;i++){
+      const an=-i*(i-a); b+=2;
+      d=an*d+b; if(Math.abs(d)<1e-30) d=1e-30;
+      c=b+an/c; if(Math.abs(c)<1e-30) c=1e-30;
+      d=1/d; const del=d*c; h*=del; if(Math.abs(del-1)<1e-12) break;
+    }
+    return 1 - Math.exp(-x+a*Math.log(x)-gammaln(a))*h;
+  }
+}
+// p-Wert eines Chi-Quadrat-Wertes mit df Freiheitsgraden
+function chiSquareP(chi, df){ return 1 - lowerRegGamma(df/2, chi/2); }
+
+// Zahl hübsch formatieren
+const fmt = (n, d=0) => n.toLocaleString('de-CH', {minimumFractionDigits:d, maximumFractionDigits:d});
+function oneIn(p){ return p>0 ? '1 zu ' + fmt(Math.round(1/p)) : '—'; }
+function pct(p){
+  if(p<=0) return '0%';
+  if(p<0.0001) return (p*100).toExponential(2).replace('e','·10^') + ' %';
+  return (p*100).toFixed(p<0.01?4:2) + ' %';
+}
+
+/* ================= Presets ================= */
+const PRESETS = {
+  swisslotto: { label:'Swiss Lotto · 6 aus 42 + Glückszahl', mainMax:42, mainPick:6,
+    bonusMax:6, bonusPick:1, bonusName:'Glückszahl', price:2.5,
+    note:'6 Gewinnzahlen aus 1–42, dazu 1 Glückszahl (1–6). Jeder Tipp nimmt zusätzlich an der Replay-Ziehung (1–13) für eine Gratis-Teilnahme teil.',
+    ranks:[ [6,1],[6,0],[5,1],[5,0],[4,1],[4,0],[3,1],[3,0] ] },
+  de649: { label:'Lotto 6aus49 + Superzahl', mainMax:49, mainPick:6,
+    bonusMax:10, bonusPick:1, bonusName:'Superzahl', price:1.2,
+    note:'6 Zahlen aus 1–49, dazu eine Superzahl 0–9 (10 Möglichkeiten).',
+    ranks:[ [6,1],[6,0],[5,1],[5,0],[4,1],[4,0],[3,1],[3,0],[2,1] ] },
+  euromillions: { label:'EuroMillions · 5 aus 50 + 2 Sterne aus 12', mainMax:50, mainPick:5,
+    bonusMax:12, bonusPick:2, bonusName:'Sterne', price:3.5,
+    note:'5 Hauptzahlen aus 1–50 und 2 Sternzahlen aus 1–12.',
+    ranks:[ [5,2],[5,1],[5,0],[4,2],[4,1],[3,2],[4,0],[2,2],[3,1],[3,0],[1,2],[2,1],[2,0] ] }
+};
+
+/* ================= Zustand ================= */
+let CFG = null;        // aktuelle Konfiguration
+let DRAWS = [];        // historische Ziehungen: {main:[...], bonus:[...], date:''}
+
+function readCfg(){
+  return {
+    mainMax:  +document.getElementById('mainMax').value,
+    mainPick: +document.getElementById('mainPick').value,
+    bonusMax: +document.getElementById('bonusMax').value,
+    bonusPick:+document.getElementById('bonusPick').value,
+    bonusName: document.getElementById('bonusName').value.trim() || 'Zusatzzahl',
+    price:    +document.getElementById('ticketPrice').value,
+    ranks: (CFG && CFG.ranks) ? CFG.ranks : PRESETS.swisslotto.ranks
+  };
+}
+
+function applyPreset(key){
+  if(key === 'custom'){ document.getElementById('cfgNote').textContent =
+      'Eigenes Format: passe die Felder oben an und klicke „Konfiguration anwenden“.'; return; }
+  const p = PRESETS[key];
+  document.getElementById('mainMax').value  = p.mainMax;
+  document.getElementById('mainPick').value = p.mainPick;
+  document.getElementById('bonusMax').value = p.bonusMax;
+  document.getElementById('bonusPick').value= p.bonusPick;
+  document.getElementById('bonusName').value= p.bonusName;
+  document.getElementById('ticketPrice').value = p.price;
+  document.getElementById('cfgNote').textContent = p.note;
+}
+
+function rankLabel(j, g){
+  let s = j + (j===1?' Richtige':' Richtige');
+  if(CFG.bonusPick>0){
+    if(g>0) s += ' + ' + (CFG.bonusPick>1? (g+' '+CFG.bonusName) : CFG.bonusName);
+  }
+  return s;
+}
+
+function pRank(j, g){ return pMain(j, CFG.mainMax, CFG.mainPick) * pBonus(g, CFG.bonusMax, CFG.bonusPick); }
+
+/* ================= Tab: Wahrscheinlichkeiten ================= */
+function renderProb(){
+  const totalCombos = comb(CFG.mainMax, CFG.mainPick) *
+        (CFG.bonusMax>0 ? comb(CFG.bonusMax, CFG.bonusPick) : 1);
+  const pJack = pRank(CFG.mainPick, CFG.bonusPick);
+
+  document.getElementById('probKpi').innerHTML = `
+    <div class="box"><div class="v">${fmt(comb(CFG.mainMax,CFG.mainPick))}</div><div class="l">Hauptzahl-Kombinationen C(${CFG.mainMax},${CFG.mainPick})</div></div>
+    <div class="box"><div class="v">${fmt(totalCombos)}</div><div class="l">Mögliche Ausgänge insgesamt</div></div>
+    <div class="box"><div class="v">${oneIn(pJack)}</div><div class="l">Jackpot-Chance</div></div>`;
+
+  // Ränge
+  const rb = document.querySelector('#rankTable tbody'); rb.innerHTML='';
+  CFG.ranks.forEach((r,i)=>{
+    const [j,g]=r, p=pRank(j,g);
+    const tr=document.createElement('tr'); if(i===0) tr.className='top';
+    tr.innerHTML = `<td>${i+1}</td><td>${rankLabel(j,g)}</td>
+      <td class="num">${pct(p)}</td><td class="num">${fmt(Math.round(1/p))}</td>
+      <td class="num">${(p*100).toPrecision(3)} %</td>`;
+    rb.appendChild(tr);
+  });
+
+  // Volle Verteilung
+  document.getElementById('bonusColHead').textContent =
+     CFG.bonusPick>0 ? ('+ '+CFG.bonusName) : '—';
+  const fb=document.querySelector('#fullTable tbody'); fb.innerHTML='';
+  for(let j=CFG.mainPick;j>=0;j--){
+    const gmax = CFG.bonusPick>0?CFG.bonusPick:0;
+    for(let g=gmax;g>=0;g--){
+      const p=pRank(j,g); if(p<=0) continue;
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td>${j}</td><td>${CFG.bonusPick>0?g:'—'}</td>
+        <td class="num">${pct(p)}</td><td class="num">${oneIn(p).replace('1 zu ','')}</td>
+        <td class="num">${(p*100).toPrecision(3)}</td>`;
+      fb.appendChild(tr);
+    }
+  }
+
+  // Chance auf irgendeinen Gewinn
+  let any=0; CFG.ranks.forEach(r=>any+=pRank(r[0],r[1]));
+  document.getElementById('anyWin').textContent = pct(any) + '  (≈ ' + oneIn(any) + ')';
+}
+
+/* ================= Tab: Tipp prüfen ================= */
+function parseNums(str){
+  return (str.match(/\d+/g)||[]).map(Number);
+}
+function validTicket(main, bonus){
+  const errs=[];
+  const uniq=new Set(main);
+  if(main.length!==CFG.mainPick) errs.push(`Genau ${CFG.mainPick} Hauptzahlen nötig (du hast ${main.length}).`);
+  if(uniq.size!==main.length) errs.push('Hauptzahlen müssen verschieden sein.');
+  if(main.some(n=>n<1||n>CFG.mainMax)) errs.push(`Hauptzahlen müssen 1–${CFG.mainMax} sein.`);
+  if(CFG.bonusPick>0){
+    if(bonus.length!==CFG.bonusPick) errs.push(`${CFG.bonusPick} ${CFG.bonusName} nötig.`);
+    if(bonus.some(n=>n<1||n>CFG.bonusMax)) errs.push(`${CFG.bonusName} muss 1–${CFG.bonusMax} sein.`);
+  }
+  return errs;
+}
+function renderCheck(){
+  const main=parseNums(document.getElementById('userMain').value);
+  const bonus=parseNums(document.getElementById('userBonus').value);
+  const out=document.getElementById('checkOut');
+  const errs=validTicket(main,bonus);
+  if(errs.length){ out.innerHTML='<p class="err">⚠ '+errs.join('<br>⚠ ')+'</p>'; return; }
+
+  let html = '<div class="balls">' +
+    main.sort((a,b)=>a-b).map(n=>`<div class="ball">${n}</div>`).join('') +
+    (CFG.bonusPick>0? bonus.map(n=>`<div class="ball luck">${n}</div>`).join(''):'') + '</div>';
+
+  html += `<p class="muted">Wichtig: Diese exakte Kombination ist <b>genauso wahrscheinlich</b> wie
+    jede andere — z. B. 1-2-3-4-5-6. Deine Gewinnchancen je Rang:</p>`;
+  html += '<table><thead><tr><th>Rang</th><th>Trefferbild</th><th class="num">Wahrscheinlichkeit</th><th class="num">1 zu …</th></tr></thead><tbody>';
+  CFG.ranks.forEach((r,i)=>{ const p=pRank(r[0],r[1]);
+    html+=`<tr${i===0?' class="top"':''}><td>${i+1}</td><td>${rankLabel(r[0],r[1])}</td>
+      <td class="num">${pct(p)}</td><td class="num">${fmt(Math.round(1/p))}</td></tr>`; });
+  html+='</tbody></table>';
+
+  // Abgleich mit Historie
+  if(DRAWS.length){
+    let exact=0, best=0, bestList=[];
+    DRAWS.forEach(d=>{
+      const inter=main.filter(n=>d.main.includes(n)).length;
+      const bInter=CFG.bonusPick>0? bonus.filter(n=>d.bonus.includes(n)).length:0;
+      if(inter===CFG.mainPick && (CFG.bonusPick===0||bInter===CFG.bonusPick)) exact++;
+      if(inter>best){best=inter;bestList=[d];} else if(inter===best){bestList.push(d);}
+    });
+    html += `<h3 style="margin-top:18px">Abgleich mit ${fmt(DRAWS.length)} historischen Ziehungen</h3>`;
+    html += `<p>Deine exakte Kombination kam bisher <b>${exact}×</b> vor.
+      Bestes historisches Trefferbild deiner Hauptzahlen: <b>${best} Richtige</b> (in ${bestList.length} Ziehung[en]).</p>`;
+    // Häufigkeit deiner Einzelzahlen
+    const counts=numberCounts().main;
+    html += '<p class="muted">Wie oft jede deiner Hauptzahlen historisch gezogen wurde:</p><div class="balls">';
+    main.forEach(n=> html+=`<div class="ball sm" title="${counts[n]||0}×">${n}<sub style="font-size:9px">·${counts[n]||0}</sub></div>`);
+    html+='</div>';
+  } else {
+    html += '<p class="note">Lade im Tab „Historische Daten“ Ziehungen, um deinen Tipp gegen die Vergangenheit abzugleichen.</p>';
+  }
+  out.innerHTML=html;
+}
+
+/* ================= Daten laden & parsen ================= */
+function parseDraws(text){
+  const out=[];
+  const lines=text.split(/\r?\n/);
+  for(let line of lines){
+    if(!line.trim()) continue;
+    if(/[a-zA-Z]{4,}/.test(line) && !/\d/.test(line)) continue; // Kopfzeile
+    const nums=parseNums(line).map(Number);
+    // Datum (yyyy etc.) entfernen wir heuristisch: betrachte nur Zahlen im gültigen Bereich
+    const valid=nums.filter(n=>n>=1 && n<=CFG.mainMax);
+    if(valid.length < CFG.mainPick) continue;
+    // Erste mainPick *eindeutige* Zahlen als Hauptzahlen
+    const main=[]; const seen=new Set();
+    for(const n of valid){ if(!seen.has(n)){ seen.add(n); main.push(n);} if(main.length===CFG.mainPick) break; }
+    if(main.length<CFG.mainPick) continue;
+    // Zusatzzahl: nächste Zahl im Bonusbereich nach den Hauptzahlen
+    let bonus=[];
+    if(CFG.bonusPick>0){
+      const idxAfter = nums.indexOf(main[main.length-1]);
+      const rest = nums.slice(idxAfter+1).filter(n=>n>=1 && n<=CFG.bonusMax);
+      bonus = rest.slice(0, CFG.bonusPick);
+    }
+    out.push({main:main.sort((a,b)=>a-b), bonus, date:''});
+  }
+  return out;
+}
+function setDraws(draws, statusMsg){
+  DRAWS = draws;
+  const st=document.getElementById('loadStatus');
+  if(draws.length){
+    st.innerHTML = `<span class="ok">✔ ${fmt(draws.length)} Ziehungen geladen.</span> ${statusMsg||''}`;
+    document.getElementById('statCard').classList.remove('hidden');
+    renderStats();
+  } else {
+    st.innerHTML = `<span class="err">Keine gültigen Ziehungen erkannt.</span> ${statusMsg||''}`;
+  }
+}
+async function fetchData(){
+  const url=document.getElementById('dataUrl').value.trim();
+  const note=document.getElementById('fetchNote');
+  note.textContent='⏳ Lade …';
+  try{
+    const r=await fetch(url, {mode:'cors'});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const txt=await r.text();
+    const draws=parseDraws(txt);
+    note.innerHTML='<span class="ok">geladen</span>';
+    setDraws(draws, '(Quelle: Web-URL)');
+  }catch(e){
+    note.innerHTML='<span class="err">Fehlgeschlagen ('+e.message+
+      '). Wahrscheinlich CORS — bitte Datei hochladen oder Zahlen einfügen.</span>';
+  }
+}
+function genDemo(){
+  // synthetische, GLEICHVERTEILTE Zufallsziehungen – klar als Demo gekennzeichnet
+  const N=1500, draws=[];
+  for(let i=0;i<N;i++){
+    const main=drawK(CFG.mainMax, CFG.mainPick);
+    const bonus=CFG.bonusPick>0? drawK(CFG.bonusMax, CFG.bonusPick):[];
+    draws.push({main:main.sort((a,b)=>a-b), bonus, date:''});
+  }
+  setDraws(draws, '<span class="warnc">⚠ Synthetische Demo-Daten (NICHT real) — nur zur Veranschaulichung der Statistik.</span>');
+}
+function drawK(max, k){
+  const pool=Array.from({length:max},(_,i)=>i+1);
+  for(let i=0;i<k;i++){ const j=i+Math.floor(Math.random()*(max-i)); [pool[i],pool[j]]=[pool[j],pool[i]]; }
+  return pool.slice(0,k);
+}
+
+/* ================= Statistik ================= */
+function numberCounts(){
+  const main=new Array(CFG.mainMax+1).fill(0);
+  const bonus=new Array(CFG.bonusMax+1).fill(0);
+  DRAWS.forEach(d=>{ d.main.forEach(n=>main[n]++); d.bonus.forEach(n=>bonus[n]++); });
+  return {main, bonus};
+}
+function renderStats(){
+  const {main, bonus}=numberCounts();
+  const N=DRAWS.length;
+  const expected = N*CFG.mainPick/CFG.mainMax;
+
+  // KPIs
+  let totalNums=0; for(let n=1;n<=CFG.mainMax;n++) totalNums+=main[n];
+  document.getElementById('statKpi').innerHTML = `
+    <div class="box"><div class="v">${fmt(N)}</div><div class="l">Ausgewertete Ziehungen</div></div>
+    <div class="box"><div class="v">${fmt(totalNums)}</div><div class="l">Gezogene Hauptzahlen total</div></div>
+    <div class="box"><div class="v">${expected.toFixed(1)}</div><div class="l">Erwartete Häufigkeit je Zahl</div></div>`;
+
+  // Balkendiagramm
+  drawFreqChart(main, expected);
+
+  // Hot/Cold
+  const idx=Array.from({length:CFG.mainMax},(_,i)=>i+1);
+  const byFreq=[...idx].sort((a,b)=>main[b]-main[a]);
+  const hot=byFreq.slice(0,8), cold=[...byFreq].reverse().slice(0,8);
+  document.getElementById('hotBalls').innerHTML =
+    hot.map(n=>`<div class="ball sm hot" title="${main[n]}×">${n}<sub style="font-size:9px">·${main[n]}</sub></div>`).join('');
+  document.getElementById('coldBalls').innerHTML =
+    cold.map(n=>`<div class="ball sm cold" title="${main[n]}×">${n}<sub style="font-size:9px">·${main[n]}</sub></div>`).join('');
+
+  // Bonus
+  const bonusHead=document.getElementById('bonusStatHead');
+  if(CFG.bonusPick>0){
+    bonusHead.textContent='Häufigkeit: '+CFG.bonusName;
+    const bidx=Array.from({length:CFG.bonusMax},(_,i)=>i+1);
+    document.getElementById('bonusBalls').innerHTML =
+      bidx.map(n=>`<div class="ball sm luck" title="${bonus[n]}×">${n}<sub style="font-size:9px">·${bonus[n]}</sub></div>`).join('');
+  } else { bonusHead.classList.add('hidden'); document.getElementById('bonusBalls').innerHTML=''; }
+
+  // Überfälligkeit
+  const last=new Array(CFG.mainMax+1).fill(-1);
+  for(let i=DRAWS.length-1;i>=0;i--){
+    DRAWS[i].main.forEach(n=>{ if(last[n]===-1) last[n]=DRAWS.length-1-i; });
+  }
+  const overdue=[...idx].sort((a,b)=>(last[b]<0?1e9:last[b])-(last[a]<0?1e9:last[a])).slice(0,8);
+  document.getElementById('overdueBalls').innerHTML =
+    overdue.map(n=>`<div class="ball sm" title="${last[n]<0?'nie':last[n]+' Ziehungen her'}">${n}<sub style="font-size:9px">·${last[n]<0?'∞':last[n]}</sub></div>`).join('');
+
+  // Chi-Quadrat
+  let chi=0; for(let n=1;n<=CFG.mainMax;n++){ const o=main[n]; chi+=(o-expected)*(o-expected)/expected; }
+  const df=CFG.mainMax-1;
+  const p=chiSquareP(chi, df);
+  const fair = p>0.05;
+  document.getElementById('chiOut').innerHTML = `
+    <div class="kpi">
+      <div class="box"><div class="v">${chi.toFixed(1)}</div><div class="l">χ²-Wert (df=${df})</div></div>
+      <div class="box"><div class="v">${p<0.001?'< 0.001':p.toFixed(3)}</div><div class="l">p-Wert</div></div>
+      <div class="box"><div class="v"><span class="pill ${fair?'g':'y'}">${fair?'unauffällig':'auffällig'}</span></div><div class="l">Bewertung (α=0.05)</div></div>
+    </div>
+    <p class="note">${fair
+      ? 'Die beobachteten Häufigkeiten sind mit einer <b>fairen Gleichverteilung verträglich</b> — genau das erwartet man bei einer korrekten Ziehung. Es gibt keine „besseren“ Zahlen.'
+      : 'Leichte Abweichung von der Gleichverteilung. Bei echten Lotterien ist das fast immer <b>Zufallsrauschen</b>, kein ausnutzbares Muster — und ändert die Zukunft nicht.'}</p>`;
+
+  // Muster: gerade/ungerade, hoch/tief, Summe
+  let evenC=0,oddC=0,lowC=0,highC=0,sumTot=0;
+  const half=CFG.mainMax/2;
+  DRAWS.forEach(d=>{ let s=0; d.main.forEach(n=>{ (n%2? oddC++:evenC++); (n<=half?lowC++:highC++); s+=n; }); sumTot+=s; });
+  const avgSum=sumTot/N;
+  document.getElementById('patternKpi').innerHTML = `
+    <div class="box"><div class="v">${(evenC/(evenC+oddC)*100).toFixed(1)}%</div><div class="l">Anteil gerade Zahlen (Erwartung ~${(Math.floor(CFG.mainMax/2)/CFG.mainMax*100).toFixed(0)}%)</div></div>
+    <div class="box"><div class="v">${(lowC/(lowC+highC)*100).toFixed(1)}%</div><div class="l">Anteil tiefe Hälfte (1–${half})</div></div>
+    <div class="box"><div class="v">${avgSum.toFixed(1)}</div><div class="l">Ø Summe der ${CFG.mainPick} Zahlen</div></div>`;
+}
+
+function drawFreqChart(counts, expected){
+  const cv=document.getElementById('freqCanvas');
+  const ratio=window.devicePixelRatio||1;
+  const W=cv.clientWidth, H=240;
+  cv.width=W*ratio; cv.height=H*ratio;
+  const ctx=cv.getContext('2d'); ctx.scale(ratio,ratio);
+  ctx.clearRect(0,0,W,H);
+  const n=CFG.mainMax, pad=28, bw=(W-pad*2)/n;
+  let max=expected; for(let i=1;i<=n;i++) max=Math.max(max,counts[i]);
+  max*=1.1;
+  // Erwartungslinie
+  const yOf=v=>H-pad - (v/max)*(H-pad*2);
+  ctx.strokeStyle='#ffb020'; ctx.setLineDash([5,4]); ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(pad, yOf(expected)); ctx.lineTo(W-pad, yOf(expected)); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle='#ffb020'; ctx.font='11px sans-serif';
+  ctx.fillText('Erwartung', W-pad-60, yOf(expected)-4);
+  // Balken
+  for(let i=1;i<=n;i++){
+    const x=pad+(i-1)*bw, h=(counts[i]/max)*(H-pad*2);
+    const above=counts[i]>=expected;
+    ctx.fillStyle=above?'#4f8cff':'#2f7fb8';
+    ctx.fillRect(x+1, H-pad-h, bw-2, h);
+  }
+  // Achsen-Labels (jede 5.)
+  ctx.fillStyle='#9aa6c8';
+  for(let i=1;i<=n;i++){ if(i%5===0||i===1){ ctx.fillText(i, pad+(i-1)*bw, H-pad+14); } }
+}
+
+/* ================= Generator ================= */
+function generateTickets(){
+  const strat=document.getElementById('genStrat').value;
+  const count=Math.min(50,Math.max(1,+document.getElementById('genCount').value));
+  const out=document.getElementById('genOut');
+  let pref=null;
+  if((strat==='cold'||strat==='hot') && DRAWS.length){
+    const {main}=numberCounts();
+    const idx=Array.from({length:CFG.mainMax},(_,i)=>i+1)
+       .sort((a,b)=> strat==='hot'? main[b]-main[a] : main[a]-main[b]);
+    pref=idx;
+  }
+  let html='';
+  for(let t=0;t<count;t++){
+    let nums;
+    if(strat==='unpopular'){
+      nums=unpopularPick();
+    } else if(pref){
+      // wähle bevorzugt aus den ersten ~Hälfte, mit etwas Zufall
+      const poolTop=pref.slice(0, Math.ceil(CFG.mainMax*0.5));
+      nums=[]; const used=new Set();
+      while(nums.length<CFG.mainPick){
+        const cand=poolTop[Math.floor(Math.random()*poolTop.length)];
+        if(!used.has(cand)){used.add(cand);nums.push(cand);}
+      }
+    } else {
+      nums=drawK(CFG.mainMax, CFG.mainPick);
+    }
+    nums.sort((a,b)=>a-b);
+    const bonus=CFG.bonusPick>0? drawK(CFG.bonusMax, CFG.bonusPick).sort((a,b)=>a-b):[];
+    html+='<div class="balls">'+nums.map(x=>`<div class="ball sm">${x}</div>`).join('')+
+      bonus.map(x=>`<div class="ball sm luck">${x}</div>`).join('')+'</div>';
+  }
+  out.innerHTML=html;
+
+  const ex={
+    random:'Reiner Zufall: jede Kombination gleich wahrscheinlich — die mathematisch sauberste Wahl.',
+    unpopular:'Unbeliebte Zahlen (bevorzugt &gt; 31, gestreut, keine Muster): gleiche Gewinnchance, aber im Jackpot-Fall teilst du mit weniger Leuten → höhere erwartete Netto-Auszahlung.',
+    cold:'Selten gezogene Zahlen: macht Spass, bringt aber <b>keinen</b> realen Vorteil — die Vergangenheit beeinflusst die nächste Ziehung nicht.',
+    hot:'Häufig gezogene Zahlen: ebenfalls <b>kein</b> realer Vorteil. Reiner Spielerfehlschluss.'
+  };
+  document.getElementById('genExplain').innerHTML=ex[strat];
+}
+function unpopularPick(){
+  // Heuristik: Zahlen >31 sind unbeliebt (keine Geburtstage); meide enge Cluster/Muster
+  const nums=[]; const used=new Set();
+  const high=[]; for(let n=32;n<=CFG.mainMax;n++) high.push(n);
+  const low=[];  for(let n=1;n<=31 && n<=CFG.mainMax;n++) low.push(n);
+  // ~2/3 aus dem hohen Bereich, wenn möglich
+  const targetHigh=Math.min(high.length, Math.round(CFG.mainPick*0.66));
+  function take(arr){ let x; do{ x=arr[Math.floor(Math.random()*arr.length)]; }while(used.has(x)); used.add(x); nums.push(x); }
+  while(nums.length<targetHigh && used.size<high.length) take(high);
+  while(nums.length<CFG.mainPick) take(low.length&&Math.random()<0.5?low:(high.length?high:low));
+  return nums.slice(0,CFG.mainPick);
+}
+
+/* ================= Monte-Carlo ================= */
+function runSim(){
+  const N=Math.min(50000000, Math.max(1000, +document.getElementById('simN').value));
+  let ticket=parseNums(document.getElementById('simTicket').value);
+  if(ticket.length!==CFG.mainPick || new Set(ticket).size!==CFG.mainPick ||
+     ticket.some(n=>n<1||n>CFG.mainMax)){
+    ticket=drawK(CFG.mainMax, CFG.mainPick);
+  }
+  const tBonus = CFG.bonusPick>0? drawK(CFG.bonusMax,CFG.bonusPick):[];
+  const tset=new Set(ticket), tbset=new Set(tBonus);
+  document.getElementById('simNote').textContent='⏳ Simuliere '+fmt(N)+' Ziehungen …';
+
+  setTimeout(()=>{
+    const hits={};  // "j_g" -> count
+    const pool=Array.from({length:CFG.mainMax},(_,i)=>i+1);
+    const bpool=CFG.bonusMax>0?Array.from({length:CFG.bonusMax},(_,i)=>i+1):[];
+    for(let s=0;s<N;s++){
+      // Hauptzahlen ziehen (partielles Fisher-Yates)
+      let j=0;
+      for(let i=0;i<CFG.mainPick;i++){
+        const r=i+((Math.random()*(CFG.mainMax-i))|0);
+        const tmp=pool[i]; pool[i]=pool[r]; pool[r]=tmp;
+        if(tset.has(pool[i])) j++;
+      }
+      let g=0;
+      if(CFG.bonusPick>0){
+        for(let i=0;i<CFG.bonusPick;i++){
+          const r=i+((Math.random()*(CFG.bonusMax-i))|0);
+          const tmp=bpool[i]; bpool[i]=bpool[r]; bpool[r]=tmp;
+          if(tbset.has(bpool[i])) g++;
+        }
+      }
+      const key=j+'_'+g; hits[key]=(hits[key]||0)+1;
+    }
+    // Auswertung gegen Ränge
+    let html='<div class="balls">'+ticket.sort((a,b)=>a-b).map(n=>`<div class="ball sm">${n}</div>`).join('')+
+      tBonus.map(n=>`<div class="ball sm luck">${n}</div>`).join('')+'</div>';
+    html+='<table><thead><tr><th>Rang</th><th>Trefferbild</th><th class="num">theoretisch</th><th class="num">simuliert</th><th class="num">Treffer</th></tr></thead><tbody>';
+    CFG.ranks.forEach((r,i)=>{
+      const [jj,gg]=r, p=pRank(jj,gg), c=hits[jj+'_'+gg]||0, emp=c/N;
+      html+=`<tr${i===0?' class="top"':''}><td>${i+1}</td><td>${rankLabel(jj,gg)}</td>
+        <td class="num">${oneIn(p)}</td><td class="num">${c?oneIn(emp):'—'}</td><td class="num">${fmt(c)}</td></tr>`;
+    });
+    html+='</tbody></table>';
+    let anyHits=0; CFG.ranks.forEach(r=>anyHits+=hits[r[0]+'_'+r[1]]||0);
+    html+=`<p class="note">In ${fmt(N)} Ziehungen hättest du <b>${fmt(anyHits)}×</b> irgendetwas gewonnen
+      (≈ ${oneIn(anyHits/N)}). Je grösser N, desto näher liegen „simuliert“ und „theoretisch“ beieinander
+      — das Gesetz der grossen Zahlen in Aktion.</p>`;
+    document.getElementById('simOut').innerHTML=html;
+    document.getElementById('simNote').innerHTML='<span class="ok">✔ fertig</span>';
+  }, 30);
+}
+
+/* ================= Erwartungswert ================= */
+function renderEV(){
+  const tb=document.querySelector('#evTable tbody'); tb.innerHTML='';
+  // sinnvolle Default-Auszahlungen (CHF) je Rang, grob an Swiss-Lotto-Grössenordnungen
+  const defaults={'6_1':20000000,'6_0':1000000,'5_1':12000,'5_0':1500,'4_1':280,'4_0':45,'3_1':18,'3_0':9,
+                  '5_2':2000000,'4_2':2500,'3_2':80,'2_2':18,'4_1b':150,'1_2':9,'2_1':6,'2_0':5};
+  CFG.ranks.forEach((r,i)=>{
+    const [j,g]=r, p=pRank(j,g), key=j+'_'+g;
+    const def=defaults[key] || Math.max(2, Math.round(1/p/3));
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${i+1}</td><td>${rankLabel(j,g)}</td><td class="num">${oneIn(p)}</td>
+      <td class="num"><input type="number" class="evpay" data-p="${p}" value="${def}" style="width:130px;text-align:right"></td>
+      <td class="num evcontrib">—</td>`;
+    tb.appendChild(tr);
+  });
+  calcEV();
+}
+function calcEV(){
+  let ev=0;
+  document.querySelectorAll('#evTable .evpay').forEach(inp=>{
+    const p=+inp.dataset.p, pay=+inp.value||0, c=p*pay;
+    ev+=c;
+    inp.closest('tr').querySelector('.evcontrib').textContent='CHF '+c.toFixed(4);
+  });
+  const price=CFG.price;
+  const net=ev-price, edge=price>0? (1-ev/price)*100 : 0;
+  document.getElementById('evKpi').innerHTML=`
+    <div class="box"><div class="v">CHF ${ev.toFixed(3)}</div><div class="l">Erwarteter Gewinn pro Tipp</div></div>
+    <div class="box"><div class="v">CHF ${price.toFixed(2)}</div><div class="l">Einsatz pro Tipp</div></div>
+    <div class="box"><div class="v" style="color:${net<0?'var(--bad)':'var(--good)'}">CHF ${net.toFixed(3)}</div><div class="l">Netto-Erwartungswert</div></div>
+    <div class="box"><div class="v" style="color:var(--warn)">${edge.toFixed(1)}%</div><div class="l">Hausvorteil (Ø Verlust)</div></div>`;
+}
+
+/* ================= UI-Verdrahtung ================= */
+function rebuildAll(){
+  CFG=readCfg();
+  // Ränge ggf. aus Preset übernehmen
+  const pk=document.getElementById('preset').value;
+  if(PRESETS[pk]) CFG.ranks=PRESETS[pk].ranks;
+  else {
+    // generische Ränge fürs eigene Format: mainPick..3 mit/ohne Bonus
+    const rs=[]; for(let j=CFG.mainPick;j>=Math.max(2,CFG.mainPick-3);j--){
+      if(CFG.bonusPick>0) rs.push([j,CFG.bonusPick]); rs.push([j,0]); }
+    CFG.ranks=rs;
+  }
+  document.getElementById('presetBadge').textContent =
+    (PRESETS[pk]?PRESETS[pk].label:'Eigenes Format');
+  document.getElementById('userBonusLbl').textContent='Deine '+CFG.bonusName;
+  document.getElementById('pasteN').textContent=CFG.mainPick;
+  document.getElementById('userBonus').closest('div').style.display = CFG.bonusPick>0?'':'none';
+  renderProb();
+  renderEV();
+  if(DRAWS.length) renderStats();
+}
+
+document.getElementById('preset').addEventListener('change', e=>{
+  applyPreset(e.target.value); rebuildAll();
+});
+document.getElementById('applyCfg').addEventListener('click', ()=>{
+  document.getElementById('preset').value='custom'; rebuildAll();
+});
+document.getElementById('checkBtn').addEventListener('click', renderCheck);
+document.getElementById('qpBtn').addEventListener('click', ()=>{
+  document.getElementById('userMain').value=drawK(CFG.mainMax,CFG.mainPick).sort((a,b)=>a-b).join(' ');
+  if(CFG.bonusPick>0) document.getElementById('userBonus').value=drawK(CFG.bonusMax,CFG.bonusPick).join(' ');
+  renderCheck();
+});
+document.getElementById('fetchBtn').addEventListener('click', fetchData);
+document.getElementById('fileInp').addEventListener('change', e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const rd=new FileReader();
+  rd.onload=()=>setDraws(parseDraws(rd.result), '(Quelle: '+f.name+')');
+  rd.readAsText(f);
+});
+document.getElementById('pasteBtn').addEventListener('click', ()=>{
+  setDraws(parseDraws(document.getElementById('pasteArea').value), '(Quelle: Eingabe)');
+});
+document.getElementById('demoBtn').addEventListener('click', genDemo);
+document.getElementById('clearBtn').addEventListener('click', ()=>{
+  DRAWS=[]; document.getElementById('statCard').classList.add('hidden');
+  document.getElementById('loadStatus').textContent='Zurückgesetzt.';
+  document.getElementById('pasteArea').value='';
+});
+document.getElementById('genBtn').addEventListener('click', generateTickets);
+document.getElementById('simBtn').addEventListener('click', runSim);
+document.getElementById('evBtn').addEventListener('click', calcEV);
+document.querySelector('#evTable').addEventListener('input', e=>{
+  if(e.target.classList.contains('evpay')) calcEV();
+});
+
+// Tabs
+document.getElementById('tabs').addEventListener('click', e=>{
+  if(e.target.tagName!=='BUTTON') return;
+  const t=e.target.dataset.tab;
+  document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('active', b===e.target));
+  document.querySelectorAll('section[data-panel]').forEach(s=>
+    s.classList.toggle('hidden', s.dataset.panel!==t));
+  if(t==='data' && DRAWS.length) renderStats(); // Canvas neu zeichnen (Grösse)
+});
+
+// Init
+applyPreset('swisslotto');
+rebuildAll();
+</script>
+</body>
+</html>
