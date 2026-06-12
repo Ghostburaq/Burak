@@ -1,0 +1,35 @@
+# Render Blueprint fuer die Burak Rental Suite
+# Doku: https://render.com/docs/blueprint-spec
+#
+# Deployt direkt aus diesem GitHub-Repo. Auf dem kostenlosen Plan laeuft die App
+# sofort; die SQLite-Datenbank liegt dann aber auf einem fluechtigen Dateisystem
+# (Daten werden bei Neustart/Deploy zurueckgesetzt und neu mit Demodaten befuellt).
+#
+# Fuer DAUERHAFTE Daten: Plan auf "starter" anheben und den unten dokumentierten
+# disk-Block aktivieren (siehe DEPLOY.md, Abschnitt "Persistente Datenbank").
+
+services:
+  - type: web
+    name: burak-rental-suite
+    runtime: python
+    plan: free
+    region: frankfurt
+    branch: claude/friendly-babbage-6ddxks
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+      # Demodaten beim Start anlegen (auf "0" setzen fuer leere Produktiv-DB):
+      - key: SEED
+        value: "1"
+      # Persistenter Speicherort der DB (nur mit disk-Block + bezahltem Plan):
+      # - key: DB_PATH
+      #   value: /var/data/crm.db
+
+    # ---- Persistente Datenbank (erfordert Plan "starter" oder hoeher) ----
+    # disk:
+    #   name: crm-data
+    #   mountPath: /var/data
+    #   sizeGB: 1

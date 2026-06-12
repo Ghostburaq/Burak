@@ -48,7 +48,9 @@ templates.env.globals["today"] = lambda: date.today().isoformat()
 
 @app.on_event("startup")
 def startup():
-    database.init_db()
+    # SEED=0 setzen, um in Produktion ohne Demodaten zu starten.
+    seed = os.environ.get("SEED", "1") not in ("0", "false", "False", "")
+    database.init_db(seed=seed)
 
 
 def render(request, name, **ctx):
