@@ -3353,6 +3353,8 @@ window.dedupMerge = function(gi){
   const keeper = g.find(c => c.id === keepId); if(!keeper) return;
   const others = g.filter(c => c.id !== keepId);
   // Move activities to keeper, merge fields where keeper is empty
+  const _atts = loadAttachments();
+  let _attsChanged = false;
   others.forEach(o => {
     STATE.activities.filter(a => a.contactId === o.id).forEach(a => { a.contactId = keepId; });
     ['kontakt','email','tel','position','ort','segment','chf','prob','wv','next','notiz','closeDate'].forEach(f => { if(!keeper[f] && o[f]) keeper[f] = o[f]; });
@@ -3360,7 +3362,10 @@ window.dedupMerge = function(gi){
     if(o.extraTels)   keeper.extraTels   = [...(keeper.extraTels||[]), ...o.extraTels];
     if(o.extraContacts) keeper.extraContacts = [...(keeper.extraContacts||[]), ...o.extraContacts];
     if(o.tags){ const t = new Set([...parseTags(keeper.tags), ...parseTags(o.tags)]); keeper.tags = [...t]; }
+    // Anhänge des Duplikats auf den behaltenen Kontakt übertragen (sonst Datenverlust)
+    if(_atts[o.id]){ _atts[keepId] = [...(_atts[keepId]||[]), ..._atts[o.id]]; delete _atts[o.id]; _attsChanged = true; }
   });
+  if(_attsChanged) saveAttachments(_atts);
   const remove = new Set(others.map(o=>o.id));
   STATE.contacts = STATE.contacts.filter(c => !remove.has(c.id));
   keeper.updated = new Date().toISOString();
@@ -3793,6 +3798,9 @@ window.deleteContact = function(){
   if(!confirm('Kontakt wirklich löschen? Alle Aktivitäten dazu werden ebenfalls entfernt.')) return;
   STATE.contacts = STATE.contacts.filter(c => c.id !== currentContactId);
   STATE.activities = STATE.activities.filter(a => a.contactId !== currentContactId);
+  // Anhänge des Kontakts ebenfalls entfernen (sonst verwaiste Daten im localStorage)
+  const _atts = loadAttachments();
+  if(_atts[currentContactId]){ delete _atts[currentContactId]; saveAttachments(_atts); }
   saveState();
   closeModal('modalContact');
   refreshAll();
