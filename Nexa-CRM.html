@@ -4051,13 +4051,9 @@ document.addEventListener('keydown', e => {
 });
 // Backdrop click closes (attached after DOM ready so all modals are present)
 function attachBackdropClose(){
-  document.querySelectorAll('.modal-bg').forEach(bg => {
-    if(bg._backdropBound) return;
-    bg._backdropBound = true;
-    bg.addEventListener('click', e => {
-      if(e.target === bg) window.closeModal(bg.id);
-    });
-  });
+  // BEWUSST DEAKTIVIERT: Modals schließen NICHT mehr beim Klick auf den Hintergrund,
+  // damit keine Eingaben versehentlich verloren gehen. Schließen nur über das ✕
+  // oder einen „Schliessen"/„Abbrechen"-Button (für ALLE Fenster gleich).
 }
 
 // ════════════════════════════════════════════════════════════════════════
@@ -7400,7 +7396,7 @@ if(document.readyState === 'loading'){
       <p class="tx-mute mb-md" style="font-size:12px;line-height:1.6">Hilft bei der späteren Analyse — was hat den Deal entschieden?</p>
       <div id="reasonOptions" class="reason-options"></div>
       <div class="field mt-md"><label>Zusatz-Notiz (optional)</label>
-        <input id="reasonNote" placeholder="z.B. Wettbewerber Bimex 12% günstiger">
+        <input id="reasonNote" placeholder="z.B. Wettbewerber 12% günstiger / Budget gestrichen">
       </div>
     </div>
     <div class="modal-foot">
