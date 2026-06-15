@@ -801,6 +801,10 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .pal-sub{font-size:11px;color:var(--text-mute);margin-top:1px}
 .pal-type{font-size:9.5px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.06em;background:var(--bg2);padding:2px 7px;border-radius:9px}
 .pal-empty{padding:30px;text-align:center;color:var(--text-mute);font-size:13px}
+.pal-close{position:absolute;top:10px;right:10px;background:transparent;border:none;color:var(--text-mute);
+  font-size:18px;cursor:pointer;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all 0.12s;z-index:2}
+.pal-close:hover{background:var(--bg2);color:var(--text)}
+.pal-modal{position:relative}
 
 /* ─── Reason modal ─── */
 .reason-options{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
@@ -4147,14 +4151,19 @@ document.addEventListener('keydown', e => {
     document.querySelectorAll('.modal-bg.open').forEach(m => m.classList.remove('open'));
   }
 });
-// Backdrop click closes (attached after DOM ready so all modals are present)
+// Backdrop click NO LONGER auto-closes modals — per user feedback every
+// modal must be closed explicitly via its ✕ header or Schliessen button.
+// Function kept as a no-op so init() can still call it without changing
+// the call sites; existing per-modal `event.target===this` handlers (e.g.
+// modalPalette, modalSearchResults) are unhooked below by clearing them.
 function attachBackdropClose(){
+  // Remove any pre-existing backdrop close handler that was attached
+  // inline (e.g. modalPalette has onclick="if(event.target===this)…")
   document.querySelectorAll('.modal-bg').forEach(bg => {
-    if(bg._backdropBound) return;
-    bg._backdropBound = true;
-    bg.addEventListener('click', e => {
-      if(e.target === bg) window.closeModal(bg.id);
-    });
+    if(bg.hasAttribute('onclick')) bg.removeAttribute('onclick');
+    if(bg._backdropBound){
+      bg._backdropBound = false;
+    }
   });
 }
 
@@ -7427,8 +7436,9 @@ if(document.readyState === 'loading'){
 <!-- ═══════════════════════════════════════════════════════════════════════ -->
 <!-- MODAL: Command Palette (Ctrl/Cmd + K)                                    -->
 <!-- ═══════════════════════════════════════════════════════════════════════ -->
-<div class="modal-bg" id="modalPalette" onclick="if(event.target===this)window.closePalette()">
-  <div class="modal pal-modal" onclick="event.stopPropagation()">
+<div class="modal-bg" id="modalPalette">
+  <div class="modal pal-modal">
+    <button class="modal-x pal-close" onclick="window.closePalette()" title="Schliessen (ESC)">✕</button>
     <div class="pal-search">
       <span class="pal-search-icon">⌕</span>
       <input id="palInput" placeholder="Suche Kontakt, Aktion …  (Ctrl/⌘+K)" autocomplete="off"
