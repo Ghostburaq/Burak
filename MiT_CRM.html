@@ -3371,7 +3371,7 @@ window.handleCardScan = async function(input){
       })
     });
     const data = await resp.json();
-    if(data.error) throw new Error(data.error.message);
+    if(data.error) throw new Error(friendlyAnthropicError(data.error));
     let txt = data.content[0].text.trim().replace(/^```(?:json)?/,'').replace(/```$/,'').trim();
     const s = txt.indexOf('{'); const e = txt.lastIndexOf('}'); if(s<0||e<0) throw new Error('Kein JSON');
     const d = JSON.parse(txt.substring(s,e+1));
@@ -4567,6 +4567,41 @@ function updateApiStatus(){
 // ════════════════════════════════════════════════════════════════════════
 //  KI: API Calls
 // ════════════════════════════════════════════════════════════════════════
+// Translate raw Anthropic API errors into actionable German messages so
+// the user understands whether it's a config issue (key/credit) vs. a
+// transient outage. Falls through with the original message + a hint if
+// nothing matches.
+function friendlyAnthropicError(err){
+  if(!err) return 'Unbekannter API-Fehler';
+  const msg = (err.message || err.toString() || '').toString();
+  const type = (err.type || '').toString().toLowerCase();
+  const low = msg.toLowerCase();
+  if(/credit balance|insufficient.*credit|billing|payment/.test(low)){
+    return '💳 Kein Anthropic-Guthaben mehr.\nBitte auf console.anthropic.com/settings/billing aufladen oder Plan upgraden.';
+  }
+  if(type === 'authentication_error' || /invalid.*api.*key|not.*authorized|x-api-key|api key/i.test(msg)){
+    return '🔑 API-Key ungültig oder widerrufen.\nIn den Einstellungen einen gültigen sk-ant-... Key eintragen.';
+  }
+  if(type === 'permission_error' || /permission/i.test(msg)){
+    return '🚫 Berechtigung verweigert.\nDer Key hat keinen Zugriff auf dieses Modell — Anthropic-Konto prüfen.';
+  }
+  if(type === 'rate_limit_error' || /rate.?limit|too many requests|429/i.test(msg)){
+    return '⏱ Zu viele Anfragen in kurzer Zeit.\nBitte 30-60 Sekunden warten und nochmal probieren.';
+  }
+  if(type === 'overloaded_error' || /overloaded|529/i.test(msg)){
+    return '🚧 Anthropic ist gerade überlastet.\nIn ein paar Minuten erneut versuchen.';
+  }
+  if(type === 'not_found_error' || /model.*not.*found|model.*does not exist/i.test(msg)){
+    return '❓ KI-Modell nicht verfügbar.\nDie App muss auf ein aktuelles Modell aktualisiert werden.';
+  }
+  if(/network|failed to fetch|cors|tls|certificate/i.test(msg)){
+    return '🌐 Netzwerkfehler.\nInternet-Verbindung prüfen — Firewall/VPN blockiert evtl. api.anthropic.com.';
+  }
+  // Default: pass through but prefix to make it obvious it came from
+  // Anthropic, not the app
+  return 'Anthropic-API-Fehler: ' + msg;
+}
+
 async function callClaude(prompt, system='', maxTokens=1200){
   const key = localStorage.getItem(API_KEY);
   if(!key){
@@ -4591,7 +4626,7 @@ async function callClaude(prompt, system='', maxTokens=1200){
       })
     });
     const data = await resp.json();
-    if(data.error) throw new Error(data.error.message);
+    if(data.error) throw new Error(friendlyAnthropicError(data.error));
     if(!data.content || !data.content[0] || !data.content[0].text){
       throw new Error('Leere Antwort vom KI-Modell');
     }
@@ -4878,7 +4913,7 @@ async function aiExtractFromPdf(file){
   });
 
   const data = await resp.json();
-  if(data.error) throw new Error(data.error.message);
+  if(data.error) throw new Error(friendlyAnthropicError(data.error));
   return parseAiJson(data.content[0].text);
 }
 
@@ -4920,7 +4955,7 @@ async function aiExtractFromText(text){
     })
   });
   const data = await resp.json();
-  if(data.error) throw new Error(data.error.message);
+  if(data.error) throw new Error(friendlyAnthropicError(data.error));
   return parseAiJson(data.content[0].text);
 }
 
