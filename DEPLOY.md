@@ -5,50 +5,54 @@ diesen Stack direkt aus dem GitHub-Repo bauen und betreiben. (Netlify eignet sic
 nicht: es hostet nur statische Seiten/kurzlebige Functions, keinen Dauerserver
 mit Schreibzugriff auf eine Datenbank.)
 
-## In 5 Minuten online (kostenlos)
+## Schritt für Schritt online (mit dauerhafter Datenbank)
 
-1. **Repo zu GitHub pushen** (ist bereits geschehen — Branch
-   `claude/friendly-babbage-6ddxks`). Optional vorher in `main` mergen.
-2. Auf <https://render.com> mit GitHub anmelden (kostenloser Account).
-3. **New → Blueprint** wählen und dieses Repo auswählen.
-   Render liest automatisch die mitgelieferte `render.yaml`.
-4. **Apply** klicken. Render installiert die Abhängigkeiten und startet die App.
-5. Nach ein paar Minuten ist sie unter
-   `https://burak-rental-suite.onrender.com` (o. ä.) erreichbar.
+Die mitgelieferte `render.yaml` ist bereits für den **Echtbetrieb** konfiguriert:
+persistente Disk (`/var/data/crm.db`), Plan `starter`, ohne Demodaten (`SEED=0`).
+
+1. **Repo ist bereits auf GitHub** — Branch `claude/friendly-babbage-6ddxks`.
+   Du musst nichts manuell hochladen; Render holt sich den Code direkt von GitHub.
+2. Auf <https://render.com> mit deinem **GitHub-Account anmelden** (Render fragt
+   nach Zugriff auf deine Repos — bestätigen).
+3. Oben rechts **New +** → **Blueprint** klicken.
+4. Das Repo **`ghostburaq/burak`** auswählen → Render erkennt automatisch die
+   `render.yaml` und zeigt den Service „burak-rental-suite" an.
+5. **Apply** klicken. Render
+   - installiert die Abhängigkeiten (`pip install -r requirements.txt`),
+   - legt die persistente Disk an (`/var/data`, 1 GB),
+   - startet den Server (`uvicorn …`).
+6. Nach ~2–3 Minuten ist die App unter
+   `https://burak-rental-suite.onrender.com` (o. ä.) erreichbar. Die genaue URL
+   steht oben im Render-Dashboard.
+
+> **Kosten:** Der Plan `starter` mit persistenter Disk ist kostenpflichtig
+> (ca. 7 $/Monat). Render fragt dafür beim ersten Apply nach einer Zahlungsart.
 
 Alternativ ohne Blueprint: **New → Web Service → Repo wählen** und manuell setzen:
 - **Runtime:** Python 3
 - **Build Command:** `pip install -r requirements.txt`
 - **Start Command:** `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+- Disk im Tab **Disks** hinzufügen (Mount Path `/var/data`, 1 GB) und
+  Umgebungsvariable `DB_PATH=/var/data/crm.db` setzen.
 
-## Wichtige Hinweise zum kostenlosen Plan
+## Kostenlos testen (ohne dauerhafte Daten)
 
-- **Cold Start:** Kostenlose Dienste werden bei Inaktivität pausiert; der erste
-  Aufruf danach dauert ~30 Sekunden.
-- **Daten nicht dauerhaft:** Das Dateisystem ist flüchtig. Bei jedem Neustart/
-  Deploy wird die SQLite-DB neu angelegt und (bei `SEED=1`) mit Demodaten gefüllt.
-  Für einen echten Testbetrieb ok — für Echtdaten siehe nächster Abschnitt.
+Wer erst gratis testen will, ändert in `render.yaml`:
+- `plan: starter` → `plan: free`
+- den `disk:`-Block auskommentieren und die `DB_PATH`-Variable entfernen
+- optional `SEED` auf `"1"` setzen (Demodaten beim Start)
 
-## Persistente Datenbank (für Echtbetrieb)
-
-Damit eingegebene Kunden, Events und Preise dauerhaft erhalten bleiben, braucht
-es eine persistente Festplatte (Render-Plan **Starter**, ca. 7 $/Monat):
-
-1. In `render.yaml` den Plan auf `starter` ändern.
-2. Den `disk:`-Block am Ende der Datei einkommentieren.
-3. Die Umgebungsvariable `DB_PATH` einkommentieren (Wert `/var/data/crm.db`).
-4. Erneut deployen.
-
-Die Datenbank liegt dann auf dem gemounteten Volume `/var/data` und übersteht
-Neustarts und Deploys.
+Achtung: Auf dem Free-Plan ist das Dateisystem flüchtig — die DB wird bei jedem
+Neustart/Deploy zurückgesetzt. Außerdem gibt es einen **Cold Start** (~30 s nach
+Inaktivität).
 
 ## Umgebungsvariablen
 
 | Variable        | Default        | Zweck |
 |-----------------|----------------|-------|
 | `PORT`          | (von Render)   | Port, auf dem der Server lauscht |
-| `DB_PATH`       | `app/crm.db`   | Speicherort der SQLite-Datei |
-| `SEED`          | `1`            | `0` = ohne Demodaten starten (leere Produktiv-DB) |
+| `DB_PATH`       | `/var/data/crm.db` | Speicherort der SQLite-Datei (auf persistenter Disk) |
+| `SEED`          | `0`            | `1` = einmalig mit Demodaten starten; `0` = leere Produktiv-DB |
 | `PYTHON_VERSION`| `3.11.9`       | Python-Version auf Render |
 
 ## Firmendaten anpassen

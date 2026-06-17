@@ -1,18 +1,19 @@
 # Render Blueprint fuer die Burak Rental Suite
 # Doku: https://render.com/docs/blueprint-spec
 #
-# Deployt direkt aus diesem GitHub-Repo. Auf dem kostenlosen Plan laeuft die App
-# sofort; die SQLite-Datenbank liegt dann aber auf einem fluechtigen Dateisystem
-# (Daten werden bei Neustart/Deploy zurueckgesetzt und neu mit Demodaten befuellt).
+# Deployt direkt aus diesem GitHub-Repo mit PERSISTENTER Datenbank:
+# Die SQLite-Datei liegt auf einer dauerhaften Disk (/var/data/crm.db) und
+# ueberlebt Neustarts und Deploys. Echte Kundendaten bleiben also erhalten.
 #
-# Fuer DAUERHAFTE Daten: Plan auf "starter" anheben und den unten dokumentierten
-# disk-Block aktivieren (siehe DEPLOY.md, Abschnitt "Persistente Datenbank").
+# Hinweis: Eine persistente Disk erfordert den Plan "starter" (kostenpflichtig).
+# Zum reinen Testen ohne Kosten: plan auf "free" setzen, den disk-Block sowie
+# die DB_PATH-Variable wieder auskommentieren (siehe DEPLOY.md).
 
 services:
   - type: web
     name: burak-rental-suite
     runtime: python
-    plan: free
+    plan: starter
     region: frankfurt
     branch: claude/friendly-babbage-6ddxks
     buildCommand: pip install -r requirements.txt
@@ -21,15 +22,17 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: "3.11.9"
-      # Demodaten beim Start anlegen (auf "0" setzen fuer leere Produktiv-DB):
+      # 0 = ohne Demodaten starten (leere Produktiv-DB fuer echte Daten).
+      # Auf "1" setzen, um die DB einmalig mit Demodaten zu befuellen.
       - key: SEED
-        value: "1"
-      # Persistenter Speicherort der DB (nur mit disk-Block + bezahltem Plan):
-      # - key: DB_PATH
-      #   value: /var/data/crm.db
+        value: "0"
+      # Persistenter Speicherort der DB auf der gemounteten Disk:
+      - key: DB_PATH
+        value: /var/data/crm.db
 
-    # ---- Persistente Datenbank (erfordert Plan "starter" oder hoeher) ----
-    # disk:
-    #   name: crm-data
-    #   mountPath: /var/data
-    #   sizeGB: 1
+    # ---- Persistente Datenbank ----
+    # Die Disk wird unter /var/data gemountet; DB_PATH zeigt dorthin.
+    disk:
+      name: crm-data
+      mountPath: /var/data
+      sizeGB: 1
