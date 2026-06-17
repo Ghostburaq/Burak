@@ -874,6 +874,91 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .close-reason-banner.bd-won{color:var(--good);background:var(--good-soft)}
 .close-reason-banner.bd-lost{color:var(--danger);background:var(--danger-soft)}
 .close-reason-banner.bd-done{color:#0f766e;background:rgba(13,148,136,0.08)}
+
+/* ═══ Welcome Dashboard widgets ═══ */
+.welcome-dashboard{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:12px;
+  margin-bottom:18px;
+}
+.widget{
+  background:var(--bg-card);border:1px solid var(--line);
+  border-radius:var(--r-md);padding:14px 16px;
+  box-shadow:var(--shadow-card);min-height:120px;
+  position:relative;overflow:hidden;
+}
+.widget-h{
+  display:flex;align-items:center;justify-content:space-between;
+  font-size:11px;font-weight:700;color:var(--text-mute);
+  text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;
+}
+.widget-h-sub{color:var(--text-dim);font-weight:500;text-transform:none;letter-spacing:0}
+.widget-loading{padding:18px 0;text-align:center;color:var(--text-mute);font-size:12px}
+.widget-error{padding:14px 0;color:var(--danger);font-size:11.5px}
+
+/* Clock */
+.widget-clock-time{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:32px;color:var(--text);line-height:1.1}
+.widget-clock-date{font-size:13px;color:var(--text);margin-top:4px}
+.widget-clock-meta{font-size:11px;color:var(--text-mute);margin-top:4px}
+
+/* Weather */
+.weather-now{display:flex;align-items:center;gap:14px}
+.weather-icon{font-size:46px;line-height:1}
+.weather-temp{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:38px;color:var(--text);line-height:1}
+.weather-unit{font-size:18px;color:var(--text-mute);margin-left:2px}
+.weather-desc{font-size:13px;color:var(--text);margin-top:4px}
+.weather-meta{font-size:11px;color:var(--text-mute);margin-top:6px}
+.widget-weather-forecast{display:flex;gap:8px;margin-top:10px;border-top:1px solid var(--line);padding-top:10px}
+.weather-day{flex:1;text-align:center;font-size:11px}
+.weather-day-name{color:var(--text-mute);font-weight:600}
+.weather-day-icon{font-size:20px;margin:2px 0}
+.weather-day-temp{font-family:'JetBrains Mono',monospace;color:var(--text)}
+
+/* Sun */
+.sun-times{display:flex;justify-content:space-between;font-size:12px}
+.sun-label{color:var(--text-mute);font-size:10.5px;text-transform:uppercase;letter-spacing:0.06em}
+.sun-time{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:20px;color:var(--text);margin-top:2px}
+.sun-bar{height:6px;background:var(--bg2);border-radius:3px;margin:10px 0 6px;overflow:hidden}
+.sun-bar-fill{height:100%;background:linear-gradient(90deg,#fde047,#fb923c);transition:width 0.6s}
+.sun-meta{font-size:11px;color:var(--text-mute);text-align:center}
+
+/* Currency */
+.fx-row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;border-bottom:1px solid var(--line)}
+.fx-row:last-of-type{border-bottom:none}
+.fx-pair{color:var(--text-mute);font-weight:500}
+.fx-rate{font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--text)}
+.fx-meta{font-size:10.5px;color:var(--text-dim);margin-top:6px;text-align:right}
+
+/* Pomodoro */
+.pomo-display{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:34px;color:var(--brand);text-align:center;letter-spacing:0.05em;margin:6px 0 10px}
+.pomo-ctrl{display:flex;gap:5px;flex-wrap:wrap;justify-content:center}
+
+/* Stats */
+.stats-row{margin-bottom:10px}
+.stats-big{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:34px;color:var(--text);line-height:1}
+.stats-meta{font-size:11px;color:var(--text-mute);text-transform:uppercase;letter-spacing:0.06em}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;border-top:1px solid var(--line);padding-top:8px}
+.stats-lbl{font-size:10px;color:var(--text-mute);text-transform:uppercase;letter-spacing:0.06em}
+.stats-val{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:18px;color:var(--text);margin-top:2px}
+
+/* Quote */
+.quote-text{font-size:13px;line-height:1.5;color:var(--text);font-style:italic}
+.quote-author{font-size:11px;color:var(--text-mute);margin-top:6px;text-align:right}
+
+/* Nearby */
+.nearby-item{padding:7px 0;border-bottom:1px solid var(--line);cursor:pointer;transition:background 0.12s}
+.nearby-item:hover{background:var(--bg-hover);margin:0 -8px;padding-left:8px;padding-right:8px;border-radius:var(--r-sm)}
+.nearby-item:last-of-type{border-bottom:none}
+.nearby-name{font-weight:600;font-size:13px;color:var(--text)}
+.nearby-meta{font-size:11px;color:var(--text-mute);margin-top:1px}
+
+/* Widget toggles in settings */
+.widget-settings-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:6px}
+.widget-toggle{display:flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid var(--line);
+  border-radius:var(--r-sm);cursor:pointer;font-size:13px;transition:all 0.12s}
+.widget-toggle:hover{border-color:var(--brand)}
+.widget-toggle input{accent-color:var(--brand);width:14px;height:14px;cursor:pointer}
 .kategorie-table{width:100%;border-collapse:collapse;font-size:13px}
 .kategorie-table th{text-align:left;padding:10px 12px;background:var(--bg2);font-weight:700;font-size:11.5px;
   text-transform:uppercase;letter-spacing:0.06em;color:var(--text-mute);border-bottom:1px solid var(--line)}
@@ -1070,6 +1155,9 @@ input,select,textarea{font-family:inherit;font-size:14px}
     <div class="content">
       <!-- ═══ TODAY PAGE ═══ -->
       <div class="page active" id="page-today">
+        <!-- Welcome Dashboard — Live widgets (clock, weather, currency, stats etc.) -->
+        <div id="welcomeDashboard" class="welcome-dashboard"></div>
+
         <!-- Overdue banner (only shown when overdue items exist) -->
         <div id="overdueBanner" class="overdue-banner hidden"></div>
         <!-- Stale-contact alert -->
@@ -1452,6 +1540,16 @@ input,select,textarea{font-family:inherit;font-size:14px}
           <div class="row gap-md">
             <input id="goalInput" placeholder="z.B. 1'500'000" style="max-width:240px">
             <button class="btn btn-primary" onclick="window.saveGoal()">Speichern</button>
+          </div>
+
+          <div class="section-h">🎨 Welcome-Dashboard Widgets</div>
+          <p class="tx-mute mb-md" style="font-size:12px;line-height:1.6;margin-top:-8px">
+            Live-Widgets oben auf der "Heute"-Seite. Wetter und Währungs-Kurse holen sich ihre Daten kostenlos im Hintergrund (kein API-Key nötig).
+          </p>
+          <div id="widgetSettings" class="widget-settings-list"></div>
+          <div class="row gap-md mt-md">
+            <input id="weatherCityInput" placeholder="Wetter-Stadt z.B. Zürich, Basel, Genf" style="max-width:280px">
+            <button class="btn btn-primary btn-sm" onclick="window.saveWeatherCity()">Stadt speichern</button>
           </div>
 
           <div class="section-h">🛠 Werkzeuge</div>
@@ -2204,6 +2302,426 @@ function renderToday(){
   drawTrendChart();
   // Goal progress bar + stale alert
   renderGoalAndStale();
+  // Welcome Dashboard widgets (live clock, weather, currency, …)
+  renderWelcomeDashboard();
+}
+
+// ════════════════════════════════════════════════════════════════════════
+//  WELCOME DASHBOARD — Live widgets
+// ════════════════════════════════════════════════════════════════════════
+const WIDGETS_KEY = 'mit_crm_widgets';
+const WIDGETS_DEFAULTS = ['clock','weather','sunRise','currency','pomodoro','stats','quote','nearby'];
+const WEATHER_CITY_KEY = 'mit_crm_weather_city';
+const WEATHER_CACHE_KEY = 'mit_crm_weather_cache';
+const FX_CACHE_KEY = 'mit_crm_fx_cache';
+
+function loadEnabledWidgets(){
+  try{ const a=JSON.parse(localStorage.getItem(WIDGETS_KEY)); if(Array.isArray(a)) return a; }catch(e){}
+  return [...WIDGETS_DEFAULTS];
+}
+function saveEnabledWidgets(arr){ localStorage.setItem(WIDGETS_KEY, JSON.stringify(arr)); }
+window.toggleWidget = function(id){
+  const set = new Set(loadEnabledWidgets());
+  if(set.has(id)) set.delete(id); else set.add(id);
+  saveEnabledWidgets([...set]);
+  renderWelcomeDashboard();
+  renderWidgetSettings();
+};
+
+// Default city for weather (configurable). Coordinates for Swiss cities for free.
+const KNOWN_CITIES = {
+  'Zürich':[47.3769,8.5417],'Bern':[46.9480,7.4474],'Basel':[47.5596,7.5886],
+  'Genf':[46.2044,6.1432],'Lausanne':[46.5197,6.6323],'Luzern':[47.0502,8.3093],
+  'St. Gallen':[47.4245,9.3767],'Winterthur':[47.5008,8.7242],'Lugano':[46.0037,8.9511]
+};
+function loadWeatherCity(){ return localStorage.getItem(WEATHER_CITY_KEY) || 'Zürich'; }
+window.saveWeatherCity = function(){
+  const v = document.getElementById('weatherCityInput').value.trim();
+  if(!v){ showToast('Stadt darf nicht leer sein','error'); return; }
+  localStorage.setItem(WEATHER_CITY_KEY, v);
+  localStorage.removeItem(WEATHER_CACHE_KEY);
+  renderWelcomeDashboard();
+  showToast('✓ Stadt gespeichert','success');
+};
+
+// ─── Widget render — main entry point ────────────────────────────────
+let _clockTimer = null, _pomodoroTimer = null, _pomodoroEnd = null, _pomodoroPaused = 0;
+function renderWelcomeDashboard(){
+  const root = document.getElementById('welcomeDashboard'); if(!root) return;
+  const enabled = new Set(loadEnabledWidgets());
+  // Build the grid as a string so we can swap whole HTML at once
+  let html = '';
+  if(enabled.has('clock'))    html += widgetClockHTML();
+  if(enabled.has('weather'))  html += widgetWeatherHTML();
+  if(enabled.has('sunRise'))  html += widgetSunHTML();
+  if(enabled.has('currency')) html += widgetCurrencyHTML();
+  if(enabled.has('pomodoro')) html += widgetPomodoroHTML();
+  if(enabled.has('stats'))    html += widgetStatsHTML();
+  if(enabled.has('quote'))    html += widgetQuoteHTML();
+  if(enabled.has('nearby'))   html += widgetNearbyHTML();
+  root.innerHTML = html;
+  // Schedule live updates
+  if(_clockTimer) clearInterval(_clockTimer);
+  if(enabled.has('clock')){
+    _clockTimer = setInterval(updateClockWidget, 1000);
+    updateClockWidget();
+  }
+  // Lazy-load remote data
+  if(enabled.has('weather')) fetchWeather();
+  if(enabled.has('sunRise')) fetchSun();
+  if(enabled.has('currency')) fetchCurrency();
+  if(enabled.has('nearby')) requestNearby();
+  // Pomodoro state restore
+  if(enabled.has('pomodoro')) updatePomodoroDisplay();
+}
+
+// ─── Widget 1: Live Clock + Date + KW ─────────────────────────────────
+function widgetClockHTML(){
+  return `<div class="widget widget-clock">
+    <div class="widget-h"><span>🕐 Live</span></div>
+    <div class="widget-clock-time" id="wClockTime">--:--:--</div>
+    <div class="widget-clock-date" id="wClockDate">—</div>
+    <div class="widget-clock-meta" id="wClockMeta">—</div>
+  </div>`;
+}
+function updateClockWidget(){
+  const time = document.getElementById('wClockTime'); if(!time) return;
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2,'0');
+  const mm = String(now.getMinutes()).padStart(2,'0');
+  const ss = String(now.getSeconds()).padStart(2,'0');
+  time.textContent = hh+':'+mm+':'+ss;
+  const dayNames = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+  const months = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+  document.getElementById('wClockDate').textContent = dayNames[now.getDay()] + ', ' + now.getDate() + '. ' + months[now.getMonth()] + ' ' + now.getFullYear();
+  const kw = getKW(now);
+  const dayOfYear = Math.floor((now - new Date(now.getFullYear(),0,0))/86400000);
+  document.getElementById('wClockMeta').textContent = 'KW ' + kw + '  ·  Tag ' + dayOfYear + ' von 365';
+}
+
+// ─── Widget 2: Weather (Open-Meteo, no key, CORS-OK) ──────────────────
+const WEATHER_CODES = {
+  0:['☀','Sonnig'],1:['🌤','Wenige Wolken'],2:['⛅','Bewölkt'],3:['☁','Bedeckt'],
+  45:['🌫','Nebel'],48:['🌫','Nebel'],
+  51:['🌦','Leichter Niesel'],53:['🌦','Niesel'],55:['🌧','Starker Niesel'],
+  61:['🌧','Leichter Regen'],63:['🌧','Regen'],65:['⛈','Starker Regen'],
+  71:['🌨','Leichter Schnee'],73:['🌨','Schnee'],75:['❄','Starker Schnee'],
+  80:['🌦','Regenschauer'],81:['🌧','Schauer'],82:['⛈','Heftige Schauer'],
+  95:['⛈','Gewitter'],96:['⛈','Gewitter mit Hagel'],99:['⛈','Starkes Gewitter']
+};
+function widgetWeatherHTML(){
+  const city = loadWeatherCity();
+  return `<div class="widget widget-weather">
+    <div class="widget-h"><span>🌤 Wetter</span><span class="widget-h-sub">${escHtml(city)}</span></div>
+    <div id="wWeatherBody"><div class="widget-loading">Lade Wetter…</div></div>
+  </div>`;
+}
+async function fetchWeather(){
+  const body = document.getElementById('wWeatherBody'); if(!body) return;
+  const city = loadWeatherCity();
+  // Cache 30 minutes
+  try{
+    const cached = JSON.parse(localStorage.getItem(WEATHER_CACHE_KEY)||'null');
+    if(cached && cached.city === city && Date.now() - cached.ts < 30*60*1000){
+      renderWeather(cached.data, body); return;
+    }
+  }catch(e){}
+  try{
+    // Resolve coordinates: known list or geocoding
+    let lat, lon;
+    if(KNOWN_CITIES[city]){
+      [lat, lon] = KNOWN_CITIES[city];
+    } else {
+      const g = await fetch('https://geocoding-api.open-meteo.com/v1/search?count=1&language=de&format=json&name='+encodeURIComponent(city));
+      const gd = await g.json();
+      if(!gd.results || !gd.results[0]) throw new Error('Stadt nicht gefunden: '+city);
+      lat = gd.results[0].latitude; lon = gd.results[0].longitude;
+    }
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,wind_speed_10m,relative_humidity_2m&daily=weather_code,temperature_2m_max,temperature_2m_min&forecast_days=4&timezone=auto`;
+    const r = await fetch(url);
+    const d = await r.json();
+    if(d.error || !d.current) throw new Error('Wetter-API antwortet nicht');
+    localStorage.setItem(WEATHER_CACHE_KEY, JSON.stringify({city, data:d, ts:Date.now()}));
+    renderWeather(d, body);
+  }catch(err){
+    body.innerHTML = '<div class="widget-error">Wetter offline · '+escHtml(err.message)+'</div>';
+  }
+}
+function renderWeather(d, body){
+  const cur = d.current; const code = WEATHER_CODES[cur.weather_code] || ['❔','Unbekannt'];
+  const dayNames = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+  let forecast = '';
+  if(d.daily && d.daily.time){
+    forecast = '<div class="widget-weather-forecast">' + d.daily.time.slice(0,4).map((iso,i)=>{
+      const dt = new Date(iso+'T12:00:00');
+      const c = WEATHER_CODES[d.daily.weather_code[i]] || ['❔',''];
+      return `<div class="weather-day">
+        <div class="weather-day-name">${i===0?'Heute':dayNames[dt.getDay()]}</div>
+        <div class="weather-day-icon">${c[0]}</div>
+        <div class="weather-day-temp">${Math.round(d.daily.temperature_2m_max[i])}° / ${Math.round(d.daily.temperature_2m_min[i])}°</div>
+      </div>`;
+    }).join('') + '</div>';
+  }
+  body.innerHTML = `
+    <div class="weather-now">
+      <div class="weather-icon">${code[0]}</div>
+      <div class="weather-temp">${Math.round(cur.temperature_2m)}°<span class="weather-unit">C</span></div>
+    </div>
+    <div class="weather-desc">${escHtml(code[1])}</div>
+    <div class="weather-meta">💧 ${cur.relative_humidity_2m}%  ·  💨 ${Math.round(cur.wind_speed_10m)} km/h</div>
+    ${forecast}
+  `;
+}
+
+// ─── Widget 3: Sunrise / Sunset (from Open-Meteo) ─────────────────────
+function widgetSunHTML(){
+  return `<div class="widget widget-sun">
+    <div class="widget-h"><span>☀ Sonne</span></div>
+    <div id="wSunBody"><div class="widget-loading">Lade Sonnendaten…</div></div>
+  </div>`;
+}
+async function fetchSun(){
+  const body = document.getElementById('wSunBody'); if(!body) return;
+  const city = loadWeatherCity();
+  try{
+    let lat,lon;
+    if(KNOWN_CITIES[city]){ [lat,lon] = KNOWN_CITIES[city]; }
+    else { const g=await fetch('https://geocoding-api.open-meteo.com/v1/search?count=1&format=json&name='+encodeURIComponent(city)); const gd=await g.json(); lat=gd.results[0].latitude; lon=gd.results[0].longitude; }
+    const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=sunrise,sunset&forecast_days=1&timezone=auto`);
+    const d = await r.json();
+    const rise = d.daily.sunrise[0].slice(11,16);
+    const set  = d.daily.sunset[0].slice(11,16);
+    const now = new Date(); const nowMin = now.getHours()*60 + now.getMinutes();
+    const [rh,rm] = rise.split(':').map(Number); const riseMin = rh*60+rm;
+    const [sh,sm] = set.split(':').map(Number); const setMin  = sh*60+sm;
+    const daylight = setMin - riseMin;
+    let progress = 0;
+    if(nowMin < riseMin) progress = 0;
+    else if(nowMin > setMin) progress = 100;
+    else progress = ((nowMin - riseMin) / daylight) * 100;
+    body.innerHTML = `
+      <div class="sun-times">
+        <div><div class="sun-label">Aufgang</div><div class="sun-time">🌅 ${rise}</div></div>
+        <div><div class="sun-label">Untergang</div><div class="sun-time">🌇 ${set}</div></div>
+      </div>
+      <div class="sun-bar"><div class="sun-bar-fill" style="width:${progress.toFixed(0)}%"></div></div>
+      <div class="sun-meta">Tageslänge ${Math.floor(daylight/60)}h ${daylight%60}min</div>
+    `;
+  }catch(err){
+    body.innerHTML = '<div class="widget-error">Daten offline</div>';
+  }
+}
+
+// ─── Widget 4: Currency (CHF / EUR / USD) — exchangerate.host free ────
+function widgetCurrencyHTML(){
+  return `<div class="widget widget-currency">
+    <div class="widget-h"><span>💱 Währung</span><span class="widget-h-sub">Basis CHF</span></div>
+    <div id="wCurrencyBody"><div class="widget-loading">Lade Kurse…</div></div>
+  </div>`;
+}
+async function fetchCurrency(){
+  const body = document.getElementById('wCurrencyBody'); if(!body) return;
+  try{
+    const cached = JSON.parse(localStorage.getItem(FX_CACHE_KEY)||'null');
+    if(cached && Date.now() - cached.ts < 60*60*1000){ renderCurrency(cached.rates, body); return; }
+    // open.er-api.com is free, no key, CORS-OK
+    const r = await fetch('https://open.er-api.com/v6/latest/CHF');
+    const d = await r.json();
+    if(d.result !== 'success') throw new Error('Kurs-API offline');
+    const rates = {EUR:d.rates.EUR, USD:d.rates.USD, GBP:d.rates.GBP, JPY:d.rates.JPY};
+    localStorage.setItem(FX_CACHE_KEY, JSON.stringify({rates, ts:Date.now()}));
+    renderCurrency(rates, body);
+  }catch(err){
+    body.innerHTML = '<div class="widget-error">Kurse offline</div>';
+  }
+}
+function renderCurrency(rates, body){
+  const fmt = n => (Math.round(n*10000)/10000).toFixed(4);
+  body.innerHTML = `
+    <div class="fx-row"><span class="fx-pair">CHF → EUR</span><span class="fx-rate">${fmt(rates.EUR)}</span></div>
+    <div class="fx-row"><span class="fx-pair">CHF → USD</span><span class="fx-rate">${fmt(rates.USD)}</span></div>
+    <div class="fx-row"><span class="fx-pair">CHF → GBP</span><span class="fx-rate">${fmt(rates.GBP)}</span></div>
+    <div class="fx-row"><span class="fx-pair">CHF → JPY</span><span class="fx-rate">${(Math.round(rates.JPY*100)/100).toFixed(2)}</span></div>
+    <div class="fx-meta">Aktualisiert ${new Date().toLocaleTimeString('de-CH',{hour:'2-digit',minute:'2-digit'})}</div>
+  `;
+}
+
+// ─── Widget 5: Pomodoro Timer ─────────────────────────────────────────
+function widgetPomodoroHTML(){
+  return `<div class="widget widget-pomodoro">
+    <div class="widget-h"><span>🍅 Fokus-Timer</span><span class="widget-h-sub" id="wPomoState">bereit</span></div>
+    <div class="pomo-display" id="wPomoTime">25:00</div>
+    <div class="pomo-ctrl">
+      <button class="btn btn-tiny btn-good" onclick="window.startPomodoro(25)">25 min</button>
+      <button class="btn btn-tiny btn-good" onclick="window.startPomodoro(50)">50 min</button>
+      <button class="btn btn-tiny btn-ghost" onclick="window.startPomodoro(5)">Pause 5</button>
+      <button class="btn btn-tiny btn-danger" onclick="window.stopPomodoro()">⏹</button>
+    </div>
+  </div>`;
+}
+window.startPomodoro = function(min){
+  if(_pomodoroTimer) clearInterval(_pomodoroTimer);
+  _pomodoroEnd = Date.now() + min*60*1000;
+  _pomodoroTimer = setInterval(updatePomodoroDisplay, 1000);
+  updatePomodoroDisplay();
+};
+window.stopPomodoro = function(){
+  if(_pomodoroTimer) clearInterval(_pomodoroTimer);
+  _pomodoroTimer = null; _pomodoroEnd = null;
+  updatePomodoroDisplay();
+};
+function updatePomodoroDisplay(){
+  const t = document.getElementById('wPomoTime'); if(!t) return;
+  const s = document.getElementById('wPomoState');
+  if(!_pomodoroEnd){ t.textContent = '25:00'; if(s) s.textContent='bereit'; return; }
+  const remain = Math.max(0, Math.floor((_pomodoroEnd - Date.now())/1000));
+  const mm = String(Math.floor(remain/60)).padStart(2,'0');
+  const ss = String(remain%60).padStart(2,'0');
+  t.textContent = mm+':'+ss;
+  if(s) s.textContent='läuft';
+  if(remain === 0){
+    if(_pomodoroTimer){ clearInterval(_pomodoroTimer); _pomodoroTimer=null; }
+    _pomodoroEnd = null;
+    if(s) s.textContent='✓ fertig';
+    try{ playReminderBeep(); }catch(e){}
+    showToast('🍅 Fokus-Zeit beendet — kurze Pause!','success');
+  }
+}
+
+// ─── Widget 6: Daily Stats / Streak ───────────────────────────────────
+function widgetStatsHTML(){
+  return `<div class="widget widget-stats">
+    <div class="widget-h"><span>📊 Tages-Stats</span></div>
+    <div id="wStatsBody">${renderStatsContent()}</div>
+  </div>`;
+}
+function renderStatsContent(){
+  const todayIso = todayISO();
+  const todayActs = STATE.activities.filter(a => a.date && a.date.slice(0,10) === todayIso);
+  const yesterday = new Date(); yesterday.setDate(yesterday.getDate()-1);
+  const ydayActs = STATE.activities.filter(a => a.date && a.date.slice(0,10) === localISO(yesterday));
+  // Streak: count consecutive workdays back from today with ≥1 activity
+  let streak = 0; const d = new Date();
+  for(let i=0;i<60;i++){
+    const ds = localISO(d);
+    const dow = d.getDay();
+    if(dow !== 0 && dow !== 6){
+      const has = STATE.activities.some(a => a.date && a.date.slice(0,10) === ds);
+      if(has) streak++;
+      else break;
+    }
+    d.setDate(d.getDate()-1);
+  }
+  const diff = todayActs.length - ydayActs.length;
+  const arrow = diff > 0 ? '↑' : diff < 0 ? '↓' : '→';
+  const arrowColor = diff > 0 ? '#0f9d58' : diff < 0 ? '#dc2626' : '#666';
+  return `
+    <div class="stats-row"><div class="stats-big">${todayActs.length}</div><div class="stats-meta">Aktivitäten heute</div></div>
+    <div class="stats-grid">
+      <div><div class="stats-lbl">vs. gestern</div><div class="stats-val" style="color:${arrowColor}">${arrow} ${diff>=0?'+':''}${diff}</div></div>
+      <div><div class="stats-lbl">Streak (Werktage)</div><div class="stats-val">🔥 ${streak}</div></div>
+    </div>
+  `;
+}
+
+// ─── Widget 7: Daily Quote ────────────────────────────────────────────
+const SALES_QUOTES = [
+  ['"Wer dem Wettbewerb 24 Stunden voraus ist, gewinnt."','Jack Welch'],
+  ['"Verkaufen ist nicht überreden. Verkaufen ist Probleme lösen."','—'],
+  ['"Der einzige Weg, gute Arbeit zu leisten, ist zu lieben, was du tust."','Steve Jobs'],
+  ['"Erfolg ist die Summe kleiner Anstrengungen, die täglich wiederholt werden."','Robert Collier'],
+  ['"Das Geheimnis des Erfolgs ist anzufangen."','Mark Twain'],
+  ['"Wer nicht fragt, bekommt nicht."','—'],
+  ['"Beziehungen sind alles im Verkauf."','—'],
+  ['"Niemand kauft Eigenschaften. Alle kaufen Lösungen."','—'],
+  ['"Hör auf zu verkaufen. Fang an zu helfen."','Zig Ziglar'],
+  ['"Wer aufhört zu lernen, hört auf zu führen."','—']
+];
+function widgetQuoteHTML(){
+  const dayIdx = Math.floor(Date.now() / 86400000) % SALES_QUOTES.length;
+  const q = SALES_QUOTES[dayIdx];
+  return `<div class="widget widget-quote">
+    <div class="widget-h"><span>💡 Zitat des Tages</span></div>
+    <div class="quote-text">${escHtml(q[0])}</div>
+    <div class="quote-author">— ${escHtml(q[1])}</div>
+  </div>`;
+}
+
+// ─── Widget 8: Nearby contacts (Geolocation) ──────────────────────────
+function widgetNearbyHTML(){
+  return `<div class="widget widget-nearby">
+    <div class="widget-h"><span>📍 Kunden in der Nähe</span></div>
+    <div id="wNearbyBody"><div class="widget-loading">Standort wird abgefragt…</div></div>
+  </div>`;
+}
+function requestNearby(){
+  const body = document.getElementById('wNearbyBody'); if(!body) return;
+  if(!navigator.geolocation){ body.innerHTML = '<div class="widget-error">Geolocation nicht unterstützt</div>'; return; }
+  navigator.geolocation.getCurrentPosition(async (pos) => {
+    const lat = pos.coords.latitude, lon = pos.coords.longitude;
+    // Resolve coordinates for contacts via Open-Meteo geocoding (best effort)
+    const candidates = STATE.contacts.filter(c => c.ort && !['Gewonnen','Verloren','Pausiert','Erledigt'].includes(c.status));
+    if(!candidates.length){ body.innerHTML = '<div class="widget-error tx-mute">Keine offenen Kontakte mit Einsatzort</div>'; return; }
+    // Use cached city coords to avoid hitting API for each
+    const cityCache = JSON.parse(localStorage.getItem('mit_crm_city_cache')||'{}');
+    const withDist = [];
+    for(const c of candidates.slice(0,20)){
+      let cLat, cLon;
+      if(cityCache[c.ort]){ [cLat,cLon] = cityCache[c.ort]; }
+      else if(KNOWN_CITIES[c.ort]){ [cLat,cLon] = KNOWN_CITIES[c.ort]; cityCache[c.ort] = KNOWN_CITIES[c.ort]; }
+      else {
+        try{
+          const g = await fetch('https://geocoding-api.open-meteo.com/v1/search?count=1&format=json&name='+encodeURIComponent(c.ort));
+          const gd = await g.json();
+          if(gd.results && gd.results[0]){ cLat = gd.results[0].latitude; cLon = gd.results[0].longitude; cityCache[c.ort] = [cLat,cLon]; }
+        }catch(e){}
+      }
+      if(cLat != null){
+        const dist = haversineKm(lat, lon, cLat, cLon);
+        withDist.push({c, dist});
+      }
+    }
+    localStorage.setItem('mit_crm_city_cache', JSON.stringify(cityCache));
+    withDist.sort((a,b)=>a.dist-b.dist);
+    const top = withDist.slice(0,5);
+    if(!top.length){ body.innerHTML = '<div class="widget-error tx-mute">Keine Koordinaten gefunden</div>'; return; }
+    body.innerHTML = top.map(x => `
+      <div class="nearby-item" onclick="window.openContact('${x.c.id}')">
+        <div class="nearby-name">${escHtml(x.c.firma)}</div>
+        <div class="nearby-meta">${escHtml(x.c.ort)} · ${x.dist.toFixed(0)} km</div>
+      </div>
+    `).join('');
+  }, (err) => {
+    body.innerHTML = '<div class="widget-error tx-mute">Standort verweigert oder offline</div>';
+  }, {timeout:8000, maximumAge:5*60*1000});
+}
+function haversineKm(lat1, lon1, lat2, lon2){
+  const R = 6371; const toRad = x => x*Math.PI/180;
+  const dLat = toRad(lat2-lat1), dLon = toRad(lon2-lon1);
+  const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
+  return 2*R*Math.asin(Math.sqrt(a));
+}
+
+// ─── Widget Settings UI ───────────────────────────────────────────────
+const WIDGET_LIST = [
+  {id:'clock',    label:'🕐 Live-Uhr + Datum + KW'},
+  {id:'weather',  label:'🌤 Wetter (live, ohne Key)'},
+  {id:'sunRise',  label:'☀ Sonnenauf-/-untergang + Tageslänge'},
+  {id:'currency', label:'💱 Währungskurse CHF→EUR/USD/GBP/JPY'},
+  {id:'pomodoro', label:'🍅 Pomodoro-Fokus-Timer (25/50/5 min)'},
+  {id:'stats',    label:'📊 Tages-Stats + Werktags-Streak'},
+  {id:'quote',    label:'💡 Sales-Zitat des Tages'},
+  {id:'nearby',   label:'📍 Kunden in der Nähe (Geolocation)'}
+];
+function renderWidgetSettings(){
+  const wrap = document.getElementById('widgetSettings'); if(!wrap) return;
+  const enabled = new Set(loadEnabledWidgets());
+  wrap.innerHTML = WIDGET_LIST.map(w => `
+    <label class="widget-toggle">
+      <input type="checkbox" ${enabled.has(w.id)?'checked':''} onchange="window.toggleWidget('${w.id}')">
+      <span>${w.label}</span>
+    </label>
+  `).join('');
 }
 
 function renderGoalAndStale(){
@@ -7289,6 +7807,8 @@ function init(){
   attachBackdropClose();
   renderTurboSettings();
   renderRepSettings();
+  renderWidgetSettings();
+  const wci = document.getElementById('weatherCityInput'); if(wci) wci.value = loadWeatherCity();
   populateSalesRepDatalist();
   // One-time migration of legacy localStorage attachments into IndexedDB
   setTimeout(()=>{ migrateAttachmentsFromLocalStorage().catch(e=>console.warn(e)); }, 500);
