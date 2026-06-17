@@ -1,19 +1,21 @@
 # Render Blueprint fuer die Burak Rental Suite
 # Doku: https://render.com/docs/blueprint-spec
 #
-# Deployt direkt aus diesem GitHub-Repo mit PERSISTENTER Datenbank:
-# Die SQLite-Datei liegt auf einer dauerhaften Disk (/var/data/crm.db) und
-# ueberlebt Neustarts und Deploys. Echte Kundendaten bleiben also erhalten.
+# Deployt direkt aus diesem GitHub-Repo auf dem KOSTENLOSEN Plan.
+# Keine Kreditkarte noetig. Hinweise zum Free-Plan:
+#  - Cold Start: Nach Inaktivitaet schlaeft der Dienst; erster Aufruf danach ~30 s.
+#  - Daten nicht dauerhaft: Das Dateisystem ist fluechtig. Bei jedem Neustart/
+#    Deploy wird die SQLite-DB neu angelegt und (SEED=1) mit Demodaten befuellt.
 #
-# Hinweis: Eine persistente Disk erfordert den Plan "starter" (kostenpflichtig).
-# Zum reinen Testen ohne Kosten: plan auf "free" setzen, den disk-Block sowie
-# die DB_PATH-Variable wieder auskommentieren (siehe DEPLOY.md).
+# Fuer DAUERHAFTE Daten spaeter: Plan auf "starter" anheben, einen disk-Block
+# (mountPath /var/data) ergaenzen und DB_PATH=/var/data/crm.db setzen
+# (siehe DEPLOY.md, Abschnitt "Schritt fuer Schritt online").
 
 services:
   - type: web
     name: burak-rental-suite
     runtime: python
-    plan: starter
+    plan: free
     region: frankfurt
     branch: claude/friendly-babbage-6ddxks
     buildCommand: pip install -r requirements.txt
@@ -22,17 +24,6 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: "3.11.9"
-      # 0 = ohne Demodaten starten (leere Produktiv-DB fuer echte Daten).
-      # Auf "1" setzen, um die DB einmalig mit Demodaten zu befuellen.
+      # Demodaten beim Start anlegen ("0" = leere DB).
       - key: SEED
-        value: "0"
-      # Persistenter Speicherort der DB auf der gemounteten Disk:
-      - key: DB_PATH
-        value: /var/data/crm.db
-
-    # ---- Persistente Datenbank ----
-    # Die Disk wird unter /var/data gemountet; DB_PATH zeigt dorthin.
-    disk:
-      name: crm-data
-      mountPath: /var/data
-      sizeGB: 1
+        value: "1"
