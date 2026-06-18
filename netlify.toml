@@ -1,0 +1,17 @@
+# Netlify-Konfiguration für Lernfuchs 🦊
+# Es gibt keinen Build-Schritt – die App besteht aus statischen Dateien im Ordner app/.
+
+[build]
+  publish = "app"
+  command = ""
+
+# Korrekte MIME-/Header-Einstellungen für PWA
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"
