@@ -12,20 +12,31 @@ Quelle: "Kabel_Mobil_in_Time_AG.pdf", Abschnitt "Version 95mm² Kabelpreise/100m
 import os, datetime as _dt
 from offerte_lib import build_offerte_workbook, HEADERS_PURCHASE
 
-# Positionen (Menge, Beschreibung, Einheit, Einzelpreis, Faktor=1)
-POSITIONS = [
-    (12, "71984 · CB 24-630/95-300 Steckendverschluss Typ C",                 "Stk", 234.20,  1),
-    (3,  "73643 · XKDT 1-Leiter MS-Polymerkabel 95/25 20/12kV, 6 x 50m",      "Set", 2138.70, 1),
-    (12, "Regie Arbeit",                                                      "Std", 160.00,  1),
+# Kalkulationsaufschlag: 30 % Marge, verdeckt in die Einzelpreise eingerechnet
+# (keine separate Aufschlagszeile -> der Kunde sieht nur die Artikelpreise).
+MARKUP = 1.30
+
+
+def _mk(price):
+    return round(price * MARKUP, 2)
+
+
+# Basis-Einkaufs-/Richtpreise (netto, ohne Aufschlag)
+_BASE_POS = [
+    (12, "71984 · CB 24-630/95-300 Steckendverschluss Typ C",            "Stk", 234.20,  1),
+    (3,  "73643 · XKDT 1-Leiter MS-Polymerkabel 95/25 20/12kV, 6 x 50m", "Set", 2138.70, 1),
+    (12, "Regie Arbeit",                                                 "Std", 160.00,  1),
+]
+_BASE_ART = [
+    ("71984 · CB 24-630/95-300 Steckendverschluss Typ C",             "Stk", 234.20),
+    ("73643 · XKDT 1-Leiter MS-Polymerkabel 95/25 20/12kV, 6 x 50m",  "Set", 2138.70),
+    ("73644 · XKDT 1-Leiter MS-Polymerkabel 150/35 20/12kV, 6 x 50m", "Set", 2811.27),
+    ("Regie Arbeit",                                                  "Std", 160.00),
 ]
 
-# Artikel-Preisliste (für Dropdown / Auto-Preis) – beide Kabelversionen
-ARTIKEL = [
-    ("71984 · CB 24-630/95-300 Steckendverschluss Typ C",                "Stk", 234.20),
-    ("73643 · XKDT 1-Leiter MS-Polymerkabel 95/25 20/12kV, 6 x 50m",     "Set", 2138.70),
-    ("73644 · XKDT 1-Leiter MS-Polymerkabel 150/35 20/12kV, 6 x 50m",    "Set", 2811.27),
-    ("Regie Arbeit",                                                     "Std", 160.00),
-]
+# Positionen + Artikelliste mit eingerechnetem Aufschlag (Menge, Beschr., Einheit, Preis, Faktor)
+POSITIONS = [(a, d, u, _mk(p), f) for (a, d, u, p, f) in _BASE_POS]
+ARTIKEL   = [(d, u, _mk(p)) for (d, u, p) in _BASE_ART]
 
 COMPANY = dict(
     name="Mobil in Time AG", strasse="Mattenstrasse 3", plz="8253 Diessenhofen",
