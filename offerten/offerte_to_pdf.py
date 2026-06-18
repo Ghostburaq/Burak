@@ -63,20 +63,37 @@ def read_workbook(src):
             preis[str(d).strip()] = (ar.cell(row=r, column=2).value,
                                      ar.cell(row=r, column=3).value)
 
-    # Kunde + Meta
+    # Kunde
     kunde = [of[f"A{r}"].value for r in (8, 9, 10, 11)]
     kunde = [k for k in kunde if k]
-    nr        = of["G8"].value
-    datum     = of["G9"].value
-    mietbeginn= of["G10"].value
-    mietende  = of["G11"].value
-    mindest   = of["G13"].value
-    zeitraum = ""
-    if isinstance(mietbeginn, (datetime.date, datetime.datetime)) and \
-       isinstance(mietende, (datetime.date, datetime.datetime)):
-        zeitraum = f"{(mietende - mietbeginn).days + 1} Tage"
+    nr = of["G8"].value
+
+    # Meta-Block generisch lesen (Label F8..F13, Wert G8..G13)
+    raw = {}
+    meta = []
+    for r in range(8, 14):
+        lab = of.cell(row=r, column=6).value
+        val = of.cell(row=r, column=7).value
+        if lab:
+            raw[str(lab).strip().lower()] = val
+            meta.append([str(lab).strip(), val])
+    # Datumsfelder für die Mietzeitraum-Formel auflösen
+    mb, me = raw.get("mietbeginn"), raw.get("mietende")
+    for row in meta:
+        lab, val = row
+        if isinstance(val, str) and val.startswith("="):
+            if "mietzeitraum" in lab.lower() and \
+               isinstance(mb, (datetime.date, datetime.datetime)) and \
+               isinstance(me, (datetime.date, datetime.datetime)):
+                row[1] = f"{(me - mb).days + 1} Tage"
+            else:
+                row[1] = ""   # nicht auswertbare Formel ausblenden
+        else:
+            row[1] = fmt_date(val)
 
     # Positionen einlesen (Tabellenkopf in Zeile 21, Daten ab 22)
+    subtitle = of["A19"].value or "Preisaufstellung"
+    headers = [of.cell(row=21, column=c).value for c in range(1, 8)]
     positions = []
     for r in range(22, of.max_row + 1):
         desc = of.cell(row=r, column=3).value
@@ -114,10 +131,9 @@ def read_workbook(src):
     endbetrag= round(netto + mwst_b, 2)
 
     return dict(
-        stamm=stamm, kunde=kunde, nr=nr, datum=datum, mietbeginn=mietbeginn,
-        mietende=mietende, mindest=mindest, zeitraum=zeitraum,
-        positions=positions, subtotal=subtotal, rabatt_b=rabatt_b,
-        netto=netto, mwst_b=mwst_b, endbetrag=endbetrag,
+        stamm=stamm, kunde=kunde, nr=nr, meta=meta, headers=headers,
+        subtitle=subtitle, positions=positions, subtotal=subtotal,
+        rabatt_b=rabatt_b, netto=netto, mwst_b=mwst_b, endbetrag=endbetrag,
     )
 
 
@@ -192,24 +208,16 @@ def build_pdf(data, dst):
     for line in data["kunde"][1:]:
         pdf.set_x(15); pdf.cell(90, 4.5, _t(line), new_x="LMARGIN", new_y="NEXT")
 
-    # Meta-Box rechts
-    meta = [
-        ("Offerte-Nr.", _t(data["nr"])),
-        ("Datum",       fmt_date(data["datum"])),
-        ("Mietbeginn",  fmt_date(data["mietbeginn"])),
-        ("Mietende",    fmt_date(data["mietende"])),
-        ("Mietzeitraum",_t(data["zeitraum"])),
-        ("Mindestmiete",_t(data["mindest"])),
-    ]
+    # Meta-Box rechts (generisch aus der Mappe)
     pdf.set_xy(120, y0 - 2)
     pdf.set_font("Helvetica", "B", 13); pdf.set_text_color(*DARK)
     pdf.cell(75, 7, "OFFERTE", align="R", new_x="LEFT", new_y="NEXT")
-    for lab, val in meta:
-        pdf.set_x(120)
+    for lab, val in data["meta"]:
+        pdf.set_x(112)
         pdf.set_font("Helvetica", "B", 8); pdf.set_text_color(*GREY)
-        pdf.cell(33, 4.8, lab, align="R")
+        pdf.cell(28, 4.8, _t(lab), align="R")
         pdf.set_font("Helvetica", "", 9); pdf.set_text_color(*DARK)
-        pdf.cell(42, 4.8, val, align="R", new_x="LEFT", new_y="NEXT")
+        pdf.cell(55, 4.8, _t(val), align="R", new_x="LEFT", new_y="NEXT")
 
     # ----- Anrede + Einleitung
     pdf.ln(6)
@@ -231,59 +239,59 @@ def build_pdf(data, dst):
     pdf.ln(2)
     pdf.set_x(15)
     pdf.set_font("Helvetica", "B", 10)
-    pdf.multi_cell(180, 5, "Preisaufstellung - Preise reflektieren Mengen")
+    pdf.multi_cell(180, 5, _t(data["subtitle"]))
     pdf.ln(1)
 
-    # ----- Positionstabelle
-    # Spalten: Pos | Anz | Beschreibung | Einh. | Preis/Wo. | Wo. | Position
-    cw = [10, 12, 86, 14, 24, 11, 23]   # Summe = 180
-    headers = ["Pos", "Anz", "Beschreibung", "Einh.", "Preis/Wo.", "Wo.", "Position"]
-    aligns  = ["C", "C", "L", "C", "R", "C", "R"]
+    # ----- Positionstabelle (Spalten dynamisch aus den Kopfzeilen)
+    # Index: 0 Pos | 1 Menge | 2 Beschreibung | 3 Einheit | 4 Preis | 5 Faktor | 6 Total
+    base   = {0: 10, 1: 13, 3: 15, 4: 26, 5: 12, 6: 25}   # 2 (Beschr.) flexibel
+    aligns = {0: "C", 1: "C", 2: "L", 3: "C", 4: "R", 5: "C", 6: "R"}
+    visible = [i for i, h in enumerate(data["headers"]) if str(h or "").strip()]
+    if 2 not in visible:
+        visible = sorted(set(visible) | {2})
+    descw = 180 - sum(base[i] for i in visible if i != 2)
+    cw = {i: (descw if i == 2 else base[i]) for i in visible}
+    DESC = 2
+
     pdf.set_x(15)
     pdf.set_fill_color(*DARK); pdf.set_text_color(255, 255, 255)
     pdf.set_font("Helvetica", "B", 8.5)
-    for w, h, a in zip(cw, headers, aligns):
-        pdf.cell(w, 7, h, align=a, fill=True)
+    for i in visible:
+        pdf.cell(cw[i], 7, _t(data["headers"][i]), align=aligns[i], fill=True)
     pdf.ln(7)
 
+    def cell_text(i, p, nr):
+        if i == 0: return str(nr)
+        if i == 1: return f"{p['anz']:g}"
+        if i == 3: return _t(p["unit"])
+        if i == 4: return chf(p["price"])
+        if i == 5: return f"{p['wochen']:g}"
+        if i == 6: return chf(p["total"])
+        return ""
+
     pdf.set_font("Helvetica", "", 8.5)
-    for i, p in enumerate(data["positions"], start=1):
-        zebra = (i % 2 == 0)
-        # Höhe anhand der Beschreibung bestimmen
+    for nr, p in enumerate(data["positions"], start=1):
+        zebra = (nr % 2 == 0)
         desc = _t(p["desc"])
         pdf.set_text_color(*DARK)
-        lines = pdf.multi_cell(cw[2], 4.6, desc, dry_run=True, output="LINES")
-        nlines = max(1, len(lines))
-        rh = max(6.5, nlines * 4.6 + 1.8)
+        lines = pdf.multi_cell(cw[DESC], 4.6, desc, dry_run=True, output="LINES")
+        rh = max(6.5, max(1, len(lines)) * 4.6 + 1.8)
         x0, y = 15, pdf.get_y()
         if y + rh > pdf.h - 18:
             pdf.add_page(); y = pdf.get_y()
         if zebra:
-            pdf.set_fill_color(*ZEBRA)
-            pdf.rect(x0, y, sum(cw), rh, style="F")
+            pdf.set_fill_color(*ZEBRA); pdf.rect(x0, y, 180, rh, style="F")
         pdf.set_draw_color(*LINE); pdf.set_line_width(0.15)
-        pdf.line(x0, y + rh, x0 + sum(cw), y + rh)
-        # Zellen
-        cells = [
-            (cw[0], str(i), "C"),
-            (cw[1], f"{p['anz']:g}", "C"),
-            (None, None, None),                       # Beschreibung separat
-            (cw[3], _t(p["unit"]), "C"),
-            (cw[4], chf(p["price"]), "R"),
-            (cw[5], f"{p['wochen']:g}", "C"),
-            (cw[6], chf(p["total"]), "R"),
-        ]
+        pdf.line(x0, y + rh, x0 + 180, y + rh)
         cx = x0
-        for idx, (w, txt, a) in enumerate(cells):
-            if idx == 2:
-                # Beschreibung mehrzeilig, vertikal leicht eingerückt
+        for i in visible:
+            if i == DESC:
                 pdf.set_xy(cx, y + 1.4)
-                pdf.multi_cell(cw[2], 4.6, desc, align="L")
-                cx += cw[2]
-                continue
-            pdf.set_xy(cx, y + (rh - 4.6) / 2)
-            pdf.cell(w, 4.6, txt, align=a)
-            cx += w
+                pdf.multi_cell(cw[DESC], 4.6, desc, align="L")
+            else:
+                pdf.set_xy(cx, y + (rh - 4.6) / 2)
+                pdf.cell(cw[i], 4.6, cell_text(i, p, nr), align=aligns[i])
+            cx += cw[i]
         pdf.set_xy(x0, y + rh)
 
     # ----- Summenblock (rechtsbündig)
