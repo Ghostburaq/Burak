@@ -2,3 +2,6 @@ __pycache__/
 *.pyc
 .DS_Store
 /tmp/
+
+# Generierte Build-Artefakte (z.B. heruntergeladene App-ZIP)
+*.zip
