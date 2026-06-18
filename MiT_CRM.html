@@ -953,6 +953,49 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .nearby-name{font-weight:600;font-size:13px;color:var(--text)}
 .nearby-meta{font-size:11px;color:var(--text-mute);margin-top:1px}
 
+/* Stocks widget */
+.stock-row{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--line);font-size:13px}
+.stock-row:last-of-type{border-bottom:none}
+.stock-name{color:var(--text);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stock-price{font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--text)}
+.stock-cur{font-size:10px;color:var(--text-mute);margin-left:2px;font-weight:500}
+.stock-change{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12px;min-width:80px;text-align:right}
+.stock-up{color:var(--good)}
+.stock-down{color:var(--danger)}
+.stock-meta{font-size:10.5px;color:var(--text-dim);text-align:right;margin-top:6px}
+
+/* News widget */
+.news-item{display:block;padding:8px 0;border-bottom:1px solid var(--line);text-decoration:none;color:inherit;transition:all 0.12s}
+.news-item:last-of-type{border-bottom:none}
+.news-item:hover{margin:0 -8px;padding-left:8px;padding-right:8px;background:var(--bg-hover);border-radius:var(--r-sm)}
+.news-title{font-size:12.5px;line-height:1.4;color:var(--text);font-weight:600}
+.news-meta{font-size:10.5px;color:var(--text-mute);margin-top:2px}
+
+/* Nearby — opt-in UI */
+.nearby-intro{font-size:13px;color:var(--text);margin-bottom:10px;line-height:1.4}
+.nearby-actions{margin-bottom:10px}
+.nearby-or{text-align:center;font-size:10.5px;color:var(--text-dim);margin:8px 0;letter-spacing:0.08em;text-transform:uppercase}
+.nearby-input{width:100%;padding:8px 10px;background:var(--bg-input);border:1px solid var(--line2);
+  border-radius:var(--r-sm);font-size:13px;color:var(--text);outline:none;margin-bottom:6px}
+.nearby-input:focus{border-color:var(--brand)}
+.nearby-from{font-size:11px;color:var(--text-mute);padding-bottom:8px;border-bottom:1px solid var(--line);margin-bottom:8px}
+.nearby-from a{color:var(--brand);text-decoration:none}
+.nearby-from a:hover{text-decoration:underline}
+
+/* Apple-style widget polish — subtle gradient borders, hover lift, smooth bg */
+.widget{
+  background:linear-gradient(180deg, var(--bg-card) 0%, color-mix(in srgb, var(--bg-card) 96%, var(--brand) 4%) 100%);
+  transition:transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+.widget:hover{
+  transform:translateY(-2px);
+  box-shadow:0 6px 22px rgba(20,30,50,0.10), 0 1px 2px rgba(20,30,50,0.04);
+  border-color:rgba(200,16,46,0.18);
+}
+@supports (backdrop-filter: blur(8px)){
+  .widget{backdrop-filter:saturate(140%) blur(2px)}
+}
+
 /* Widget toggles in settings */
 .widget-settings-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:6px}
 .widget-toggle{display:flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid var(--line);
@@ -1547,9 +1590,35 @@ input,select,textarea{font-family:inherit;font-size:14px}
             Live-Widgets oben auf der "Heute"-Seite. Wetter und Währungs-Kurse holen sich ihre Daten kostenlos im Hintergrund (kein API-Key nötig).
           </p>
           <div id="widgetSettings" class="widget-settings-list"></div>
-          <div class="row gap-md mt-md">
-            <input id="weatherCityInput" placeholder="Wetter-Stadt z.B. Zürich, Basel, Genf" style="max-width:280px">
-            <button class="btn btn-primary btn-sm" onclick="window.saveWeatherCity()">Stadt speichern</button>
+          <div class="form-grid mt-md">
+            <div class="field">
+              <label>🌤 Wetter-Stadt</label>
+              <div class="row gap-md">
+                <input id="weatherCityInput" placeholder="Zürich, Basel, Genf …">
+                <button class="btn btn-primary btn-sm" onclick="window.saveWeatherCity()">Speichern</button>
+              </div>
+            </div>
+            <div class="field">
+              <label>📈 Aktien-Symbole (Komma-getrennt, Yahoo Finance Format)</label>
+              <div class="row gap-md">
+                <input id="stocksInput" placeholder="^SSMI,ROG.SW,NESN.SW,TSLA,AAPL …">
+                <button class="btn btn-primary btn-sm" onclick="window.saveStockSymbols()">Speichern</button>
+              </div>
+            </div>
+            <div class="field full">
+              <label>📰 News-Feed</label>
+              <div class="row gap-md">
+                <select id="newsFeedSelect" style="max-width:300px">
+                  <option>NZZ Wirtschaft</option>
+                  <option>Tagesanzeiger</option>
+                  <option>BFE Aktuelles</option>
+                  <option>Heise</option>
+                  <option>TechCrunch</option>
+                </select>
+                <button class="btn btn-primary btn-sm" onclick="window.saveNewsFeed()">Speichern</button>
+                <button class="btn btn-ghost btn-sm" onclick="window.resetGeoConsent()" title="Standort-Daten zurücksetzen">🔄 Standort-Wahl zurücksetzen</button>
+              </div>
+            </div>
           </div>
 
           <div class="section-h">🛠 Werkzeuge</div>
@@ -2310,7 +2379,7 @@ function renderToday(){
 //  WELCOME DASHBOARD — Live widgets
 // ════════════════════════════════════════════════════════════════════════
 const WIDGETS_KEY = 'mit_crm_widgets';
-const WIDGETS_DEFAULTS = ['clock','weather','sunRise','currency','pomodoro','stats','quote','nearby'];
+const WIDGETS_DEFAULTS = ['clock','weather','sunRise','currency','stocks','news','pomodoro','stats','quote','nearby'];
 const WEATHER_CITY_KEY = 'mit_crm_weather_city';
 const WEATHER_CACHE_KEY = 'mit_crm_weather_cache';
 const FX_CACHE_KEY = 'mit_crm_fx_cache';
@@ -2355,6 +2424,8 @@ function renderWelcomeDashboard(){
   if(enabled.has('weather'))  html += widgetWeatherHTML();
   if(enabled.has('sunRise'))  html += widgetSunHTML();
   if(enabled.has('currency')) html += widgetCurrencyHTML();
+  if(enabled.has('stocks'))   html += widgetStocksHTML();
+  if(enabled.has('news'))     html += widgetNewsHTML();
   if(enabled.has('pomodoro')) html += widgetPomodoroHTML();
   if(enabled.has('stats'))    html += widgetStatsHTML();
   if(enabled.has('quote'))    html += widgetQuoteHTML();
@@ -2370,6 +2441,8 @@ function renderWelcomeDashboard(){
   if(enabled.has('weather')) fetchWeather();
   if(enabled.has('sunRise')) fetchSun();
   if(enabled.has('currency')) fetchCurrency();
+  if(enabled.has('stocks')) fetchStocks();
+  if(enabled.has('news')) fetchNews();
   if(enabled.has('nearby')) requestNearby();
   // Pomodoro state restore
   if(enabled.has('pomodoro')) updatePomodoroDisplay();
@@ -2649,20 +2722,63 @@ function widgetQuoteHTML(){
 
 // ─── Widget 8: Nearby contacts (Geolocation) ──────────────────────────
 function widgetNearbyHTML(){
+  const consent = localStorage.getItem('mit_crm_geo_consent');
+  const manual = localStorage.getItem('mit_crm_manual_loc');
   return `<div class="widget widget-nearby">
     <div class="widget-h"><span>📍 Kunden in der Nähe</span></div>
-    <div id="wNearbyBody"><div class="widget-loading">Standort wird abgefragt…</div></div>
+    <div id="wNearbyBody">
+      ${consent === 'yes' || manual ? '<div class="widget-loading">Berechne Distanzen…</div>' : `
+        <div class="nearby-intro">Wo bist du gerade?</div>
+        <div class="nearby-actions">
+          <button class="btn btn-tiny btn-primary" onclick="window.askGeoConsent()">📍 Standort verwenden</button>
+        </div>
+        <div class="nearby-or">— oder manuell —</div>
+        <input type="text" id="wManualLoc" class="nearby-input" placeholder="z.B. Zürich, Bern, Basel …" list="salesRepList"
+          onkeydown="if(event.key==='Enter')window.setManualLocation()">
+        <button class="btn btn-tiny btn-ghost" style="width:100%" onclick="window.setManualLocation()">Suchen</button>
+      `}
+    </div>
   </div>`;
 }
+window.askGeoConsent = function(){
+  localStorage.setItem('mit_crm_geo_consent','yes');
+  localStorage.removeItem('mit_crm_manual_loc');
+  renderWelcomeDashboard();
+};
+window.resetGeoConsent = function(){
+  localStorage.removeItem('mit_crm_geo_consent');
+  localStorage.removeItem('mit_crm_manual_loc');
+  renderWelcomeDashboard();
+};
+window.setManualLocation = async function(){
+  const inp = document.getElementById('wManualLoc'); if(!inp) return;
+  const city = inp.value.trim();
+  if(!city){ showToast('Bitte Stadt eintragen','error'); return; }
+  let lat, lon;
+  if(KNOWN_CITIES[city]){ [lat,lon] = KNOWN_CITIES[city]; }
+  else {
+    try{
+      const g = await fetch('https://geocoding-api.open-meteo.com/v1/search?count=1&language=de&format=json&name='+encodeURIComponent(city));
+      const gd = await g.json();
+      if(!gd.results || !gd.results[0]){ showToast('Stadt nicht gefunden','error'); return; }
+      lat = gd.results[0].latitude; lon = gd.results[0].longitude;
+    }catch(e){ showToast('Geocoder offline','error'); return; }
+  }
+  localStorage.setItem('mit_crm_manual_loc', JSON.stringify({city, lat, lon}));
+  localStorage.removeItem('mit_crm_geo_consent');
+  renderWelcomeDashboard();
+};
+
 function requestNearby(){
   const body = document.getElementById('wNearbyBody'); if(!body) return;
-  if(!navigator.geolocation){ body.innerHTML = '<div class="widget-error">Geolocation nicht unterstützt</div>'; return; }
-  navigator.geolocation.getCurrentPosition(async (pos) => {
-    const lat = pos.coords.latitude, lon = pos.coords.longitude;
-    // Resolve coordinates for contacts via Open-Meteo geocoding (best effort)
+  const consent = localStorage.getItem('mit_crm_geo_consent');
+  const manualRaw = localStorage.getItem('mit_crm_manual_loc');
+  // No consent yet AND no manual location → don't fire geo
+  if(consent !== 'yes' && !manualRaw) return;
+
+  const finishWith = async (lat, lon, fromLabel) => {
     const candidates = STATE.contacts.filter(c => c.ort && !['Gewonnen','Verloren','Pausiert','Erledigt'].includes(c.status));
-    if(!candidates.length){ body.innerHTML = '<div class="widget-error tx-mute">Keine offenen Kontakte mit Einsatzort</div>'; return; }
-    // Use cached city coords to avoid hitting API for each
+    if(!candidates.length){ body.innerHTML = renderNearbyControls(fromLabel) + '<div class="widget-error tx-mute">Keine offenen Kontakte mit Einsatzort</div>'; return; }
     const cityCache = JSON.parse(localStorage.getItem('mit_crm_city_cache')||'{}');
     const withDist = [];
     for(const c of candidates.slice(0,20)){
@@ -2676,30 +2792,168 @@ function requestNearby(){
           if(gd.results && gd.results[0]){ cLat = gd.results[0].latitude; cLon = gd.results[0].longitude; cityCache[c.ort] = [cLat,cLon]; }
         }catch(e){}
       }
-      if(cLat != null){
-        const dist = haversineKm(lat, lon, cLat, cLon);
-        withDist.push({c, dist});
-      }
+      if(cLat != null){ withDist.push({c, dist: haversineKm(lat, lon, cLat, cLon)}); }
     }
     localStorage.setItem('mit_crm_city_cache', JSON.stringify(cityCache));
     withDist.sort((a,b)=>a.dist-b.dist);
     const top = withDist.slice(0,5);
-    if(!top.length){ body.innerHTML = '<div class="widget-error tx-mute">Keine Koordinaten gefunden</div>'; return; }
-    body.innerHTML = top.map(x => `
+    if(!top.length){ body.innerHTML = renderNearbyControls(fromLabel) + '<div class="widget-error tx-mute">Keine Koordinaten gefunden</div>'; return; }
+    body.innerHTML = renderNearbyControls(fromLabel) + top.map(x => `
       <div class="nearby-item" onclick="window.openContact('${x.c.id}')">
         <div class="nearby-name">${escHtml(x.c.firma)}</div>
         <div class="nearby-meta">${escHtml(x.c.ort)} · ${x.dist.toFixed(0)} km</div>
       </div>
     `).join('');
-  }, (err) => {
-    body.innerHTML = '<div class="widget-error tx-mute">Standort verweigert oder offline</div>';
-  }, {timeout:8000, maximumAge:5*60*1000});
+  };
+
+  if(manualRaw){
+    try{ const m = JSON.parse(manualRaw); finishWith(m.lat, m.lon, m.city); return; }catch(e){}
+  }
+  // Browser geolocation (only when user explicitly consented)
+  if(!navigator.geolocation){ body.innerHTML = renderNearbyControls('') + '<div class="widget-error">Geolocation nicht unterstützt</div>'; return; }
+  navigator.geolocation.getCurrentPosition(
+    (pos) => finishWith(pos.coords.latitude, pos.coords.longitude, 'Mein Standort'),
+    () => { body.innerHTML = renderNearbyControls('') + '<div class="widget-error tx-mute">Standort verweigert oder offline · <a href="#" onclick="event.preventDefault();window.resetGeoConsent()">Reset</a></div>'; },
+    {timeout:8000, maximumAge:5*60*1000}
+  );
 }
+function renderNearbyControls(fromLabel){
+  return `<div class="nearby-from">📍 von <strong>${escHtml(fromLabel||'Mein Standort')}</strong> · <a href="#" onclick="event.preventDefault();window.resetGeoConsent()">ändern</a></div>`;
+}
+
 function haversineKm(lat1, lon1, lat2, lon2){
   const R = 6371; const toRad = x => x*Math.PI/180;
   const dLat = toRad(lat2-lat1), dLon = toRad(lon2-lon1);
   const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
   return 2*R*Math.asin(Math.sqrt(a));
+}
+
+// ─── Widget 9: Aktien (Yahoo Finance v8, free, CORS-OK) ───────────────
+const STOCKS_KEY = 'mit_crm_stocks_symbols';
+const STOCKS_CACHE_KEY = 'mit_crm_stocks_cache';
+const STOCKS_DEFAULT = '^SSMI,ROG.SW,NESN.SW,NOVN.SW,UBSG.SW,SCMN.SW';
+const STOCKS_NAMES = {
+  '^SSMI':'SMI Index','^GSPC':'S&P 500','^IXIC':'Nasdaq','^DJI':'Dow Jones','^GDAXI':'DAX',
+  'ROG.SW':'Roche','NESN.SW':'Nestlé','NOVN.SW':'Novartis','UBSG.SW':'UBS','SCMN.SW':'Swisscom',
+  'ZURN.SW':'Zurich','ABBN.SW':'ABB','HOLN.SW':'Holcim','CFR.SW':'Richemont','GIVN.SW':'Givaudan',
+  'TSLA':'Tesla','AAPL':'Apple','MSFT':'Microsoft','GOOGL':'Google','AMZN':'Amazon','NVDA':'Nvidia'
+};
+function loadStockSymbols(){ return (localStorage.getItem(STOCKS_KEY) || STOCKS_DEFAULT).split(',').map(s=>s.trim()).filter(Boolean); }
+window.saveStockSymbols = function(){
+  const v = document.getElementById('stocksInput').value.trim() || STOCKS_DEFAULT;
+  localStorage.setItem(STOCKS_KEY, v);
+  localStorage.removeItem(STOCKS_CACHE_KEY);
+  renderWelcomeDashboard();
+  showToast('✓ Aktien-Liste gespeichert','success');
+};
+
+function widgetStocksHTML(){
+  return `<div class="widget widget-stocks">
+    <div class="widget-h"><span>📈 Börse / Aktien</span><span class="widget-h-sub">Yahoo Finance</span></div>
+    <div id="wStocksBody"><div class="widget-loading">Lade Kurse…</div></div>
+  </div>`;
+}
+async function fetchStocks(){
+  const body = document.getElementById('wStocksBody'); if(!body) return;
+  const symbols = loadStockSymbols();
+  try{
+    const cached = JSON.parse(localStorage.getItem(STOCKS_CACHE_KEY)||'null');
+    if(cached && cached.symbols === symbols.join(',') && Date.now() - cached.ts < 5*60*1000){ renderStocks(cached.data, body); return; }
+    // Yahoo Finance v8 chart endpoint — one fetch per symbol, fast and CORS-OK
+    const results = await Promise.all(symbols.slice(0,8).map(async sym => {
+      try{
+        const r = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/'+encodeURIComponent(sym)+'?interval=1d&range=1d');
+        const d = await r.json();
+        const meta = d.chart && d.chart.result && d.chart.result[0] && d.chart.result[0].meta;
+        if(!meta) return null;
+        const price = meta.regularMarketPrice;
+        const prev  = meta.chartPreviousClose || meta.previousClose || price;
+        const ch    = price - prev;
+        const pct   = prev ? (ch/prev)*100 : 0;
+        return {sym, name:STOCKS_NAMES[sym]||sym, price, ch, pct, currency: meta.currency||''};
+      }catch(e){ return null; }
+    }));
+    const ok = results.filter(Boolean);
+    if(!ok.length) throw new Error('Yahoo Finance offline');
+    localStorage.setItem(STOCKS_CACHE_KEY, JSON.stringify({symbols:symbols.join(','), data:ok, ts:Date.now()}));
+    renderStocks(ok, body);
+  }catch(err){
+    body.innerHTML = '<div class="widget-error">Aktien offline · '+escHtml(err.message)+'</div>';
+  }
+}
+function renderStocks(list, body){
+  body.innerHTML = list.map(s => {
+    const up = s.ch >= 0;
+    const arrow = up ? '▲' : '▼';
+    const cls = up ? 'stock-up' : 'stock-down';
+    return `<div class="stock-row">
+      <div class="stock-name">${escHtml(s.name)}</div>
+      <div class="stock-price">${s.price.toFixed(2)}<span class="stock-cur">${escHtml(s.currency)}</span></div>
+      <div class="stock-change ${cls}">${arrow} ${Math.abs(s.pct).toFixed(2)}%</div>
+    </div>`;
+  }).join('') + `<div class="stock-meta">Aktualisiert ${new Date().toLocaleTimeString('de-CH',{hour:'2-digit',minute:'2-digit'})}</div>`;
+}
+
+// ─── Widget 10: News (RSS via rss2json) ───────────────────────────────
+const NEWS_FEED_KEY = 'mit_crm_news_feed';
+const NEWS_CACHE_KEY = 'mit_crm_news_cache';
+const NEWS_FEEDS = {
+  'NZZ Wirtschaft': 'https://www.nzz.ch/wirtschaft.rss',
+  'Tagesanzeiger':  'https://www.tagesanzeiger.ch/rss.html',
+  'BFE Aktuelles':  'https://www.bfe.admin.ch/bfe/de/home/news-medien/medienmitteilungen.rss.html',
+  'Heise':          'https://www.heise.de/rss/heise-atom.xml',
+  'TechCrunch':     'https://techcrunch.com/feed/'
+};
+function loadNewsFeed(){ return localStorage.getItem(NEWS_FEED_KEY) || 'NZZ Wirtschaft'; }
+window.saveNewsFeed = function(){
+  const sel = document.getElementById('newsFeedSelect');
+  if(!sel) return;
+  localStorage.setItem(NEWS_FEED_KEY, sel.value);
+  localStorage.removeItem(NEWS_CACHE_KEY);
+  renderWelcomeDashboard();
+  showToast('✓ News-Feed gespeichert','success');
+};
+
+function widgetNewsHTML(){
+  const feed = loadNewsFeed();
+  return `<div class="widget widget-news">
+    <div class="widget-h"><span>📰 News</span><span class="widget-h-sub">${escHtml(feed)}</span></div>
+    <div id="wNewsBody"><div class="widget-loading">Lade News…</div></div>
+  </div>`;
+}
+async function fetchNews(){
+  const body = document.getElementById('wNewsBody'); if(!body) return;
+  const feedName = loadNewsFeed();
+  const url = NEWS_FEEDS[feedName] || NEWS_FEEDS['NZZ Wirtschaft'];
+  try{
+    const cached = JSON.parse(localStorage.getItem(NEWS_CACHE_KEY)||'null');
+    if(cached && cached.feed === feedName && Date.now() - cached.ts < 60*60*1000){ renderNews(cached.items, body); return; }
+    const r = await fetch('https://api.rss2json.com/v1/api.json?rss_url='+encodeURIComponent(url));
+    const d = await r.json();
+    if(d.status !== 'ok' || !d.items) throw new Error('News-API offline');
+    const items = d.items.slice(0,5).map(i => ({
+      title: i.title,
+      link:  i.link,
+      date:  i.pubDate
+    }));
+    localStorage.setItem(NEWS_CACHE_KEY, JSON.stringify({feed:feedName, items, ts:Date.now()}));
+    renderNews(items, body);
+  }catch(err){
+    body.innerHTML = '<div class="widget-error">News offline · '+escHtml(err.message)+'</div>';
+  }
+}
+function renderNews(items, body){
+  body.innerHTML = items.map(it => {
+    let when = '';
+    try{ const d = new Date(it.date); if(!isNaN(d)){
+      const diffH = Math.round((Date.now() - d.getTime()) / 3600000);
+      when = diffH < 24 ? diffH+'h' : Math.round(diffH/24)+'d';
+    } }catch(e){}
+    return `<a class="news-item" href="${escHtml(it.link)}" target="_blank" rel="noopener">
+      <div class="news-title">${escHtml(it.title)}</div>
+      <div class="news-meta">${when?'vor '+when:''}</div>
+    </a>`;
+  }).join('');
 }
 
 // ─── Widget Settings UI ───────────────────────────────────────────────
@@ -2708,10 +2962,12 @@ const WIDGET_LIST = [
   {id:'weather',  label:'🌤 Wetter (live, ohne Key)'},
   {id:'sunRise',  label:'☀ Sonnenauf-/-untergang + Tageslänge'},
   {id:'currency', label:'💱 Währungskurse CHF→EUR/USD/GBP/JPY'},
+  {id:'stocks',   label:'📈 Aktien & Börse (SMI, Roche, Tesla, …)'},
+  {id:'news',     label:'📰 News (NZZ, BFE, Tages-Anzeiger, Heise)'},
   {id:'pomodoro', label:'🍅 Pomodoro-Fokus-Timer (25/50/5 min)'},
   {id:'stats',    label:'📊 Tages-Stats + Werktags-Streak'},
   {id:'quote',    label:'💡 Sales-Zitat des Tages'},
-  {id:'nearby',   label:'📍 Kunden in der Nähe (Geolocation)'}
+  {id:'nearby',   label:'📍 Kunden in der Nähe (opt-in oder manuell)'}
 ];
 function renderWidgetSettings(){
   const wrap = document.getElementById('widgetSettings'); if(!wrap) return;
@@ -7809,6 +8065,8 @@ function init(){
   renderRepSettings();
   renderWidgetSettings();
   const wci = document.getElementById('weatherCityInput'); if(wci) wci.value = loadWeatherCity();
+  const si = document.getElementById('stocksInput'); if(si) si.value = loadStockSymbols().join(',');
+  const nfs = document.getElementById('newsFeedSelect'); if(nfs) nfs.value = loadNewsFeed();
   populateSalesRepDatalist();
   // One-time migration of legacy localStorage attachments into IndexedDB
   setTimeout(()=>{ migrateAttachmentsFromLocalStorage().catch(e=>console.warn(e)); }, 500);
