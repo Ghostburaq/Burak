@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#2bb673" />
+  <meta name="description" content="Lernfuchs – Französisch & Englisch lernen mit deutscher Hilfe. Mit Lern-Timer, Streak, XP und Level." />
+  <title>Lernfuchs 🦊 – Sprachen lernen</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div id="app">
+    <header id="topbar">
+      <div class="brand"><span class="fox">🦊</span> Lernfuchs</div>
+      <div class="stats">
+        <span class="stat streak" title="Tage-Serie">🔥 <b id="stat-streak">0</b></span>
+        <span class="stat xp" title="Erfahrungspunkte">⭐ <b id="stat-xp">0</b></span>
+        <button class="stat level" id="level-pill" title="Level">
+          <span id="level-emoji">🦊</span> <b id="stat-level">1</b>
+        </button>
+        <button class="goal-ring" id="goal-ring" title="Tagesziel">
+          <span class="goal-ring-inner"><span id="goal-ring-label">0/15′</span></span>
+        </button>
+      </div>
+    </header>
+
+    <main id="main"><!-- dynamischer Inhalt --></main>
+
+    <nav id="bottomnav">
+      <button class="nav-btn active" data-tab="learn"><span>📚</span>Lernen</button>
+      <button class="nav-btn" data-tab="timer"><span>⏱️</span>Timer</button>
+      <button class="nav-btn" data-tab="stats"><span>📊</span>Statistik</button>
+      <button class="nav-btn" data-tab="profile"><span>👤</span>Profil</button>
+    </nav>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/gamification.js"></script>
+  <script src="js/timer.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

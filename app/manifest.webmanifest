@@ -1,0 +1,17 @@
+{
+  "name": "Lernfuchs – Sprachen lernen",
+  "short_name": "Lernfuchs",
+  "description": "Französisch & Englisch lernen mit deutscher Hilfe – mit Lern-Timer, Streak, XP und Level.",
+  "lang": "de",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f4f7f5",
+  "theme_color": "#2bb673",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
