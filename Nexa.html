@@ -4,6 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nexa · Mobil in Time AG</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'><rect x='2' y='2' width='36' height='36' rx='11' fill='%230071e3'/><path d='M13 28 V12 L27 28 V12' fill='none' stroke='white' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+
+<!-- Apply saved/system theme before paint to avoid flash -->
+<script>
+  (function(){
+    try{
+      var t = localStorage.getItem('nexa_theme');
+      if(t!=='light' && t!=='dark'){
+        t = (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+      }
+      document.documentElement.setAttribute('data-theme', t);
+    }catch(e){}
+  })();
+</script>
 
 <!-- Fonts — Inter as a clean SF-Pro fallback for non-Apple platforms -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -65,6 +79,52 @@
   --font-mono:'SF Mono',ui-monospace,'JetBrains Mono',Menlo,Consolas,monospace;
 }
 
+/* ════════════════════════════════════════════════════════════ */
+/*  DARK THEME — Apple "Dark Mode" surfaces                     */
+/* ════════════════════════════════════════════════════════════ */
+[data-theme="dark"]{
+  --bg0:#000000;          /* page    — Apple true black */
+  --bg1:#1c1c1e;          /* panels  */
+  --bg2:#2c2c2e;          /* fills / light grey equiv */
+  --bg3:#3a3a3c;          /* hover */
+  --bg-card:#1c1c1e;
+  --bg-input:#2c2c2e;
+  --bg-hover:rgba(10,132,255,0.16);
+
+  --line:rgba(255,255,255,0.10);
+  --line2:rgba(255,255,255,0.16);
+  --line-strong:rgba(255,255,255,0.30);
+
+  --text:#f5f5f7;
+  --text-mute:#aeaeb2;
+  --text-dim:#8e8e93;
+
+  /* Brighter blue reads better on dark, matches Apple's dark accent */
+  --brand:#0a84ff;
+  --brand-2:#409cff;
+  --brand-soft:rgba(10,132,255,0.16);
+
+  --good:#30d158;
+  --good-soft:rgba(48,209,88,0.16);
+  --warn:#ff9f0a;
+  --warn-soft:rgba(255,159,10,0.16);
+  --danger:#ff453a;
+  --danger-soft:rgba(255,69,58,0.16);
+  --info:#0a84ff;
+  --info-soft:rgba(10,132,255,0.16);
+
+  --shadow-1:0 1px 4px rgba(0,0,0,0.45);
+  --shadow-2:0 18px 60px rgba(0,0,0,0.65);
+  --shadow-card:0 1px 2px rgba(0,0,0,0.40), 0 6px 24px rgba(0,0,0,0.45);
+}
+[data-theme="dark"] #sidebar{background:rgba(28,28,30,0.75)}
+[data-theme="dark"] .topbar{background:rgba(28,28,30,0.70)}
+[data-theme="dark"] .nav-item.active{box-shadow:0 4px 14px rgba(10,132,255,0.45)}
+[data-theme="dark"] .modal-bg{background:rgba(0,0,0,0.72)}
+[data-theme="dark"] ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.18)}
+html{background:var(--bg0)}
+html,body{transition:background-color 0.3s ease,color 0.3s ease}
+
 *,*::before,*::after{box-sizing:border-box}
 html,body{margin:0;padding:0;height:100%}
 body{
@@ -104,9 +164,12 @@ input,select,textarea{font-family:inherit;font-size:14px}
   position:relative;
 }
 .brand-block{padding:0 22px 18px;border-bottom:1px solid var(--line)}
-.brand-name{font-family:var(--font-display);font-weight:700;font-size:26px;letter-spacing:-0.03em;line-height:1}
+.brand-row{display:flex;align-items:center;gap:12px}
+.brand-mark{flex-shrink:0;border-radius:11px;box-shadow:0 5px 16px rgba(0,113,227,0.30)}
+.brand-text{min-width:0}
+.brand-name{font-family:var(--font-display);font-weight:700;font-size:23px;letter-spacing:-0.03em;line-height:1.05}
 .brand-name span{color:var(--brand)}
-.brand-sub{font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.14em;margin-top:7px;font-weight:600}
+.brand-sub{font-size:9.5px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.14em;margin-top:5px;font-weight:600;white-space:nowrap}
 
 .nav{display:flex;flex-direction:column;padding:14px 12px;gap:3px;flex:1}
 .nav-item{
@@ -539,6 +602,17 @@ input,select,textarea{font-family:inherit;font-size:14px}
 /* "Auf Erledigt setzen" button */
 .btn-done{background:#0f766e;color:#fff;font-weight:600}
 .btn-done:hover{background:#0d6660;transform:translateY(-1px);box-shadow:0 4px 12px rgba(15,118,110,0.30)}
+
+/* Theme toggle in topbar */
+.theme-btn{
+  background:var(--bg2);border:1px solid transparent;
+  width:38px;height:36px;border-radius:50%;
+  display:inline-flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:16px;line-height:1;
+  transition:background 0.18s,transform 0.12s;
+}
+.theme-btn:hover{background:var(--bg3)}
+.theme-btn:active{transform:scale(0.92)}
 
 /* Alarm bell in topbar */
 .alarm-wrap{position:relative}
@@ -1016,7 +1090,8 @@ input,select,textarea{font-family:inherit;font-size:14px}
 /* ─── Mobile responsive ─── */
 @media (max-width: 900px){
   #app{grid-template-columns:64px 1fr}
-  .brand-name,.brand-sub,.nav-shortcut,.api-status,.api-btn span{display:none}
+  .brand-text,.nav-shortcut,.api-status,.api-btn span{display:none}
+  .brand-row{justify-content:center}
   .nav-item{justify-content:center;padding:10px 8px}
   .nav-item span:not(.nav-icon){display:none}
   .nav-item .nav-badge,.nav-item .nav-icon{display:inline}
@@ -1076,8 +1151,22 @@ input,select,textarea{font-family:inherit;font-size:14px}
   <!-- ════════════════════════════════════════════════════════ -->
   <aside id="sidebar">
     <div class="brand-block">
-      <div class="brand-name">Nexa</div>
-      <div class="brand-sub">Mobil in Time AG</div>
+      <div class="brand-row">
+        <svg class="brand-mark" viewBox="0 0 40 40" width="34" height="34" aria-hidden="true">
+          <defs>
+            <linearGradient id="nexaMark" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#0a84ff"/>
+              <stop offset="1" stop-color="#0060df"/>
+            </linearGradient>
+          </defs>
+          <rect x="2" y="2" width="36" height="36" rx="11" fill="url(#nexaMark)"/>
+          <path d="M13 28 V12 L27 28 V12" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <div class="brand-text">
+          <div class="brand-name">Nexa</div>
+          <div class="brand-sub">Mobil in Time AG</div>
+        </div>
+      </div>
     </div>
     <nav class="nav">
       <button class="nav-item active" data-page="today" onclick="window.nav('today')">
@@ -1146,6 +1235,11 @@ input,select,textarea{font-family:inherit;font-size:14px}
         <kbd>/</kbd>
         <div id="globalSearchResults" class="hidden gs-results"></div>
       </div>
+
+      <!-- Theme toggle (light / dark) -->
+      <button class="theme-btn" id="themeBtn" onclick="window.toggleTheme()" title="Hell / Dunkel umschalten" aria-label="Theme umschalten">
+        <span id="themeIcon">🌙</span>
+      </button>
 
       <!-- Alarm bell with overdue/due-today counter + dropdown panel -->
       <div class="alarm-wrap" id="alarmWrap">
@@ -2816,8 +2910,8 @@ function drawTrendChart(){
       responsive:true, maintainAspectRatio:false,
       plugins:{legend:{display:false}, tooltip:{enabled:true}},
       scales:{
-        y:{beginAtZero:true, ticks:{stepSize:1,color:'#5a6478'}, grid:{color:'rgba(20,30,50,0.07)'}},
-        x:{ticks:{color:'#5a6478',maxRotation:0,autoSkip:true}, grid:{display:false}}
+        y:{beginAtZero:true, ticks:{stepSize:1,color:'#86868b'}, grid:{color:'rgba(128,128,128,0.18)'}},
+        x:{ticks:{color:'#86868b',maxRotation:0,autoSkip:true}, grid:{display:false}}
       }
     }
   });
@@ -4095,7 +4189,7 @@ function renderAnalytics(){
     anForecastChart = new Chart(fc, { type:'bar', data:{labels, datasets:[
       {label:'Gewichtet', data:Object.values(monthsMap).map(m=>m.weighted), backgroundColor:'rgba(0,113,227,0.85)'},
       {label:'Pipeline brutto', data:Object.values(monthsMap).map(m=>m.pipe-m.weighted), backgroundColor:'rgba(0,113,227,0.25)'}
-    ]}, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom',labels:{color:'#5b6678'}}}, scales:{x:{stacked:true,ticks:{color:'#5b6678'},grid:{display:false}},y:{stacked:true,beginAtZero:true,ticks:{color:'#5b6678',callback:v=>(v/1000).toFixed(0)+'k'},grid:{color:'rgba(20,30,50,0.07)'}}}}});
+    ]}, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom',labels:{color:'#86868b'}}}, scales:{x:{stacked:true,ticks:{color:'#86868b'},grid:{display:false}},y:{stacked:true,beginAtZero:true,ticks:{color:'#86868b',callback:v=>(v/1000).toFixed(0)+'k'},grid:{color:'rgba(128,128,128,0.18)'}}}}});
   }
 
   // Funnel
@@ -4121,7 +4215,7 @@ function renderAnalytics(){
   const sc = document.getElementById('anSegChart');
   if(sc && window.Chart){
     if(anSegChart) anSegChart.destroy();
-    anSegChart = new Chart(sc, { type:'bar', data:{labels:segLabels, datasets:[{label:'Win-Rate %', data:segRates, backgroundColor:'rgba(0,113,227,0.75)'}]}, options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}, scales:{x:{beginAtZero:true,max:100,ticks:{color:'#5b6678',callback:v=>v+'%'},grid:{color:'rgba(20,30,50,0.07)'}},y:{ticks:{color:'#5b6678'},grid:{display:false}}}}});
+    anSegChart = new Chart(sc, { type:'bar', data:{labels:segLabels, datasets:[{label:'Win-Rate %', data:segRates, backgroundColor:'rgba(0,113,227,0.75)'}]}, options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}, scales:{x:{beginAtZero:true,max:100,ticks:{color:'#86868b',callback:v=>v+'%'},grid:{color:'rgba(128,128,128,0.18)'}},y:{ticks:{color:'#86868b'},grid:{display:false}}}}});
   }
 
   // Cycle time: average days between status changes (using activities with newStatus)
@@ -4220,8 +4314,8 @@ function renderAktivitaeten(){
       responsive:true, maintainAspectRatio:false,
       plugins:{legend:{display:false}},
       scales:{
-        y:{beginAtZero:true, ticks:{stepSize:1,color:'#5a6478'}, grid:{color:'rgba(20,30,50,0.07)'}},
-        x:{ticks:{color:'#5a6478'}, grid:{display:false}}
+        y:{beginAtZero:true, ticks:{stepSize:1,color:'#86868b'}, grid:{color:'rgba(128,128,128,0.18)'}},
+        x:{ticks:{color:'#86868b'}, grid:{display:false}}
       }
     }
   });
@@ -7799,11 +7893,32 @@ function fmtDateShortPdf(iso){
 }
 
 // ════════════════════════════════════════════════════════════════════════
+//  THEME (Light / Dark)
+// ════════════════════════════════════════════════════════════════════════
+const THEME_KEY = 'nexa_theme';
+function applyTheme(theme){
+  const t = (theme === 'dark') ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', t);
+  const icon = document.getElementById('themeIcon');
+  if(icon) icon.textContent = (t === 'dark') ? '☀️' : '🌙';
+  const btn = document.getElementById('themeBtn');
+  if(btn) btn.title = (t === 'dark') ? 'Zu hellem Design wechseln' : 'Zu dunklem Design wechseln';
+}
+window.toggleTheme = function(){
+  const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+  const next = current === 'dark' ? 'light' : 'dark';
+  try{ localStorage.setItem(THEME_KEY, next); }catch(e){}
+  applyTheme(next);
+};
+
+// ════════════════════════════════════════════════════════════════════════
 //  INIT
 // ════════════════════════════════════════════════════════════════════════
 let _initialized = false;
 function init(){
   if(_initialized) return;
+  // Sync theme button icon with the theme set pre-paint in <head>
+  applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light');
   _initialized = true;
   loadState();
   updateApiStatus();
