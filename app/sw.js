@@ -2,7 +2,7 @@
  * Strategie: App-Dateien werden beim ersten Besuch gecacht (cache-first),
  * sodass die App auch ohne Internet weltweit funktioniert.
  */
-const CACHE = 'lernfuchs-v1';
+const CACHE = 'lernfuchs-v2';
 const ASSETS = [
   './',
   './index.html',

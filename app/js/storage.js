@@ -18,6 +18,8 @@
     streak: 0,                  // aktuelle Tage-Serie
     lastActiveDay: null,        // 'YYYY-MM-DD'
     completedLessons: {},       // { lessonId: bestScore 0..1 }
+    level: 'A1',                // zuletzt gewähltes CEFR-Niveau
+    blitzBest: {},              // { 'fr|A1': bestScore }
     dailyGoalMin: 15,           // Lern-Tagesziel in Minuten
     minutesToday: 0,            // heute gelernte Minuten
     minutesDay: null,           // Tag, auf den sich minutesToday bezieht
@@ -98,8 +100,14 @@
   }
 
   function setLang(l) { state.lang = l; save(); }
+  function setLevel(l) { state.level = l; save(); }
   function setSetting(k, v) { state.settings[k] = v; save(); }
   function setGoal(min) { state.dailyGoalMin = min; save(); }
+
+  function setBlitzBest(key, score) {
+    if (score > (state.blitzBest[key] || 0)) { state.blitzBest[key] = score; save(); return true; }
+    return false;
+  }
 
   function reset() { state = defaultState(); save(); }
 
@@ -107,6 +115,7 @@
 
   window.Store = {
     load, save, get, addXp, addMinutes, completeLesson,
-    setLang, setSetting, setGoal, reset, markActiveToday, todayStr, daysBetween,
+    setLang, setLevel, setSetting, setGoal, setBlitzBest,
+    reset, markActiveToday, todayStr, daysBetween,
   };
 })();
