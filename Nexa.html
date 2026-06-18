@@ -28,6 +28,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<!-- Supabase: Mitarbeiter-Logins + geteilte Cloud-Datenbank (Auth + Realtime) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 /* ════════════════════════════════════════════════════════════ */
@@ -1141,9 +1143,167 @@ input,select,textarea{font-family:inherit;font-size:14px}
   .modal-h .modal-x{display:none}
   table,tr,td,th{break-inside:avoid;page-break-inside:avoid}
 }
+
+/* ════════════════════════════════════════════════════════════ */
+/*  AUTH — Login & Cloud-Setup (Supabase)                       */
+/* ════════════════════════════════════════════════════════════ */
+#authOverlay{
+  position:fixed;inset:0;z-index:5000;
+  display:flex;align-items:center;justify-content:center;padding:24px;
+  background:
+    radial-gradient(1200px 600px at 70% -10%, rgba(0,113,227,0.10), transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, rgba(0,113,227,0.08), transparent 60%),
+    var(--bg0);
+}
+#authOverlay.hidden{display:none}
+.auth-card{
+  width:100%;max-width:420px;background:var(--bg-card);
+  border:1px solid var(--line);border-radius:var(--r-xl);
+  box-shadow:var(--shadow-2);padding:38px 34px;
+  animation:slideUp 0.35s cubic-bezier(0.16,1,0.3,1);
+}
+.auth-brand{display:flex;flex-direction:column;align-items:center;gap:14px;margin-bottom:26px}
+.auth-mark{border-radius:16px;box-shadow:0 8px 24px rgba(0,113,227,0.32)}
+.auth-title{font-family:var(--font-display);font-weight:600;font-size:26px;letter-spacing:-0.03em;text-align:center}
+.auth-sub{font-size:13.5px;color:var(--text-mute);text-align:center;margin-top:-6px}
+.auth-field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.auth-field label{font-size:11px;font-weight:600;color:var(--text-mute);text-transform:uppercase;letter-spacing:0.06em}
+.auth-field input,.auth-field textarea{
+  background:var(--bg-input);border:1px solid var(--line2);color:var(--text);
+  padding:12px 14px;border-radius:var(--r-sm);outline:none;width:100%;font-size:14px;
+  transition:border-color 0.15s,box-shadow 0.15s;
+}
+.auth-field input:focus,.auth-field textarea:focus{border-color:var(--brand);box-shadow:0 0 0 4px var(--brand-soft)}
+.auth-field textarea{resize:vertical;min-height:64px;font-family:var(--font-mono);font-size:12px}
+.auth-btn{
+  width:100%;padding:13px;border:none;border-radius:980px;cursor:pointer;
+  background:var(--brand);color:#fff;font-weight:600;font-size:15px;letter-spacing:-0.01em;
+  transition:background 0.18s,box-shadow 0.18s,transform 0.12s;margin-top:4px;
+}
+.auth-btn:hover{background:var(--brand-2);box-shadow:0 6px 20px rgba(0,113,227,0.35)}
+.auth-btn:active{transform:scale(0.98)}
+.auth-btn:disabled{opacity:0.6;cursor:default}
+.auth-alt{text-align:center;margin-top:18px;font-size:13px;color:var(--text-mute)}
+.auth-link{color:var(--brand);font-weight:600;cursor:pointer;background:none;border:none;font-size:13px;padding:0}
+.auth-link:hover{text-decoration:underline}
+.auth-row{display:flex;justify-content:space-between;align-items:center;margin-top:16px;gap:10px;flex-wrap:wrap}
+.auth-msg{font-size:13px;border-radius:var(--r-sm);padding:10px 13px;margin-bottom:14px;line-height:1.45;display:none}
+.auth-msg.show{display:block}
+.auth-msg.err{background:var(--danger-soft);color:var(--danger)}
+.auth-msg.ok{background:var(--good-soft);color:var(--good)}
+.auth-msg.info{background:var(--brand-soft);color:var(--brand)}
+.auth-help{font-size:12px;color:var(--text-dim);line-height:1.5;margin-top:8px}
+.auth-help a{color:var(--brand)}
+.auth-sql{position:relative;margin-top:10px}
+.auth-sql pre{
+  background:var(--bg2);border:1px solid var(--line);border-radius:var(--r-sm);
+  padding:14px;font-family:var(--font-mono);font-size:11px;line-height:1.5;
+  white-space:pre;overflow:auto;max-height:220px;color:var(--text);
+}
+.auth-sql .auth-copy{position:absolute;top:8px;right:8px}
+details.auth-details{margin-top:14px}
+details.auth-details summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--brand)}
+/* Logged-in user chip in sidebar */
+.auth-foot{margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+.auth-user{font-size:11px;color:var(--text-mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:6px}
+.auth-user b{color:var(--text);font-weight:600}
+.auth-signout{width:100%;padding:7px 10px;background:transparent;color:var(--text-mute);border:1px solid var(--line2);border-radius:var(--r-sm);font-size:12px;font-weight:500;transition:all 0.15s;cursor:pointer}
+.auth-signout:hover{border-color:var(--danger);color:var(--danger)}
 </style>
 </head>
 <body>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<!-- AUTH OVERLAY — Login / Registrierung / Cloud-Setup            -->
+<!-- ════════════════════════════════════════════════════════════ -->
+<div id="authOverlay" class="hidden">
+
+  <!-- ▸ Cloud-Setup (einmalig: Supabase URL + anon key eingeben) -->
+  <div class="auth-card" id="authSetupCard" style="display:none;max-width:480px">
+    <div class="auth-brand">
+      <svg class="auth-mark" viewBox="0 0 40 40" width="52" height="52" aria-hidden="true">
+        <defs><linearGradient id="nexaAuth1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0a84ff"/><stop offset="1" stop-color="#0060df"/></linearGradient></defs>
+        <rect x="2" y="2" width="36" height="36" rx="11" fill="url(#nexaAuth1)"/>
+        <path d="M13 28 V12 L27 28 V12" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div class="auth-title">Nexa Cloud einrichten</div>
+      <div class="auth-sub">Verbinde dein Supabase-Projekt für Mitarbeiter-Logins und gemeinsame Daten.</div>
+    </div>
+    <div class="auth-msg" id="setupMsg"></div>
+    <div class="auth-field">
+      <label>Supabase Project URL</label>
+      <input id="setupUrl" type="text" placeholder="https://xxxxxxxx.supabase.co" autocomplete="off">
+    </div>
+    <div class="auth-field">
+      <label>Supabase anon public key</label>
+      <textarea id="setupKey" placeholder="eyJhbGciOiJIUzI1NiIs..." autocomplete="off"></textarea>
+    </div>
+    <button class="auth-btn" onclick="window.cloudSaveConfig()">Verbinden</button>
+    <div class="auth-help">
+      Beide Werte findest du in Supabase unter <b>Project Settings → API</b>. Der anon-Key ist öffentlich und sicher im Frontend — der Schutz erfolgt über Row-Level-Security.
+    </div>
+    <details class="auth-details">
+      <summary>① Einmalig: dieses SQL in Supabase ausführen</summary>
+      <div class="auth-help">Supabase → <b>SQL Editor</b> → einfügen → <b>Run</b>. Legt die gemeinsame Tabelle an und aktiviert Live-Sync.</div>
+      <div class="auth-sql">
+        <button class="btn btn-ghost btn-sm auth-copy" onclick="window.cloudCopySql()">Kopieren</button>
+        <pre id="setupSql">create table if not exists public.crm_state (
+  id text primary key default 'default',
+  data jsonb not null default '{}'::jsonb,
+  updated_at timestamptz default now(),
+  updated_by text
+);
+
+alter table public.crm_state enable row level security;
+
+create policy "team read"   on public.crm_state
+  for select to authenticated using (true);
+create policy "team insert" on public.crm_state
+  for insert to authenticated with check (true);
+create policy "team update" on public.crm_state
+  for update to authenticated using (true) with check (true);
+
+alter publication supabase_realtime add table public.crm_state;</pre>
+      </div>
+    </details>
+    <div class="auth-alt">
+      <button class="auth-link" onclick="window.cloudUseLocal()">Vorerst ohne Cloud / nur lokal nutzen</button>
+    </div>
+  </div>
+
+  <!-- ▸ Login / Registrierung -->
+  <div class="auth-card" id="authLoginCard" style="display:none">
+    <div class="auth-brand">
+      <svg class="auth-mark" viewBox="0 0 40 40" width="56" height="56" aria-hidden="true">
+        <defs><linearGradient id="nexaAuth2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0a84ff"/><stop offset="1" stop-color="#0060df"/></linearGradient></defs>
+        <rect x="2" y="2" width="36" height="36" rx="11" fill="url(#nexaAuth2)"/>
+        <path d="M13 28 V12 L27 28 V12" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div class="auth-title" id="loginTitle">Bei Nexa anmelden</div>
+      <div class="auth-sub" id="loginSub">Mobil in Time AG · CRM</div>
+    </div>
+    <div class="auth-msg" id="loginMsg"></div>
+    <form id="loginForm" onsubmit="return window.authSubmit(event)">
+      <div class="auth-field">
+        <label>E-Mail</label>
+        <input id="authEmail" type="email" placeholder="mitarbeiter@firma.ch" autocomplete="username" required>
+      </div>
+      <div class="auth-field">
+        <label>Passwort</label>
+        <input id="authPassword" type="password" placeholder="••••••••" autocomplete="current-password" required minlength="6">
+      </div>
+      <button class="auth-btn" id="authSubmitBtn" type="submit">Anmelden</button>
+    </form>
+    <div class="auth-row">
+      <button class="auth-link" id="authForgot" onclick="window.authReset()">Passwort vergessen?</button>
+      <button class="auth-link" id="authToggle" onclick="window.authToggleMode()">Konto erstellen</button>
+    </div>
+    <div class="auth-alt">
+      <button class="auth-link" onclick="window.cloudReconfigure()" style="color:var(--text-dim)">⚙ Cloud-Einstellungen</button>
+    </div>
+  </div>
+
+</div>
 
 <div id="app">
   <!-- ════════════════════════════════════════════════════════ -->
@@ -1216,6 +1376,10 @@ input,select,textarea{font-family:inherit;font-size:14px}
         <span id="apiStatus">API-Key fehlt</span>
       </div>
       <button class="api-btn" onclick="window.openApiKey()">API-Key konfigurieren</button>
+      <div class="auth-foot" id="authFoot" style="display:none">
+        <div class="auth-user">Angemeldet: <b id="authFootEmail">—</b></div>
+        <button class="auth-signout" onclick="window.cloudSignOut()">Abmelden</button>
+      </div>
     </div>
   </aside>
 
@@ -2215,6 +2379,8 @@ function saveState(){
   }catch(e){
     showToast('Speichern fehlgeschlagen: ' + e.message, 'error');
   }
+  // Mirror every change to the shared cloud database (debounced)
+  cloudPushDebounced();
 }
 function loadState(){
   try{
@@ -2228,6 +2394,298 @@ function loadState(){
   }catch(e){
     console.warn('Corrupt state, using defaults', e);
   }
+}
+
+// ════════════════════════════════════════════════════════════════════════
+//  CLOUD — Supabase Auth (Mitarbeiter-Logins) + geteilte Datenbank + Live-Sync
+//  Modell: 1 Kunde = 1 Supabase-Projekt = 1 Team. Alle eingeloggten
+//  Mitarbeiter teilen sich denselben CRM-Datensatz (Zeile id='default').
+//  Trennung zwischen Kunden = getrennte Supabase-Projekte.
+// ════════════════════════════════════════════════════════════════════════
+const SB_URL_KEY   = 'nexa_sb_url';
+const SB_ANON_KEY  = 'nexa_sb_key';
+const SB_LOCAL_KEY = 'nexa_local_mode';
+const CLOUD = {
+  client:null, user:null, channel:null,
+  ready:false, applying:false, saveTimer:null, lastPushTs:0,
+  ORG:'default',
+  url:  (localStorage.getItem(SB_URL_KEY)  || '').trim(),
+  key:  (localStorage.getItem(SB_ANON_KEY) || '').trim(),
+};
+let _authMode = 'login'; // 'login' | 'signup'
+
+function cloudConfigured(){ return !!(CLOUD.url && CLOUD.key); }
+function cloudLibReady(){ return !!(window.supabase && window.supabase.createClient); }
+
+function cloudInitClient(){
+  if(!cloudConfigured() || !cloudLibReady()) return false;
+  if(!CLOUD.client){
+    CLOUD.client = window.supabase.createClient(CLOUD.url, CLOUD.key, {
+      auth:{ persistSession:true, autoRefreshToken:true, detectSessionInUrl:true }
+    });
+  }
+  return true;
+}
+
+// ─── Auth screen helpers ───────────────────────────────────────────────
+function showAuthOverlay(){ const o=document.getElementById('authOverlay'); if(o) o.classList.remove('hidden'); }
+function hideAuthOverlay(){ const o=document.getElementById('authOverlay'); if(o) o.classList.add('hidden'); }
+function showCard(which){
+  const setup=document.getElementById('authSetupCard');
+  const login=document.getElementById('authLoginCard');
+  if(setup) setup.style.display = (which==='setup') ? 'block' : 'none';
+  if(login) login.style.display = (which==='login') ? 'block' : 'none';
+  showAuthOverlay();
+}
+function authMsg(id, text, kind){
+  const el=document.getElementById(id); if(!el) return;
+  if(!text){ el.className='auth-msg'; el.textContent=''; return; }
+  el.className='auth-msg show '+(kind||'info'); el.textContent=text;
+}
+
+// ─── Setup actions ─────────────────────────────────────────────────────
+window.cloudSaveConfig = function(){
+  const url=(document.getElementById('setupUrl').value||'').trim().replace(/\/+$/,'');
+  const key=(document.getElementById('setupKey').value||'').trim();
+  if(!/^https:\/\/.+\.supabase\.co$/.test(url)){
+    return authMsg('setupMsg','Bitte eine gültige Supabase Project URL eingeben (https://xxxx.supabase.co).','err');
+  }
+  if(key.length < 40){
+    return authMsg('setupMsg','Der anon-Key sieht zu kurz aus. Bitte den vollständigen Key aus Project Settings → API einfügen.','err');
+  }
+  localStorage.setItem(SB_URL_KEY, url);
+  localStorage.setItem(SB_ANON_KEY, key);
+  localStorage.removeItem(SB_LOCAL_KEY);
+  authMsg('setupMsg','Verbunden — Anmeldung wird geladen…','ok');
+  setTimeout(()=>location.reload(), 500);
+};
+window.cloudCopySql = function(){
+  const sql=document.getElementById('setupSql').textContent;
+  navigator.clipboard.writeText(sql).then(()=>showToast('SQL kopiert','success'))
+    .catch(()=>showToast('Kopieren nicht möglich','error'));
+};
+window.cloudUseLocal = function(){
+  localStorage.setItem(SB_LOCAL_KEY,'1');
+  hideAuthOverlay();
+  startAppLocal();
+};
+window.cloudReconfigure = function(){
+  document.getElementById('setupUrl').value = CLOUD.url || '';
+  document.getElementById('setupKey').value = CLOUD.key || '';
+  authMsg('setupMsg','');
+  showCard('setup');
+};
+
+// ─── Login / Signup actions ────────────────────────────────────────────
+window.authToggleMode = function(){
+  _authMode = (_authMode==='login') ? 'signup' : 'login';
+  const t=document.getElementById('loginTitle');
+  const sub=document.getElementById('loginSub');
+  const btn=document.getElementById('authSubmitBtn');
+  const toggle=document.getElementById('authToggle');
+  const forgot=document.getElementById('authForgot');
+  const pw=document.getElementById('authPassword');
+  if(_authMode==='signup'){
+    t.textContent='Konto erstellen'; sub.textContent='Neuen Mitarbeiter-Zugang anlegen';
+    btn.textContent='Konto erstellen'; toggle.textContent='Stattdessen anmelden';
+    if(forgot) forgot.style.visibility='hidden';
+    if(pw) pw.setAttribute('autocomplete','new-password');
+  } else {
+    t.textContent='Bei Nexa anmelden'; sub.textContent='Mobil in Time AG · CRM';
+    btn.textContent='Anmelden'; toggle.textContent='Konto erstellen';
+    if(forgot) forgot.style.visibility='visible';
+    if(pw) pw.setAttribute('autocomplete','current-password');
+  }
+  authMsg('loginMsg','');
+};
+window.authSubmit = function(ev){
+  ev.preventDefault();
+  const email=(document.getElementById('authEmail').value||'').trim();
+  const pw=document.getElementById('authPassword').value||'';
+  const btn=document.getElementById('authSubmitBtn');
+  if(!cloudInitClient()){ authMsg('loginMsg','Cloud nicht verbunden. Bitte Cloud-Einstellungen prüfen.','err'); return false; }
+  btn.disabled=true; const orig=btn.textContent; btn.textContent='Bitte warten…';
+  const done=()=>{ btn.disabled=false; btn.textContent=orig; };
+  if(_authMode==='signup'){
+    CLOUD.client.auth.signUp({ email, password:pw }).then(({data,error})=>{
+      done();
+      if(error){ return authMsg('loginMsg', mapAuthError(error.message),'err'); }
+      if(data.session){ /* email confirm disabled → logged in */ onAuthenticated(data.session.user); }
+      else { authMsg('loginMsg','Konto erstellt. Bitte E-Mail bestätigen, dann anmelden.','ok'); window.authToggleMode(); }
+    });
+  } else {
+    CLOUD.client.auth.signInWithPassword({ email, password:pw }).then(({data,error})=>{
+      done();
+      if(error){ return authMsg('loginMsg', mapAuthError(error.message),'err'); }
+      onAuthenticated(data.user);
+    });
+  }
+  return false;
+};
+window.authReset = function(){
+  const email=(document.getElementById('authEmail').value||'').trim();
+  if(!email){ return authMsg('loginMsg','Bitte zuerst deine E-Mail eingeben.','info'); }
+  if(!cloudInitClient()){ return authMsg('loginMsg','Cloud nicht verbunden.','err'); }
+  CLOUD.client.auth.resetPasswordForEmail(email, { redirectTo: location.href.split('#')[0] })
+    .then(({error})=>{
+      if(error) authMsg('loginMsg', mapAuthError(error.message),'err');
+      else authMsg('loginMsg','Falls die E-Mail existiert, wurde ein Reset-Link verschickt.','ok');
+    });
+};
+function mapAuthError(m){
+  m = String(m||'');
+  if(/invalid login/i.test(m)) return 'E-Mail oder Passwort falsch.';
+  if(/already registered/i.test(m)) return 'Diese E-Mail ist bereits registriert. Bitte anmelden.';
+  if(/email not confirmed/i.test(m)) return 'E-Mail noch nicht bestätigt. Bitte Postfach prüfen.';
+  if(/at least 6/i.test(m)) return 'Passwort muss mindestens 6 Zeichen haben.';
+  return m;
+}
+window.cloudSignOut = function(){
+  if(CLOUD.client){ CLOUD.client.auth.signOut().finally(()=>location.reload()); }
+  else location.reload();
+};
+
+// ─── Data sync ─────────────────────────────────────────────────────────
+function applyRemoteState(d){
+  if(!d) return;
+  CLOUD.applying = true;
+  STATE.contacts   = Array.isArray(d.contacts)   ? d.contacts   : [];
+  STATE.activities = Array.isArray(d.activities) ? d.activities : [];
+  if(d.meta) STATE.meta = d.meta;
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE)); }catch(e){}
+  CLOUD.applying = false;
+}
+async function cloudPull(){
+  if(!CLOUD.client) return false;
+  try{
+    const { data, error } = await CLOUD.client
+      .from('crm_state').select('data,updated_by').eq('id', CLOUD.ORG).maybeSingle();
+    if(error){ console.warn('cloudPull', error); showToast('Cloud-Laden fehlgeschlagen — lokaler Stand wird genutzt','warn'); return false; }
+    if(data && data.data && (data.data.contacts || data.data.activities)){
+      applyRemoteState(data.data);
+    } else {
+      // No shared data yet → seed cloud from whatever is local (first run / migration)
+      await cloudPush(true);
+    }
+    return true;
+  }catch(e){ console.warn(e); return false; }
+}
+function cloudPushDebounced(){
+  if(!CLOUD.ready || CLOUD.applying || !CLOUD.client || !CLOUD.user) return;
+  clearTimeout(CLOUD.saveTimer);
+  CLOUD.saveTimer = setTimeout(()=>cloudPush(), 800);
+}
+async function cloudPush(force){
+  if(!CLOUD.client || !CLOUD.user) return;
+  if(!CLOUD.ready && !force) return;
+  const payload = {
+    id: CLOUD.ORG,
+    data: { contacts:STATE.contacts, activities:STATE.activities, meta:STATE.meta },
+    updated_at: new Date().toISOString(),
+    updated_by: CLOUD.user.email || CLOUD.user.id
+  };
+  CLOUD.lastPushTs = Date.now();
+  try{
+    const { error } = await CLOUD.client.from('crm_state').upsert(payload, { onConflict:'id' });
+    if(error){ console.warn('cloudPush', error); }
+  }catch(e){ console.warn(e); }
+}
+function cloudSubscribe(){
+  if(!CLOUD.client || CLOUD.channel) return;
+  CLOUD.channel = CLOUD.client
+    .channel('crm_state_'+CLOUD.ORG)
+    .on('postgres_changes',
+      { event:'*', schema:'public', table:'crm_state', filter:'id=eq.'+CLOUD.ORG },
+      (payload)=>{
+        const row = payload.new; if(!row || !row.data) return;
+        const me = CLOUD.user.email || CLOUD.user.id;
+        // Ignore the echo of our own recent write
+        if(row.updated_by === me && (Date.now()-CLOUD.lastPushTs) < 5000) return;
+        applyRemoteState(row.data);
+        renderCurrentPage();
+        if(row.updated_by && row.updated_by !== me){
+          showToast('Aktualisiert durch '+row.updated_by, 'info');
+        }
+      })
+    .subscribe();
+}
+
+// Re-render whichever page is currently open (used after a remote update)
+function renderCurrentPage(){
+  try{
+    const active = document.querySelector('.page.active');
+    const id = active ? active.id.replace('page-','') : 'today';
+    if(id==='today') renderToday();
+    else if(id==='analytics') renderAnalytics();
+    else if(id==='kontakte') renderKontakte();
+    else if(id==='pipeline') renderPipeline();
+    else if(id==='wiedervorlagen') renderWiedervorlagen();
+    else if(id==='aktivitaeten') renderAktivitaeten();
+    else if(id==='kalender') renderCalendar();
+    if(typeof updateSidebarBadge==='function') updateSidebarBadge();
+    if(typeof updateAlarmBell==='function') updateAlarmBell();
+    if(typeof renderOverdueBanner==='function') renderOverdueBanner();
+  }catch(e){ console.warn('renderCurrentPage', e); }
+}
+
+function setAuthFootUI(){
+  const foot=document.getElementById('authFoot');
+  const em=document.getElementById('authFootEmail');
+  if(CLOUD.user && foot && em){
+    em.textContent = CLOUD.user.email || 'Mitarbeiter';
+    foot.style.display='block';
+  } else if(foot){ foot.style.display='none'; }
+}
+
+function onAuthenticated(user){
+  CLOUD.user = user;
+  startAppCloud();
+}
+
+// Start app in shared-cloud mode (after successful login)
+async function startAppCloud(){
+  hideAuthOverlay();
+  loadState();              // local cache first (for first-time seeding/migration)
+  CLOUD.ready = false;
+  await cloudPull();        // shared data wins (or seeds cloud from local)
+  CLOUD.ready = true;
+  cloudSubscribe();
+  init();                   // existing app bootstrap (renders from STATE)
+  setAuthFootUI();
+  showToast('Angemeldet als '+(CLOUD.user.email||'Mitarbeiter'), 'success');
+}
+
+// Start app in local-only mode (no cloud)
+function startAppLocal(){
+  hideAuthOverlay();
+  init();
+}
+
+// Entry point — decides: local mode / setup / login / authenticated
+async function bootstrap(){
+  // Local-only mode explicitly chosen
+  if(localStorage.getItem(SB_LOCAL_KEY) === '1' && !cloudConfigured()){
+    return startAppLocal();
+  }
+  // Not configured yet → show one-time cloud setup
+  if(!cloudConfigured()){
+    return showCard('setup');
+  }
+  // Configured but library failed to load (e.g. offline) → offer local fallback
+  if(!cloudLibReady()){
+    showCard('setup');
+    authMsg('setupMsg','Cloud-Bibliothek konnte nicht geladen werden (offline?). Du kannst lokal weiterarbeiten.','info');
+    return;
+  }
+  cloudInitClient();
+  showCard('login');   // cover app while we check for an existing session
+  try{
+    const { data:{ session } } = await CLOUD.client.auth.getSession();
+    if(session && session.user){ onAuthenticated(session.user); }
+  }catch(e){ console.warn(e); showCard('login'); }
+  CLOUD.client.auth.onAuthStateChange((event)=>{
+    if(event==='SIGNED_OUT'){ location.reload(); }
+  });
 }
 
 // ════════════════════════════════════════════════════════════════════════
@@ -7968,11 +8426,12 @@ function init(){
   });
 }
 
+// Entry point: auth gate (Supabase) decides login / local mode, then runs init()
 if(document.readyState === 'loading'){
-  document.addEventListener('DOMContentLoaded', init);
+  document.addEventListener('DOMContentLoaded', bootstrap);
 } else {
   // DOMContentLoaded already fired
-  setTimeout(init, 0);
+  setTimeout(bootstrap, 0);
 }
 
 </script>
