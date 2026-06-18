@@ -56,6 +56,16 @@ python3 offerten/offerte_to_pdf.py offerten/Offerte_Kabel_95mm.xlsx
 
 Zahlen erscheinen im Schweizer Format (`18'454.74`).
 
+## 📘 Bebilderte Anleitung „Excel → PDF“
+
+Für alle, die ein PDF aus Excel erzeugen möchten, gibt es eine
+Schritt-für-Schritt-Anleitung **mit Bildern**:
+- als druckbares PDF: [`anleitung/Anleitung_Excel_zu_PDF.pdf`](anleitung/Anleitung_Excel_zu_PDF.pdf)
+- als Markdown: [`anleitung/PDF_Anleitung.md`](anleitung/PDF_Anleitung.md)
+- Bilder/PDF reproduzierbar:
+  `python3 offerten/anleitung/make_anleitung_bilder.py` und
+  `python3 offerten/anleitung/make_anleitung_pdf.py`
+
 ## PDF auf Knopfdruck – zwei Wege
 
 ### A) In Excel (echter Knopf)
