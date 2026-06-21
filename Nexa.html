@@ -1235,12 +1235,12 @@ details.auth-details summary{cursor:pointer;font-size:13px;font-weight:600;color
       <input id="setupUrl" type="text" placeholder="https://xxxxxxxx.supabase.co" autocomplete="off">
     </div>
     <div class="auth-field">
-      <label>Supabase anon public key</label>
-      <textarea id="setupKey" placeholder="eyJhbGciOiJIUzI1NiIs..." autocomplete="off"></textarea>
+      <label>anon / public key (NICHT der service_role-Key!)</label>
+      <textarea id="setupKey" placeholder="eyJhbGciOiJIUzI1NiIs…  oder  sb_publishable_…" autocomplete="off"></textarea>
     </div>
-    <button class="auth-btn" onclick="window.cloudSaveConfig()">Verbinden</button>
+    <button class="auth-btn" onclick="window.cloudSaveConfig()">Verbinden &amp; testen</button>
     <div class="auth-help">
-      Beide Werte findest du in Supabase unter <b>Project Settings → API</b>. Der anon-Key ist öffentlich und sicher im Frontend — der Schutz erfolgt über Row-Level-Security.
+      Beide Werte stehen in Supabase unter <b>Settings → API Keys</b> (bzw. oben auf <b>Connect</b>). Nimm den <b>anon / public</b>-Key (beginnt mit <code>eyJ…</code> oder <code>sb_publishable_…</code>) — er ist öffentlich und sicher, der Schutz läuft über Row-Level-Security. Beim Klick auf „Verbinden &amp; testen" prüft Nexa die Verbindung und sagt dir genau, falls etwas fehlt.
     </div>
     <details class="auth-details">
       <summary>① Einmalig: dieses SQL in Supabase ausführen</summary>
@@ -2444,20 +2444,51 @@ function authMsg(id, text, kind){
 }
 
 // ─── Setup actions ─────────────────────────────────────────────────────
-window.cloudSaveConfig = function(){
+window.cloudSaveConfig = async function(){
+  const btn = document.querySelector('#authSetupCard .auth-btn');
   const url=(document.getElementById('setupUrl').value||'').trim().replace(/\/+$/,'');
   const key=(document.getElementById('setupKey').value||'').trim();
   if(!/^https:\/\/.+\.supabase\.co$/.test(url)){
-    return authMsg('setupMsg','Bitte eine gültige Supabase Project URL eingeben (https://xxxx.supabase.co).','err');
+    return authMsg('setupMsg','❌ Bitte eine gültige Project URL eingeben — sie sieht so aus: https://xxxxxxxx.supabase.co (Settings → Data API).','err');
   }
-  if(key.length < 40){
-    return authMsg('setupMsg','Der anon-Key sieht zu kurz aus. Bitte den vollständigen Key aus Project Settings → API einfügen.','err');
+  if(/^sb_secret_/i.test(key) || /service_role/i.test(key)){
+    return authMsg('setupMsg','❌ Das ist der GEHEIME service_role-Key — der darf NICHT verwendet werden! Bitte den „anon"- bzw. „publishable"-Key nehmen.','err');
   }
-  localStorage.setItem(SB_URL_KEY, url);
-  localStorage.setItem(SB_ANON_KEY, key);
-  localStorage.removeItem(SB_LOCAL_KEY);
-  authMsg('setupMsg','Verbunden — Anmeldung wird geladen…','ok');
-  setTimeout(()=>location.reload(), 500);
+  if(key.length < 30){
+    return authMsg('setupMsg','❌ Der Key sieht zu kurz aus. Bitte den vollständigen „anon / public"-Key einfügen (beginnt mit eyJ… oder sb_publishable_…).','err');
+  }
+  if(!cloudLibReady()){
+    return authMsg('setupMsg','❌ Die Cloud-Bibliothek wurde nicht geladen (Internet/CDN blockiert?). Bitte Seite neu laden oder Verbindung prüfen.','err');
+  }
+
+  authMsg('setupMsg','⏳ Verbindung wird getestet…','info');
+  if(btn){ btn.disabled=true; }
+
+  try{
+    const test = window.supabase.createClient(url, key, { auth:{ persistSession:false } });
+    const { error } = await test.from('crm_state').select('id').limit(1);
+    if(error){
+      const m = (error.message||'') + ' ' + (error.code||'') + ' ' + (error.hint||'');
+      if(/does not exist|42P01|find the table|schema cache/i.test(m)){
+        authMsg('setupMsg','⚠️ Verbindung steht — aber die Tabelle „crm_state" fehlt. Bitte zuerst das SQL aus „① Einmalig…" im Supabase SQL-Editor ausführen, dann erneut „Verbinden".','err');
+      } else if(/invalid|jwt|api key|401|unauthorized/i.test(m)){
+        authMsg('setupMsg','❌ Der Key wird abgelehnt (ungültig). Bitte den korrekten „anon / public"-Key aus Settings → API Keys kopieren.','err');
+      } else {
+        authMsg('setupMsg','❌ Fehler: '+(error.message||m),'err');
+      }
+      if(btn) btn.disabled=false;
+      return;
+    }
+    // Success — table reachable, key + URL valid
+    localStorage.setItem(SB_URL_KEY, url);
+    localStorage.setItem(SB_ANON_KEY, key);
+    localStorage.removeItem(SB_LOCAL_KEY);
+    authMsg('setupMsg','✅ Verbunden! Anmeldung wird geladen…','ok');
+    setTimeout(()=>location.reload(), 700);
+  }catch(e){
+    authMsg('setupMsg','❌ Keine Verbindung möglich. Meist ist die Project URL falsch oder es besteht keine Internetverbindung. ('+(e.message||e)+')','err');
+    if(btn) btn.disabled=false;
+  }
 };
 window.cloudCopySql = function(){
   const sql=document.getElementById('setupSql').textContent;
@@ -2506,19 +2537,20 @@ window.authSubmit = function(ev){
   if(!cloudInitClient()){ authMsg('loginMsg','Cloud nicht verbunden. Bitte Cloud-Einstellungen prüfen.','err'); return false; }
   btn.disabled=true; const orig=btn.textContent; btn.textContent='Bitte warten…';
   const done=()=>{ btn.disabled=false; btn.textContent=orig; };
+  const netErr = (e)=>{ done(); authMsg('loginMsg','Keine Verbindung zum Server. Internet/Cloud-Einstellungen prüfen. ('+((e&&e.message)||e)+')','err'); };
   if(_authMode==='signup'){
     CLOUD.client.auth.signUp({ email, password:pw }).then(({data,error})=>{
       done();
       if(error){ return authMsg('loginMsg', mapAuthError(error.message),'err'); }
       if(data.session){ /* email confirm disabled → logged in */ onAuthenticated(data.session.user); }
       else { authMsg('loginMsg','Konto erstellt. Bitte E-Mail bestätigen, dann anmelden.','ok'); window.authToggleMode(); }
-    });
+    }).catch(netErr);
   } else {
     CLOUD.client.auth.signInWithPassword({ email, password:pw }).then(({data,error})=>{
       done();
       if(error){ return authMsg('loginMsg', mapAuthError(error.message),'err'); }
       onAuthenticated(data.user);
-    });
+    }).catch(netErr);
   }
   return false;
 };
