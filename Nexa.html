@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nexa · Mobil in Time AG</title>
+<title>Nexa · Strix</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'><rect x='2' y='2' width='36' height='36' rx='11' fill='%230071e3'/><path d='M13 28 V12 L27 28 V12' fill='none' stroke='white' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'/></svg>">
 
 <!-- Apply saved/system theme before paint to avoid flash -->
@@ -496,10 +496,12 @@ input,select,textarea{font-family:inherit;font-size:14px}
 }
 
 /* KI tabs */
-.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:18px}
-.tab{padding:10px 16px;background:transparent;border:none;color:var(--text-mute);font-size:13px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.15s}
+/* iOS-style segmented control */
+.tabs{display:inline-flex;gap:2px;background:var(--bg2);border-radius:11px;padding:3px;margin-bottom:22px}
+.tab{padding:7px 18px;background:transparent;border:none;color:var(--text-mute);font-size:13px;font-weight:500;cursor:pointer;border-radius:8px;transition:color 0.18s,background 0.18s,box-shadow 0.18s;letter-spacing:-0.01em}
 .tab:hover{color:var(--text)}
-.tab.active{color:var(--text);border-bottom-color:var(--brand)}
+.tab.active{color:var(--text);background:var(--bg1);box-shadow:0 1px 3px rgba(0,0,0,0.12),0 0 0 0.5px rgba(0,0,0,0.04);font-weight:600}
+[data-theme="dark"] .tab.active{background:#48484a;box-shadow:0 1px 3px rgba(0,0,0,0.4)}
 
 .tab-pane{display:none}
 .tab-pane.active{display:block}
@@ -1052,7 +1054,17 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .widget-toggle{display:flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid var(--line);
   border-radius:var(--r-sm);cursor:pointer;font-size:13px;transition:all 0.12s}
 .widget-toggle:hover{border-color:var(--brand)}
-.widget-toggle input{accent-color:var(--brand);width:14px;height:14px;cursor:pointer}
+.widget-toggle input{
+  appearance:none;-webkit-appearance:none;margin:0;flex-shrink:0;
+  width:42px;height:25px;border-radius:13px;background:var(--line2);
+  position:relative;cursor:pointer;transition:background 0.22s ease;
+}
+.widget-toggle input::after{
+  content:'';position:absolute;top:2.5px;left:2.5px;width:20px;height:20px;border-radius:50%;
+  background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.3);transition:transform 0.22s ease;
+}
+.widget-toggle input:checked{background:var(--good)}
+.widget-toggle input:checked::after{transform:translateX(17px)}
 .kategorie-table{width:100%;border-collapse:collapse;font-size:13px}
 .kategorie-table th{text-align:left;padding:10px 12px;background:var(--bg2);font-weight:700;font-size:11.5px;
   text-transform:uppercase;letter-spacing:0.06em;color:var(--text-mute);border-bottom:1px solid var(--line)}
@@ -1280,7 +1292,7 @@ alter publication supabase_realtime add table public.crm_state;</pre>
         <path d="M13 28 V12 L27 28 V12" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
       <div class="auth-title" id="loginTitle">Bei Nexa anmelden</div>
-      <div class="auth-sub" id="loginSub">Mobil in Time AG · CRM</div>
+      <div class="auth-sub" id="loginSub">Strix · CRM</div>
     </div>
     <div class="auth-msg" id="loginMsg"></div>
     <form id="loginForm" onsubmit="return window.authSubmit(event)">
@@ -1324,7 +1336,7 @@ alter publication supabase_realtime add table public.crm_state;</pre>
         </svg>
         <div class="brand-text">
           <div class="brand-name">Nexa</div>
-          <div class="brand-sub">Mobil in Time AG</div>
+          <div class="brand-sub">Strix</div>
         </div>
       </div>
     </div>
@@ -1521,13 +1533,13 @@ alter publication supabase_realtime add table public.crm_state;</pre>
             </select>
             <select id="filterSegment" onchange="window.renderKontakte()">
               <option value="">Alle Segmente</option>
-              <option>Industrie</option><option>Pharma</option><option>Rechenzentrum</option>
-              <option>Spital/Klinik</option><option>EVU</option><option>Gemeinde</option>
-              <option>Bau</option><option>Event</option><option>Cross-Sell</option><option>Sonstige</option>
+              <option>Industrie</option><option>Handel</option><option>Dienstleistung</option>
+              <option>Gesundheit</option><option>IT/Tech</option><option>Öffentlich/Verwaltung</option>
+              <option>Bau</option><option>Finanzen</option><option>Cross-Sell</option><option>Sonstige</option>
             </select>
-            <select id="filterKategorie" onchange="window.renderKontakte()" title="Strom / Wärme / Kälte">
+            <select id="filterKategorie" onchange="window.renderKontakte()" title="Produkt / Service / Beratung">
               <option value="">Alle Kategorien</option>
-              <option>Strom</option><option>Wärme</option><option>Kälte</option><option>USV</option><option>Mix</option>
+              <option>Produkt</option><option>Service</option><option>Beratung</option><option>Lizenz</option><option>Mix</option>
             </select>
             <select id="filterSalesRep" onchange="window.renderKontakte()" title="Berater / Außendienst">
               <option value="">Alle Berater</option>
@@ -1658,8 +1670,8 @@ alter publication supabase_realtime add table public.crm_state;</pre>
               <div class="field"><label>Ansprechpartner</label><input id="kiEmKontakt2" placeholder="z.B. Frau Müller"></div>
               <div class="field"><label>Branche</label>
                 <select id="kiEmBranche">
-                  <option>Industrie</option><option>Pharma</option><option>Rechenzentrum</option>
-                  <option>Spital/Klinik</option><option>EVU</option><option>Bau</option><option>Gemeinde</option><option>Event</option>
+                  <option>Industrie</option><option>Handel</option><option>Dienstleistung</option>
+                  <option>Gesundheit</option><option>IT/Tech</option><option>Bau</option><option>Öffentlich/Verwaltung</option><option>Finanzen</option>
                 </select>
               </div>
               <div class="field full"><label>Anlass / Kontext</label>
@@ -1701,8 +1713,8 @@ alter publication supabase_realtime add table public.crm_state;</pre>
               <div class="field"><label>Firma</label><input id="kiCallFirma"></div>
               <div class="field"><label>Branche</label>
                 <select id="kiCallBranche">
-                  <option>Industrie</option><option>Pharma</option><option>Rechenzentrum</option>
-                  <option>Spital/Klinik</option><option>EVU</option><option>Bau</option><option>Gemeinde</option>
+                  <option>Industrie</option><option>Handel</option><option>Dienstleistung</option>
+                  <option>Gesundheit</option><option>IT/Tech</option><option>Bau</option><option>Öffentlich/Verwaltung</option>
                 </select>
               </div>
               <div class="field"><label>Gesprächsziel</label>
@@ -1712,7 +1724,7 @@ alter publication supabase_realtime add table public.crm_state;</pre>
                 </select>
               </div>
               <div class="field full"><label>Bekannter Kontext / Vorgeschichte</label>
-                <textarea id="kiCallKontext" rows="2" placeholder="z.B. Letztes Gespräch vor 3 Wochen, hat Interesse an BESS gezeigt, wartet auf Budget-Freigabe"></textarea>
+                <textarea id="kiCallKontext" rows="2" placeholder="z.B. Letztes Gespräch vor 3 Wochen, Interesse gezeigt, wartet auf Budget-Freigabe"></textarea>
               </div>
             </div>
             <div class="row mt-md">
@@ -1728,19 +1740,19 @@ alter publication supabase_realtime add table public.crm_state;</pre>
           <div class="card">
             <div class="form-grid col1">
               <div class="field full"><label>Einwand des Kunden</label>
-                <textarea id="kiObjEin" rows="2" placeholder='z.B. "Zu teuer im Vergleich zu Bimex" oder "Wir haben schon einen Lieferanten"'></textarea>
+                <textarea id="kiObjEin" rows="2" placeholder='z.B. &quot;Zu teuer im Vergleich zum Wettbewerb&quot; oder &quot;Wir haben schon einen Lieferanten&quot;'></textarea>
               </div>
               <div class="form-grid">
                 <div class="field"><label>Branche</label>
                   <select id="kiObjBranche">
-                    <option>Industrie</option><option>Pharma</option><option>Rechenzentrum</option>
-                    <option>Spital/Klinik</option><option>EVU</option><option>Bau</option><option>Gemeinde</option>
+                    <option>Industrie</option><option>Handel</option><option>Dienstleistung</option>
+                    <option>Gesundheit</option><option>IT/Tech</option><option>Bau</option><option>Öffentlich/Verwaltung</option>
                   </select>
                 </div>
                 <div class="field"><label>Produkt-Fokus</label>
                   <select id="kiObjProd">
-                    <option>Generator</option><option>BESS</option><option>Heat/Cool</option>
-                    <option>USV</option><option>Trafo</option><option>Komplettlösung</option>
+                    <option>Produkt</option><option>Service</option><option>Beratung</option>
+                    <option>Lizenz</option><option>Support</option><option>Komplettlösung</option>
                   </select>
                 </div>
               </div>
@@ -1749,7 +1761,7 @@ alter publication supabase_realtime add table public.crm_state;</pre>
               <button class="btn btn-primary" onclick="window.kiGenObj()">✦ Antwort-Strategien generieren</button>
               <button class="btn btn-ghost btn-sm" onclick="window.kiCopy('kiObjOut')">📋 Kopieren</button>
             </div>
-            <div class="ai-out mt-md" id="kiObjOut">Einwand eingeben → Du bekommst 3 Antwortvarianten: Empathie-Reframe, Fakten-Konter, Closing-Brücke. Inkl. konkreter Argumente aus Aggreko/MiT-Portfolio.</div>
+            <div class="ai-out mt-md" id="kiObjOut">Einwand eingeben → Du bekommst 3 Antwortvarianten: Empathie-Reframe, Fakten-Konter, Closing-Brücke — konkret auf dein Angebot und die Branche zugeschnitten.</div>
           </div>
         </div>
       </div>
@@ -1779,7 +1791,7 @@ alter publication supabase_realtime add table public.crm_state;</pre>
         <!-- Kategorie matrix (Strom / Wärme / Kälte) × Status -->
         <div class="card mt-md">
           <div class="card-h">
-            <div class="card-title">Kategorie-Übersicht — Strom · Wärme · Kälte</div>
+            <div class="card-title">Kategorie-Übersicht</div>
             <span class="tx-dim" style="font-size:11px">Offen / Gewonnen / Verloren / Erledigt pro Produktlinie · klick auf Kategorie filtert die Kontakte</span>
           </div>
           <div id="anKategorieMatrix"></div>
@@ -1836,14 +1848,22 @@ alter publication supabase_realtime add table public.crm_state;</pre>
             <button class="btn btn-ghost" onclick="window.startOnboarding(true)">🎓 Onboarding-Tour erneut anzeigen</button>
           </div>
 
+          <div class="section-h">🏢 Unternehmen</div>
+          <p class="tx-mute mb-md" style="font-size:12px;line-height:1.6;margin-top:-8px">Dein Firmenname — erscheint in generierten PDF-Berichten und als Standard-Betreff in E-Mails.</p>
+          <div class="field">
+            <label>Firmenname</label>
+            <input id="settingsCompany" placeholder="z.B. Muster AG">
+          </div>
+          <button class="btn btn-primary mt-md" onclick="window.saveCompany()">Firmenname speichern</button>
+
           <div class="section-h">Wochenbericht — Empfänger</div>
-          <p class="tx-mute mb-md" style="font-size:12px;line-height:1.6;margin-top:-8px">Jede Woche Montag: Automatisch generierter Bericht an Stefan.</p>
+          <p class="tx-mute mb-md" style="font-size:12px;line-height:1.6;margin-top:-8px">Jede Woche Montag: automatisch generierter Bericht an die Teamleitung.</p>
           <div class="form-grid">
-            <div class="field"><label>Stefan's E-Mail</label>
-              <input id="stefanEmail" placeholder="stefan@mobilintime.com" type="email">
+            <div class="field"><label>Empfänger E-Mail</label>
+              <input id="stefanEmail" placeholder="kollege@firma.ch" type="email">
             </div>
             <div class="field"><label>CC (optional)</label>
-              <input id="wbCcEmail" placeholder="roberto@mobilintime.com" type="email">
+              <input id="wbCcEmail" placeholder="cc@firma.ch" type="email">
             </div>
           </div>
           <button class="btn btn-primary mt-md" onclick="window.saveWbSettings()">Einstellungen speichern</button>
@@ -1872,7 +1892,7 @@ alter publication supabase_realtime add table public.crm_state;</pre>
           <p class="tx-mute mb-md" style="font-size:12px;line-height:1.6;margin-top:-8px">Wird automatisch an generierte Emails angehängt. Die KI fügt danach keine eigene Signatur mehr ein.</p>
           <div class="field">
             <label>Meine Signatur</label>
-            <textarea id="settingsSig" rows="7" placeholder="Freundliche Grüsse&#10;&#10;Burak Ücöz&#10;Sales Engineer Strom | Mobil in Time AG&#10;+41 44 806 13 19 | burak.uecoez@mobilintime.com&#10;www.mobilintime.com"></textarea>
+            <textarea id="settingsSig" rows="7" placeholder="Freundliche Grüsse&#10;&#10;Max Muster&#10;Verkauf | [Dein Unternehmen]&#10;+41 00 000 00 00 | max.muster@firma.ch&#10;www.firma.ch"></textarea>
           </div>
           <button class="btn btn-primary mt-md" onclick="window.saveSignature()">Signatur speichern</button>
 
@@ -1884,9 +1904,9 @@ alter publication supabase_realtime add table public.crm_state;</pre>
           <button class="btn btn-primary mt-md" onclick="window.saveApiKey()">API-Key speichern</button>
           <div class="section-h">Über</div>
           <div class="tx-mute" style="font-size:13px;line-height:1.7">
-            <strong>Nexa v2.0</strong> · Mobil in Time AG · An Aggreko Company<br>
+            <strong>Nexa v2.0</strong> · Ein Produkt der Strix<br>
             Single-File HTML · localStorage · Anthropic Claude Sonnet 4.5<br>
-            Burak Ücöz · Sales Engineer Strom · Zürich
+            © Strix · Alle Rechte vorbehalten
           </div>
         </div>
       </div>
@@ -1938,19 +1958,19 @@ alter publication supabase_realtime add table public.crm_state;</pre>
         <div class="field"><label>Einsatzort / Adresse</label><input id="cOrt"></div>
         <div class="field"><label>Segment</label>
           <select id="cSegment">
-            <option>Industrie</option><option>Pharma</option><option>Rechenzentrum</option>
-            <option>Spital/Klinik</option><option>EVU</option><option>Gemeinde</option>
-            <option>Bau</option><option>Event</option><option>Cross-Sell</option><option>Sonstige</option>
+            <option>Industrie</option><option>Handel</option><option>Dienstleistung</option>
+            <option>Gesundheit</option><option>IT/Tech</option><option>Öffentlich/Verwaltung</option>
+            <option>Bau</option><option>Finanzen</option><option>Cross-Sell</option><option>Sonstige</option>
           </select>
         </div>
         <div class="field"><label>Kategorie (Produktlinie)</label>
           <select id="cKategorie">
             <option value="">— keine —</option>
-            <option>Strom</option><option>Wärme</option><option>Kälte</option><option>USV</option><option>Mix</option>
+            <option>Produkt</option><option>Service</option><option>Beratung</option><option>Lizenz</option><option>Mix</option>
           </select>
         </div>
         <div class="field"><label>Berater / Verantwortlich</label>
-          <input id="cSalesRep" list="salesRepList" placeholder="z.B. Burak Ücöz">
+          <input id="cSalesRep" list="salesRepList" placeholder="z.B. Max Muster">
           <datalist id="salesRepList"></datalist>
         </div>
         <div class="field"><label>Status</label>
@@ -2142,9 +2162,9 @@ alter publication supabase_realtime add table public.crm_state;</pre>
           <div class="ai-row"><label>Einsatzort</label><input id="ai_ort"></div>
           <div class="ai-row"><label>Segment</label>
             <select id="ai_segment">
-              <option>Industrie</option><option>Pharma</option><option>Rechenzentrum</option>
-              <option>Spital/Klinik</option><option>EVU</option><option>Gemeinde</option>
-              <option>Bau</option><option>Event</option><option>Cross-Sell</option><option>Sonstige</option>
+              <option>Industrie</option><option>Handel</option><option>Dienstleistung</option>
+              <option>Gesundheit</option><option>IT/Tech</option><option>Öffentlich/Verwaltung</option>
+              <option>Bau</option><option>Finanzen</option><option>Cross-Sell</option><option>Sonstige</option>
             </select>
           </div>
         </div>
@@ -2522,7 +2542,7 @@ window.authToggleMode = function(){
     if(forgot) forgot.style.visibility='hidden';
     if(pw) pw.setAttribute('autocomplete','new-password');
   } else {
-    t.textContent='Bei Nexa anmelden'; sub.textContent='Mobil in Time AG · CRM';
+    t.textContent='Bei Nexa anmelden'; sub.textContent='Strix · CRM';
     btn.textContent='Anmelden'; toggle.textContent='Konto erstellen';
     if(forgot) forgot.style.visibility='visible';
     if(pw) pw.setAttribute('autocomplete','current-password');
@@ -4004,12 +4024,12 @@ function markBackup(){ localStorage.setItem(BACKUP_KEY, String(Date.now())); }
 //  SALES REPS (Berater / Außendienst) + KATEGORIE filters
 // ════════════════════════════════════════════════════════════════════════
 const REPS_KEY = 'mit_crm_sales_reps';
-const REP_DEFAULTS = ['Burak Ücöz', 'Stefan Roth'];
-const KATEGORIEN = ['Strom','Wärme','Kälte','USV','Mix'];
+const REP_DEFAULTS = [];
+const KATEGORIEN = ['Produkt','Service','Beratung','Lizenz','Mix'];
 // Slug map for CSS classes — `'Wärme'.toLowerCase().replace(/[^a-z]/g,'')`
 // would strip the umlaut and produce 'kat-wrme' which doesn't match the
 // defined `.kat-waerme` rule.
-const KAT_SLUG = {'Strom':'strom','Wärme':'waerme','Kälte':'kalte','USV':'usv','Mix':'mix'};
+const KAT_SLUG = {'Produkt':'strom','Service':'waerme','Beratung':'kalte','Lizenz':'usv','Mix':'mix'};
 function katPillClass(k){ return 'kat-pill kat-' + (KAT_SLUG[k] || 'mix'); }
 
 // Probability resolver: respect explicit 0 (don't fall back to status default).
@@ -4437,7 +4457,7 @@ Tags: ${parseTags(c.tags).join(', ')||'—'}
 
 Letzte Aktivitäten:
 ${acts.map(a => `- ${fmtDate(a.date)} [${a.typ}] ${a.sum||''} ${a.next?'→ '+a.next:''}`).join('\n')||'keine'}`;
-  const system = 'Du bist Senior Sales Coach für Mobil in Time AG (Aggreko CH). Liefere die EINE konkret beste nächste Aktion in 2-3 prägnanten Sätzen — kein Preamble, keine generischen Floskeln. Beziehe dich auf die Historie. Schweizer Direktsprache.';
+  const system = 'Du bist ein erfahrener B2B-Sales-Coach. Liefere die EINE konkret beste nächste Aktion in 2-3 prägnanten Sätzen — kein Preamble, keine generischen Floskeln. Beziehe dich auf die Historie des Kontakts. Direkte, professionelle Sprache.';
   const prompt = 'Welche EINE konkret beste nächste Aktion empfiehlst du für diesen Kontakt? Antworte in 2-3 Sätzen.\n\n'+ctx;
   const resp = await callClaude(prompt, system, 400);
   if(resp){ out.innerHTML = '<div class="nba-tag">💡 Next-Best-Action</div><div class="nba-text">'+escHtml(resp)+'</div>'; }
@@ -5410,6 +5430,15 @@ window.saveSignature = function(){
   showToast('✓ Signatur gespeichert', 'success');
 };
 
+// Company name (used in PDF reports + email subjects) — neutral, configurable
+const COMPANY_KEY = 'nexa_company';
+function loadCompany(){ return (localStorage.getItem(COMPANY_KEY) || '').trim(); }
+window.saveCompany = function(){
+  const c = document.getElementById('settingsCompany').value.trim();
+  localStorage.setItem(COMPANY_KEY, c);
+  showToast('✓ Firmenname gespeichert', 'success');
+};
+
 function getSignatureBlock(){
   const sig = loadSignature();
   if(!sig.trim()) return '';
@@ -5827,7 +5856,8 @@ window.kiGenEmail = async function(){
   const out = document.getElementById('kiEmOut');
   out.innerHTML = '<div class="loading"><span></span><span></span><span></span></div> Generiere personalisierte Email...';
 
-  const system = `Du bist Burak Ücöz, Sales Engineer bei Mobil in Time AG (An Aggreko Company). Du verkaufst temporäre Energielösungen: Generatoren 30-2100 kVA, BESS Batteriespeicher, Trafos, Heat/Cool, USV. Stage V, HVO100-fähig, EMV/PQ-Expertise (EN 50160, IEC 61000-4-30). 19 Standorte CH. Schreibe in Schweizer B2B-Sprache, professionell, direkt, niemals Floskeln oder Marketing-Sprech. Maximal 100 Wörter. Kein "Sehr geehrter" wenn nicht zwingend nötig. WICHTIG: Füge KEINE Signatur, KEINE Grussformel mit Absender und KEINEN "Mit freundlichen Grüssen"-Block ein — die Signatur wird separat angehängt.`;
+  const _comp = loadCompany();
+  const system = `Du bist ein professioneller B2B-Vertriebsmitarbeiter${_comp?` bei ${_comp}`:''}. Schreibe in professioneller, direkter Geschäftssprache, niemals Floskeln oder Marketing-Sprech. Maximal 100 Wörter. Kein "Sehr geehrter" wenn nicht zwingend nötig. WICHTIG: Füge KEINE Signatur, KEINE Grussformel mit Absender und KEINEN "Mit freundlichen Grüssen"-Block ein — die Signatur wird separat angehängt.`;
 
   const prompt = `Schreibe eine ${typ}-Email an ${kontakt||'einen Ansprechpartner'} bei ${firma} (Branche: ${branche}).
 Kontext: ${kontext||'kein spezifischer Anlass'}
@@ -5859,7 +5889,7 @@ window.kiGenCall = async function(){
   const out = document.getElementById('kiCallOut');
   out.innerHTML = '<div class="loading"><span></span><span></span><span></span></div> Generiere Talking Points...';
 
-  const system = `Du bist ein Senior Sales Coach für Mobil in Time AG (Aggreko CH), spezialisiert auf temporäre Energielösungen. Du gibst dem Aussendienstler kompakte, sofort einsetzbare Anruf-Talking-Points in Schweizer Direktsprache. Keine generischen Floskeln, sondern branchenspezifische, technisch fundierte Aufhänger.`;
+  const system = `Du bist ein erfahrener B2B-Sales-Coach. Du gibst dem Vertriebsmitarbeiter kompakte, sofort einsetzbare Anruf-Talking-Points in professioneller Geschäftssprache. Keine generischen Floskeln, sondern konkrete, auf die Branche des Kunden zugeschnittene Aufhänger.`;
 
   const prompt = `Bereite einen Anruf vor:
 Firma: ${firma} (Branche: ${branche})
@@ -5899,7 +5929,7 @@ window.kiGenObj = async function(){
   const out = document.getElementById('kiObjOut');
   out.innerHTML = '<div class="loading"><span></span><span></span><span></span></div> Generiere Antwort-Strategien...';
 
-  const system = `Du bist ein Verhandlungstrainer für technische B2B-Vertriebler in der Schweizer Energie-Vermietung. Mobil in Time AG (Aggreko) bietet: 19 CH-Standorte, schnellste Reaktion, einziger CH-Vermieter mit EMV/PQ-Expertise, Stage V, HVO100, BESS, Komplettlösung Strom+Wärme+Kälte. Wettbewerber: Bimex, GENGA, Atlas Copco, Avesco. Du arbeitest mit den Prinzipien aus "Wie man Freunde gewinnt" (Empathie zuerst), Sun Tzu (nicht angreifen, umlenken) und Chris Voss (Tactical Empathy, Labels, Calibrated Questions).`;
+  const system = `Du bist ein Verhandlungstrainer für technische B2B-Vertriebler. Du arbeitest mit den Prinzipien aus "Wie man Freunde gewinnt" (Empathie zuerst), Sun Tzu (nicht angreifen, umlenken) und Chris Voss (Tactical Empathy, Labels, Calibrated Questions).`;
 
   const prompt = `Einwand des Kunden: "${ein}"
 Branche: ${branche}
@@ -5910,8 +5940,8 @@ Liefere genau drei Antwort-Strategien:
 1. EMPATHIE-REFRAME (Voss Tactical Empathy)
 [Wie du den Einwand validierst und in eine offene Frage zurückspielst, ohne zu kontern]
 
-2. FAKTEN-KONTER (Aggreko-Differenzierung)
-[Welcher konkrete MiT/Aggreko-Vorteil widerspricht diesem Einwand sachlich — mit Norm-Bezug oder messbarem Mehrwert]
+2. FAKTEN-KONTER (Differenzierung)
+[Welcher konkrete, sachliche Vorteil deines Angebots widerspricht diesem Einwand — mit messbarem Mehrwert oder belegbarem Argument]
 
 3. CLOSING-BRÜCKE (Sun Tzu — nicht direkt angreifen, sondern positionieren)
 [Wie du das Gespräch trotz Einwand zum Termin oder Pilot-Test führst]
@@ -6089,7 +6119,7 @@ async function aiExtractFromText(text){
 }
 
 function aiExtractionSystemPrompt(){
-  return `Du bist ein Daten-Extraktor für Mobil in Time AG (Aggreko CH), spezialisiert auf das Auslesen von Angeboten, Bestellungen, Pflichtenheften und Ausschreibungen aus dem temporären Energie-Vermietungsgeschäft (Generatoren, BESS, Heat/Cool, USV, Trafos).
+  return `Du bist ein Daten-Extraktor für ein B2B-Vertriebsteam, spezialisiert auf das Auslesen von Angeboten, Bestellungen, Aufträgen, Pflichtenheften und Ausschreibungen.
 
 Deine Aufgabe: Aus dem Eingabedokument strukturierte Felder extrahieren und ALS REINES JSON-OBJEKT antworten — kein Markdown, keine Backticks, keine Erklärung. Nur das JSON.
 
@@ -6106,7 +6136,7 @@ function aiExtractionUserPrompt(){
   "tel": "Telefon mit Ländervorwahl wenn möglich",
   "position": "Funktion/Rolle wenn ersichtlich",
   "ort": "Einsatzort/Adresse oder Ort",
-  "segment": "EINE der folgenden Kategorien: Industrie, Pharma, Rechenzentrum, Spital/Klinik, EVU, Gemeinde, Bau, Event, Cross-Sell, Sonstige (basierend auf Branche/Projekt)",
+  "segment": "EINE der folgenden Branchen: Industrie, Handel, Dienstleistung, IT/Tech, Gesundheit, Öffentlich/Verwaltung, Bau, Finanzen, Sonstige (basierend auf Branche/Projekt)",
   "status": "Lead, Kontaktiert, Angebot, Verhandlung, Gewonnen, oder Verloren — bei einem Angebot meist 'Angebot'",
   "chf_zwischen": "Zwischensumme exkl. MwSt als Zahl, oder null",
   "chf_total": "Endsumme inkl. MwSt als Zahl, oder null",
@@ -6117,7 +6147,7 @@ function aiExtractionUserPrompt(){
   "mietdauer_von": "ISO Datum Mietbeginn",
   "mietdauer_bis": "ISO Datum Mietende",
   "mietdauer_tage": "Anzahl Kalendertage als Zahl",
-  "produkte": "Hauptprodukte als kurze Liste, mit Pipe getrennt — z.B. '150 kVA Generator Stage V | Stromverteiler 125A | Diesel-Tank 3000L'",
+  "produkte": "Hauptprodukte/Positionen als kurze Liste, mit Pipe getrennt — z.B. 'Position A | Position B | Position C'",
   "dokument_datum": "ISO Datum des Dokuments",
   "wiedervorlage": "ISO Datum für sinnvolle Wiedervorlage — Standard: Dokument-Datum + 14 Tage",
   "naechster_schritt": "konkreter nächster Schritt — z.B. 'Nachfassen ob Angebot angenommen'",
@@ -6221,12 +6251,12 @@ function findMatchingContact(firma, kontakt, ort){
   });
   return m || null;
   // IMPORTANT: if same firma but DIFFERENT ort (Einsatzort) — treat as new contact,
-  // because Mobil in Time often runs multiple parallel projects per company at
+  // because a company often runs multiple parallel projects at
   // different sites that must be tracked independently.
 }
 
 function validSegment(s){
-  const valid = ['Industrie','Pharma','Rechenzentrum','Spital/Klinik','EVU','Gemeinde','Bau','Event','Cross-Sell','Sonstige'];
+  const valid = ['Industrie','Handel','Dienstleistung','IT/Tech','Gesundheit','Öffentlich/Verwaltung','Bau','Finanzen','Sonstige'];
   return valid.includes(s) ? s : null;
 }
 function validStatus(s){
@@ -6450,11 +6480,13 @@ window.handleExcelFile = function(input){
 
         // Parse segment
         let seg = ix.segment >= 0 ? String(row[ix.segment]||'').trim() : 'Sonstige';
-        if(!['Industrie','Pharma','Rechenzentrum','Spital/Klinik','EVU','Gemeinde','Bau','Event','Cross-Sell','Sonstige'].includes(seg)){
+        if(!['Industrie','Handel','Dienstleistung','IT/Tech','Gesundheit','Öffentlich/Verwaltung','Bau','Finanzen','Sonstige'].includes(seg)){
           // try fuzzy match
-          const segMap = {'industrie':'Industrie','pharma':'Pharma','rz':'Rechenzentrum','rechenz':'Rechenzentrum',
-                          'spital':'Spital/Klinik','klinik':'Spital/Klinik','evu':'EVU','gemeinde':'Gemeinde',
-                          'bau':'Bau','event':'Event'};
+          const segMap = {'industrie':'Industrie','produktion':'Industrie','handel':'Handel','retail':'Handel',
+                          'dienst':'Dienstleistung','service':'Dienstleistung','it':'IT/Tech','tech':'IT/Tech','software':'IT/Tech',
+                          'gesund':'Gesundheit','klinik':'Gesundheit','spital':'Gesundheit',
+                          'öffentl':'Öffentlich/Verwaltung','offentl':'Öffentlich/Verwaltung','gemeinde':'Öffentlich/Verwaltung','verwaltung':'Öffentlich/Verwaltung',
+                          'bau':'Bau','finanz':'Finanzen','bank':'Finanzen','versicher':'Finanzen'};
           const lower = seg.toLowerCase();
           let mapped = 'Sonstige';
           for(const k in segMap){ if(lower.includes(k)){ mapped = segMap[k]; break; } }
@@ -6602,14 +6634,14 @@ window.loadDemo = function(){
     if(!confirm('Es sind bereits Daten vorhanden. Demo zusätzlich laden?')) return;
   }
   const demoContacts = [
-    {firma:'Roche AG', kontakt:'Dr. Marc Bühler', email:'m.buehler@roche.ch', tel:'+41 61 688 11 11', position:'Head Facility Mgmt', ort:'Basel', segment:'Pharma', status:'Verhandlung', chf:185000, prob:60, next:'Vor-Ort-Termin Dimensionierung'},
-    {firma:'Swisscom AG', kontakt:'Frau Petra Stadelmann', email:'p.stadelmann@swisscom.ch', tel:'+41 58 221 99 11', position:'RZ-Leiterin', ort:'Bern', segment:'Rechenzentrum', status:'Angebot', chf:340000, prob:40, next:'Angebots-Review'},
-    {firma:'Universitätsspital Zürich', kontakt:'Herr Roger Imhof', email:'r.imhof@usz.ch', tel:'+41 44 255 11 11', position:'Technischer Leiter', ort:'Zürich', segment:'Spital/Klinik', status:'Kontaktiert', chf:420000, prob:30, next:'Pflichtenheft anfordern'},
-    {firma:'EWZ Elektrizitätswerke Zürich', kontakt:'Frau Sara Kohler', email:'sara.kohler@ewz.ch', tel:'+41 58 319 41 11', position:'Projektleiterin', ort:'Zürich', segment:'EVU', status:'Lead', chf:95000, prob:15, next:'Erstgespräch'},
-    {firma:'Implenia AG', kontakt:'Herr Markus Steiner', email:'markus.steiner@implenia.com', tel:'+41 58 474 74 74', position:'Bauleiter', ort:'Dietlikon', segment:'Bau', status:'Verhandlung', chf:62000, prob:70, next:'Verträge prüfen'},
-    {firma:'Stadt Winterthur', kontakt:'Frau Andrea Maurer', email:'andrea.maurer@win.ch', tel:'+41 52 267 51 51', position:'Stadtwerke-Leiterin', ort:'Winterthur', segment:'Gemeinde', status:'Gewonnen', chf:48000, prob:100, next:'Übergabe an Service'},
-    {firma:'CSL Behring AG', kontakt:'Herr Lukas Frei', email:'lukas.frei@cslbehring.com', position:'Plant Engineer', ort:'Bern', segment:'Pharma', status:'Lead', chf:0, prob:10, next:'Recherche Standort'},
-    {firma:'Tri Air AG', kontakt:'Herr Remo Nägeli', tel:'+41 55 220 12 34', ort:'Jona', segment:'Industrie', status:'Kontaktiert', chf:15000, prob:25, next:'Anruf in 6 Wochen'},
+    {firma:'Alpina Industrie AG', kontakt:'Marc Berger', email:'m.berger@alpina-ind.ch', tel:'+41 44 200 10 10', position:'Einkaufsleiter', ort:'Zürich', segment:'Industrie', status:'Verhandlung', chf:185000, prob:60, next:'Vor-Ort-Termin vereinbaren'},
+    {firma:'Helvetia Retail GmbH', kontakt:'Petra Stadelmann', email:'p.stadelmann@helvetia-retail.ch', tel:'+41 58 221 99 11', position:'Leiterin Beschaffung', ort:'Bern', segment:'Handel', status:'Angebot', chf:84000, prob:40, next:'Angebots-Review'},
+    {firma:'NordData Services AG', kontakt:'Roger Imhof', email:'r.imhof@norddata.ch', tel:'+41 44 255 11 11', position:'IT-Leiter', ort:'Zürich', segment:'IT/Tech', status:'Kontaktiert', chf:120000, prob:30, next:'Anforderungen klären'},
+    {firma:'Seeblick Klinik AG', kontakt:'Sara Kohler', email:'s.kohler@seeblick-klinik.ch', tel:'+41 58 319 41 11', position:'Verwaltungsleiterin', ort:'Luzern', segment:'Gesundheit', status:'Lead', chf:95000, prob:15, next:'Erstgespräch'},
+    {firma:'BauWerk AG', kontakt:'Markus Steiner', email:'m.steiner@bauwerk.ch', tel:'+41 58 474 74 74', position:'Projektleiter', ort:'Dietlikon', segment:'Bau', status:'Verhandlung', chf:62000, prob:70, next:'Verträge prüfen'},
+    {firma:'Gemeinde Musterlingen', kontakt:'Andrea Maurer', email:'a.maurer@musterlingen.ch', tel:'+41 52 267 51 51', position:'Bereichsleiterin', ort:'Winterthur', segment:'Öffentlich/Verwaltung', status:'Gewonnen', chf:48000, prob:100, next:'Übergabe an Service'},
+    {firma:'FinPlus AG', kontakt:'Lukas Frei', email:'l.frei@finplus.ch', position:'Office Manager', ort:'Zug', segment:'Finanzen', status:'Lead', chf:0, prob:10, next:'Recherche'},
+    {firma:'Meier Dienstleistungen GmbH', kontakt:'Remo Nägeli', tel:'+41 55 220 12 34', ort:'Jona', segment:'Dienstleistung', status:'Kontaktiert', chf:15000, prob:25, next:'Anruf in 6 Wochen'},
   ];
   const today = new Date();
   demoContacts.forEach((c, i) => {
@@ -7137,9 +7169,9 @@ function generateWochenbericht(){
 
 function buildWbEmailText({ mondayISO, sundayISO, weekActs, typCount, newContacts, wonThisWeek, lostThisWeek, pipelineTotal, openDeals, overdue }){
   const lines = [];
-  lines.push(`Wochenbericht Strom CH — ${fmtDate(mondayISO)} bis ${fmtDate(sundayISO)}`);
+  lines.push(`Wochenbericht — ${fmtDate(mondayISO)} bis ${fmtDate(sundayISO)}`);
   lines.push('');
-  lines.push('Hallo Stefan,');
+  lines.push('Hallo,');
   lines.push('');
   lines.push('hier mein kurzes Update zur aktuellen Woche:');
   lines.push('');
@@ -7190,7 +7222,8 @@ function buildWbEmailText({ mondayISO, sundayISO, weekActs, typCount, newContact
   lines.push('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   lines.push('');
   lines.push('Freundliche Grüsse');
-  lines.push('Sales Engineer Strom | Mobil in Time AG');
+  const _wbComp = loadCompany();
+  if(_wbComp) lines.push(_wbComp);
   return lines.join('\n');
 }
 
@@ -7567,7 +7600,7 @@ window.openEmailInOutlook = function(){
   const contact = selId ? STATE.contacts.find(c=>c.id===selId) : null;
   const toEmail = contact && contact.email ? contact.email : '';
 
-  const subject = encodeURIComponent(_kiEmailSubject || 'Mobil in Time AG — Temporäre Energielösungen');
+  const subject = encodeURIComponent(_kiEmailSubject || (loadCompany() ? loadCompany() + ' — Anfrage' : 'Anfrage'));
   const body    = encodeURIComponent(_kiEmailBody);
   const to      = toEmail ? encodeURIComponent(toEmail) : '';
   window.location.href = `mailto:${to}?subject=${subject}&body=${body}`;
@@ -7580,7 +7613,7 @@ window.openContactInOutlook = function(){
   const c = STATE.contacts.find(x=>x.id===currentContactId);
   if(!c) return;
   const toEmail = c.email || '';
-  const subject = encodeURIComponent(`Mobil in Time AG — ${c.firma}`);
+  const subject = encodeURIComponent(loadCompany() ? `${loadCompany()} — ${c.firma}` : `Kontaktaufnahme — ${c.firma}`);
   // Pre-fill a brief context from last activity
   const acts = STATE.activities.filter(a=>a.contactId===currentContactId)
     .sort((a,b)=>(b.date||'').localeCompare(a.date||''));
@@ -7719,10 +7752,9 @@ window.generateWbPdf = function(){
     box(0,HEADER_H-1.6,PW,1.6, RED);
 
     font('bold',15); ink([255,255,255]);
-    T('Mobil in Time AG', ML+2, 12);
+    T(loadCompany() || 'Nexa CRM', ML+2, 14);
     font('normal',7.5); ink([150,170,205]);
-    T('An Aggreko Company   ·   Sales Engineer Strom   ·   Schweiz', ML+2, 17.5);
-    T('mobilintime.com', ML+2, 22);
+    T('Vertriebsbericht', ML+2, 19.5);
 
     font('bold',19); ink([255,255,255]);
     T('WOCHENBERICHT', PW-MR, 12.5, {align:'right'});
@@ -7734,7 +7766,7 @@ window.generateWbPdf = function(){
     box(0,PH-FOOTER_H,PW,FOOTER_H, NAVY);
     box(0,PH-FOOTER_H,PW,1.4, RED);
     font('normal',7); ink([150,168,200]);
-    T('Mobil in Time AG  ·  Vertraulich', ML, PH-5.5);
+    T((loadCompany() || 'Nexa CRM') + '  ·  Vertraulich', ML, PH-5.5);
     const nowStr = new Date().toLocaleDateString('de-CH') + '  ' +
                    new Date().toLocaleTimeString('de-CH',{hour:'2-digit',minute:'2-digit'});
     T('Erstellt ' + nowStr, PW-MR, PH-5.5, {align:'right'});
@@ -8141,10 +8173,9 @@ window.generateAdReportPdf = function(repName){
   let pageNum=0;
   function drawHeader(subtitle){
     box(0,0,PW,HEADER_H,NAVY); box(0,0,3,HEADER_H,RED); box(0,HEADER_H-1.6,PW,1.6,RED);
-    font('bold',15); ink([255,255,255]); T('Mobil in Time AG', ML+2, 12);
+    font('bold',15); ink([255,255,255]); T(loadCompany() || 'Nexa CRM', ML+2, 14);
     font('normal',7.5); ink([150,170,205]);
-    T('An Aggreko Company   ·   Außendienst-Report   ·   Schweiz', ML+2, 17.5);
-    T('mobilintime.com', ML+2, 22);
+    T('Außendienst-Report', ML+2, 19.5);
     font('bold',17); ink([255,255,255]); T('AUSSENDIENST-REPORT', PW-MR, 11.5, {align:'right'});
     font('bold',10); ink([255,255,255]); T(repName, PW-MR, 17.5, {align:'right'});
     font('normal',8); ink([200,212,232]); T('Stand ' + fmtDFull(todayStr), PW-MR, 22.5, {align:'right'});
@@ -8153,7 +8184,7 @@ window.generateAdReportPdf = function(repName){
   function drawFooter(){
     box(0,PH-FOOTER_H,PW,FOOTER_H,NAVY); box(0,PH-FOOTER_H,PW,1.4,RED);
     font('normal',7); ink([150,168,200]);
-    T('Mobil in Time AG  ·  Vertraulich  ·  AD-Report ' + repName, ML, PH-5.5);
+    T((loadCompany() || 'Nexa CRM') + '  ·  Vertraulich  ·  AD-Report ' + repName, ML, PH-5.5);
     const nowStr=new Date().toLocaleDateString('de-CH')+'  '+new Date().toLocaleTimeString('de-CH',{hour:'2-digit',minute:'2-digit'});
     T('Erstellt ' + nowStr, PW-MR, PH-5.5, {align:'right'});
     font('bold',7.5); ink([255,255,255]); T('Seite ' + pageNum, PW/2, PH-5.5, {align:'center'});
@@ -8220,7 +8251,7 @@ window.generateAdReportPdf = function(repName){
   rbox(kx, Y, kw, statH, [255,255,255], 2); rbdr(kx, Y, kw, statH, LINE, 0.3, 2);
   box(kx, Y, kw, 2.4, RED);
   font('bold',7.5); ink(SLATE); T('KATEGORIE-VERTEILUNG', kx+5, Y+7.5);
-  const katOrder = ['Strom','Wärme','Kälte','USV','Mix','—'];
+  const katOrder = ['Produkt','Service','Beratung','Lizenz','Mix','—'];
   const katMaxC = Math.max(1, ...katOrder.map(k=>katDist[k]||0));
   const katBarMax = kw - 56;
   let ky = Y + 13;
@@ -8230,7 +8261,7 @@ window.generateAdReportPdf = function(repName){
     if(!c) return;
     const w = (c/katMaxC)*katBarMax;
     font('normal',7); ink(SLATE); T(k==='—'?'Keine':k, kx+5, ky);
-    box(kx+34, ky-2.6, Math.max(1.2,w), 3.2, k==='Strom'?[37,99,235]:k==='Wärme'?[200,50,50]:k==='Kälte'?[14,165,233]:k==='USV'?[124,58,237]:[100,116,139]);
+    box(kx+34, ky-2.6, Math.max(1.2,w), 3.2, k==='Produkt'?[37,99,235]:k==='Service'?[200,50,50]:k==='Beratung'?[14,165,233]:k==='Lizenz'?[124,58,237]:[100,116,139]);
     font('bold',7); ink(INK); T(String(c), kx+kw-5, ky, {align:'right'});
     ky += 5.3;
   });
@@ -8284,7 +8315,7 @@ window.generateAdReportPdf = function(repName){
     font('normal',7); ink(SLATE); T(clip(c.kontakt||'—', 20), cKont, Y+4.3);
     if(c.kategorie){
       font('bold',5.5); ink([255,255,255]);
-      const kCol = c.kategorie==='Strom'?[37,99,235]:c.kategorie==='Wärme'?[200,50,50]:c.kategorie==='Kälte'?[14,165,233]:c.kategorie==='USV'?[124,58,237]:[100,116,139];
+      const kCol = c.kategorie==='Produkt'?[37,99,235]:c.kategorie==='Service'?[200,50,50]:c.kategorie==='Beratung'?[14,165,233]:c.kategorie==='Lizenz'?[124,58,237]:[100,116,139];
       rbox(cKat-1, Y+1.4, 16, 3.6, kCol, 1.8);
       T(clip(c.kategorie.toUpperCase(), 7), cKat+7, Y+3.95, {align:'center'});
     }
@@ -8420,6 +8451,10 @@ function init(){
   const sig = loadSignature();
   const settingsSig = document.getElementById('settingsSig');
   if(sig && settingsSig){ settingsSig.value = sig; }
+  // Load company name
+  const comp = loadCompany();
+  const settingsCompany = document.getElementById('settingsCompany');
+  if(comp && settingsCompany){ settingsCompany.value = comp; }
   // Load WB settings
   const wbSettings = loadWbSettings();
   if(wbSettings.stefanEmail && document.getElementById('stefanEmail'))
@@ -8608,7 +8643,7 @@ if(document.readyState === 'loading'){
       <p class="tx-mute mb-md" style="font-size:12px;line-height:1.6">Hilft bei der späteren Analyse — was hat den Deal entschieden?</p>
       <div id="reasonOptions" class="reason-options"></div>
       <div class="field mt-md"><label>Zusatz-Notiz (optional)</label>
-        <input id="reasonNote" placeholder="z.B. Wettbewerber Bimex 12% günstiger">
+        <input id="reasonNote" placeholder="z.B. Wettbewerber 12% günstiger">
       </div>
     </div>
     <div class="modal-foot">
