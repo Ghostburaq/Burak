@@ -517,6 +517,18 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .mt-md{margin-top:14px}
 .hidden{display:none !important}
 
+/* ── Angebots-Positionen (Quote line items) ── */
+.qitem{display:grid;grid-template-columns:1fr 72px 96px 74px 100px 30px;gap:6px;align-items:center;margin-bottom:6px}
+.qitem input{padding:7px 9px;border:1px solid var(--line2);border-radius:8px;background:var(--bg-input);color:var(--text);font-size:13px;width:100%}
+.qitem input:focus{border-color:var(--brand);outline:none;box-shadow:0 0 0 3px var(--brand-soft)}
+.qi-num{text-align:right}
+.qi-sum{text-align:right;font-weight:600;font-size:13px}
+.qi-del{border:none;background:transparent;color:var(--text-dim);cursor:pointer;font-size:15px;border-radius:6px;padding:4px}
+.qi-del:hover{color:var(--danger)}
+.qitem-head{font-size:10.5px;color:var(--text-mute);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:5px;font-weight:600}
+.qtotals{margin-top:12px;border-top:1px solid var(--line);padding-top:12px;display:flex;flex-direction:column;gap:5px;align-items:flex-end;font-size:14px}
+.qtotals .qt-total{font-size:19px;font-weight:700;color:var(--brand)}
+
 /* ── MINI CALENDAR ─────────────────────────────────────────── */
 .mini-cal{
   background:var(--bg2);border:1px solid var(--line2);
@@ -1349,6 +1361,12 @@ alter publication supabase_realtime add table public.crm_state;</pre>
         <span class="nav-icon">≡</span> Pipeline
         <span class="nav-shortcut">3</span>
       </button>
+      <button class="nav-item" data-page="produkte" onclick="window.nav('produkte')">
+        <span class="nav-icon">📦</span> Produkte
+      </button>
+      <button class="nav-item" data-page="angebote" onclick="window.nav('angebote')">
+        <span class="nav-icon">📄</span> Angebote
+      </button>
       <button class="nav-item" data-page="wiedervorlagen" onclick="window.nav('wiedervorlagen')">
         <span class="nav-icon">↻</span> Wiedervorlagen
         <span class="nav-shortcut">4</span>
@@ -1560,6 +1578,55 @@ alter publication supabase_realtime add table public.crm_state;</pre>
                 <th class="tx-right">CHF</th><th>Letzte Akt.</th><th>Wiedervorlage</th>
               </tr></thead>
               <tbody id="kontakteBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ PRODUKTE PAGE ═══ -->
+      <div class="page" id="page-produkte">
+        <div class="table-wrap">
+          <div class="table-toolbar">
+            <input id="prodSearch" placeholder="Produkt / Artikelnr. suchen..." oninput="window.renderProdukte()">
+            <select id="prodCatFilter" onchange="window.renderProdukte()">
+              <option value="">Alle Kategorien</option>
+            </select>
+            <span style="flex:1"></span>
+            <span class="tx-dim mono" id="prodCount" style="font-size:12px"></span>
+            <button class="btn btn-primary btn-sm" onclick="window.openProductForm()">+ Neues Produkt</button>
+          </div>
+          <div style="max-height:calc(100vh - 250px);overflow-y:auto">
+            <table class="tbl">
+              <thead><tr>
+                <th>Bezeichnung</th><th>Artikelnr.</th><th>Kategorie</th><th>Einheit</th>
+                <th class="tx-right">Preis</th><th class="tx-right">MwSt</th><th style="width:90px"></th>
+              </tr></thead>
+              <tbody id="produkteBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ ANGEBOTE PAGE ═══ -->
+      <div class="page" id="page-angebote">
+        <div class="table-wrap">
+          <div class="table-toolbar">
+            <input id="quoteSearch" placeholder="Angebot / Firma suchen..." oninput="window.renderAngebote()">
+            <select id="quoteStatusFilter" onchange="window.renderAngebote()">
+              <option value="">Alle Status</option>
+              <option>Entwurf</option><option>Versendet</option><option>Akzeptiert</option><option>Abgelehnt</option>
+            </select>
+            <span style="flex:1"></span>
+            <span class="tx-dim mono" id="quoteCount" style="font-size:12px"></span>
+            <button class="btn btn-primary btn-sm" onclick="window.openQuoteForm()">+ Neues Angebot</button>
+          </div>
+          <div style="max-height:calc(100vh - 250px);overflow-y:auto">
+            <table class="tbl">
+              <thead><tr>
+                <th>Nummer</th><th>Firma</th><th>Datum</th><th>Gültig bis</th>
+                <th>Status</th><th class="tx-right">Total</th><th style="width:120px"></th>
+              </tr></thead>
+              <tbody id="angeboteBody"></tbody>
             </table>
           </div>
         </div>
@@ -2287,6 +2354,8 @@ const ATT_KEY     = 'mit_crm_attachments'; // {contactId: [{name, b64, size, dat
 const STATE = {
   contacts: [],     // {id, firma, kontakt, email, tel, position, ort, segment, status, chf, prob, wv, next, notiz, created, updated}
   activities: [],   // {id, contactId, date, typ, sum, next, newWv, newStatus, created}
+  products: [],     // {id, name, sku, price, unit, category, taxRate, active, notes, created}
+  quotes: [],       // {id, number, contactId, firma, kontakt, date, validUntil, status, items:[{name,qty,unitPrice,discount,taxRate}], notes, created, updated}
   meta: { v: 1, created: new Date().toISOString() }
 };
 
@@ -2408,6 +2477,8 @@ function loadState(){
       const d = JSON.parse(raw);
       if(d.contacts) STATE.contacts = d.contacts;
       if(d.activities) STATE.activities = d.activities;
+      if(Array.isArray(d.products)) STATE.products = d.products;
+      if(Array.isArray(d.quotes)) STATE.quotes = d.quotes;
       if(d.meta) STATE.meta = d.meta;
     }
   }catch(e){
@@ -2602,6 +2673,8 @@ function applyRemoteState(d){
   CLOUD.applying = true;
   STATE.contacts   = Array.isArray(d.contacts)   ? d.contacts   : [];
   STATE.activities = Array.isArray(d.activities) ? d.activities : [];
+  STATE.products   = Array.isArray(d.products)   ? d.products   : [];
+  STATE.quotes     = Array.isArray(d.quotes)     ? d.quotes     : [];
   if(d.meta) STATE.meta = d.meta;
   try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE)); }catch(e){}
   CLOUD.applying = false;
@@ -2612,7 +2685,7 @@ async function cloudPull(){
     const { data, error } = await CLOUD.client
       .from('crm_state').select('data,updated_by').eq('id', CLOUD.ORG).maybeSingle();
     if(error){ console.warn('cloudPull', error); showToast('Cloud-Laden fehlgeschlagen — lokaler Stand wird genutzt','warn'); return false; }
-    if(data && data.data && (data.data.contacts || data.data.activities)){
+    if(data && data.data && (data.data.contacts || data.data.activities || data.data.products || data.data.quotes)){
       applyRemoteState(data.data);
     } else {
       // No shared data yet → seed cloud from whatever is local (first run / migration)
@@ -2631,7 +2704,7 @@ async function cloudPush(force){
   if(!CLOUD.ready && !force) return;
   const payload = {
     id: CLOUD.ORG,
-    data: { contacts:STATE.contacts, activities:STATE.activities, meta:STATE.meta },
+    data: { contacts:STATE.contacts, activities:STATE.activities, products:STATE.products, quotes:STATE.quotes, meta:STATE.meta },
     updated_at: new Date().toISOString(),
     updated_by: CLOUD.user.email || CLOUD.user.id
   };
@@ -2808,6 +2881,7 @@ window.nav = function(page){
   if(navBtn) navBtn.classList.add('active');
   const titles = {
     today:'Heute', kontakte:'Kontakte', pipeline:'Pipeline',
+    produkte:'Produkte', angebote:'Angebote',
     wiedervorlagen:'Wiedervorlagen', aktivitaeten:'Aktivitäten',
     kalender:'Kalender', ki:'KI-Assist', analytics:'Analytics', settings:'Einstellungen'
   };
@@ -2816,6 +2890,8 @@ window.nav = function(page){
   if(page === 'today') renderToday();
   else if(page === 'analytics') renderAnalytics();
   else if(page === 'kontakte') renderKontakte();
+  else if(page === 'produkte') renderProdukte();
+  else if(page === 'angebote') renderAngebote();
   else if(page === 'pipeline') renderPipeline();
   else if(page === 'wiedervorlagen') renderWiedervorlagen();
   else if(page === 'aktivitaeten') renderAktivitaeten();
@@ -8502,6 +8578,324 @@ function init(){
   });
 }
 
+// ════════════════════════════════════════════════════════════════════════
+//  MODULE: PRODUKTKATALOG + ANGEBOTE
+// ════════════════════════════════════════════════════════════════════════
+const DEFAULT_TAX = 8.1; // CH MwSt-Normalsatz
+let _editingProductId = null;
+let _editingQuoteId = null;
+let _quoteItems = [];
+
+function fmtCHFpdfLocal(n){ return (Math.round((parseFloat(n)||0)*100)/100).toLocaleString('de-CH',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+// ── Produkte ──
+window.renderProdukte = function(){
+  const body = document.getElementById('produkteBody');
+  if(!body) return;
+  const cats = [...new Set(STATE.products.map(p=>p.category).filter(Boolean))].sort();
+  const catSel = document.getElementById('prodCatFilter');
+  const curCat = catSel ? catSel.value : '';
+  if(catSel){
+    catSel.innerHTML = '<option value="">Alle Kategorien</option>' + cats.map(c=>`<option ${c===curCat?'selected':''}>${escHtml(c)}</option>`).join('');
+    catSel.value = curCat;
+  }
+  const ql = ((document.getElementById('prodSearch')||{}).value||'').toLowerCase();
+  let list = STATE.products.filter(p=>{
+    if(curCat && p.category !== curCat) return false;
+    if(ql && !((p.name||'').toLowerCase().includes(ql) || (p.sku||'').toLowerCase().includes(ql))) return false;
+    return true;
+  });
+  list.sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  document.getElementById('prodCount').textContent = list.length + ' Produkte';
+  if(!list.length){
+    body.innerHTML = '<tr><td colspan="7" class="tx-mute" style="text-align:center;padding:30px">Noch keine Produkte — lege dein erstes an.</td></tr>';
+    return;
+  }
+  body.innerHTML = list.map(p=>`
+    <tr>
+      <td class="fw-bold">${escHtml(p.name)}</td>
+      <td class="mono tx-mute">${escHtml(p.sku||'—')}</td>
+      <td>${escHtml(p.category||'—')}</td>
+      <td>${escHtml(p.unit||'Stk')}</td>
+      <td class="tx-right">${fmtCHF(p.price||0)}</td>
+      <td class="tx-right tx-mute">${(p.taxRate!=null?p.taxRate:DEFAULT_TAX)}%</td>
+      <td class="tx-right">
+        <button class="btn btn-tiny btn-ghost" onclick="window.openProductForm('${p.id}')">✎</button>
+        <button class="btn btn-tiny btn-ghost" onclick="window.deleteProduct('${p.id}')">🗑</button>
+      </td>
+    </tr>`).join('');
+};
+
+window.openProductForm = function(id){
+  _editingProductId = id || null;
+  const p = id ? STATE.products.find(x=>x.id===id) : null;
+  document.getElementById('prodFormTitle').textContent = p ? 'Produkt bearbeiten' : 'Neues Produkt';
+  document.getElementById('pfName').value = p ? (p.name||'') : '';
+  document.getElementById('pfSku').value = p ? (p.sku||'') : '';
+  document.getElementById('pfCategory').value = p ? (p.category||'') : '';
+  document.getElementById('pfUnit').value = p ? (p.unit||'Stk') : 'Stk';
+  document.getElementById('pfPrice').value = p ? (p.price!=null?p.price:'') : '';
+  document.getElementById('pfTax').value = p ? (p.taxRate!=null?p.taxRate:DEFAULT_TAX) : DEFAULT_TAX;
+  document.getElementById('pfNotes').value = p ? (p.notes||'') : '';
+  openModal('modalProduct');
+};
+
+window.saveProduct = function(){
+  const name = document.getElementById('pfName').value.trim();
+  if(!name){ showToast('Bezeichnung fehlt', 'error'); return; }
+  const rec = {
+    name,
+    sku: document.getElementById('pfSku').value.trim(),
+    category: document.getElementById('pfCategory').value.trim(),
+    unit: document.getElementById('pfUnit').value.trim() || 'Stk',
+    price: parseFloat(document.getElementById('pfPrice').value)||0,
+    taxRate: parseFloat(document.getElementById('pfTax').value)||0,
+    notes: document.getElementById('pfNotes').value.trim()
+  };
+  if(_editingProductId){
+    const p = STATE.products.find(x=>x.id===_editingProductId);
+    if(p) Object.assign(p, rec);
+  } else {
+    STATE.products.push({ id:uid(), ...rec, created:new Date().toISOString() });
+  }
+  saveState();
+  closeModal('modalProduct');
+  window.renderProdukte();
+  showToast('✓ Produkt gespeichert', 'success');
+};
+
+window.deleteProduct = function(id){
+  if(!confirm('Produkt wirklich löschen?')) return;
+  STATE.products = STATE.products.filter(p=>p.id!==id);
+  saveState();
+  window.renderProdukte();
+  showToast('Produkt gelöscht', 'success');
+};
+
+// ── Angebote ──
+function lineNet(it){ return (parseFloat(it.qty)||0) * (parseFloat(it.unitPrice)||0) * (1 - (parseFloat(it.discount)||0)/100); }
+function quoteTotals(items){
+  let net=0, tax=0;
+  (items||[]).forEach(it=>{ const n=lineNet(it); net+=n; tax += n*((parseFloat(it.taxRate)||0)/100); });
+  return { net, tax, total:net+tax };
+}
+function nextQuoteNumber(){
+  const year = new Date().getFullYear();
+  const prefix = 'AN-'+year+'-';
+  const nums = STATE.quotes.filter(q=>q.number&&q.number.indexOf(prefix)===0).map(q=>parseInt(q.number.slice(prefix.length))||0);
+  return prefix + String((nums.length?Math.max(...nums):0)+1).padStart(3,'0');
+}
+function quoteStatusBadge(s){
+  const map = {'Entwurf':'#8a8a8e','Versendet':'#0071e3','Akzeptiert':'#1d8a4e','Abgelehnt':'#e0314b'};
+  const col = map[s]||'#8a8a8e';
+  return `<span style="display:inline-block;padding:2px 9px;border-radius:980px;font-size:11px;font-weight:600;color:#fff;background:${col}">${escHtml(s||'Entwurf')}</span>`;
+}
+
+window.renderAngebote = function(){
+  const body = document.getElementById('angeboteBody');
+  if(!body) return;
+  const q = ((document.getElementById('quoteSearch')||{}).value||'').toLowerCase();
+  const sf = (document.getElementById('quoteStatusFilter')||{}).value||'';
+  let list = STATE.quotes.filter(x=>{
+    if(sf && (x.status||'Entwurf')!==sf) return false;
+    if(q && !((x.firma||'').toLowerCase().includes(q) || (x.number||'').toLowerCase().includes(q))) return false;
+    return true;
+  });
+  list.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  document.getElementById('quoteCount').textContent = list.length + ' Angebote';
+  if(!list.length){
+    body.innerHTML = '<tr><td colspan="7" class="tx-mute" style="text-align:center;padding:30px">Noch keine Angebote — erstelle dein erstes.</td></tr>';
+    return;
+  }
+  body.innerHTML = list.map(x=>{
+    const t = quoteTotals(x.items);
+    return `<tr>
+      <td class="mono fw-bold">${escHtml(x.number||'—')}</td>
+      <td>${escHtml(x.firma||'—')}</td>
+      <td class="tx-mute">${x.date?fmtDate(x.date):'—'}</td>
+      <td class="tx-mute">${x.validUntil?fmtDate(x.validUntil):'—'}</td>
+      <td>${quoteStatusBadge(x.status)}</td>
+      <td class="tx-right fw-bold">${fmtCHF(t.total)}</td>
+      <td class="tx-right">
+        <button class="btn btn-tiny btn-ghost" onclick="window.openQuoteForm('${x.id}')">✎</button>
+        <button class="btn btn-tiny btn-ghost" onclick="window.quotePdf('${x.id}')" title="PDF">📄</button>
+        <button class="btn btn-tiny btn-ghost" onclick="window.deleteQuote('${x.id}')">🗑</button>
+      </td>
+    </tr>`;
+  }).join('');
+};
+
+window.openQuoteForm = function(id){
+  _editingQuoteId = id || null;
+  const x = id ? STATE.quotes.find(q=>q.id===id) : null;
+  document.getElementById('quoteFormTitle').textContent = x ? ('Angebot '+(x.number||'')) : 'Neues Angebot';
+  const csel = document.getElementById('qfContact');
+  const contacts = [...STATE.contacts].sort((a,b)=>(a.firma||'').localeCompare(b.firma||''));
+  csel.innerHTML = '<option value="">— Kontakt wählen (optional) —</option>' +
+    contacts.map(c=>`<option value="${c.id}">${escHtml(c.firma||'?')}${c.kontakt?' · '+escHtml(c.kontakt):''}</option>`).join('');
+  csel.value = x && x.contactId ? x.contactId : '';
+  const psel = document.getElementById('qfProductPick');
+  const prods = [...STATE.products].sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  psel.innerHTML = '<option value="">＋ Produkt aus Katalog…</option>' +
+    prods.map(p=>`<option value="${p.id}">${escHtml(p.name)} — ${fmtCHF(p.price||0)}</option>`).join('');
+  document.getElementById('qfFirma').value = x ? (x.firma||'') : '';
+  document.getElementById('qfKontakt').value = x ? (x.kontakt||'') : '';
+  document.getElementById('qfDate').value = x ? (x.date? x.date.slice(0,10): todayISO()) : todayISO();
+  document.getElementById('qfValid').value = x ? (x.validUntil? x.validUntil.slice(0,10):'') : '';
+  document.getElementById('qfStatus').value = x ? (x.status||'Entwurf') : 'Entwurf';
+  document.getElementById('qfNotes').value = x ? (x.notes||'') : '';
+  _quoteItems = x && Array.isArray(x.items) ? x.items.map(it=>({...it})) : [];
+  if(!_quoteItems.length) _quoteItems.push({name:'', qty:1, unitPrice:0, discount:0, taxRate:DEFAULT_TAX});
+  renderQuoteItems();
+  openModal('modalQuote');
+};
+
+window.qfContactPick = function(){
+  const c = STATE.contacts.find(x=>x.id===document.getElementById('qfContact').value);
+  if(c){
+    document.getElementById('qfFirma').value = c.firma||'';
+    document.getElementById('qfKontakt').value = c.kontakt||'';
+  }
+};
+
+function renderQuoteItems(){
+  const wrap = document.getElementById('qfItems');
+  wrap.innerHTML = _quoteItems.map((it,i)=>`
+    <div class="qitem">
+      <input class="qi-name" placeholder="Bezeichnung" value="${escHtml(it.name||'')}" oninput="window.quoteItemChange(${i},'name',this.value)">
+      <input class="qi-num" type="number" step="any" placeholder="1" value="${it.qty!=null?it.qty:''}" oninput="window.quoteItemChange(${i},'qty',this.value)">
+      <input class="qi-num" type="number" step="any" placeholder="0.00" value="${it.unitPrice!=null?it.unitPrice:''}" oninput="window.quoteItemChange(${i},'unitPrice',this.value)">
+      <input class="qi-num" type="number" step="any" placeholder="0" value="${it.discount||0}" oninput="window.quoteItemChange(${i},'discount',this.value)">
+      <span class="qi-sum">${fmtCHF(lineNet(it))}</span>
+      <button class="qi-del" onclick="window.removeQuoteItem(${i})" title="Position entfernen">✕</button>
+    </div>`).join('');
+  recalcQuoteTotals();
+}
+window.quoteItemChange = function(i, field, val){
+  if(!_quoteItems[i]) return;
+  _quoteItems[i][field] = val;
+  const wrap = document.getElementById('qfItems');
+  const row = wrap && wrap.children[i];
+  if(row){ const sumEl = row.querySelector('.qi-sum'); if(sumEl) sumEl.textContent = fmtCHF(lineNet(_quoteItems[i])); }
+  recalcQuoteTotals();
+};
+window.addQuoteItem = function(){ _quoteItems.push({name:'', qty:1, unitPrice:0, discount:0, taxRate:DEFAULT_TAX}); renderQuoteItems(); };
+window.removeQuoteItem = function(i){ _quoteItems.splice(i,1); if(!_quoteItems.length)_quoteItems.push({name:'',qty:1,unitPrice:0,discount:0,taxRate:DEFAULT_TAX}); renderQuoteItems(); };
+window.quoteAddFromCatalog = function(){
+  const p = STATE.products.find(x=>x.id===document.getElementById('qfProductPick').value);
+  if(!p) return;
+  const last = _quoteItems[_quoteItems.length-1];
+  const item = {name:p.name, qty:1, unitPrice:p.price||0, discount:0, taxRate:(p.taxRate!=null?p.taxRate:DEFAULT_TAX)};
+  if(last && !(last.name||'').trim() && !parseFloat(last.unitPrice)) _quoteItems[_quoteItems.length-1] = item;
+  else _quoteItems.push(item);
+  document.getElementById('qfProductPick').value='';
+  renderQuoteItems();
+};
+function recalcQuoteTotals(){
+  const t = quoteTotals(_quoteItems);
+  document.getElementById('qfNet').textContent = fmtCHF(t.net);
+  document.getElementById('qfTax').textContent = fmtCHF(t.tax);
+  document.getElementById('qfTotal').textContent = fmtCHF(t.total);
+}
+
+window.saveQuote = function(){
+  const firma = document.getElementById('qfFirma').value.trim();
+  if(!firma){ showToast('Firma fehlt', 'error'); return; }
+  const items = _quoteItems.filter(it=>(it.name||'').trim() || (parseFloat(it.unitPrice)||0));
+  if(!items.length){ showToast('Mindestens eine Position eingeben', 'error'); return; }
+  const rec = {
+    contactId: document.getElementById('qfContact').value || null,
+    firma,
+    kontakt: document.getElementById('qfKontakt').value.trim(),
+    date: document.getElementById('qfDate').value || todayISO(),
+    validUntil: document.getElementById('qfValid').value || '',
+    status: document.getElementById('qfStatus').value || 'Entwurf',
+    notes: document.getElementById('qfNotes').value.trim(),
+    items: items.map(it=>({name:(it.name||'').trim(), qty:parseFloat(it.qty)||0, unitPrice:parseFloat(it.unitPrice)||0, discount:parseFloat(it.discount)||0, taxRate:parseFloat(it.taxRate)||0}))
+  };
+  if(_editingQuoteId){
+    const x = STATE.quotes.find(q=>q.id===_editingQuoteId);
+    if(x){ Object.assign(x, rec); x.updated=new Date().toISOString(); }
+  } else {
+    STATE.quotes.push({ id:uid(), number:nextQuoteNumber(), ...rec, created:new Date().toISOString(), updated:new Date().toISOString() });
+  }
+  saveState();
+  closeModal('modalQuote');
+  window.renderAngebote();
+  showToast('✓ Angebot gespeichert', 'success');
+};
+
+window.deleteQuote = function(id){
+  if(!confirm('Angebot wirklich löschen?')) return;
+  STATE.quotes = STATE.quotes.filter(q=>q.id!==id);
+  saveState();
+  window.renderAngebote();
+  showToast('Angebot gelöscht', 'success');
+};
+
+window.quotePdf = function(id){
+  const x = STATE.quotes.find(q=>q.id===id);
+  if(!x) return;
+  if(typeof window.jspdf === 'undefined'){ showToast('jsPDF nicht geladen — Seite neu laden', 'error'); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+  const PW=210, ML=18, MR=18, CW=PW-ML-MR;
+  const company = loadCompany() || 'Nexa';
+  let y = 22;
+  doc.setFont('helvetica','bold'); doc.setFontSize(20); doc.setTextColor(20,20,22);
+  doc.text(company, ML, y);
+  doc.setTextColor(0,113,227);
+  doc.text('ANGEBOT', PW-MR, y, {align:'right'});
+  y+=7;
+  doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(120,120,128);
+  doc.text(x.number||'', PW-MR, y, {align:'right'});
+  y+=10;
+  doc.setDrawColor(225,225,228); doc.line(ML, y, PW-MR, y); y+=8;
+  doc.setTextColor(120,120,128); doc.setFontSize(9); doc.text('ANGEBOT FÜR', ML, y);
+  let my = y;
+  doc.setTextColor(20,20,22); doc.setFontSize(11); doc.setFont('helvetica','bold');
+  y+=5; doc.text(x.firma||'', ML, y);
+  if(x.kontakt){ y+=5; doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.text(x.kontakt, ML, y); }
+  doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(80,80,86);
+  doc.text('Datum: '+(x.date?fmtDate(x.date):'—'), PW-MR, my+5, {align:'right'});
+  if(x.validUntil){ doc.text('Gültig bis: '+fmtDate(x.validUntil), PW-MR, my+10, {align:'right'}); }
+  y+=12;
+  const cName=ML, cQty=ML+98, cPrice=ML+126, cDisc=ML+150, cSum=PW-MR;
+  doc.setFillColor(245,245,247); doc.rect(ML, y-5, CW, 8, 'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(80,80,86);
+  doc.text('Bezeichnung', cName+2, y);
+  doc.text('Menge', cQty, y, {align:'right'});
+  doc.text('Preis', cPrice, y, {align:'right'});
+  doc.text('Rab.%', cDisc, y, {align:'right'});
+  doc.text('Betrag', cSum, y, {align:'right'});
+  y+=8;
+  doc.setFont('helvetica','normal'); doc.setTextColor(30,30,32); doc.setFontSize(10);
+  (x.items||[]).forEach(it=>{
+    if(y>262){ doc.addPage(); y=22; }
+    const nameLines = doc.splitTextToSize(it.name||'', 90);
+    doc.text(nameLines, cName+2, y);
+    doc.text(String(it.qty||0), cQty, y, {align:'right'});
+    doc.text(fmtCHFpdfLocal(it.unitPrice||0), cPrice, y, {align:'right'});
+    doc.text(String(it.discount||0), cDisc, y, {align:'right'});
+    doc.text(fmtCHFpdfLocal(lineNet(it)), cSum, y, {align:'right'});
+    y += Math.max(6, nameLines.length*5);
+    doc.setDrawColor(238,238,240); doc.line(ML, y-2, PW-MR, y-2);
+  });
+  const t = quoteTotals(x.items);
+  y+=4;
+  doc.setFontSize(10); doc.setTextColor(80,80,86);
+  doc.text('Zwischensumme', cPrice, y, {align:'right'}); doc.text(fmtCHFpdfLocal(t.net), cSum, y, {align:'right'}); y+=6;
+  doc.text('MwSt', cPrice, y, {align:'right'}); doc.text(fmtCHFpdfLocal(t.tax), cSum, y, {align:'right'}); y+=7;
+  doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(0,113,227);
+  doc.text('Total', cPrice, y, {align:'right'}); doc.text('CHF '+fmtCHFpdfLocal(t.total), cSum, y, {align:'right'});
+  if(x.notes){ y+=12; doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(110,110,116);
+    doc.text(doc.splitTextToSize(x.notes, CW), ML, y); }
+  doc.setFontSize(8); doc.setTextColor(150,150,156);
+  doc.text(company+'  ·  '+(x.number||''), ML, 288);
+  doc.save((x.number||'Angebot')+'.pdf');
+  showToast('📄 Angebots-PDF erstellt', 'success');
+};
+
 // Entry point: auth gate (Supabase) decides login / local mode, then runs init()
 if(document.readyState === 'loading'){
   document.addEventListener('DOMContentLoaded', bootstrap);
@@ -8515,6 +8909,73 @@ if(document.readyState === 'loading'){
 <!-- ═══════════════════════════════════════════════════════════════════════ -->
 <!-- MODAL: Wochenbericht                                                    -->
 <!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- MODAL: Produkt -->
+<div class="modal-bg" id="modalProduct">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-h">
+      <div class="modal-title" id="prodFormTitle">Neues Produkt</div>
+      <button class="modal-x" onclick="window.closeModal('modalProduct')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="field full"><label>Bezeichnung *</label><input id="pfName"></div>
+        <div class="field"><label>Artikelnummer</label><input id="pfSku"></div>
+        <div class="field"><label>Kategorie</label><input id="pfCategory" placeholder="z.B. Hardware"></div>
+        <div class="field"><label>Einheit</label><input id="pfUnit" placeholder="Stk / Tag / h / Pauschal"></div>
+        <div class="field"><label>Preis (CHF, netto)</label><input id="pfPrice" type="number" step="any"></div>
+        <div class="field"><label>MwSt %</label><input id="pfTax" type="number" step="any"></div>
+        <div class="field full"><label>Notiz</label><textarea id="pfNotes" rows="2"></textarea></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="window.closeModal('modalProduct')">Abbrechen</button>
+      <button class="btn btn-primary" onclick="window.saveProduct()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Angebot -->
+<div class="modal-bg" id="modalQuote">
+  <div class="modal lg" style="max-width:760px">
+    <div class="modal-h">
+      <div class="modal-title" id="quoteFormTitle">Neues Angebot</div>
+      <button class="modal-x" onclick="window.closeModal('modalQuote')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="field full"><label>Kontakt aus CRM (optional)</label>
+          <select id="qfContact" onchange="window.qfContactPick()"></select></div>
+        <div class="field"><label>Firma *</label><input id="qfFirma"></div>
+        <div class="field"><label>Ansprechpartner</label><input id="qfKontakt"></div>
+        <div class="field"><label>Datum</label><input id="qfDate" type="date"></div>
+        <div class="field"><label>Gültig bis</label><input id="qfValid" type="date"></div>
+        <div class="field"><label>Status</label>
+          <select id="qfStatus"><option>Entwurf</option><option>Versendet</option><option>Akzeptiert</option><option>Abgelehnt</option></select></div>
+      </div>
+      <div class="section-h">Positionen</div>
+      <div class="qitem qitem-head">
+        <span>Bezeichnung</span><span class="tx-right">Menge</span><span class="tx-right">Preis</span><span class="tx-right">Rabatt%</span><span class="tx-right">Betrag</span><span></span>
+      </div>
+      <div id="qfItems"></div>
+      <div class="row gap-md mt-md" style="flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm" onclick="window.addQuoteItem()">＋ Position</button>
+        <select id="qfProductPick" onchange="window.quoteAddFromCatalog()" style="max-width:280px"></select>
+      </div>
+      <div class="qtotals">
+        <div>Zwischensumme: <b id="qfNet">CHF 0.00</b></div>
+        <div>MwSt: <b id="qfTax">CHF 0.00</b></div>
+        <div class="qt-total">Total: <span id="qfTotal">CHF 0.00</span></div>
+      </div>
+      <div class="field full mt-md"><label>Notiz / Bedingungen</label><textarea id="qfNotes" rows="2"></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="window.closeModal('modalQuote')">Abbrechen</button>
+      <span class="flex1"></span>
+      <button class="btn btn-primary" onclick="window.saveQuote()">Speichern</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-bg" id="modalWochenbericht">
   <div class="modal lg" style="max-width:780px">
     <div class="modal-h">
