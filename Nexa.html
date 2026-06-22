@@ -6489,7 +6489,7 @@ window.handleExcelFile = function(input){
         if(!['Industrie','Handel','Dienstleistung','IT/Tech','Gesundheit','Öffentlich/Verwaltung','Bau','Finanzen','Sonstige'].includes(seg)){
           // try fuzzy match
           const segMap = {'industrie':'Industrie','produktion':'Industrie','handel':'Handel','retail':'Handel',
-                          'dienst':'Dienstleistung','service':'Dienstleistung','it':'IT/Tech','tech':'IT/Tech','software':'IT/Tech',
+                          'dienst':'Dienstleistung','service':'Dienstleistung','informatik':'IT/Tech','edv':'IT/Tech','tech':'IT/Tech','software':'IT/Tech',
                           'gesund':'Gesundheit','klinik':'Gesundheit','spital':'Gesundheit',
                           'öffentl':'Öffentlich/Verwaltung','offentl':'Öffentlich/Verwaltung','gemeinde':'Öffentlich/Verwaltung','verwaltung':'Öffentlich/Verwaltung',
                           'bau':'Bau','finanz':'Finanzen','bank':'Finanzen','versicher':'Finanzen'};
@@ -7045,12 +7045,6 @@ window.saveWbSettings = function(){
   localStorage.setItem(WB_KEY, JSON.stringify({recipientName, stefanEmail, ccEmail}));
   showToast('✓ Wochenbericht-Einstellungen gespeichert', 'success');
 };
-
-// Display name for the recipient — falls back to a neutral label
-function wbRecipientName(){
-  const s = loadWbSettings();
-  return (s.recipientName||'').trim() || 'Empfänger';
-}
 
 function loadWbSettings(){
   try{ return JSON.parse(localStorage.getItem(WB_KEY)||'{}'); } catch(e){ return {}; }
