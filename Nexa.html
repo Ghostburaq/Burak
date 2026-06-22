@@ -529,6 +529,12 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .qtotals{margin-top:12px;border-top:1px solid var(--line);padding-top:12px;display:flex;flex-direction:column;gap:5px;align-items:flex-end;font-size:14px}
 .qtotals .qt-total{font-size:19px;font-weight:700;color:var(--brand)}
 
+/* ── Verfügbarkeit (rental availability) ── */
+.avail-asset{border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:10px;background:var(--bg-card)}
+.avail-head{font-weight:700;font-size:15px;margin-bottom:8px;display:flex;align-items:center;gap:10px}
+.avail-row{display:flex;align-items:center;gap:12px;padding:6px 0;border-top:1px solid var(--line);font-size:13px}
+.avail-row:first-of-type{border-top:none}
+
 /* ── MINI CALENDAR ─────────────────────────────────────────── */
 .mini-cal{
   background:var(--bg2);border:1px solid var(--line2);
@@ -1367,6 +1373,9 @@ alter publication supabase_realtime add table public.crm_state;</pre>
       <button class="nav-item" data-page="angebote" onclick="window.nav('angebote')">
         <span class="nav-icon">📄</span> Angebote
       </button>
+      <button class="nav-item" data-page="vermietung" onclick="window.nav('vermietung')">
+        <span class="nav-icon">🔑</span> Vermietung
+      </button>
       <button class="nav-item" data-page="wiedervorlagen" onclick="window.nav('wiedervorlagen')">
         <span class="nav-icon">↻</span> Wiedervorlagen
         <span class="nav-shortcut">4</span>
@@ -1628,6 +1637,73 @@ alter publication supabase_realtime add table public.crm_state;</pre>
               </tr></thead>
               <tbody id="angeboteBody"></tbody>
             </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ VERMIETUNG PAGE ═══ -->
+      <div class="page" id="page-vermietung">
+        <div class="tabs" style="margin-bottom:16px">
+          <button class="tab active" data-miet="assets" onclick="window.mietTab('assets')">📦 Mietpark</button>
+          <button class="tab" data-miet="rentals" onclick="window.mietTab('rentals')">📋 Verträge</button>
+          <button class="tab" data-miet="avail" onclick="window.mietTab('avail')">📅 Verfügbarkeit</button>
+        </div>
+
+        <!-- Mietpark (Assets) -->
+        <div class="tab-pane active" id="miet-assets">
+          <div class="table-wrap">
+            <div class="table-toolbar">
+              <input id="assetSearch" placeholder="Gerät / Artikelnr. suchen..." oninput="window.renderAssets()">
+              <select id="assetStatusFilter" onchange="window.renderAssets()">
+                <option value="">Alle Status</option>
+                <option>Verfügbar</option><option>Vermietet</option><option>Wartung</option><option>Defekt</option>
+              </select>
+              <span style="flex:1"></span>
+              <span class="tx-dim mono" id="assetCount" style="font-size:12px"></span>
+              <button class="btn btn-primary btn-sm" onclick="window.openAssetForm()">+ Neues Gerät</button>
+            </div>
+            <div style="max-height:calc(100vh - 300px);overflow-y:auto">
+              <table class="tbl">
+                <thead><tr>
+                  <th>Gerät</th><th>Artikelnr.</th><th>Kategorie</th>
+                  <th class="tx-right">Tagessatz</th><th>Status</th><th>Belegung</th><th style="width:90px"></th>
+                </tr></thead>
+                <tbody id="assetsBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Verträge (Rentals) -->
+        <div class="tab-pane" id="miet-rentals">
+          <div class="table-wrap">
+            <div class="table-toolbar">
+              <input id="rentalSearch" placeholder="Vertrag / Firma / Gerät suchen..." oninput="window.renderRentals()">
+              <select id="rentalStatusFilter" onchange="window.renderRentals()">
+                <option value="">Alle Status</option>
+                <option>Reserviert</option><option>Aktiv</option><option>Zurückgegeben</option><option>Storniert</option>
+              </select>
+              <span style="flex:1"></span>
+              <span class="tx-dim mono" id="rentalCount" style="font-size:12px"></span>
+              <button class="btn btn-primary btn-sm" onclick="window.openRentalForm()">+ Neue Vermietung</button>
+            </div>
+            <div style="max-height:calc(100vh - 300px);overflow-y:auto">
+              <table class="tbl">
+                <thead><tr>
+                  <th>Nummer</th><th>Gerät</th><th>Firma</th><th>Zeitraum</th>
+                  <th class="tx-right">Tage</th><th class="tx-right">Total</th><th>Status</th><th style="width:120px"></th>
+                </tr></thead>
+                <tbody id="rentalsBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Verfügbarkeit -->
+        <div class="tab-pane" id="miet-avail">
+          <div class="card">
+            <div class="card-h"><div class="card-title">Verfügbarkeit & Buchungen</div></div>
+            <div id="availBody"></div>
           </div>
         </div>
       </div>
@@ -2356,6 +2432,8 @@ const STATE = {
   activities: [],   // {id, contactId, date, typ, sum, next, newWv, newStatus, created}
   products: [],     // {id, name, sku, price, unit, category, taxRate, active, notes, created}
   quotes: [],       // {id, number, contactId, firma, kontakt, date, validUntil, status, items:[{name,qty,unitPrice,discount,taxRate}], notes, created, updated}
+  assets: [],       // {id, name, sku, category, dailyRate, status, serial, notes, created}
+  rentals: [],      // {id, number, assetId, assetName, contactId, firma, kontakt, from, to, dailyRate, deposit, status, notes, created, updated}
   meta: { v: 1, created: new Date().toISOString() }
 };
 
@@ -2479,6 +2557,8 @@ function loadState(){
       if(d.activities) STATE.activities = d.activities;
       if(Array.isArray(d.products)) STATE.products = d.products;
       if(Array.isArray(d.quotes)) STATE.quotes = d.quotes;
+      if(Array.isArray(d.assets)) STATE.assets = d.assets;
+      if(Array.isArray(d.rentals)) STATE.rentals = d.rentals;
       if(d.meta) STATE.meta = d.meta;
     }
   }catch(e){
@@ -2675,6 +2755,8 @@ function applyRemoteState(d){
   STATE.activities = Array.isArray(d.activities) ? d.activities : [];
   STATE.products   = Array.isArray(d.products)   ? d.products   : [];
   STATE.quotes     = Array.isArray(d.quotes)     ? d.quotes     : [];
+  STATE.assets     = Array.isArray(d.assets)     ? d.assets     : [];
+  STATE.rentals    = Array.isArray(d.rentals)    ? d.rentals    : [];
   if(d.meta) STATE.meta = d.meta;
   try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE)); }catch(e){}
   CLOUD.applying = false;
@@ -2685,7 +2767,7 @@ async function cloudPull(){
     const { data, error } = await CLOUD.client
       .from('crm_state').select('data,updated_by').eq('id', CLOUD.ORG).maybeSingle();
     if(error){ console.warn('cloudPull', error); showToast('Cloud-Laden fehlgeschlagen — lokaler Stand wird genutzt','warn'); return false; }
-    if(data && data.data && (data.data.contacts || data.data.activities || data.data.products || data.data.quotes)){
+    if(data && data.data && (data.data.contacts || data.data.activities || data.data.products || data.data.quotes || data.data.assets || data.data.rentals)){
       applyRemoteState(data.data);
     } else {
       // No shared data yet → seed cloud from whatever is local (first run / migration)
@@ -2704,7 +2786,7 @@ async function cloudPush(force){
   if(!CLOUD.ready && !force) return;
   const payload = {
     id: CLOUD.ORG,
-    data: { contacts:STATE.contacts, activities:STATE.activities, products:STATE.products, quotes:STATE.quotes, meta:STATE.meta },
+    data: { contacts:STATE.contacts, activities:STATE.activities, products:STATE.products, quotes:STATE.quotes, assets:STATE.assets, rentals:STATE.rentals, meta:STATE.meta },
     updated_at: new Date().toISOString(),
     updated_by: CLOUD.user.email || CLOUD.user.id
   };
@@ -2881,7 +2963,7 @@ window.nav = function(page){
   if(navBtn) navBtn.classList.add('active');
   const titles = {
     today:'Heute', kontakte:'Kontakte', pipeline:'Pipeline',
-    produkte:'Produkte', angebote:'Angebote',
+    produkte:'Produkte', angebote:'Angebote', vermietung:'Vermietung',
     wiedervorlagen:'Wiedervorlagen', aktivitaeten:'Aktivitäten',
     kalender:'Kalender', ki:'KI-Assist', analytics:'Analytics', settings:'Einstellungen'
   };
@@ -2892,6 +2974,7 @@ window.nav = function(page){
   else if(page === 'kontakte') renderKontakte();
   else if(page === 'produkte') renderProdukte();
   else if(page === 'angebote') renderAngebote();
+  else if(page === 'vermietung') renderVermietung();
   else if(page === 'pipeline') renderPipeline();
   else if(page === 'wiedervorlagen') renderWiedervorlagen();
   else if(page === 'aktivitaeten') renderAktivitaeten();
@@ -8896,6 +8979,265 @@ window.quotePdf = function(id){
   showToast('📄 Angebots-PDF erstellt', 'success');
 };
 
+// ════════════════════════════════════════════════════════════════════════
+//  MODULE: MIETMODUL (Mietpark / Verträge / Verfügbarkeit)
+// ════════════════════════════════════════════════════════════════════════
+let _editingAssetId = null, _editingRentalId = null, _mietTab = 'assets';
+
+function daysBetween(from, to){
+  if(!from || !to) return 0;
+  const a = new Date(from+'T00:00:00'), b = new Date(to+'T00:00:00');
+  if(isNaN(a) || isNaN(b)) return 0;
+  const d = Math.round((b-a)/86400000) + 1;
+  return d>0 ? d : 0;
+}
+function rentalDays(r){ return daysBetween(r.from, r.to); }
+function rentalTotal(r){ return rentalDays(r) * (parseFloat(r.dailyRate)||0); }
+function nextRentalNumber(){
+  const Y = new Date().getFullYear(), pre = 'MV-'+Y+'-';
+  const n = STATE.rentals.filter(r=>r.number&&r.number.indexOf(pre)===0).map(r=>parseInt(r.number.slice(pre.length))||0);
+  return pre + String((n.length?Math.max(...n):0)+1).padStart(3,'0');
+}
+function assetStatusBadge(s){
+  const map={'Verfügbar':'#1d8a4e','Vermietet':'#0071e3','Wartung':'#bf6a02','Defekt':'#e0314b'};
+  const col=map[s]||'#8a8a8e';
+  return `<span style="display:inline-block;padding:2px 9px;border-radius:980px;font-size:11px;font-weight:600;color:#fff;background:${col}">${escHtml(s||'Verfügbar')}</span>`;
+}
+function rentalStatusBadge(s){
+  const map={'Reserviert':'#bf6a02','Aktiv':'#0071e3','Zurückgegeben':'#1d8a4e','Storniert':'#8a8a8e'};
+  const col=map[s]||'#8a8a8e';
+  return `<span style="display:inline-block;padding:2px 9px;border-radius:980px;font-size:11px;font-weight:600;color:#fff;background:${col}">${escHtml(s||'Reserviert')}</span>`;
+}
+function rangesOverlap(aF,aT,bF,bT){ return aF<=bT && bF<=aT; }
+function rentalConflict(assetId, from, to, excludeId){
+  if(!assetId || !from || !to) return false;
+  return STATE.rentals.some(r=> r.id!==excludeId && r.assetId===assetId && r.status!=='Storniert' && r.from && r.to && rangesOverlap(from,to,r.from,r.to));
+}
+function assetBookingLabel(assetId){
+  const today = todayISO();
+  const active = STATE.rentals
+    .filter(r=>r.assetId===assetId && r.status!=='Storniert' && r.status!=='Zurückgegeben' && r.to>=today)
+    .sort((a,b)=>(a.from||'').localeCompare(b.from||''));
+  if(!active.length) return '<span class="tx-mute">frei</span>';
+  const r = active[0];
+  const cur = r.from<=today && r.to>=today;
+  return `<span class="tx-mute">${cur?'belegt bis ':'ab '}${fmtDate(cur?r.to:r.from)}</span>`;
+}
+
+window.mietTab = function(tab){
+  _mietTab = tab;
+  document.querySelectorAll('[data-miet]').forEach(t=>t.classList.remove('active'));
+  ['assets','rentals','avail'].forEach(p=>{ const el=document.getElementById('miet-'+p); if(el)el.classList.remove('active'); });
+  const btn=document.querySelector('[data-miet="'+tab+'"]'); if(btn)btn.classList.add('active');
+  const pane=document.getElementById('miet-'+tab); if(pane)pane.classList.add('active');
+  if(tab==='assets') window.renderAssets();
+  else if(tab==='rentals') window.renderRentals();
+  else if(tab==='avail') window.renderAvailability();
+};
+window.renderVermietung = function(){ window.mietTab(_mietTab || 'assets'); };
+
+// ── Mietpark (Assets) ──
+window.renderAssets = function(){
+  const body=document.getElementById('assetsBody'); if(!body) return;
+  const ql=((document.getElementById('assetSearch')||{}).value||'').toLowerCase();
+  const sf=(document.getElementById('assetStatusFilter')||{}).value||'';
+  let list=STATE.assets.filter(a=>{
+    if(sf && (a.status||'Verfügbar')!==sf) return false;
+    if(ql && !((a.name||'').toLowerCase().includes(ql)||(a.sku||'').toLowerCase().includes(ql))) return false;
+    return true;
+  });
+  list.sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  document.getElementById('assetCount').textContent=list.length+' Geräte';
+  if(!list.length){ body.innerHTML='<tr><td colspan="7" class="tx-mute" style="text-align:center;padding:30px">Noch keine Geräte — lege dein erstes an.</td></tr>'; return; }
+  body.innerHTML=list.map(a=>`
+    <tr>
+      <td class="fw-bold">${escHtml(a.name)}</td>
+      <td class="mono tx-mute">${escHtml(a.sku||'—')}</td>
+      <td>${escHtml(a.category||'—')}</td>
+      <td class="tx-right">${fmtCHF(a.dailyRate||0)}</td>
+      <td>${assetStatusBadge(a.status)}</td>
+      <td style="font-size:12.5px">${assetBookingLabel(a.id)}</td>
+      <td class="tx-right">
+        <button class="btn btn-tiny btn-ghost" onclick="window.openAssetForm('${a.id}')">✎</button>
+        <button class="btn btn-tiny btn-ghost" onclick="window.deleteAsset('${a.id}')">🗑</button>
+      </td>
+    </tr>`).join('');
+};
+window.openAssetForm = function(id){
+  _editingAssetId=id||null;
+  const a=id?STATE.assets.find(x=>x.id===id):null;
+  document.getElementById('assetFormTitle').textContent=a?'Gerät bearbeiten':'Neues Gerät';
+  document.getElementById('afName').value=a?(a.name||''):'';
+  document.getElementById('afSku').value=a?(a.sku||''):'';
+  document.getElementById('afCategory').value=a?(a.category||''):'';
+  document.getElementById('afRate').value=a?(a.dailyRate!=null?a.dailyRate:''):'';
+  document.getElementById('afStatus').value=a?(a.status||'Verfügbar'):'Verfügbar';
+  document.getElementById('afSerial').value=a?(a.serial||''):'';
+  document.getElementById('afNotes').value=a?(a.notes||''):'';
+  openModal('modalAsset');
+};
+window.saveAsset = function(){
+  const name=document.getElementById('afName').value.trim();
+  if(!name){ showToast('Bezeichnung fehlt','error'); return; }
+  const rec={ name, sku:document.getElementById('afSku').value.trim(), category:document.getElementById('afCategory').value.trim(),
+    dailyRate:parseFloat(document.getElementById('afRate').value)||0, status:document.getElementById('afStatus').value||'Verfügbar',
+    serial:document.getElementById('afSerial').value.trim(), notes:document.getElementById('afNotes').value.trim() };
+  if(_editingAssetId){ const a=STATE.assets.find(x=>x.id===_editingAssetId); if(a)Object.assign(a,rec); }
+  else STATE.assets.push({ id:uid(), ...rec, created:new Date().toISOString() });
+  saveState(); closeModal('modalAsset'); window.renderAssets(); showToast('✓ Gerät gespeichert','success');
+};
+window.deleteAsset = function(id){
+  const used=STATE.rentals.some(r=>r.assetId===id && r.status!=='Storniert' && r.status!=='Zurückgegeben');
+  if(used){ if(!confirm('Für dieses Gerät existieren offene Vermietungen. Trotzdem löschen?')) return; }
+  else if(!confirm('Gerät wirklich löschen?')) return;
+  STATE.assets=STATE.assets.filter(a=>a.id!==id); saveState(); window.renderAssets(); showToast('Gerät gelöscht','success');
+};
+
+// ── Verträge (Rentals) ──
+window.renderRentals = function(){
+  const body=document.getElementById('rentalsBody'); if(!body) return;
+  const ql=((document.getElementById('rentalSearch')||{}).value||'').toLowerCase();
+  const sf=(document.getElementById('rentalStatusFilter')||{}).value||'';
+  let list=STATE.rentals.filter(r=>{
+    if(sf && (r.status||'Reserviert')!==sf) return false;
+    if(ql && !((r.firma||'').toLowerCase().includes(ql)||(r.number||'').toLowerCase().includes(ql)||(r.assetName||'').toLowerCase().includes(ql))) return false;
+    return true;
+  });
+  list.sort((a,b)=>(b.from||'').localeCompare(a.from||''));
+  document.getElementById('rentalCount').textContent=list.length+' Verträge';
+  if(!list.length){ body.innerHTML='<tr><td colspan="8" class="tx-mute" style="text-align:center;padding:30px">Noch keine Vermietungen.</td></tr>'; return; }
+  body.innerHTML=list.map(r=>`
+    <tr>
+      <td class="mono fw-bold">${escHtml(r.number||'—')}</td>
+      <td>${escHtml(r.assetName||'—')}</td>
+      <td>${escHtml(r.firma||'—')}</td>
+      <td class="tx-mute" style="font-size:12.5px">${r.from?fmtDate(r.from):'?'} – ${r.to?fmtDate(r.to):'?'}</td>
+      <td class="tx-right">${rentalDays(r)}</td>
+      <td class="tx-right fw-bold">${fmtCHF(rentalTotal(r))}</td>
+      <td>${rentalStatusBadge(r.status)}</td>
+      <td class="tx-right">
+        <button class="btn btn-tiny btn-ghost" onclick="window.openRentalForm('${r.id}')">✎</button>
+        <button class="btn btn-tiny btn-ghost" onclick="window.rentalPdf('${r.id}')" title="PDF">📄</button>
+        <button class="btn btn-tiny btn-ghost" onclick="window.deleteRental('${r.id}')">🗑</button>
+      </td>
+    </tr>`).join('');
+};
+window.openRentalForm = function(id){
+  _editingRentalId=id||null;
+  const r=id?STATE.rentals.find(x=>x.id===id):null;
+  document.getElementById('rentalFormTitle').textContent=r?('Vermietung '+(r.number||'')):'Neue Vermietung';
+  const asel=document.getElementById('rfAsset');
+  const assets=[...STATE.assets].sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  asel.innerHTML='<option value="">— Gerät wählen —</option>'+assets.map(a=>`<option value="${a.id}">${escHtml(a.name)} — ${fmtCHF(a.dailyRate||0)}/Tag</option>`).join('');
+  asel.value=r&&r.assetId?r.assetId:'';
+  const csel=document.getElementById('rfContact');
+  const contacts=[...STATE.contacts].sort((a,b)=>(a.firma||'').localeCompare(b.firma||''));
+  csel.innerHTML='<option value="">— Kontakt wählen (optional) —</option>'+contacts.map(c=>`<option value="${c.id}">${escHtml(c.firma||'?')}${c.kontakt?' · '+escHtml(c.kontakt):''}</option>`).join('');
+  csel.value=r&&r.contactId?r.contactId:'';
+  document.getElementById('rfFirma').value=r?(r.firma||''):'';
+  document.getElementById('rfKontakt').value=r?(r.kontakt||''):'';
+  document.getElementById('rfFrom').value=r?(r.from||todayISO()):todayISO();
+  document.getElementById('rfTo').value=r?(r.to||''):'';
+  document.getElementById('rfRate').value=r?(r.dailyRate!=null?r.dailyRate:''):'';
+  document.getElementById('rfDeposit').value=r?(r.deposit!=null?r.deposit:''):'';
+  document.getElementById('rfStatus').value=r?(r.status||'Reserviert'):'Reserviert';
+  document.getElementById('rfNotes').value=r?(r.notes||''):'';
+  window.rfRecalc();
+  openModal('modalRental');
+};
+window.rfAssetPick = function(){
+  const a=STATE.assets.find(x=>x.id===document.getElementById('rfAsset').value);
+  if(a){ const rate=document.getElementById('rfRate'); if(!rate.value) rate.value=(a.dailyRate!=null?a.dailyRate:''); }
+  window.rfRecalc();
+};
+window.rfContactPick = function(){
+  const c=STATE.contacts.find(x=>x.id===document.getElementById('rfContact').value);
+  if(c){ document.getElementById('rfFirma').value=c.firma||''; document.getElementById('rfKontakt').value=c.kontakt||''; }
+};
+window.rfRecalc = function(){
+  const from=document.getElementById('rfFrom').value, to=document.getElementById('rfTo').value;
+  const rate=parseFloat(document.getElementById('rfRate').value)||0;
+  const days=daysBetween(from,to);
+  document.getElementById('rfDays').textContent=days+' Tag'+(days===1?'':'e');
+  document.getElementById('rfTotal').textContent=fmtCHF(days*rate);
+  const conflict=rentalConflict(document.getElementById('rfAsset').value, from, to, _editingRentalId);
+  document.getElementById('rfConflict').style.display=conflict?'block':'none';
+};
+window.saveRental = function(){
+  const assetId=document.getElementById('rfAsset').value;
+  const asset=STATE.assets.find(a=>a.id===assetId);
+  if(!asset){ showToast('Bitte ein Gerät wählen','error'); return; }
+  const firma=document.getElementById('rfFirma').value.trim();
+  if(!firma){ showToast('Firma fehlt','error'); return; }
+  const from=document.getElementById('rfFrom').value, to=document.getElementById('rfTo').value;
+  if(!from||!to){ showToast('Zeitraum (Von/Bis) fehlt','error'); return; }
+  if(to<from){ showToast('„Bis" liegt vor „Von"','error'); return; }
+  const status=document.getElementById('rfStatus').value||'Reserviert';
+  if(status!=='Storniert' && rentalConflict(assetId, from, to, _editingRentalId)){
+    if(!confirm('Der Zeitraum überschneidet sich mit einer bestehenden Buchung dieses Geräts. Trotzdem speichern?')) return;
+  }
+  const rec={ assetId, assetName:asset.name, contactId:document.getElementById('rfContact').value||null,
+    firma, kontakt:document.getElementById('rfKontakt').value.trim(), from, to,
+    dailyRate:parseFloat(document.getElementById('rfRate').value)||0,
+    deposit:parseFloat(document.getElementById('rfDeposit').value)||0, status,
+    notes:document.getElementById('rfNotes').value.trim() };
+  if(_editingRentalId){ const r=STATE.rentals.find(x=>x.id===_editingRentalId); if(r){ Object.assign(r,rec); r.updated=new Date().toISOString(); } }
+  else STATE.rentals.push({ id:uid(), number:nextRentalNumber(), ...rec, created:new Date().toISOString(), updated:new Date().toISOString() });
+  if(status==='Aktiv') asset.status='Vermietet';
+  saveState(); closeModal('modalRental'); window.renderRentals(); showToast('✓ Vermietung gespeichert','success');
+};
+window.deleteRental = function(id){
+  if(!confirm('Vermietung wirklich löschen?')) return;
+  STATE.rentals=STATE.rentals.filter(r=>r.id!==id); saveState(); window.renderRentals(); showToast('Vermietung gelöscht','success');
+};
+window.rentalPdf = function(id){
+  const r=STATE.rentals.find(x=>x.id===id); if(!r) return;
+  if(typeof window.jspdf==='undefined'){ showToast('jsPDF nicht geladen — Seite neu laden','error'); return; }
+  const {jsPDF}=window.jspdf; const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const PW=210, ML=18, MR=18, CW=PW-ML-MR; const company=loadCompany()||'Nexa'; let y=22;
+  doc.setFont('helvetica','bold'); doc.setFontSize(20); doc.setTextColor(20,20,22); doc.text(company, ML, y);
+  doc.setTextColor(0,113,227); doc.text('MIETVERTRAG', PW-MR, y, {align:'right'});
+  y+=7; doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(120,120,128); doc.text(r.number||'', PW-MR, y, {align:'right'});
+  y+=10; doc.setDrawColor(225,225,228); doc.line(ML,y,PW-MR,y); y+=8;
+  doc.setTextColor(120,120,128); doc.setFontSize(9); doc.text('MIETER', ML, y);
+  doc.setTextColor(20,20,22); doc.setFontSize(11); doc.setFont('helvetica','bold'); y+=5; doc.text(r.firma||'', ML, y);
+  if(r.kontakt){ y+=5; doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.text(r.kontakt, ML, y); }
+  y+=12;
+  doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(20,20,22); doc.text('Mietgegenstand', ML, y); y+=7;
+  doc.setFontSize(10);
+  [['Gerät', r.assetName||''],['Zeitraum',(r.from?fmtDate(r.from):'?')+' – '+(r.to?fmtDate(r.to):'?')],
+   ['Mietdauer', rentalDays(r)+' Tage'],['Tagessatz', fmtCHFpdfLocal(r.dailyRate||0)+' CHF'],
+   ['Kaution', fmtCHFpdfLocal(r.deposit||0)+' CHF'],['Status', r.status||'']].forEach(([k,v])=>{
+    doc.setFont('helvetica','normal'); doc.setTextColor(120,120,128); doc.text(k, ML, y);
+    doc.setTextColor(30,30,32); doc.text(String(v), ML+50, y); y+=6;
+  });
+  y+=4; doc.setDrawColor(225,225,228); doc.line(ML,y,PW-MR,y); y+=9;
+  doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(0,113,227);
+  doc.text('Mietpreis Total', ML, y); doc.text('CHF '+fmtCHFpdfLocal(rentalTotal(r)), PW-MR, y, {align:'right'});
+  if(r.notes){ y+=12; doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(110,110,116); doc.text(doc.splitTextToSize(r.notes, CW), ML, y); }
+  doc.setFontSize(8); doc.setTextColor(150,150,156); doc.text(company+'  ·  '+(r.number||''), ML, 288);
+  doc.save((r.number||'Mietvertrag')+'.pdf'); showToast('📄 Mietvertrag-PDF erstellt','success');
+};
+
+// ── Verfügbarkeit ──
+window.renderAvailability = function(){
+  const wrap=document.getElementById('availBody'); if(!wrap) return;
+  if(!STATE.assets.length){ wrap.innerHTML='<div class="tx-mute" style="padding:20px;text-align:center">Noch keine Geräte angelegt.</div>'; return; }
+  const today=todayISO();
+  wrap.innerHTML=[...STATE.assets].sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(a=>{
+    const bookings=STATE.rentals.filter(r=>r.assetId===a.id && r.status!=='Storniert' && r.to>=today)
+      .sort((x,y)=>(x.from||'').localeCompare(y.from||''));
+    const items = bookings.length ? bookings.map(r=>`
+        <div class="avail-row">
+          ${rentalStatusBadge(r.status)}
+          <span class="tx-mute">${r.from?fmtDate(r.from):'?'} – ${r.to?fmtDate(r.to):'?'}</span>
+          <span class="fw-bold">${escHtml(r.firma||'')}</span>
+        </div>`).join('')
+      : '<div class="avail-row tx-mute">Keine kommenden Buchungen — frei</div>';
+    return `<div class="avail-asset"><div class="avail-head">${escHtml(a.name)} ${assetStatusBadge(a.status)}</div>${items}</div>`;
+  }).join('');
+};
+
 // Entry point: auth gate (Supabase) decides login / local mode, then runs init()
 if(document.readyState === 'loading'){
   document.addEventListener('DOMContentLoaded', bootstrap);
@@ -8909,6 +9251,69 @@ if(document.readyState === 'loading'){
 <!-- ═══════════════════════════════════════════════════════════════════════ -->
 <!-- MODAL: Wochenbericht                                                    -->
 <!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- MODAL: Gerät / Asset -->
+<div class="modal-bg" id="modalAsset">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-h">
+      <div class="modal-title" id="assetFormTitle">Neues Gerät</div>
+      <button class="modal-x" onclick="window.closeModal('modalAsset')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="field full"><label>Bezeichnung *</label><input id="afName"></div>
+        <div class="field"><label>Artikelnummer</label><input id="afSku"></div>
+        <div class="field"><label>Kategorie</label><input id="afCategory" placeholder="z.B. Werkzeug"></div>
+        <div class="field"><label>Tagessatz (CHF)</label><input id="afRate" type="number" step="any"></div>
+        <div class="field"><label>Status</label>
+          <select id="afStatus"><option>Verfügbar</option><option>Vermietet</option><option>Wartung</option><option>Defekt</option></select></div>
+        <div class="field"><label>Seriennummer</label><input id="afSerial"></div>
+        <div class="field full"><label>Notiz</label><textarea id="afNotes" rows="2"></textarea></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="window.closeModal('modalAsset')">Abbrechen</button>
+      <button class="btn btn-primary" onclick="window.saveAsset()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Vermietung / Rental -->
+<div class="modal-bg" id="modalRental">
+  <div class="modal lg" style="max-width:680px">
+    <div class="modal-h">
+      <div class="modal-title" id="rentalFormTitle">Neue Vermietung</div>
+      <button class="modal-x" onclick="window.closeModal('modalRental')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="field full"><label>Gerät *</label>
+          <select id="rfAsset" onchange="window.rfAssetPick()"></select></div>
+        <div class="field full"><label>Kontakt aus CRM (optional)</label>
+          <select id="rfContact" onchange="window.rfContactPick()"></select></div>
+        <div class="field"><label>Firma *</label><input id="rfFirma"></div>
+        <div class="field"><label>Ansprechpartner</label><input id="rfKontakt"></div>
+        <div class="field"><label>Von *</label><input id="rfFrom" type="date" onchange="window.rfRecalc()"></div>
+        <div class="field"><label>Bis *</label><input id="rfTo" type="date" onchange="window.rfRecalc()"></div>
+        <div class="field"><label>Tagessatz (CHF)</label><input id="rfRate" type="number" step="any" oninput="window.rfRecalc()"></div>
+        <div class="field"><label>Kaution (CHF)</label><input id="rfDeposit" type="number" step="any"></div>
+        <div class="field"><label>Status</label>
+          <select id="rfStatus"><option>Reserviert</option><option>Aktiv</option><option>Zurückgegeben</option><option>Storniert</option></select></div>
+      </div>
+      <div class="qtotals" style="align-items:flex-start">
+        <div>Mietdauer: <b id="rfDays">0 Tage</b></div>
+        <div class="qt-total">Total: <span id="rfTotal">CHF 0.00</span></div>
+        <div id="rfConflict" class="tx-mute" style="color:var(--danger);font-size:12.5px;display:none">⚠️ Achtung: Zeitraum überschneidet sich mit einer bestehenden Buchung dieses Geräts.</div>
+      </div>
+      <div class="field full mt-md"><label>Notiz / Bedingungen</label><textarea id="rfNotes" rows="2"></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="window.closeModal('modalRental')">Abbrechen</button>
+      <span class="flex1"></span>
+      <button class="btn btn-primary" onclick="window.saveRental()">Speichern</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: Produkt -->
 <div class="modal-bg" id="modalProduct">
   <div class="modal" style="max-width:520px">
