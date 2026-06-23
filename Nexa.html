@@ -2154,6 +2154,7 @@ alter publication supabase_realtime add table public.crm_state;</pre>
         <div class="section-h">Aktivitäts-Verlauf</div>
         <div class="row mb-md" style="flex-wrap:wrap;gap:6px">
           <button class="btn btn-ghost btn-sm" onclick="window.logFromContact()">+ Aktivität hinzufügen</button>
+          <button class="btn btn-ghost btn-sm" onclick="window.followupFromContact()" style="border-color:var(--brand);color:var(--brand)">✦✉ Nachfass-Mail (KI)</button>
           <button class="btn btn-ghost btn-sm" id="cOutlookEmailBtn" onclick="window.openContactInOutlook()" style="display:none;border-color:#0078d4;color:#0078d4">📬 Email in Outlook</button>
         </div>
         <div class="timeline" id="cTimeline"></div>
@@ -3820,6 +3821,7 @@ function renderWiedervorlagen(){
       <div class="todo-actions">
         ${c.tel?`<a class="btn btn-tiny btn-ghost" href="tel:${escHtml(c.tel)}">☎</a>`:''}
         ${c.email?`<a class="btn btn-tiny btn-ghost" href="mailto:${escHtml(c.email)}">✉</a>`:''}
+        <button class="btn btn-tiny btn-ghost" onclick="window.turboFollowupMail('${c.id}')" title="KI-Nachfass-Mail erstellen & öffnen" style="border-color:var(--brand);color:var(--brand)">✦✉</button>
         <button class="btn btn-tiny btn-good" onclick="window.quickLog('${c.id}')">Log</button>
         <button class="btn btn-tiny btn-ghost" onclick="window.snooze('${c.id}',7)">+7d</button>
       </div>
@@ -5039,6 +5041,7 @@ window.saveContact = function(){
   };
 
   const doSave = ()=>{
+    let createdId = null;
     if(currentContactId){
       const c = STATE.contacts.find(x=>x.id===currentContactId);
       Object.assign(c, data);
@@ -5047,11 +5050,15 @@ window.saveContact = function(){
       data.id = uid();
       data.created = new Date().toISOString();
       STATE.contacts.push(data);
+      createdId = data.id;
       showToast('Kontakt angelegt', 'success');
     }
     saveState();
     closeModal('modalContact');
     refreshAll();
+    // After creating a NEW contact, open the activity form preselected to it,
+    // so the user can log the first activity without searching again.
+    if(createdId) setTimeout(()=>window.openLogActivity(createdId), 250);
   };
 
   // If status flipped to a closing one, ask for reason (Win/Loss-Analyse)
@@ -7657,6 +7664,55 @@ window.openContactInOutlook = function(){
   const body = encodeURIComponent(bodyTxt);
   window.location.href = `mailto:${encodeURIComponent(toEmail)}?subject=${subject}&body=${body}`;
   showToast('📬 Outlook öffnet…', 'success');
+};
+
+// ════════════════════════════════════════════════════════════════════════
+//  TURBO NACHFASS — echte KI-generierte Nachfass-Mail (öffnet Mail-Programm)
+// ════════════════════════════════════════════════════════════════════════
+function followupRecipient(c){
+  let to = (c.email||'').trim();
+  if(!to && Array.isArray(c.extraContacts)){ const p=c.extraContacts.find(p=>(p.email||'').trim()); if(p) to=p.email.trim(); }
+  if(!to && Array.isArray(c.extraEmails)){ const e=c.extraEmails.find(e=>(e.val||'').trim()); if(e) to=e.val.trim(); }
+  return to;
+}
+window.followupFromContact = function(){ if(currentContactId) window.turboFollowupMail(currentContactId); };
+window.turboFollowupMail = async function(contactId){
+  const c = STATE.contacts.find(x=>x.id===contactId);
+  if(!c){ showToast('Kontakt nicht gefunden','error'); return; }
+  if(!localStorage.getItem(API_KEY)){ showToast('API-Key fehlt — bitte konfigurieren','error'); window.openApiKey(); return; }
+  const acts = STATE.activities.filter(a=>a.contactId===contactId).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const neverContacted = acts.length===0;
+  const histLines = acts.slice(0,5).map(a=>`${fmtDate(a.date)} [${a.typ}] ${a.sum}`).join('\n');
+  const toEmail = followupRecipient(c);
+  showToast('✦ Nachfass-Mail wird generiert…','info');
+  const _comp = loadCompany();
+  const system = `Du bist ein professioneller B2B-Vertriebsmitarbeiter${_comp?` bei ${_comp}`:''}. Schreibe eine kurze, höfliche, professionelle Nachfass-E-Mail in deutscher Geschäftssprache. Maximal 110 Wörter, kein Marketing-Sprech, keine leeren Floskeln. WICHTIG: Füge KEINE Signatur und KEINEN Gruss-Block mit Absender ein — die Signatur wird separat angehängt.`;
+  const prompt = neverContacted
+    ? `Erstelle eine erste, höfliche Kontaktaufnahme an ${c.kontakt||'den Ansprechpartner'} bei ${c.firma} (Branche: ${c.segment||'—'}). Bisher gab es noch keinen dokumentierten Kontakt — freundlich den Kontakt herstellen und einen konkreten nächsten Schritt (kurzes Gespräch/Termin) vorschlagen.${c.next?(' Geplanter nächster Schritt: '+c.next):''}
+Liefere zuerst BETREFF auf einer Zeile, dann eine Leerzeile, dann den Text. Nur die E-Mail.`
+    : `Erstelle eine Nachfass-E-Mail an ${c.kontakt||'den Ansprechpartner'} bei ${c.firma} (Branche: ${c.segment||'—'}), die höflich an den bisherigen Austausch anknüpft.
+Bisherige Historie (neueste zuerst):
+${histLines}${c.next?('\nOffener nächster Schritt: '+c.next):''}
+Knüpfe konkret an die Historie an und schlage einen klaren nächsten Schritt vor. Liefere zuerst BETREFF auf einer Zeile, dann eine Leerzeile, dann den Text. Nur die E-Mail.`;
+  const resp = await callClaude(prompt, system, 700);
+  if(!resp){ showToast('Generierung fehlgeschlagen — API-Key prüfen','error'); return; }
+  const fullText = resp + getSignatureBlock();
+  const parsed = parseEmailOutput(fullText);
+  // Log a real activity for this follow-up
+  STATE.activities.push({
+    id: uid(), contactId, date: todayISO(), typ:'Mail',
+    sum: 'Nachfass-Mail (KI)' + (parsed.subject? ': '+parsed.subject : ''),
+    next: c.next||'', newWv:null, newStatus:(c.status==='Lead'?'Kontaktiert':null),
+    created: new Date().toISOString()
+  });
+  if(c.status==='Lead') c.status='Kontaktiert';
+  c.updated = new Date().toISOString();
+  saveState(); refreshAll();
+  const subject = encodeURIComponent(parsed.subject || ((loadCompany()?loadCompany()+' — ':'')+'Nachfrage'));
+  const body = encodeURIComponent(fullText);
+  window.location.href = `mailto:${toEmail?encodeURIComponent(toEmail):''}?subject=${subject}&body=${body}`;
+  if(!toEmail) showToast('Mail erstellt — keine E-Mail-Adresse hinterlegt, bitte Empfänger ergänzen','warn');
+  else showToast('📬 Nachfass-Mail bereit im Mail-Programm','success');
 };
 
 // ════════════════════════════════════════════════════════════════════════
