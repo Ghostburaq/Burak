@@ -516,6 +516,8 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .mb-0{margin-bottom:0}.mb-md{margin-bottom:14px}.mb-lg{margin-bottom:24px}
 .mt-md{margin-top:14px}
 .hidden{display:none !important}
+/* Role gating: hide admin-only controls for members */
+.role-member .admin-only{display:none !important}
 
 /* ── Angebots-Positionen (Quote line items) ── */
 .qitem{display:grid;grid-template-columns:1fr 72px 96px 74px 100px 30px;gap:6px;align-items:center;margin-bottom:6px}
@@ -1383,7 +1385,7 @@ alter publication supabase_realtime add table public.crm_state;</pre>
         <span class="nav-icon">📈</span> Analytics
         <span class="nav-shortcut">8</span>
       </button>
-      <button class="nav-item" data-page="settings" onclick="window.nav('settings')">
+      <button class="nav-item admin-only" data-page="settings" onclick="window.nav('settings')">
         <span class="nav-icon">⚙</span> Einstellungen
       </button>
       <button class="nav-item" onclick="window.openWochenbericht()" id="wbNavBtn" style="position:relative">
@@ -2012,6 +2014,17 @@ alter publication supabase_realtime add table public.crm_state;</pre>
           </div>
           <button class="btn btn-primary mt-md" onclick="window.saveWbSettings()">Einstellungen speichern</button>
 
+          <div class="section-h">👥 Team & Rollen</div>
+          <p class="tx-mute mb-md" style="font-size:12px;line-height:1.6;margin-top:-8px">
+            Admins dürfen löschen und Einstellungen ändern, Mitarbeiter nicht. Trage die E-Mail-Adressen deiner Team-Logins ein und weise jeweils eine Rolle zu. Gilt für alle, die sich in dieses Supabase-Projekt einloggen.
+          </p>
+          <div id="roleSelfBadge" class="tx-mute mb-md" style="font-size:12.5px"></div>
+          <div id="roleRows"></div>
+          <div class="row gap-md mt-md">
+            <button class="btn btn-ghost btn-sm" onclick="window.addRoleRow()">＋ Person hinzufügen</button>
+            <button class="btn btn-primary btn-sm" onclick="window.saveRoles()">Rollen speichern</button>
+          </div>
+
           <div class="section-h">👤 Berater / Außendienst</div>
           <p class="tx-mute mb-md" style="font-size:12px;line-height:1.6;margin-top:-8px">
             Liste der Verantwortlichen, die in Kontakten ausgewählt werden können (Auto-Complete). Auf der Kontakte-Seite ist ein Filter „Alle Berater" zum Eingrenzen verfügbar.
@@ -2190,7 +2203,7 @@ alter publication supabase_realtime add table public.crm_state;</pre>
       </div>
     </div>
     <div class="modal-foot">
-      <button class="btn btn-danger btn-sm hidden" id="cDeleteBtn" onclick="window.deleteContact()">Löschen</button>
+      <button class="btn btn-danger btn-sm hidden admin-only" id="cDeleteBtn" onclick="window.deleteContact()">Löschen</button>
       <button class="btn btn-ghost btn-sm hidden" id="cIcsBtn" onclick="window.exportContactIcs()" title="Wiedervorlage in Outlook exportieren">📅 → Outlook</button>
       <button class="btn btn-done btn-sm hidden" id="cDoneBtn" onclick="window.markErledigt()" title="Anderer hat den Auftrag — wird nicht mehr als überfällig angezeigt">✓ Auf Erledigt setzen</button>
       <button class="btn btn-primary btn-sm hidden" id="cCloseBtn" onclick="window.openCloseChooser()" title="Vorgang abschliessen — alle 4 Optionen anzeigen" style="background:#0f1b31">🏁 Vorgang abschliessen</button>
@@ -2429,6 +2442,7 @@ const STATE = {
   assets: [],       // {id, name, sku, category, dailyRate, status, serial, notes, created}
   rentals: [],      // {id, number, assetId, assetName, contactId, firma, kontakt, from, to, dailyRate, deposit, status, notes, created, updated}
   invoices: [],     // {id, number, contactId, firma, kontakt, date, dueDate, status, items:[...], notes, paidDate, source, created, updated}
+  roles: {},        // { "email@firma.ch": "admin" | "member" } — team roles (app-level)
   meta: { v: 1, created: new Date().toISOString() }
 };
 
@@ -2555,6 +2569,7 @@ function loadState(){
       if(Array.isArray(d.assets)) STATE.assets = d.assets;
       if(Array.isArray(d.rentals)) STATE.rentals = d.rentals;
       if(Array.isArray(d.invoices)) STATE.invoices = d.invoices;
+      if(d.roles && typeof d.roles === 'object') STATE.roles = d.roles;
       if(d.meta) STATE.meta = d.meta;
     }
   }catch(e){
@@ -2754,7 +2769,9 @@ function applyRemoteState(d){
   STATE.assets     = Array.isArray(d.assets)     ? d.assets     : [];
   STATE.rentals    = Array.isArray(d.rentals)    ? d.rentals    : [];
   STATE.invoices   = Array.isArray(d.invoices)   ? d.invoices   : [];
+  STATE.roles      = (d.roles && typeof d.roles === 'object') ? d.roles : {};
   if(d.meta) STATE.meta = d.meta;
+  if(typeof applyRoleUI === 'function') applyRoleUI();
   try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE)); }catch(e){}
   CLOUD.applying = false;
 }
@@ -2783,7 +2800,7 @@ async function cloudPush(force){
   if(!CLOUD.ready && !force) return;
   const payload = {
     id: CLOUD.ORG,
-    data: { contacts:STATE.contacts, activities:STATE.activities, products:STATE.products, quotes:STATE.quotes, assets:STATE.assets, rentals:STATE.rentals, invoices:STATE.invoices, meta:STATE.meta },
+    data: { contacts:STATE.contacts, activities:STATE.activities, products:STATE.products, quotes:STATE.quotes, assets:STATE.assets, rentals:STATE.rentals, invoices:STATE.invoices, roles:STATE.roles, meta:STATE.meta },
     updated_at: new Date().toISOString(),
     updated_by: CLOUD.user.email || CLOUD.user.id
   };
@@ -2838,6 +2855,8 @@ function setAuthFootUI(){
     em.textContent = CLOUD.user.email || 'Mitarbeiter';
     foot.style.display='flex';
   } else if(foot){ foot.style.display='none'; }
+  if(typeof applyRoleUI === 'function') applyRoleUI();
+  if(typeof renderRoleRows === 'function') renderRoleRows();
 }
 
 function onAuthenticated(user){
@@ -2952,6 +2971,11 @@ function lastActivityDate(contactId){
 //  NAVIGATION
 // ════════════════════════════════════════════════════════════════════════
 window.nav = function(page){
+  // Members may not open Einstellungen (role gating)
+  if(page === 'settings' && !isAdmin()){
+    showToast('Einstellungen sind nur für Admins.', 'warn');
+    page = 'today';
+  }
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   const target = document.getElementById('page-' + page);
@@ -2978,6 +3002,7 @@ window.nav = function(page){
   else if(page === 'aktivitaeten') renderAktivitaeten();
   else if(page === 'kalender'){ calDate = calDate || new Date(); renderCalendar(); }
   else if(page === 'ki') populateKiSelects();
+  else if(page === 'settings'){ _roleDraft = null; renderRoleRows(); }
 };
 
 // ════════════════════════════════════════════════════════════════════════
@@ -4137,6 +4162,7 @@ window._repEdit = (i,v)=>{ const d=repsDraft(); d[i] = v; };
 window._repRemove = (i)=>{ const d=repsDraft(); d.splice(i,1); _repsDraft=d; renderRepSettings(); };
 window.addRep = ()=>{ const d=repsDraft(); d.push(''); _repsDraft=d; renderRepSettings(); };
 window.saveRepSettings = ()=>{
+  if(!requireAdmin('Einstellungen ändern')) return;
   const d = repsDraft().map(r=>r.trim()).filter(Boolean);
   if(!d.length){ showToast('Mindestens ein Berater nötig', 'error'); return; }
   saveSalesReps(d); _repsDraft = null;
@@ -5103,6 +5129,7 @@ window.saveContact = function(){
 };
 
 window.deleteContact = function(){
+  if(!requireAdmin('Kontakte löschen')) return;
   if(!currentContactId) return;
   if(!confirm('Kontakt wirklich löschen? Alle Aktivitäten und Anhänge dazu werden ebenfalls entfernt.')) return;
   const idToDelete = currentContactId;
@@ -5492,6 +5519,7 @@ function loadSignature(){
 }
 
 window.saveSignature = function(){
+  if(!requireAdmin('Einstellungen ändern')) return;
   const sig = document.getElementById('settingsSig').value;
   localStorage.setItem(SIG_KEY, sig);
   showToast('✓ Signatur gespeichert', 'success');
@@ -5501,6 +5529,7 @@ window.saveSignature = function(){
 const COMPANY_KEY = 'nexa_company';
 function loadCompany(){ return (localStorage.getItem(COMPANY_KEY) || '').trim(); }
 window.saveCompany = function(){
+  if(!requireAdmin('Einstellungen ändern')) return;
   const c = document.getElementById('settingsCompany').value.trim();
   localStorage.setItem(COMPANY_KEY, c);
   showToast('✓ Firmenname gespeichert', 'success');
@@ -7100,6 +7129,7 @@ async function initNotifications(){
 const WB_KEY = 'mit_crm_wb_settings';
 
 window.saveWbSettings = function(){
+  if(!requireAdmin('Einstellungen ändern')) return;
   const recipientName = ((document.getElementById('wbRecipientName')||{}).value || '').trim();
   const stefanEmail = (document.getElementById('stefanEmail')||{}).value || '';
   const ccEmail = (document.getElementById('wbCcEmail')||{}).value || '';
@@ -8591,6 +8621,8 @@ function init(){
   attachBackdropClose();
   renderRepSettings();
   renderWidgetSettings();
+  renderRoleRows();
+  applyRoleUI();
   const wci = document.getElementById('weatherCityInput'); if(wci) wci.value = loadWeatherCity();
   populateSalesRepDatalist();
   // One-time migration of legacy localStorage attachments into IndexedDB
@@ -8661,7 +8693,7 @@ window.renderProdukte = function(){
       <td class="tx-right tx-mute">${(p.taxRate!=null?p.taxRate:DEFAULT_TAX)}%</td>
       <td class="tx-right">
         <button class="btn btn-tiny btn-ghost" onclick="window.openProductForm('${p.id}')">✎</button>
-        <button class="btn btn-tiny btn-ghost" onclick="window.deleteProduct('${p.id}')">🗑</button>
+        <button class="btn btn-tiny btn-ghost admin-only" onclick="window.deleteProduct('${p.id}')">🗑</button>
       </td>
     </tr>`).join('');
 };
@@ -8705,6 +8737,7 @@ window.saveProduct = function(){
 };
 
 window.deleteProduct = function(id){
+  if(!requireAdmin('Produkte löschen')) return;
   if(!confirm('Produkt wirklich löschen?')) return;
   STATE.products = STATE.products.filter(p=>p.id!==id);
   saveState();
@@ -8760,7 +8793,7 @@ window.renderAngebote = function(){
         <button class="btn btn-tiny btn-ghost" onclick="window.openQuoteForm('${x.id}')">✎</button>
         <button class="btn btn-tiny btn-ghost" onclick="window.quotePdf('${x.id}')" title="PDF">📄</button>
         <button class="btn btn-tiny btn-ghost" onclick="window.createInvoiceFromQuote('${x.id}')" title="Rechnung aus Angebot" style="border-color:var(--good);color:var(--good)">→RE</button>
-        <button class="btn btn-tiny btn-ghost" onclick="window.deleteQuote('${x.id}')">🗑</button>
+        <button class="btn btn-tiny btn-ghost admin-only" onclick="window.deleteQuote('${x.id}')">🗑</button>
       </td>
     </tr>`;
   }).join('');
@@ -8867,6 +8900,7 @@ window.saveQuote = function(){
 };
 
 window.deleteQuote = function(id){
+  if(!requireAdmin('Angebote löschen')) return;
   if(!confirm('Angebot wirklich löschen?')) return;
   STATE.quotes = STATE.quotes.filter(q=>q.id!==id);
   saveState();
@@ -9017,7 +9051,7 @@ window.renderAssets = function(){
       <td style="font-size:12.5px">${assetBookingLabel(a.id)}</td>
       <td class="tx-right">
         <button class="btn btn-tiny btn-ghost" onclick="window.openAssetForm('${a.id}')">✎</button>
-        <button class="btn btn-tiny btn-ghost" onclick="window.deleteAsset('${a.id}')">🗑</button>
+        <button class="btn btn-tiny btn-ghost admin-only" onclick="window.deleteAsset('${a.id}')">🗑</button>
       </td>
     </tr>`).join('');
 };
@@ -9045,6 +9079,7 @@ window.saveAsset = function(){
   saveState(); closeModal('modalAsset'); window.renderAssets(); showToast('✓ Gerät gespeichert','success');
 };
 window.deleteAsset = function(id){
+  if(!requireAdmin('Geräte löschen')) return;
   const used=STATE.rentals.some(r=>r.assetId===id && r.status!=='Storniert' && r.status!=='Zurückgegeben');
   if(used){ if(!confirm('Für dieses Gerät existieren offene Vermietungen. Trotzdem löschen?')) return; }
   else if(!confirm('Gerät wirklich löschen?')) return;
@@ -9077,7 +9112,7 @@ window.renderRentals = function(){
         <button class="btn btn-tiny btn-ghost" onclick="window.openRentalForm('${r.id}')">✎</button>
         <button class="btn btn-tiny btn-ghost" onclick="window.rentalPdf('${r.id}')" title="PDF">📄</button>
         <button class="btn btn-tiny btn-ghost" onclick="window.createInvoiceFromRental('${r.id}')" title="Rechnung aus Vermietung" style="border-color:var(--good);color:var(--good)">→RE</button>
-        <button class="btn btn-tiny btn-ghost" onclick="window.deleteRental('${r.id}')">🗑</button>
+        <button class="btn btn-tiny btn-ghost admin-only" onclick="window.deleteRental('${r.id}')">🗑</button>
       </td>
     </tr>`).join('');
 };
@@ -9146,6 +9181,7 @@ window.saveRental = function(){
   saveState(); closeModal('modalRental'); window.renderRentals(); showToast('✓ Vermietung gespeichert','success');
 };
 window.deleteRental = function(id){
+  if(!requireAdmin('Vermietungen löschen')) return;
   if(!confirm('Vermietung wirklich löschen?')) return;
   STATE.rentals=STATE.rentals.filter(r=>r.id!==id); saveState(); window.renderRentals(); showToast('Vermietung gelöscht','success');
 };
@@ -9254,7 +9290,7 @@ window.renderRechnungen = function(){
         ${x.status!=='Bezahlt'&&x.status!=='Storniert'?`<button class="btn btn-tiny btn-good" onclick="window.markInvoicePaid('${x.id}')" title="Als bezahlt markieren">✓ Bezahlt</button>`:''}
         <button class="btn btn-tiny btn-ghost" onclick="window.openInvoiceForm('${x.id}')">✎</button>
         <button class="btn btn-tiny btn-ghost" onclick="window.invoicePdf('${x.id}')" title="PDF">📄</button>
-        <button class="btn btn-tiny btn-ghost" onclick="window.deleteInvoice('${x.id}')">🗑</button>
+        <button class="btn btn-tiny btn-ghost admin-only" onclick="window.deleteInvoice('${x.id}')">🗑</button>
       </td>
     </tr>`;
   }).join('');
@@ -9352,6 +9388,7 @@ window.saveInvoice=function(){
   saveState(); closeModal('modalInvoice'); window.renderRechnungen(); showToast('✓ Rechnung gespeichert','success');
 };
 window.deleteInvoice=function(id){
+  if(!requireAdmin('Rechnungen löschen')) return;
   if(!confirm('Rechnung wirklich löschen?')) return;
   STATE.invoices=STATE.invoices.filter(x=>x.id!==id); saveState(); window.renderRechnungen(); showToast('Rechnung gelöscht','success');
 };
@@ -9411,6 +9448,84 @@ window.invoicePdf=function(id){
   if(x.notes){ y+=12; doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(110,110,116); doc.text(doc.splitTextToSize(x.notes, CW), ML, y); }
   doc.setFontSize(8); doc.setTextColor(150,150,156); doc.text(company+'  ·  '+(x.number||''), ML, 288);
   doc.save((x.number||'Rechnung')+'.pdf'); showToast('📄 Rechnungs-PDF erstellt','success');
+};
+
+// ════════════════════════════════════════════════════════════════════════
+//  MODULE: ROLLEN & RECHTE (Admin / Mitarbeiter) — app-level enforcement
+//  Hinweis: Daten liegen als EINE gemeinsame Zeile pro Supabase-Projekt.
+//  Diese Rollen steuern, was die App erlaubt (löschen / Einstellungen).
+// ════════════════════════════════════════════════════════════════════════
+function currentUserEmail(){
+  return (typeof CLOUD !== 'undefined' && CLOUD.user && CLOUD.user.email)
+    ? String(CLOUD.user.email).toLowerCase().trim() : '';
+}
+function anyAdminDefined(){ return Object.values(STATE.roles||{}).some(r => r === 'admin'); }
+function isAdmin(){
+  // Local mode (no cloud login) → single user has full control
+  if(!currentUserEmail()) return true;
+  // Bootstrap: until an admin is assigned, every logged-in user is admin
+  if(!anyAdminDefined()) return true;
+  return (STATE.roles || {})[currentUserEmail()] === 'admin';
+}
+function requireAdmin(action){
+  if(isAdmin()) return true;
+  showToast('Nur Admins dürfen ' + (action || 'das ausführen') + '.', 'warn');
+  return false;
+}
+function applyRoleUI(){
+  document.body.classList.toggle('role-member', !isAdmin());
+}
+
+// ── Rollen-Editor (Einstellungen, nur Admin) ──
+let _roleDraft = null;
+function roleDraft(){
+  if(_roleDraft) return _roleDraft;
+  const map = {...(STATE.roles||{})};
+  const me = currentUserEmail();
+  if(me && !(me in map)) map[me] = anyAdminDefined() ? 'member' : 'admin';
+  _roleDraft = Object.keys(map).map(email => ({ email, role: map[email] }));
+  if(!_roleDraft.length) _roleDraft = [{ email: me || '', role: 'admin' }];
+  return _roleDraft;
+}
+function renderRoleRows(){
+  const wrap = document.getElementById('roleRows');
+  if(!wrap) return;
+  const me = currentUserEmail();
+  const rows = roleDraft();
+  const badge = isAdmin()
+    ? '<span class="bd" style="background:var(--good);color:#fff">Admin</span>'
+    : '<span class="bd" style="background:var(--text-mute);color:#fff">Mitarbeiter</span>';
+  document.getElementById('roleSelfBadge').innerHTML =
+    'Du bist angemeldet als ' + (me ? '<b>'+escHtml(me)+'</b>' : '<b>lokaler Nutzer</b>') + ' · ' + badge;
+  wrap.innerHTML = rows.map((r,i) => `
+    <div class="turbo-row">
+      <input class="turbo-row-text" type="email" value="${escHtml(r.email||'')}" placeholder="mitarbeiter@firma.ch" oninput="window._roleEdit(${i},'email',this.value)">
+      <select onchange="window._roleEdit(${i},'role',this.value)" style="max-width:150px;background:var(--bg-input);border:1px solid var(--line2);color:var(--text);padding:7px 8px;border-radius:var(--r-sm)">
+        <option value="admin" ${r.role==='admin'?'selected':''}>Admin</option>
+        <option value="member" ${r.role!=='admin'?'selected':''}>Mitarbeiter</option>
+      </select>
+      <button class="btn-remove-field" onclick="window._roleRemove(${i})" title="Entfernen">✕</button>
+    </div>`).join('');
+}
+window._roleEdit = (i,field,v) => { const d=roleDraft(); if(d[i]) d[i][field] = (field==='email'? v.toLowerCase().trim() : v); };
+window._roleRemove = (i) => { const d=roleDraft(); d.splice(i,1); _roleDraft=d; renderRoleRows(); };
+window.addRoleRow = () => { const d=roleDraft(); d.push({email:'',role:'member'}); _roleDraft=d; renderRoleRows(); };
+window.saveRoles = function(){
+  if(!requireAdmin('Rollen ändern')) return;
+  const d = roleDraft().filter(r => (r.email||'').trim());
+  const map = {};
+  d.forEach(r => { map[r.email.toLowerCase().trim()] = (r.role==='admin'?'admin':'member'); });
+  // Safety: never lock everyone out — ensure at least one admin remains
+  if(!Object.values(map).some(r=>r==='admin')){
+    const me = currentUserEmail();
+    if(me) map[me] = 'admin';
+  }
+  STATE.roles = map;
+  _roleDraft = null;
+  saveState();
+  renderRoleRows();
+  applyRoleUI();
+  showToast('✓ Rollen gespeichert', 'success');
 };
 
 // Entry point: auth gate (Supabase) decides login / local mode, then runs init()
