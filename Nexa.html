@@ -1359,6 +1359,9 @@ alter publication supabase_realtime add table public.crm_state;</pre>
       <button class="nav-item" data-page="vermietung" onclick="window.nav('vermietung')">
         <span class="nav-icon">🔑</span> Vermietung
       </button>
+      <button class="nav-item" data-page="rechnungen" onclick="window.nav('rechnungen')">
+        <span class="nav-icon">📑</span> Rechnungen
+      </button>
       <button class="nav-item" data-page="wiedervorlagen" onclick="window.nav('wiedervorlagen')">
         <span class="nav-icon">↻</span> Wiedervorlagen
         <span class="nav-shortcut">4</span>
@@ -1687,6 +1690,32 @@ alter publication supabase_realtime add table public.crm_state;</pre>
           <div class="card">
             <div class="card-h"><div class="card-title">Verfügbarkeit & Buchungen</div></div>
             <div id="availBody"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ RECHNUNGEN PAGE ═══ -->
+      <div class="page" id="page-rechnungen">
+        <div class="wb-kpi-row" id="invSummary" style="margin-bottom:16px"></div>
+        <div class="table-wrap">
+          <div class="table-toolbar">
+            <input id="invSearch" placeholder="Rechnung / Firma suchen..." oninput="window.renderRechnungen()">
+            <select id="invStatusFilter" onchange="window.renderRechnungen()">
+              <option value="">Alle Status</option>
+              <option>Entwurf</option><option>Offen</option><option>Bezahlt</option><option>Storniert</option>
+            </select>
+            <span style="flex:1"></span>
+            <span class="tx-dim mono" id="invCount" style="font-size:12px"></span>
+            <button class="btn btn-primary btn-sm" onclick="window.openInvoiceForm()">+ Neue Rechnung</button>
+          </div>
+          <div style="max-height:calc(100vh - 320px);overflow-y:auto">
+            <table class="tbl">
+              <thead><tr>
+                <th>Nummer</th><th>Firma</th><th>Datum</th><th>Fällig</th>
+                <th>Status</th><th class="tx-right">Total</th><th style="width:150px"></th>
+              </tr></thead>
+              <tbody id="rechnungenBody"></tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -2399,6 +2428,7 @@ const STATE = {
   quotes: [],       // {id, number, contactId, firma, kontakt, date, validUntil, status, items:[{name,qty,unitPrice,discount,taxRate}], notes, created, updated}
   assets: [],       // {id, name, sku, category, dailyRate, status, serial, notes, created}
   rentals: [],      // {id, number, assetId, assetName, contactId, firma, kontakt, from, to, dailyRate, deposit, status, notes, created, updated}
+  invoices: [],     // {id, number, contactId, firma, kontakt, date, dueDate, status, items:[...], notes, paidDate, source, created, updated}
   meta: { v: 1, created: new Date().toISOString() }
 };
 
@@ -2524,6 +2554,7 @@ function loadState(){
       if(Array.isArray(d.quotes)) STATE.quotes = d.quotes;
       if(Array.isArray(d.assets)) STATE.assets = d.assets;
       if(Array.isArray(d.rentals)) STATE.rentals = d.rentals;
+      if(Array.isArray(d.invoices)) STATE.invoices = d.invoices;
       if(d.meta) STATE.meta = d.meta;
     }
   }catch(e){
@@ -2722,6 +2753,7 @@ function applyRemoteState(d){
   STATE.quotes     = Array.isArray(d.quotes)     ? d.quotes     : [];
   STATE.assets     = Array.isArray(d.assets)     ? d.assets     : [];
   STATE.rentals    = Array.isArray(d.rentals)    ? d.rentals    : [];
+  STATE.invoices   = Array.isArray(d.invoices)   ? d.invoices   : [];
   if(d.meta) STATE.meta = d.meta;
   try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE)); }catch(e){}
   CLOUD.applying = false;
@@ -2732,7 +2764,7 @@ async function cloudPull(){
     const { data, error } = await CLOUD.client
       .from('crm_state').select('data,updated_by').eq('id', CLOUD.ORG).maybeSingle();
     if(error){ console.warn('cloudPull', error); showToast('Cloud-Laden fehlgeschlagen — lokaler Stand wird genutzt','warn'); return false; }
-    if(data && data.data && (data.data.contacts || data.data.activities || data.data.products || data.data.quotes || data.data.assets || data.data.rentals)){
+    if(data && data.data && (data.data.contacts || data.data.activities || data.data.products || data.data.quotes || data.data.assets || data.data.rentals || data.data.invoices)){
       applyRemoteState(data.data);
     } else {
       // No shared data yet → seed cloud from whatever is local (first run / migration)
@@ -2751,7 +2783,7 @@ async function cloudPush(force){
   if(!CLOUD.ready && !force) return;
   const payload = {
     id: CLOUD.ORG,
-    data: { contacts:STATE.contacts, activities:STATE.activities, products:STATE.products, quotes:STATE.quotes, assets:STATE.assets, rentals:STATE.rentals, meta:STATE.meta },
+    data: { contacts:STATE.contacts, activities:STATE.activities, products:STATE.products, quotes:STATE.quotes, assets:STATE.assets, rentals:STATE.rentals, invoices:STATE.invoices, meta:STATE.meta },
     updated_at: new Date().toISOString(),
     updated_by: CLOUD.user.email || CLOUD.user.id
   };
@@ -2928,7 +2960,7 @@ window.nav = function(page){
   if(navBtn) navBtn.classList.add('active');
   const titles = {
     today:'Heute', kontakte:'Kontakte', pipeline:'Pipeline',
-    produkte:'Produkte', angebote:'Angebote', vermietung:'Vermietung',
+    produkte:'Produkte', angebote:'Angebote', vermietung:'Vermietung', rechnungen:'Rechnungen',
     wiedervorlagen:'Wiedervorlagen', aktivitaeten:'Aktivitäten',
     kalender:'Kalender', ki:'KI-Assist', analytics:'Analytics', settings:'Einstellungen'
   };
@@ -2940,6 +2972,7 @@ window.nav = function(page){
   else if(page === 'produkte') renderProdukte();
   else if(page === 'angebote') renderAngebote();
   else if(page === 'vermietung') renderVermietung();
+  else if(page === 'rechnungen') renderRechnungen();
   else if(page === 'pipeline') renderPipeline();
   else if(page === 'wiedervorlagen') renderWiedervorlagen();
   else if(page === 'aktivitaeten') renderAktivitaeten();
@@ -8726,6 +8759,7 @@ window.renderAngebote = function(){
       <td class="tx-right">
         <button class="btn btn-tiny btn-ghost" onclick="window.openQuoteForm('${x.id}')">✎</button>
         <button class="btn btn-tiny btn-ghost" onclick="window.quotePdf('${x.id}')" title="PDF">📄</button>
+        <button class="btn btn-tiny btn-ghost" onclick="window.createInvoiceFromQuote('${x.id}')" title="Rechnung aus Angebot" style="border-color:var(--good);color:var(--good)">→RE</button>
         <button class="btn btn-tiny btn-ghost" onclick="window.deleteQuote('${x.id}')">🗑</button>
       </td>
     </tr>`;
@@ -9042,6 +9076,7 @@ window.renderRentals = function(){
       <td class="tx-right">
         <button class="btn btn-tiny btn-ghost" onclick="window.openRentalForm('${r.id}')">✎</button>
         <button class="btn btn-tiny btn-ghost" onclick="window.rentalPdf('${r.id}')" title="PDF">📄</button>
+        <button class="btn btn-tiny btn-ghost" onclick="window.createInvoiceFromRental('${r.id}')" title="Rechnung aus Vermietung" style="border-color:var(--good);color:var(--good)">→RE</button>
         <button class="btn btn-tiny btn-ghost" onclick="window.deleteRental('${r.id}')">🗑</button>
       </td>
     </tr>`).join('');
@@ -9162,6 +9197,222 @@ window.renderAvailability = function(){
   }).join('');
 };
 
+// ════════════════════════════════════════════════════════════════════════
+//  MODULE: RECHNUNGEN & ABRECHNUNG
+// ════════════════════════════════════════════════════════════════════════
+let _editingInvoiceId = null, _invItems = [];
+
+function nextInvoiceNumber(){
+  const Y=new Date().getFullYear(), pre='RE-'+Y+'-';
+  const n=STATE.invoices.filter(x=>x.number&&x.number.indexOf(pre)===0).map(x=>parseInt(x.number.slice(pre.length))||0);
+  return pre+String((n.length?Math.max(...n):0)+1).padStart(3,'0');
+}
+function invIsOverdue(inv){ return (inv.status==='Offen') && inv.dueDate && inv.dueDate < todayISO(); }
+function invStatusBadge(inv){
+  let s = inv.status||'Entwurf';
+  let col = {'Entwurf':'#8a8a8e','Offen':'#0071e3','Bezahlt':'#1d8a4e','Storniert':'#8a8a8e'}[s]||'#8a8a8e';
+  if(invIsOverdue(inv)){ s='Überfällig'; col='#e0314b'; }
+  return `<span style="display:inline-block;padding:2px 9px;border-radius:980px;font-size:11px;font-weight:600;color:#fff;background:${col}">${escHtml(s)}</span>`;
+}
+function renderInvSummary(){
+  const wrap=document.getElementById('invSummary'); if(!wrap) return;
+  const Y=new Date().getFullYear();
+  let offen=0, ueber=0, bezahlt=0;
+  STATE.invoices.forEach(inv=>{
+    const t=quoteTotals(inv.items).total;
+    if(inv.status==='Offen'){ offen+=t; if(invIsOverdue(inv)) ueber+=t; }
+    if(inv.status==='Bezahlt' && (inv.paidDate||inv.date||'').slice(0,4)===String(Y)) bezahlt+=t;
+  });
+  wrap.innerHTML = `
+    <div class="wb-kpi"><div class="wb-kpi-val" style="color:var(--info)">${fmtCHF(offen)}</div><div class="wb-kpi-label">Offen</div></div>
+    <div class="wb-kpi"><div class="wb-kpi-val" style="color:${ueber?'var(--danger)':'var(--good)'}">${fmtCHF(ueber)}</div><div class="wb-kpi-label">davon überfällig</div></div>
+    <div class="wb-kpi"><div class="wb-kpi-val" style="color:var(--good)">${fmtCHF(bezahlt)}</div><div class="wb-kpi-label">Bezahlt ${Y}</div></div>`;
+}
+window.renderRechnungen = function(){
+  renderInvSummary();
+  const body=document.getElementById('rechnungenBody'); if(!body) return;
+  const q=((document.getElementById('invSearch')||{}).value||'').toLowerCase();
+  const sf=(document.getElementById('invStatusFilter')||{}).value||'';
+  let list=STATE.invoices.filter(x=>{
+    if(sf && (x.status||'Entwurf')!==sf) return false;
+    if(q && !((x.firma||'').toLowerCase().includes(q)||(x.number||'').toLowerCase().includes(q))) return false;
+    return true;
+  });
+  list.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  document.getElementById('invCount').textContent=list.length+' Rechnungen';
+  if(!list.length){ body.innerHTML='<tr><td colspan="7" class="tx-mute" style="text-align:center;padding:30px">Noch keine Rechnungen — erstelle deine erste (auch aus einem Angebot oder Mietvertrag).</td></tr>'; return; }
+  body.innerHTML=list.map(x=>{
+    const t=quoteTotals(x.items);
+    return `<tr>
+      <td class="mono fw-bold">${escHtml(x.number||'—')}</td>
+      <td>${escHtml(x.firma||'—')}</td>
+      <td class="tx-mute">${x.date?fmtDate(x.date):'—'}</td>
+      <td class="tx-mute">${x.dueDate?fmtDate(x.dueDate):'—'}</td>
+      <td>${invStatusBadge(x)}</td>
+      <td class="tx-right fw-bold">${fmtCHF(t.total)}</td>
+      <td class="tx-right">
+        ${x.status!=='Bezahlt'&&x.status!=='Storniert'?`<button class="btn btn-tiny btn-good" onclick="window.markInvoicePaid('${x.id}')" title="Als bezahlt markieren">✓ Bezahlt</button>`:''}
+        <button class="btn btn-tiny btn-ghost" onclick="window.openInvoiceForm('${x.id}')">✎</button>
+        <button class="btn btn-tiny btn-ghost" onclick="window.invoicePdf('${x.id}')" title="PDF">📄</button>
+        <button class="btn btn-tiny btn-ghost" onclick="window.deleteInvoice('${x.id}')">🗑</button>
+      </td>
+    </tr>`;
+  }).join('');
+};
+
+function invFillContacts(selId){
+  const csel=document.getElementById('invContact');
+  const contacts=[...STATE.contacts].sort((a,b)=>(a.firma||'').localeCompare(b.firma||''));
+  csel.innerHTML='<option value="">— Kontakt wählen (optional) —</option>'+contacts.map(c=>`<option value="${c.id}">${escHtml(c.firma||'?')}${c.kontakt?' · '+escHtml(c.kontakt):''}</option>`).join('');
+  csel.value=selId||'';
+  const psel=document.getElementById('invProductPick');
+  const prods=[...STATE.products].sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  psel.innerHTML='<option value="">＋ Produkt aus Katalog…</option>'+prods.map(p=>`<option value="${p.id}">${escHtml(p.name)} — ${fmtCHF(p.price||0)}</option>`).join('');
+}
+window.openInvoiceForm = function(id, prefill){
+  _editingInvoiceId=id||null;
+  const x=id?STATE.invoices.find(q=>q.id===id):null;
+  const src = x || prefill || {};
+  document.getElementById('invFormTitle').textContent = x ? ('Rechnung '+(x.number||'')) : 'Neue Rechnung';
+  invFillContacts(src.contactId||'');
+  document.getElementById('invFirma').value=src.firma||'';
+  document.getElementById('invKontakt').value=src.kontakt||'';
+  const dt = src.date ? src.date.slice(0,10) : todayISO();
+  document.getElementById('invDate').value=dt;
+  document.getElementById('invDue').value = src.dueDate ? src.dueDate.slice(0,10) : addDaysISO(dt,30);
+  document.getElementById('invStatus').value=src.status||'Entwurf';
+  document.getElementById('invNotes').value = src.notes!=null ? src.notes : 'Zahlbar innert 30 Tagen netto.';
+  _invItems = Array.isArray(src.items)&&src.items.length ? src.items.map(it=>({...it})) : [{name:'',qty:1,unitPrice:0,discount:0,taxRate:DEFAULT_TAX}];
+  renderInvItems();
+  openModal('modalInvoice');
+};
+function addDaysISO(iso, days){ const d=new Date(iso+'T00:00:00'); if(isNaN(d)) return iso; d.setDate(d.getDate()+days); return localISO(d); }
+window.invSyncDue = function(){
+  const dt=document.getElementById('invDate').value; const due=document.getElementById('invDue');
+  if(dt && !due.value) due.value=addDaysISO(dt,30);
+};
+window.invContactPick = function(){
+  const c=STATE.contacts.find(x=>x.id===document.getElementById('invContact').value);
+  if(c){ document.getElementById('invFirma').value=c.firma||''; document.getElementById('invKontakt').value=c.kontakt||''; }
+};
+function renderInvItems(){
+  const wrap=document.getElementById('invItems');
+  wrap.innerHTML=_invItems.map((it,i)=>`
+    <div class="qitem">
+      <input class="qi-name" placeholder="Bezeichnung" value="${escHtml(it.name||'')}" oninput="window.invItemChange(${i},'name',this.value)">
+      <input class="qi-num" type="number" step="any" placeholder="1" value="${it.qty!=null?it.qty:''}" oninput="window.invItemChange(${i},'qty',this.value)">
+      <input class="qi-num" type="number" step="any" placeholder="0.00" value="${it.unitPrice!=null?it.unitPrice:''}" oninput="window.invItemChange(${i},'unitPrice',this.value)">
+      <input class="qi-num" type="number" step="any" placeholder="0" value="${it.discount||0}" oninput="window.invItemChange(${i},'discount',this.value)">
+      <span class="qi-sum">${fmtCHF(lineNet(it))}</span>
+      <button class="qi-del" onclick="window.removeInvItem(${i})" title="Position entfernen">✕</button>
+    </div>`).join('');
+  recalcInvTotals();
+}
+window.invItemChange=function(i,field,val){
+  if(!_invItems[i]) return; _invItems[i][field]=val;
+  const wrap=document.getElementById('invItems'); const row=wrap&&wrap.children[i];
+  if(row){ const sumEl=row.querySelector('.qi-sum'); if(sumEl) sumEl.textContent=fmtCHF(lineNet(_invItems[i])); }
+  recalcInvTotals();
+};
+window.addInvItem=function(){ _invItems.push({name:'',qty:1,unitPrice:0,discount:0,taxRate:DEFAULT_TAX}); renderInvItems(); };
+window.removeInvItem=function(i){ _invItems.splice(i,1); if(!_invItems.length)_invItems.push({name:'',qty:1,unitPrice:0,discount:0,taxRate:DEFAULT_TAX}); renderInvItems(); };
+window.invAddFromCatalog=function(){
+  const p=STATE.products.find(x=>x.id===document.getElementById('invProductPick').value); if(!p) return;
+  const last=_invItems[_invItems.length-1];
+  const item={name:p.name,qty:1,unitPrice:p.price||0,discount:0,taxRate:(p.taxRate!=null?p.taxRate:DEFAULT_TAX)};
+  if(last && !(last.name||'').trim() && !parseFloat(last.unitPrice)) _invItems[_invItems.length-1]=item; else _invItems.push(item);
+  document.getElementById('invProductPick').value=''; renderInvItems();
+};
+function recalcInvTotals(){
+  const t=quoteTotals(_invItems);
+  document.getElementById('invNet').textContent=fmtCHF(t.net);
+  document.getElementById('invTax').textContent=fmtCHF(t.tax);
+  document.getElementById('invTotal').textContent=fmtCHF(t.total);
+}
+window.saveInvoice=function(){
+  const firma=document.getElementById('invFirma').value.trim();
+  if(!firma){ showToast('Firma fehlt','error'); return; }
+  const items=_invItems.filter(it=>(it.name||'').trim()||(parseFloat(it.unitPrice)||0));
+  if(!items.length){ showToast('Mindestens eine Position eingeben','error'); return; }
+  const status=document.getElementById('invStatus').value||'Entwurf';
+  const rec={
+    contactId:document.getElementById('invContact').value||null,
+    firma, kontakt:document.getElementById('invKontakt').value.trim(),
+    date:document.getElementById('invDate').value||todayISO(),
+    dueDate:document.getElementById('invDue').value||'',
+    status, notes:document.getElementById('invNotes').value.trim(),
+    items:items.map(it=>({name:(it.name||'').trim(),qty:parseFloat(it.qty)||0,unitPrice:parseFloat(it.unitPrice)||0,discount:parseFloat(it.discount)||0,taxRate:parseFloat(it.taxRate)||0}))
+  };
+  if(_editingInvoiceId){
+    const x=STATE.invoices.find(q=>q.id===_editingInvoiceId);
+    if(x){ Object.assign(x,rec); if(status==='Bezahlt'&&!x.paidDate)x.paidDate=todayISO(); if(status!=='Bezahlt')x.paidDate=null; x.updated=new Date().toISOString(); }
+  } else {
+    STATE.invoices.push({ id:uid(), number:nextInvoiceNumber(), ...rec, paidDate:(status==='Bezahlt'?todayISO():null), created:new Date().toISOString(), updated:new Date().toISOString() });
+  }
+  saveState(); closeModal('modalInvoice'); window.renderRechnungen(); showToast('✓ Rechnung gespeichert','success');
+};
+window.deleteInvoice=function(id){
+  if(!confirm('Rechnung wirklich löschen?')) return;
+  STATE.invoices=STATE.invoices.filter(x=>x.id!==id); saveState(); window.renderRechnungen(); showToast('Rechnung gelöscht','success');
+};
+window.markInvoicePaid=function(id){
+  const x=STATE.invoices.find(q=>q.id===id); if(!x) return;
+  x.status='Bezahlt'; x.paidDate=todayISO(); x.updated=new Date().toISOString();
+  saveState(); window.renderRechnungen(); showToast('✓ Als bezahlt markiert','success');
+};
+window.createInvoiceFromQuote=function(quoteId){
+  const qd=STATE.quotes.find(x=>x.id===quoteId); if(!qd){ showToast('Angebot nicht gefunden','error'); return; }
+  window.nav('rechnungen');
+  setTimeout(()=>window.openInvoiceForm(null,{contactId:qd.contactId,firma:qd.firma,kontakt:qd.kontakt,items:qd.items,notes:'Zahlbar innert 30 Tagen netto.'}),60);
+};
+window.createInvoiceFromRental=function(rentalId){
+  const r=STATE.rentals.find(x=>x.id===rentalId); if(!r){ showToast('Vermietung nicht gefunden','error'); return; }
+  const days=rentalDays(r);
+  const item={name:`Miete ${r.assetName||''} (${r.from?fmtDate(r.from):'?'}–${r.to?fmtDate(r.to):'?'}, ${days} Tage)`, qty:days, unitPrice:parseFloat(r.dailyRate)||0, discount:0, taxRate:DEFAULT_TAX};
+  const note='Zahlbar innert 30 Tagen netto.'+((parseFloat(r.deposit)||0)?(' Kaution CHF '+fmtCHFpdfLocal(r.deposit)+' separat.'):'');
+  window.nav('rechnungen');
+  setTimeout(()=>window.openInvoiceForm(null,{contactId:r.contactId,firma:r.firma,kontakt:r.kontakt,items:[item],notes:note}),60);
+};
+window.invoicePdf=function(id){
+  const x=STATE.invoices.find(q=>q.id===id); if(!x) return;
+  if(typeof window.jspdf==='undefined'){ showToast('jsPDF nicht geladen — Seite neu laden','error'); return; }
+  const {jsPDF}=window.jspdf; const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const PW=210, ML=18, MR=18, CW=PW-ML-MR; const company=loadCompany()||'Nexa'; let y=22;
+  doc.setFont('helvetica','bold'); doc.setFontSize(20); doc.setTextColor(20,20,22); doc.text(company, ML, y);
+  doc.setTextColor(0,113,227); doc.text('RECHNUNG', PW-MR, y, {align:'right'});
+  y+=7; doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(120,120,128); doc.text(x.number||'', PW-MR, y, {align:'right'});
+  y+=10; doc.setDrawColor(225,225,228); doc.line(ML,y,PW-MR,y); y+=8;
+  doc.setTextColor(120,120,128); doc.setFontSize(9); doc.text('RECHNUNG AN', ML, y);
+  const my=y; doc.setTextColor(20,20,22); doc.setFontSize(11); doc.setFont('helvetica','bold'); y+=5; doc.text(x.firma||'', ML, y);
+  if(x.kontakt){ y+=5; doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.text(x.kontakt, ML, y); }
+  doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(80,80,86);
+  doc.text('Datum: '+(x.date?fmtDate(x.date):'—'), PW-MR, my+5, {align:'right'});
+  doc.text('Fällig: '+(x.dueDate?fmtDate(x.dueDate):'—'), PW-MR, my+10, {align:'right'});
+  y+=12;
+  const cName=ML, cQty=ML+98, cPrice=ML+126, cDisc=ML+150, cSum=PW-MR;
+  doc.setFillColor(245,245,247); doc.rect(ML, y-5, CW, 8, 'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(80,80,86);
+  doc.text('Bezeichnung', cName+2, y); doc.text('Menge', cQty, y, {align:'right'}); doc.text('Preis', cPrice, y, {align:'right'}); doc.text('Rab.%', cDisc, y, {align:'right'}); doc.text('Betrag', cSum, y, {align:'right'});
+  y+=8; doc.setFont('helvetica','normal'); doc.setTextColor(30,30,32); doc.setFontSize(10);
+  (x.items||[]).forEach(it=>{
+    if(y>258){ doc.addPage(); y=22; }
+    const nl=doc.splitTextToSize(it.name||'', 90);
+    doc.text(nl, cName+2, y); doc.text(String(it.qty||0), cQty, y, {align:'right'});
+    doc.text(fmtCHFpdfLocal(it.unitPrice||0), cPrice, y, {align:'right'}); doc.text(String(it.discount||0), cDisc, y, {align:'right'});
+    doc.text(fmtCHFpdfLocal(lineNet(it)), cSum, y, {align:'right'});
+    y+=Math.max(6, nl.length*5); doc.setDrawColor(238,238,240); doc.line(ML, y-2, PW-MR, y-2);
+  });
+  const t=quoteTotals(x.items); y+=4; doc.setFontSize(10); doc.setTextColor(80,80,86);
+  doc.text('Zwischensumme', cPrice, y, {align:'right'}); doc.text(fmtCHFpdfLocal(t.net), cSum, y, {align:'right'}); y+=6;
+  doc.text('MwSt', cPrice, y, {align:'right'}); doc.text(fmtCHFpdfLocal(t.tax), cSum, y, {align:'right'}); y+=7;
+  doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(0,113,227);
+  doc.text('Rechnungsbetrag', cPrice, y, {align:'right'}); doc.text('CHF '+fmtCHFpdfLocal(t.total), cSum, y, {align:'right'});
+  if(x.status==='Bezahlt'){ y+=8; doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(29,138,78); doc.text('BEZAHLT'+(x.paidDate?' am '+fmtDate(x.paidDate):''), PW-MR, y, {align:'right'}); }
+  if(x.notes){ y+=12; doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(110,110,116); doc.text(doc.splitTextToSize(x.notes, CW), ML, y); }
+  doc.setFontSize(8); doc.setTextColor(150,150,156); doc.text(company+'  ·  '+(x.number||''), ML, 288);
+  doc.save((x.number||'Rechnung')+'.pdf'); showToast('📄 Rechnungs-PDF erstellt','success');
+};
+
 // Entry point: auth gate (Supabase) decides login / local mode, then runs init()
 if(document.readyState === 'loading'){
   document.addEventListener('DOMContentLoaded', bootstrap);
@@ -9175,6 +9426,48 @@ if(document.readyState === 'loading'){
 <!-- ═══════════════════════════════════════════════════════════════════════ -->
 <!-- MODAL: Wochenbericht                                                    -->
 <!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- MODAL: Rechnung -->
+<div class="modal-bg" id="modalInvoice">
+  <div class="modal lg" style="max-width:760px">
+    <div class="modal-h">
+      <div class="modal-title" id="invFormTitle">Neue Rechnung</div>
+      <button class="modal-x" onclick="window.closeModal('modalInvoice')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="field full"><label>Kontakt aus CRM (optional)</label>
+          <select id="invContact" onchange="window.invContactPick()"></select></div>
+        <div class="field"><label>Firma *</label><input id="invFirma"></div>
+        <div class="field"><label>Ansprechpartner</label><input id="invKontakt"></div>
+        <div class="field"><label>Rechnungsdatum</label><input id="invDate" type="date" onchange="window.invSyncDue()"></div>
+        <div class="field"><label>Fällig bis</label><input id="invDue" type="date"></div>
+        <div class="field"><label>Status</label>
+          <select id="invStatus"><option>Entwurf</option><option>Offen</option><option>Bezahlt</option><option>Storniert</option></select></div>
+      </div>
+      <div class="section-h">Positionen</div>
+      <div class="qitem qitem-head">
+        <span>Bezeichnung</span><span class="tx-right">Menge</span><span class="tx-right">Preis</span><span class="tx-right">Rabatt%</span><span class="tx-right">Betrag</span><span></span>
+      </div>
+      <div id="invItems"></div>
+      <div class="row gap-md mt-md" style="flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm" onclick="window.addInvItem()">＋ Position</button>
+        <select id="invProductPick" onchange="window.invAddFromCatalog()" style="max-width:280px"></select>
+      </div>
+      <div class="qtotals">
+        <div>Zwischensumme: <b id="invNet">CHF 0.00</b></div>
+        <div>MwSt: <b id="invTax">CHF 0.00</b></div>
+        <div class="qt-total">Total: <span id="invTotal">CHF 0.00</span></div>
+      </div>
+      <div class="field full mt-md"><label>Notiz / Zahlungsbedingungen</label><textarea id="invNotes" rows="2" placeholder="z.B. Zahlbar innert 30 Tagen netto. IBAN: …"></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="window.closeModal('modalInvoice')">Abbrechen</button>
+      <span class="flex1"></span>
+      <button class="btn btn-primary" onclick="window.saveInvoice()">Speichern</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: Gerät / Asset -->
 <div class="modal-bg" id="modalAsset">
   <div class="modal" style="max-width:520px">
