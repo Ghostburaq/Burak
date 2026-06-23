@@ -24,12 +24,21 @@
 <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-<!-- Libraries (CDN — replace local saved-page paths) -->
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-<!-- Supabase: Mitarbeiter-Logins + geteilte Cloud-Datenbank (Auth + Realtime) -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Libraries (CDN, UMD builds — explicit paths so window globals are set) -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" crossorigin="anonymous"></script>
+<!-- Supabase: must be the UMD build; the bare /npm/@supabase/supabase-js@2 path resolves to ESM and does NOT expose window.supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js" crossorigin="anonymous"></script>
+<script>
+  // Fallback to unpkg if jsDelivr fails — UMD build also there
+  if(!window.supabase || !window.supabase.createClient){
+    var s=document.createElement('script');
+    s.src='https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js';
+    s.async=false;
+    document.head.appendChild(s);
+  }
+</script>
 
 <style>
 /* ════════════════════════════════════════════════════════════ */
@@ -2706,6 +2715,14 @@ let _authMode = 'login'; // 'login' | 'signup'
 
 function cloudConfigured(){ return !!(CLOUD.url && CLOUD.key); }
 function cloudLibReady(){ return !!(window.supabase && window.supabase.createClient); }
+// Wait up to `maxMs` for the Supabase library to appear (handles slow CDNs / fallback chain)
+async function waitForCloudLib(maxMs){
+  const start = Date.now();
+  while(!cloudLibReady() && (Date.now()-start) < (maxMs||5000)){
+    await new Promise(r => setTimeout(r, 100));
+  }
+  return cloudLibReady();
+}
 
 function cloudInitClient(){
   if(!cloudConfigured() || !cloudLibReady()) return false;
@@ -2995,14 +3012,19 @@ async function bootstrap(){
   if(!cloudConfigured()){
     return showCard('setup');
   }
-  // Configured but library failed to load (e.g. offline) → offer local fallback
-  if(!cloudLibReady()){
+  // Cover the screen with the login card while we wait for the library
+  showCard('login');
+  authMsg('loginMsg','⏳ Cloud-Bibliothek wird geladen…','info');
+  // Give the CDN up to 6 s (jsDelivr + unpkg fallback chain). cloudLibReady() is rechecked every 100 ms.
+  const ready = await waitForCloudLib(6000);
+  if(!ready){
+    // Library still missing → only NOW fall back to setup with the offline message
     showCard('setup');
-    authMsg('setupMsg','Cloud-Bibliothek konnte nicht geladen werden (offline?). Du kannst lokal weiterarbeiten.','info');
+    authMsg('setupMsg','Cloud-Bibliothek konnte nicht geladen werden (offline oder CDN blockiert?). Du kannst lokal weiterarbeiten oder es gleich nochmal versuchen.','info');
     return;
   }
+  authMsg('loginMsg','','info');
   cloudInitClient();
-  showCard('login');   // cover app while we check for an existing session
   try{
     const { data:{ session } } = await CLOUD.client.auth.getSession();
     if(session && session.user){ onAuthenticated(session.user); }
