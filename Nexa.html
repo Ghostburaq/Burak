@@ -9557,13 +9557,13 @@ window.toggleNavMore = function(e){
   if(e) e.stopPropagation();
   const m=document.getElementById('navMoreMenu'); const wasOpen=!m.classList.contains('hidden');
   closeAllNavMenus();
-  if(!wasOpen){ positionNavMenu(m, document.getElementById('navMoreBtn'), false); m.classList.remove('hidden'); setTimeout(()=>document.addEventListener('click', closeAllNavMenus),0); }
+  if(!wasOpen){ if(m.parentElement!==document.body) document.body.appendChild(m); positionNavMenu(m, document.getElementById('navMoreBtn'), false); m.classList.remove('hidden'); setTimeout(()=>document.addEventListener('click', closeAllNavMenus),0); }
 };
 window.toggleProfile = function(e){
   if(e) e.stopPropagation();
   const m=document.getElementById('profileMenu'); const wasOpen=!m.classList.contains('hidden');
   closeAllNavMenus();
-  if(!wasOpen){ positionNavMenu(m, document.getElementById('profileBtn'), true); m.classList.remove('hidden'); setTimeout(()=>document.addEventListener('click', closeAllNavMenus),0); }
+  if(!wasOpen){ if(m.parentElement!==document.body) document.body.appendChild(m); positionNavMenu(m, document.getElementById('profileBtn'), true); m.classList.remove('hidden'); setTimeout(()=>document.addEventListener('click', closeAllNavMenus),0); }
 };
 
 // Entry point: auth gate (Supabase) decides login / local mode, then runs init()
