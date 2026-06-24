@@ -204,6 +204,25 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .api-btn{width:auto;padding:5px 11px;background:transparent;color:#d2d2d7;border:1px solid rgba(255,255,255,0.22);border-radius:980px;font-size:11.5px;font-weight:500;transition:all 0.15s;white-space:nowrap}
 .api-btn:hover{color:#fff;border-color:#fff}
 
+/* "Mehr ▾" dropdown + profile avatar menu */
+.nav-more{position:relative;flex-shrink:0}
+.profile-wrap{position:relative;flex-shrink:0}
+.profile-btn{display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 11px;border-radius:980px;
+  background:rgba(255,255,255,0.12);color:#f5f5f7;border:none;cursor:pointer;font-size:12px;font-weight:700;letter-spacing:0.02em;transition:background 0.15s}
+.profile-btn:hover{background:rgba(255,255,255,0.22)}
+.nav-menu{background:var(--bg-card);border:1px solid var(--line);border-radius:14px;
+  box-shadow:0 12px 44px rgba(0,0,0,0.22);padding:6px;min-width:224px;z-index:90}
+.profile-menu{min-width:248px}
+.navmenu-item{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:transparent;border:none;
+  padding:9px 12px;border-radius:9px;font-size:13.5px;color:var(--text);cursor:pointer;white-space:nowrap;transition:background 0.12s}
+.navmenu-item:hover{background:var(--bg2)}
+.navmenu-item.active{background:var(--brand-soft);color:var(--brand-2);font-weight:600}
+.navmenu-sep{height:1px;background:var(--line);margin:5px 6px}
+.profile-head{padding:9px 12px 8px}
+.profile-name{font-weight:700;font-size:13.5px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:224px}
+.profile-sub{font-size:11px;color:var(--text-mute);margin-top:2px}
+.profile-api{display:flex;align-items:center;gap:7px;padding:5px 12px 8px;font-size:12px;color:var(--text-mute)}
+
 /* MAIN ────────────────────────────────────────────────────── */
 #main{overflow:hidden;display:flex;flex-direction:column;min-width:0}
 
@@ -1342,66 +1361,54 @@ alter publication supabase_realtime add table public.crm_state;</pre>
     <nav class="nav">
       <button class="nav-item active" data-page="today" onclick="window.nav('today')">
         <span class="nav-icon">⊙</span> Heute
-        <span class="nav-shortcut">1</span>
       </button>
       <button class="nav-item" data-page="kontakte" onclick="window.nav('kontakte')">
         <span class="nav-icon">⎈</span> Kontakte
-        <span class="nav-shortcut">2</span>
       </button>
       <button class="nav-item" data-page="pipeline" onclick="window.nav('pipeline')">
         <span class="nav-icon">≡</span> Pipeline
-        <span class="nav-shortcut">3</span>
-      </button>
-      <button class="nav-item" data-page="produkte" onclick="window.nav('produkte')">
-        <span class="nav-icon">📦</span> Produkte
       </button>
       <button class="nav-item" data-page="angebote" onclick="window.nav('angebote')">
         <span class="nav-icon">📄</span> Angebote
       </button>
-      <button class="nav-item" data-page="vermietung" onclick="window.nav('vermietung')">
-        <span class="nav-icon">🔑</span> Vermietung
-      </button>
       <button class="nav-item" data-page="rechnungen" onclick="window.nav('rechnungen')">
         <span class="nav-icon">📑</span> Rechnungen
       </button>
-      <button class="nav-item" data-page="wiedervorlagen" onclick="window.nav('wiedervorlagen')">
-        <span class="nav-icon">↻</span> Wiedervorlagen
-        <span class="nav-shortcut">4</span>
-        <span class="nav-badge hidden" id="badgeWV">0</span>
-      </button>
-      <button class="nav-item" data-page="aktivitaeten" onclick="window.nav('aktivitaeten')">
-        <span class="nav-icon">▤</span> Aktivitäten
-        <span class="nav-shortcut">5</span>
-      </button>
-      <button class="nav-item" data-page="kalender" onclick="window.nav('kalender')">
-        <span class="nav-icon">▦</span> Kalender
-        <span class="nav-shortcut">6</span>
-      </button>
-      <button class="nav-item" data-page="ki" onclick="window.nav('ki')">
-        <span class="nav-icon">✦</span> KI-Assist
-        <span class="nav-shortcut">7</span>
-      </button>
-      <button class="nav-item" data-page="analytics" onclick="window.nav('analytics')">
-        <span class="nav-icon">📈</span> Analytics
-        <span class="nav-shortcut">8</span>
-      </button>
-      <button class="nav-item admin-only" data-page="settings" onclick="window.nav('settings')">
-        <span class="nav-icon">⚙</span> Einstellungen
-      </button>
-      <button class="nav-item" onclick="window.openWochenbericht()" id="wbNavBtn" style="position:relative">
-        <span class="nav-icon">📊</span> Wochenbericht
-        <span id="wbNewDot" class="notif-dot" style="display:none"></span>
-      </button>
+      <div class="nav-more">
+        <button class="nav-item" id="navMoreBtn" onclick="window.toggleNavMore(event)">
+          Mehr <span style="font-size:9px">▾</span>
+          <span class="nav-badge hidden" id="badgeWV">0</span>
+        </button>
+        <div class="nav-menu hidden" id="navMoreMenu">
+          <button class="navmenu-item" data-page="produkte" onclick="window.nav('produkte');window.closeNavMore()">📦 Produkte</button>
+          <button class="navmenu-item" data-page="vermietung" onclick="window.nav('vermietung');window.closeNavMore()">🔑 Vermietung</button>
+          <button class="navmenu-item" data-page="wiedervorlagen" onclick="window.nav('wiedervorlagen');window.closeNavMore()">↻ Wiedervorlagen <span class="nav-badge hidden" id="badgeWV2">0</span></button>
+          <button class="navmenu-item" data-page="aktivitaeten" onclick="window.nav('aktivitaeten');window.closeNavMore()">▤ Aktivitäten</button>
+          <button class="navmenu-item" data-page="kalender" onclick="window.nav('kalender');window.closeNavMore()">▦ Kalender</button>
+          <button class="navmenu-item" data-page="ki" onclick="window.nav('ki');window.closeNavMore()">✦ KI-Assist</button>
+          <button class="navmenu-item" data-page="analytics" onclick="window.nav('analytics');window.closeNavMore()">📈 Analytics</button>
+          <div class="navmenu-sep"></div>
+          <button class="navmenu-item" id="wbNavBtn" onclick="window.openWochenbericht();window.closeNavMore()" style="position:relative">📊 Wochenbericht <span id="wbNewDot" class="notif-dot" style="display:none"></span></button>
+        </div>
+      </div>
     </nav>
     <div class="sidebar-foot">
-      <div class="api-status">
-        <span class="api-dot" id="apiDot"></span>
-        <span id="apiStatus">API-Key fehlt</span>
-      </div>
-      <button class="api-btn" onclick="window.openApiKey()">API-Key konfigurieren</button>
-      <div class="auth-foot" id="authFoot" style="display:none">
-        <div class="auth-user">Angemeldet: <b id="authFootEmail">—</b></div>
-        <button class="auth-signout" onclick="window.cloudSignOut()">Abmelden</button>
+      <div class="profile-wrap">
+        <button class="profile-btn" id="profileBtn" onclick="window.toggleProfile(event)" title="Profil & Konto">
+          <span class="api-dot" id="apiDot"></span>
+          <span id="profileInitials">··</span>
+        </button>
+        <div class="nav-menu profile-menu hidden" id="profileMenu">
+          <div class="profile-head">
+            <div class="profile-name" id="profileName">Lokaler Nutzer</div>
+            <div class="profile-sub" id="profileRole"></div>
+          </div>
+          <div class="profile-api"><span class="api-dot" id="apiDot2"></span><span id="apiStatus">API-Key fehlt</span></div>
+          <button class="navmenu-item" onclick="window.openApiKey();window.closeProfile()">🔑 API-Key konfigurieren</button>
+          <button class="navmenu-item admin-only" data-page="settings" onclick="window.nav('settings');window.closeProfile()">⚙ Einstellungen</button>
+          <div class="navmenu-sep"></div>
+          <button class="navmenu-item" id="profileSignout" onclick="window.cloudSignOut();window.closeProfile()" style="display:none">⎋ Abmelden</button>
+        </div>
       </div>
     </div>
   </aside>
@@ -2849,12 +2856,15 @@ function renderCurrentPage(){
 }
 
 function setAuthFootUI(){
-  const foot=document.getElementById('authFoot');
-  const em=document.getElementById('authFootEmail');
-  if(CLOUD.user && foot && em){
-    em.textContent = CLOUD.user.email || 'Mitarbeiter';
-    foot.style.display='flex';
-  } else if(foot){ foot.style.display='none'; }
+  const email = (CLOUD.user && CLOUD.user.email) ? CLOUD.user.email : '';
+  const nameEl = document.getElementById('profileName');
+  const roleEl = document.getElementById('profileRole');
+  const initEl = document.getElementById('profileInitials');
+  const signout = document.getElementById('profileSignout');
+  if(nameEl) nameEl.textContent = email || 'Lokaler Nutzer';
+  if(initEl) initEl.textContent = email ? email.replace(/@.*/,'').slice(0,2).toUpperCase() : '··';
+  if(signout) signout.style.display = email ? 'block' : 'none';
+  if(roleEl) roleEl.textContent = email ? (isAdmin() ? 'Admin' : 'Mitarbeiter') : '';
   if(typeof applyRoleUI === 'function') applyRoleUI();
   if(typeof renderRoleRows === 'function') renderRoleRows();
 }
@@ -2977,11 +2987,15 @@ window.nav = function(page){
     page = 'today';
   }
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.nav-item, .navmenu-item').forEach(n => n.classList.remove('active'));
   const target = document.getElementById('page-' + page);
   if(target) target.classList.add('active');
   const navBtn = document.querySelector('[data-page="'+page+'"]');
   if(navBtn) navBtn.classList.add('active');
+  // Highlight the "Mehr ▾" button when the active page lives inside that menu
+  const MORE_PAGES = ['produkte','vermietung','wiedervorlagen','aktivitaeten','kalender','ki','analytics'];
+  const moreBtn = document.getElementById('navMoreBtn');
+  if(moreBtn) moreBtn.classList.toggle('active', MORE_PAGES.includes(page));
   const titles = {
     today:'Heute', kontakte:'Kontakte', pipeline:'Pipeline',
     produkte:'Produkte', angebote:'Angebote', vermietung:'Vermietung', rechnungen:'Rechnungen',
@@ -3918,13 +3932,11 @@ function updateSidebarBadge(){
   const todayIso = todayISO();
   const open = STATE.contacts.filter(c => !['Gewonnen','Verloren','Pausiert','Erledigt'].includes(c.status) && c.wv);
   const due = open.filter(c => c.wv.slice(0,10) <= todayIso).length;
-  const badge = document.getElementById('badgeWV');
-  if(due > 0){
-    badge.textContent = due;
-    badge.classList.remove('hidden');
-  } else {
-    badge.classList.add('hidden');
-  }
+  [document.getElementById('badgeWV'), document.getElementById('badgeWV2')].forEach(badge=>{
+    if(!badge) return;
+    if(due > 0){ badge.textContent = due; badge.classList.remove('hidden'); }
+    else badge.classList.add('hidden');
+  });
   // Also refresh alarm bell + overdue banner
   updateAlarmBell();
   renderOverdueBanner();
@@ -5807,15 +5819,10 @@ window.saveApiKey = function(){
 };
 function updateApiStatus(){
   const key = localStorage.getItem(API_KEY);
-  const dot = document.getElementById('apiDot');
+  const dots = [document.getElementById('apiDot'), document.getElementById('apiDot2')];
   const status = document.getElementById('apiStatus');
-  if(key){
-    dot.classList.add('ok');
-    status.textContent = 'API verbunden';
-  } else {
-    dot.classList.remove('ok');
-    status.textContent = 'API-Key fehlt';
-  }
+  dots.forEach(d=>{ if(d) d.classList.toggle('ok', !!key); });
+  if(status) status.textContent = key ? 'API verbunden' : 'API-Key fehlt';
 }
 
 // ════════════════════════════════════════════════════════════════════════
@@ -9526,6 +9533,37 @@ window.saveRoles = function(){
   renderRoleRows();
   applyRoleUI();
   showToast('✓ Rollen gespeichert', 'success');
+};
+
+// ════════════════════════════════════════════════════════════════════════
+//  TOP-NAV DROPDOWNS ("Mehr ▾" + Profil-Menü) — fixed-positioned popovers
+// ════════════════════════════════════════════════════════════════════════
+function positionNavMenu(menu, btn, alignRight){
+  const r = btn.getBoundingClientRect();
+  menu.style.position = 'fixed';
+  menu.style.top = (r.bottom + 6) + 'px';
+  if(alignRight){ menu.style.right = Math.max(8, window.innerWidth - r.right) + 'px'; menu.style.left = 'auto'; }
+  else { menu.style.left = Math.max(8, r.left) + 'px'; menu.style.right = 'auto'; }
+}
+function closeAllNavMenus(){
+  const a=document.getElementById('navMoreMenu'), b=document.getElementById('profileMenu');
+  if(a) a.classList.add('hidden');
+  if(b) b.classList.add('hidden');
+  document.removeEventListener('click', closeAllNavMenus);
+}
+window.closeNavMore = function(){ const m=document.getElementById('navMoreMenu'); if(m) m.classList.add('hidden'); };
+window.closeProfile = function(){ const m=document.getElementById('profileMenu'); if(m) m.classList.add('hidden'); };
+window.toggleNavMore = function(e){
+  if(e) e.stopPropagation();
+  const m=document.getElementById('navMoreMenu'); const wasOpen=!m.classList.contains('hidden');
+  closeAllNavMenus();
+  if(!wasOpen){ positionNavMenu(m, document.getElementById('navMoreBtn'), false); m.classList.remove('hidden'); setTimeout(()=>document.addEventListener('click', closeAllNavMenus),0); }
+};
+window.toggleProfile = function(e){
+  if(e) e.stopPropagation();
+  const m=document.getElementById('profileMenu'); const wasOpen=!m.classList.contains('hidden');
+  closeAllNavMenus();
+  if(!wasOpen){ positionNavMenu(m, document.getElementById('profileBtn'), true); m.classList.remove('hidden'); setTimeout(()=>document.addEventListener('click', closeAllNavMenus),0); }
 };
 
 // Entry point: auth gate (Supabase) decides login / local mode, then runs init()
