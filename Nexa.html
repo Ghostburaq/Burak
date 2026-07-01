@@ -2332,7 +2332,7 @@ alter publication supabase_realtime add table public.crm_state;</pre>
 <div class="modal-bg" id="modalAiImport">
   <div class="modal lg">
     <div class="modal-h">
-      <div class="modal-title">✦ KI-Import — Angebot, Bestellung, RFP</div>
+      <div class="modal-title">✦ Universal-Import (KI)</div>
       <button class="modal-x" onclick="window.closeModal('modalAiImport')">✕</button>
     </div>
     <div class="modal-body">
@@ -2340,7 +2340,7 @@ alter publication supabase_realtime add table public.crm_state;</pre>
       <!-- Step 1: Upload -->
       <div id="aiStep1">
         <p class="tx-mute mb-md" style="font-size:13px;line-height:1.6">
-          Lege ein Angebot, eine Bestellung oder ein Pflichtenheft als PDF oder Excel ab — Claude liest die Datei, extrahiert alle relevanten Felder (Kunde, Projekt, CHF-Wert, Mietdauer, Produkte) und legt automatisch Kontakt, Aktivität und Pipeline-Eintrag an.
+          Lege ein <b>beliebiges Dokument</b> ab (PDF, Excel, CSV, Text — egal welches Format oder Layout). Die KI erkennt automatisch, ob es ein Angebot, eine Rechnung, ein Mietvertrag oder ein Kontakt ist, liest alle Felder aus und verteilt sie auf die richtigen Bereiche (Kontakt · Angebot · Rechnung · Vermietung · Aktivität) — mit Vorschau vor dem Übernehmen.
         </p>
         <div class="dropzone" id="aiDropzone" onclick="document.getElementById('aiFileInput').click()">
           <div class="dropzone-icon">📄</div>
@@ -2411,6 +2411,18 @@ alter publication supabase_realtime add table public.crm_state;</pre>
           <div class="ai-row"><label>Produkte</label><textarea id="ai_produkte" rows="2"></textarea></div>
           <div class="ai-row"><label>Dokumenten-Datum</label><input id="ai_dokdatum" type="date"></div>
           <div class="ai-row"><label>Notizen / Zusammenfassung</label><textarea id="ai_notiz" rows="3"></textarea></div>
+        </div>
+
+        <div class="ai-section" id="aiCreateSection">
+          <div class="ai-section-title">Was soll erstellt werden? <span id="aiDetectedType" class="bd" style="margin-left:8px;background:var(--brand);color:#fff">—</span></div>
+          <div class="row gap-md" style="flex-wrap:wrap;padding:6px 0">
+            <label class="chk"><input type="checkbox" id="aiMkContact" checked> 👤 Kontakt</label>
+            <label class="chk"><input type="checkbox" id="aiMkActivity" checked> 📝 Aktivität</label>
+            <label class="chk"><input type="checkbox" id="aiMkQuote"> 📄 Angebot</label>
+            <label class="chk"><input type="checkbox" id="aiMkInvoice"> 📑 Rechnung</label>
+            <label class="chk"><input type="checkbox" id="aiMkRental"> 🔑 Vermietung</label>
+          </div>
+          <div class="tx-mute" style="font-size:11.5px">Die KI hat den Dokumenttyp erkannt und passende Optionen vorausgewählt — frei anpassbar. Angebot/Rechnung nutzen die erkannten Positionen.</div>
         </div>
 
         <div id="aiMatchInfo" class="hidden tx-mute mt-md" style="font-size:12px;padding:10px 14px;background:var(--info-soft);border-left:3px solid var(--info);border-radius:var(--r-sm)"></div>
@@ -6325,10 +6337,18 @@ function aiExtractionUserPrompt(){
   "wiedervorlage": "ISO Datum für sinnvolle Wiedervorlage — Standard: Dokument-Datum + 14 Tage",
   "naechster_schritt": "konkreter nächster Schritt — z.B. 'Nachfassen ob Angebot angenommen'",
   "zusammenfassung": "Kurze Zusammenfassung in 1-2 Sätzen für Notizen-Feld",
-  "dokumenttyp": "Angebot, Bestellung, RFP, Pflichtenheft, oder Sonstiges"
+  "dokumenttyp": "GENAU EINES: Angebot, Rechnung, Bestellung, Mietvertrag, Kontakt, RFP, Pflichtenheft, Sonstiges",
+  "rechnungsnummer": "Rechnungsnummer falls es eine Rechnung ist, sonst null",
+  "faellig": "ISO Fälligkeitsdatum bei Rechnungen (Zahlungsziel), sonst null",
+  "positionen": [
+    { "name": "Bezeichnung der Position/Zeile", "menge": "Menge als Zahl", "einzelpreis": "Einzelpreis exkl. MwSt als Zahl", "mwst": "MwSt-Satz in % als Zahl, Standard 8.1" }
+  ]
 }
 
-Wichtig: Bei Privatpersonen (kein "AG", "GmbH", "SA" etc. im Namen) → setze sowohl firma als auch kontakt auf den vollständigen Namen.`;
+Regeln:
+- "positionen": Extrahiere ALLE einzelnen Positionen/Zeilen mit Preisen aus dem Dokument. Leeres Array [] wenn keine Positionen erkennbar.
+- "dokumenttyp": Rechnung nur wenn klar eine Rechnung (Rechnungsnummer/„zahlbar bis"); Mietvertrag wenn Mietzeitraum/Tagessatz; sonst Angebot/Bestellung/Sonstiges.
+- Bei Privatpersonen (kein "AG", "GmbH", "SA" etc. im Namen) → setze sowohl firma als auch kontakt auf den vollständigen Namen.`;
 }
 
 function parseAiJson(text){
@@ -6389,6 +6409,17 @@ function aiShowPreview(d){
   if(d.produkte) notiz += '\n— Produkte: ' + d.produkte;
   document.getElementById('ai_notiz').value = notiz.trim();
 
+  // Detected type + which records to create
+  const typ = (d.dokumenttyp || 'Sonstiges');
+  const tl = typ.toLowerCase();
+  const dt = document.getElementById('aiDetectedType'); if(dt) dt.textContent = typ;
+  const setChk = (id,on)=>{ const el=document.getElementById(id); if(el) el.checked=!!on; };
+  setChk('aiMkContact', true);
+  setChk('aiMkActivity', true);
+  setChk('aiMkQuote', /angebot|offerte|rfp|ausschreibung|pflichtenheft/.test(tl));
+  setChk('aiMkInvoice', /rechnung|invoice/.test(tl));
+  setChk('aiMkRental', /miet/.test(tl) || !!(d.mietdauer_von || d.mietdauer_bis));
+
   // Match against existing contacts
   aiMatchedContact = findMatchingContact(d.firma, d.kontakt, d.ort);
   const matchInfo = document.getElementById('aiMatchInfo');
@@ -6437,85 +6468,129 @@ function validStatus(s){
   return valid.includes(s) ? s : null;
 }
 
+function aiBuildItems(){
+  const d = aiExtracted || {};
+  const pos = Array.isArray(d.positionen) ? d.positionen : [];
+  const items = pos.filter(p=>p && (p.name || p.einzelpreis!=null)).map(p=>({
+    name: String(p.name||'Position'),
+    qty: parseFloat(p.menge)||1,
+    unitPrice: parseFloat(p.einzelpreis)||0,
+    discount: 0,
+    taxRate: (p.mwst!=null && !isNaN(parseFloat(p.mwst))) ? parseFloat(p.mwst) : DEFAULT_TAX
+  }));
+  if(items.length) return items;
+  // Fallback: single line from projekt/produkte + CHF
+  const prod = (document.getElementById('ai_produkte').value||'').split('\n').map(x=>x.trim()).filter(Boolean);
+  const chf = parseCHF(document.getElementById('ai_chf').value) || parseCHF(document.getElementById('ai_chf_total').value) || 0;
+  const name = document.getElementById('ai_projekt').value.trim() || prod[0] || (document.getElementById('ai_firma').value.trim()+' — Import');
+  return [{ name, qty:1, unitPrice:chf, discount:0, taxRate:DEFAULT_TAX }];
+}
+
 window.applyAiImport = function(){
   const firma = document.getElementById('ai_firma').value.trim();
   if(!firma){ showToast('Firma fehlt', 'error'); return; }
 
-  // Re-check match with current edited fields — user may have changed ort,
-  // which means it's a different site → should NOT merge into existing.
-  const editedOrt = document.getElementById('ai_ort').value.trim();
-  const editedKontakt = document.getElementById('ai_kontakt').value.trim();
-  aiMatchedContact = findMatchingContact(firma, editedKontakt, editedOrt);
+  const mk = id => { const el=document.getElementById(id); return el ? el.checked : false; };
+  if(!mk('aiMkContact') && !mk('aiMkActivity') && !mk('aiMkQuote') && !mk('aiMkInvoice') && !mk('aiMkRental')){
+    showToast('Bitte mindestens einen Datensatz auswählen', 'warn'); return;
+  }
 
+  const editedOrt = document.getElementById('ai_ort').value.trim();
+  const kontakt = document.getElementById('ai_kontakt').value.trim();
   const chfTotal = parseCHF(document.getElementById('ai_chf_total').value);
   let notizFinal = document.getElementById('ai_notiz').value.trim();
-  if(chfTotal != null){
-    notizFinal += (notizFinal?'\n':'') + '— CHF inkl. MwSt: ' + fmtCHF(chfTotal);
-  }
+  if(chfTotal != null){ notizFinal += (notizFinal?'\n':'') + '— CHF inkl. MwSt: ' + fmtCHF(chfTotal); }
 
-  const data = {
-    firma,
-    kontakt:  document.getElementById('ai_kontakt').value.trim(),
-    email:    document.getElementById('ai_email').value.trim(),
-    tel:      document.getElementById('ai_tel').value.trim(),
-    position: document.getElementById('ai_position').value.trim(),
-    ort:      document.getElementById('ai_ort').value.trim(),
-    segment:  document.getElementById('ai_segment').value,
-    status:   document.getElementById('ai_status').value,
-    chf:      parseCHF(document.getElementById('ai_chf').value),
-    chfTotal: chfTotal,
-    prob:     (function(){ const v = parseFloat(document.getElementById('ai_prob').value); return isNaN(v)?null:v; })(),
-    wv:       document.getElementById('ai_wv').value || null,
-    next:     document.getElementById('ai_next').value.trim(),
-    notiz:    notizFinal,
-    updated:  new Date().toISOString()
-  };
-
-  let contactId;
-  if(aiMatchedContact){
-    // Update existing — preserve created date
-    Object.assign(aiMatchedContact, data);
-    contactId = aiMatchedContact.id;
-    showToast('Kontakt aktualisiert: ' + firma, 'success');
-  } else {
-    // Create new
-    data.id = uid();
-    data.created = new Date().toISOString();
-    STATE.contacts.push(data);
-    contactId = data.id;
-    showToast('Kontakt angelegt: ' + firma, 'success');
-  }
-
-  // Auto-log activity
-  const beleg = document.getElementById('ai_beleg').value.trim();
-  const projekt = document.getElementById('ai_projekt').value.trim();
-  const produkte = document.getElementById('ai_produkte').value.trim().replace(/\n/g,' · ');
-  const mietdauer = document.getElementById('ai_mietdauer').value.trim();
   const dokDatum = document.getElementById('ai_dokdatum').value || todayISO();
+  const status   = document.getElementById('ai_status').value;
+  const next     = document.getElementById('ai_next').value.trim();
+  const now = new Date().toISOString();
+  const created = [];
+  let contactId = null;
 
-  let actSum = '';
-  if(projekt) actSum += projekt;
-  if(beleg) actSum += (actSum?' · ':'') + beleg;
-  if(mietdauer) actSum += (actSum?' · Mietdauer ':'Mietdauer ') + mietdauer;
-  if(produkte) actSum += '\nProdukte: ' + produkte;
-  if(!actSum) actSum = 'Angebot via KI-Import erfasst';
+  // ── Kontakt ──
+  if(mk('aiMkContact')){
+    aiMatchedContact = findMatchingContact(firma, kontakt, editedOrt);
+    const data = {
+      firma, kontakt,
+      email:    document.getElementById('ai_email').value.trim(),
+      tel:      document.getElementById('ai_tel').value.trim(),
+      position: document.getElementById('ai_position').value.trim(),
+      ort:      editedOrt,
+      segment:  document.getElementById('ai_segment').value,
+      status,
+      chf:      parseCHF(document.getElementById('ai_chf').value),
+      chfTotal: chfTotal,
+      prob:     (function(){ const v = parseFloat(document.getElementById('ai_prob').value); return isNaN(v)?null:v; })(),
+      wv:       document.getElementById('ai_wv').value || null,
+      next, notiz: notizFinal, updated: now
+    };
+    if(aiMatchedContact){ Object.assign(aiMatchedContact, data); contactId = aiMatchedContact.id; created.push('Kontakt aktualisiert'); }
+    else { data.id = uid(); data.created = now; STATE.contacts.push(data); contactId = data.id; created.push('Kontakt'); }
+  }
 
-  STATE.activities.push({
-    id: uid(),
-    contactId,
-    date: dokDatum,
-    typ: 'Angebot',
-    sum: actSum,
-    next: data.next,
-    newStatus: data.status,
-    created: new Date().toISOString()
-  });
+  // ── Aktivität ── (needs a contact)
+  if(mk('aiMkActivity') && contactId){
+    const beleg = document.getElementById('ai_beleg').value.trim();
+    const projekt = document.getElementById('ai_projekt').value.trim();
+    const produkte = document.getElementById('ai_produkte').value.trim().replace(/\n/g,' · ');
+    const mietdauer = document.getElementById('ai_mietdauer').value.trim();
+    let actSum = '';
+    if(projekt) actSum += projekt;
+    if(beleg) actSum += (actSum?' · ':'') + beleg;
+    if(mietdauer) actSum += (actSum?' · Mietdauer ':'Mietdauer ') + mietdauer;
+    if(produkte) actSum += '\nProdukte: ' + produkte;
+    if(!actSum) actSum = 'Via KI-Import erfasst';
+    STATE.activities.push({ id: uid(), contactId, date: dokDatum, typ: 'Angebot', sum: actSum, next, newStatus: status, created: now });
+    created.push('Aktivität');
+  }
+
+  const items = aiBuildItems();
+
+  // ── Angebot ──
+  if(mk('aiMkQuote')){
+    STATE.quotes.push({ id: uid(), number: nextQuoteNumber(), contactId, firma, kontakt,
+      date: dokDatum, validUntil: '', status: 'Versendet', items, notes: notizFinal,
+      created: now, updated: now });
+    created.push('Angebot');
+  }
+
+  // ── Rechnung ──
+  if(mk('aiMkInvoice')){
+    const faellig = (aiExtracted && aiExtracted.faellig) || addDaysISO(dokDatum, 30);
+    STATE.invoices.push({ id: uid(), number: nextInvoiceNumber(), contactId, firma, kontakt,
+      date: dokDatum, dueDate: faellig, status: 'Offen', items, notes: notizFinal, paidDate: null,
+      created: now, updated: now });
+    created.push('Rechnung');
+  }
+
+  // ── Vermietung ──
+  if(mk('aiMkRental')){
+    const md = aiExtracted || {};
+    const from = md.mietdauer_von || '';
+    const to   = md.mietdauer_bis || '';
+    const days = parseInt(md.mietdauer_tage) || (from && to ? daysBetween(from, to) : 0);
+    const prod = (document.getElementById('ai_produkte').value||'').split('\n').map(x=>x.trim()).filter(Boolean);
+    const assetName = document.getElementById('ai_projekt').value.trim() || prod[0] || firma;
+    const total = parseCHF(document.getElementById('ai_chf').value) || 0;
+    const dailyRate = (days>0 && total>0) ? Math.round(total/days*100)/100 : 0;
+    STATE.rentals.push({ id: uid(), number: nextRentalNumber(), assetId: null, assetName,
+      contactId, firma, kontakt, from, to, dailyRate, deposit: 0, status: 'Reserviert',
+      notes: 'Aus KI-Import', created: now, updated: now });
+    created.push('Vermietung');
+  }
 
   saveState();
   closeModal('modalAiImport');
   refreshAll();
-  // Auto-jump to the newly imported contact
-  setTimeout(() => window.openContact(contactId), 300);
+  showToast('✓ Erstellt: ' + created.join(' · '), 'success');
+  // Jump to the most relevant place
+  setTimeout(() => {
+    if(contactId) window.openContact(contactId);
+    else if(mk('aiMkInvoice')) window.nav('rechnungen');
+    else if(mk('aiMkQuote')) window.nav('angebote');
+    else if(mk('aiMkRental')) window.nav('vermietung');
+  }, 300);
 };
 
 
