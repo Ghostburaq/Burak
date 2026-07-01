@@ -556,6 +556,14 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .avail-row{display:flex;align-items:center;gap:12px;padding:6px 0;border-top:1px solid var(--line);font-size:13px}
 .avail-row:first-of-type{border-top:none}
 
+/* ── Mitarbeiter / Termine ── */
+.chk{display:inline-flex;align-items:center;gap:6px;font-size:13.5px;cursor:pointer;color:var(--text)}
+.chk input{width:16px;height:16px;accent-color:var(--brand)}
+.emp-hours-row{display:grid;grid-template-columns:70px 90px 1fr 1fr;gap:8px;align-items:center;margin-bottom:6px}
+.emp-hours-row input[type=time]{padding:6px 8px;border:1px solid var(--line2);border-radius:8px;background:var(--bg-input);color:var(--text);font-size:13px;width:100%}
+.emp-hours-row .day-lbl{font-weight:600;font-size:13px}
+.emp-hours-row.off input[type=time]{opacity:0.4;pointer-events:none}
+
 /* ── MINI CALENDAR ─────────────────────────────────────────── */
 .mini-cal{
   background:var(--bg2);border:1px solid var(--line2);
@@ -793,6 +801,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .cal-ev.today-ev{background:var(--warn-soft);color:var(--warn)}
 .cal-ev.future{background:var(--info-soft);color:var(--info)}
 .cal-ev.activity{background:var(--good-soft);color:var(--good)}
+.cal-ev.appointment{background:var(--brand-soft);color:var(--brand-2);font-weight:700}
 .cal-more{font-size:10px;color:var(--text-dim);padding:1px 4px}
 .cal-day-items{display:flex;flex-direction:column;gap:10px;max-height:280px;overflow-y:auto}
 .cal-day-item{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;
@@ -1386,6 +1395,7 @@ alter publication supabase_realtime add table public.crm_state;</pre>
           <button class="navmenu-item" data-page="aktivitaeten" onclick="window.nav('aktivitaeten');window.closeNavMore()">▤ Aktivitäten</button>
           <button class="navmenu-item" data-page="kalender" onclick="window.nav('kalender');window.closeNavMore()">▦ Kalender</button>
           <button class="navmenu-item" data-page="ki" onclick="window.nav('ki');window.closeNavMore()">✦ KI-Assist</button>
+          <button class="navmenu-item" data-page="termine" onclick="window.nav('termine');window.closeNavMore()">📅 Termine</button>
           <button class="navmenu-item" data-page="analytics" onclick="window.nav('analytics');window.closeNavMore()">📈 Analytics</button>
           <div class="navmenu-sep"></div>
           <button class="navmenu-item" id="wbNavBtn" onclick="window.openWochenbericht();window.closeNavMore()" style="position:relative">📊 Wochenbericht <span id="wbNewDot" class="notif-dot" style="display:none"></span></button>
@@ -1725,6 +1735,59 @@ alter publication supabase_realtime add table public.crm_state;</pre>
               </tr></thead>
               <tbody id="rechnungenBody"></tbody>
             </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ TERMINE PAGE ═══ -->
+      <div class="page" id="page-termine">
+        <div class="tabs" style="margin-bottom:16px">
+          <button class="tab active" data-term="appts" onclick="window.termTab('appts')">📅 Termine</button>
+          <button class="tab" data-term="staff" onclick="window.termTab('staff')">👥 Mitarbeiter</button>
+        </div>
+
+        <!-- Termine (Appointments) -->
+        <div class="tab-pane active" id="term-appts">
+          <div class="table-wrap">
+            <div class="table-toolbar">
+              <input id="apptSearch" placeholder="Termin / Firma / Mitarbeiter suchen..." oninput="window.renderAppointments()">
+              <select id="apptStatusFilter" onchange="window.renderAppointments()">
+                <option value="">Alle Status</option>
+                <option>Geplant</option><option>Bestätigt</option><option>Abgesagt</option><option>Erledigt</option>
+              </select>
+              <span style="flex:1"></span>
+              <span class="tx-dim mono" id="apptCount" style="font-size:12px"></span>
+              <button class="btn btn-primary btn-sm" onclick="window.openAppointmentForm()">+ Neuer Termin</button>
+            </div>
+            <div style="max-height:calc(100vh - 300px);overflow-y:auto">
+              <table class="tbl">
+                <thead><tr>
+                  <th>Datum &amp; Zeit</th><th>Firma</th><th>Mitarbeiter</th><th>Typ</th>
+                  <th>Status</th><th style="width:170px"></th>
+                </tr></thead>
+                <tbody id="appointmentsBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mitarbeiter (Employees) -->
+        <div class="tab-pane" id="term-staff">
+          <div class="table-wrap">
+            <div class="table-toolbar">
+              <input id="empSearch" placeholder="Mitarbeiter suchen..." oninput="window.renderEmployees()">
+              <span style="flex:1"></span>
+              <span class="tx-dim mono" id="empCount" style="font-size:12px"></span>
+              <button class="btn btn-primary btn-sm admin-only" onclick="window.openEmployeeForm()">+ Neuer Mitarbeiter</button>
+            </div>
+            <div style="max-height:calc(100vh - 300px);overflow-y:auto">
+              <table class="tbl">
+                <thead><tr>
+                  <th>Name</th><th>E-Mail (Login)</th><th>Telefon</th><th>Rolle</th><th>Meeting-Arten</th><th style="width:90px"></th>
+                </tr></thead>
+                <tbody id="employeesBody"></tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
@@ -2449,6 +2512,8 @@ const STATE = {
   assets: [],       // {id, name, sku, category, dailyRate, status, serial, notes, created}
   rentals: [],      // {id, number, assetId, assetName, contactId, firma, kontakt, from, to, dailyRate, deposit, status, notes, created, updated}
   invoices: [],     // {id, number, contactId, firma, kontakt, date, dueDate, status, items:[...], notes, paidDate, source, created, updated}
+  employees: [],    // {id, name, email, phone, role, types:[], hours:{mon..sun}, teamsLink, notes, active, created}
+  appointments: [], // {id, contactId, firma, kontakt, custEmail, employeeId, employeeName, date, time, duration, type, link, location, notes, status, created, updated}
   roles: {},        // { "email@firma.ch": "admin" | "member" } — team roles (app-level)
   meta: { v: 1, created: new Date().toISOString() }
 };
@@ -2576,6 +2641,8 @@ function loadState(){
       if(Array.isArray(d.assets)) STATE.assets = d.assets;
       if(Array.isArray(d.rentals)) STATE.rentals = d.rentals;
       if(Array.isArray(d.invoices)) STATE.invoices = d.invoices;
+      if(Array.isArray(d.employees)) STATE.employees = d.employees;
+      if(Array.isArray(d.appointments)) STATE.appointments = d.appointments;
       if(d.roles && typeof d.roles === 'object') STATE.roles = d.roles;
       if(d.meta) STATE.meta = d.meta;
     }
@@ -2776,6 +2843,8 @@ function applyRemoteState(d){
   STATE.assets     = Array.isArray(d.assets)     ? d.assets     : [];
   STATE.rentals    = Array.isArray(d.rentals)    ? d.rentals    : [];
   STATE.invoices   = Array.isArray(d.invoices)   ? d.invoices   : [];
+  STATE.employees  = Array.isArray(d.employees)  ? d.employees  : [];
+  STATE.appointments = Array.isArray(d.appointments) ? d.appointments : [];
   STATE.roles      = (d.roles && typeof d.roles === 'object') ? d.roles : {};
   if(d.meta) STATE.meta = d.meta;
   if(typeof applyRoleUI === 'function') applyRoleUI();
@@ -2788,7 +2857,7 @@ async function cloudPull(){
     const { data, error } = await CLOUD.client
       .from('crm_state').select('data,updated_by').eq('id', CLOUD.ORG).maybeSingle();
     if(error){ console.warn('cloudPull', error); showToast('Cloud-Laden fehlgeschlagen — lokaler Stand wird genutzt','warn'); return false; }
-    if(data && data.data && (data.data.contacts || data.data.activities || data.data.products || data.data.quotes || data.data.assets || data.data.rentals || data.data.invoices)){
+    if(data && data.data && (data.data.contacts || data.data.activities || data.data.products || data.data.quotes || data.data.assets || data.data.rentals || data.data.invoices || data.data.employees || data.data.appointments)){
       applyRemoteState(data.data);
     } else {
       // No shared data yet → seed cloud from whatever is local (first run / migration)
@@ -2807,7 +2876,7 @@ async function cloudPush(force){
   if(!CLOUD.ready && !force) return;
   const payload = {
     id: CLOUD.ORG,
-    data: { contacts:STATE.contacts, activities:STATE.activities, products:STATE.products, quotes:STATE.quotes, assets:STATE.assets, rentals:STATE.rentals, invoices:STATE.invoices, roles:STATE.roles, meta:STATE.meta },
+    data: { contacts:STATE.contacts, activities:STATE.activities, products:STATE.products, quotes:STATE.quotes, assets:STATE.assets, rentals:STATE.rentals, invoices:STATE.invoices, employees:STATE.employees, appointments:STATE.appointments, roles:STATE.roles, meta:STATE.meta },
     updated_at: new Date().toISOString(),
     updated_by: CLOUD.user.email || CLOUD.user.id
   };
@@ -2993,12 +3062,12 @@ window.nav = function(page){
   const navBtn = document.querySelector('[data-page="'+page+'"]');
   if(navBtn) navBtn.classList.add('active');
   // Highlight the "Mehr ▾" button when the active page lives inside that menu
-  const MORE_PAGES = ['produkte','vermietung','wiedervorlagen','aktivitaeten','kalender','ki','analytics'];
+  const MORE_PAGES = ['produkte','vermietung','wiedervorlagen','aktivitaeten','kalender','ki','analytics','termine'];
   const moreBtn = document.getElementById('navMoreBtn');
   if(moreBtn) moreBtn.classList.toggle('active', MORE_PAGES.includes(page));
   const titles = {
     today:'Heute', kontakte:'Kontakte', pipeline:'Pipeline',
-    produkte:'Produkte', angebote:'Angebote', vermietung:'Vermietung', rechnungen:'Rechnungen',
+    produkte:'Produkte', angebote:'Angebote', vermietung:'Vermietung', rechnungen:'Rechnungen', termine:'Termine',
     wiedervorlagen:'Wiedervorlagen', aktivitaeten:'Aktivitäten',
     kalender:'Kalender', ki:'KI-Assist', analytics:'Analytics', settings:'Einstellungen'
   };
@@ -3011,6 +3080,7 @@ window.nav = function(page){
   else if(page === 'angebote') renderAngebote();
   else if(page === 'vermietung') renderVermietung();
   else if(page === 'rechnungen') renderRechnungen();
+  else if(page === 'termine') renderTermine();
   else if(page === 'pipeline') renderPipeline();
   else if(page === 'wiedervorlagen') renderWiedervorlagen();
   else if(page === 'aktivitaeten') renderAktivitaeten();
@@ -6834,6 +6904,13 @@ function calEventsForDate(iso){
       if(c) events.push({ label: a.typ + ': ' + c.firma, cls: 'activity', contactId: c.id, typ: 'akt' });
     });
 
+  // Appointments (Termine)
+  (STATE.appointments||[])
+    .filter(a => a.date && a.date.slice(0,10) === iso && a.status !== 'Abgesagt')
+    .forEach(a => {
+      events.push({ label: (a.time||'') + ' ' + apptTypeIcon(a.type) + ' ' + (a.firma||''), cls: 'appointment', contactId: a.contactId || '', typ: 'termin' });
+    });
+
   return events;
 }
 
@@ -6882,7 +6959,7 @@ function renderCalendar(){
     cell.dataset.iso = iso;
 
     const evHtml = events.slice(0,3).map(ev =>
-      `<div class="cal-ev ${ev.cls}" onclick="event.stopPropagation();window.openContact('${ev.contactId}')">${escHtml(ev.label)}</div>`
+      `<div class="cal-ev ${ev.cls}"${ev.contactId?` onclick="event.stopPropagation();window.openContact('${ev.contactId}')"`:''}>${escHtml(ev.label)}</div>`
     ).join('');
     const more = events.length > 3 ? `<div class="cal-more">+${events.length - 3} weitere</div>` : '';
 
@@ -9566,6 +9643,318 @@ window.toggleProfile = function(e){
   if(!wasOpen){ if(m.parentElement!==document.body) document.body.appendChild(m); positionNavMenu(m, document.getElementById('profileBtn'), true); m.classList.remove('hidden'); setTimeout(()=>document.addEventListener('click', closeAllNavMenus),0); }
 };
 
+// ════════════════════════════════════════════════════════════════════════
+//  MODULE: TERMINE & MITARBEITER (Booking, Video/Teams/Telefon, .ics invite)
+// ════════════════════════════════════════════════════════════════════════
+const WEEKDAYS = [['mon','Mo'],['tue','Di'],['wed','Mi'],['thu','Do'],['fri','Fr'],['sat','Sa'],['sun','So']];
+let _editingEmployeeId=null, _empHoursDraft=null, _editingApptId=null, _termTab='appts';
+
+function defaultHours(){
+  const h={}; WEEKDAYS.forEach(([k])=>{ h[k]={on:['mon','tue','wed','thu','fri'].includes(k),from:'08:00',to:'17:00'}; }); return h;
+}
+function pad2(n){ return String(n).padStart(2,'0'); }
+function slugify(s){ return (String(s||'').normalize('NFD').replace(/[^\w]+/g,'').slice(0,16))||'Termin'; }
+function randToken(n){ let t='',a='abcdefghijklmnopqrstuvwxyz0123456789'; for(let i=0;i<(n||6);i++)t+=a[Math.floor(Math.random()*a.length)]; return t; }
+function jitsiLink(firma){ return 'https://meet.jit.si/Nexa-'+slugify(firma)+'-'+randToken(6); }
+function isoWeekdayKey(iso){ const d=new Date(iso+'T00:00:00'); if(isNaN(d))return 'mon'; return ['sun','mon','tue','wed','thu','fri','sat'][d.getDay()]; }
+function addMinutes(time, mins){ const p=(time||'00:00').split(':'); let tot=((parseInt(p[0])||0)*60)+(parseInt(p[1])||0)+(parseInt(mins)||0); tot=((tot%1440)+1440)%1440; return pad2(Math.floor(tot/60))+':'+pad2(tot%60); }
+function apptTypeIcon(t){ return t==='Video'?'🎥':t==='Teams'?'💬':t==='Telefon'?'📞':'📍'; }
+
+window.termTab=function(tab){
+  _termTab=tab;
+  document.querySelectorAll('[data-term]').forEach(t=>t.classList.remove('active'));
+  ['appts','staff'].forEach(p=>{const el=document.getElementById('term-'+p); if(el)el.classList.remove('active');});
+  const btn=document.querySelector('[data-term="'+tab+'"]'); if(btn)btn.classList.add('active');
+  const pane=document.getElementById('term-'+tab); if(pane)pane.classList.add('active');
+  if(tab==='appts') window.renderAppointments(); else window.renderEmployees();
+};
+window.renderTermine=function(){ window.termTab(_termTab||'appts'); };
+
+// ── Mitarbeiter ──
+window.renderEmployees=function(){
+  const body=document.getElementById('employeesBody'); if(!body) return;
+  const ql=((document.getElementById('empSearch')||{}).value||'').toLowerCase();
+  let list=STATE.employees.filter(e=> !ql || ((e.name||'')+' '+(e.email||'')).toLowerCase().includes(ql));
+  list.sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  document.getElementById('empCount').textContent=list.length+' Mitarbeiter';
+  if(!list.length){ body.innerHTML='<tr><td colspan="6" class="tx-mute" style="text-align:center;padding:30px">Noch keine Mitarbeiter — lege den ersten an.</td></tr>'; return; }
+  body.innerHTML=list.map(e=>`
+    <tr>
+      <td class="fw-bold">${escHtml(e.name)}</td>
+      <td class="mono tx-mute">${escHtml(e.email||'—')}</td>
+      <td class="tx-mute">${escHtml(e.phone||'—')}</td>
+      <td>${e.role==='admin'?'<span class="bd" style="background:var(--good);color:#fff">Admin</span>':'<span class="bd" style="background:var(--text-mute);color:#fff">Mitarbeiter</span>'}</td>
+      <td class="tx-mute" style="font-size:12px">${(e.types||[]).join(', ')||'—'}</td>
+      <td class="tx-right">
+        <button class="btn btn-tiny btn-ghost admin-only" onclick="window.openEmployeeForm('${e.id}')">✎</button>
+        <button class="btn btn-tiny btn-ghost admin-only" onclick="window.deleteEmployee('${e.id}')">🗑</button>
+      </td>
+    </tr>`).join('');
+};
+function renderEmpHours(){
+  const wrap=document.getElementById('empHoursRows'); if(!wrap) return;
+  const h=_empHoursDraft||defaultHours();
+  wrap.innerHTML=WEEKDAYS.map(([k,l])=>{
+    const d=h[k]||{on:false,from:'08:00',to:'17:00'};
+    return `<div class="emp-hours-row ${d.on?'':'off'}">
+      <label class="chk"><input type="checkbox" ${d.on?'checked':''} onchange="window._empHourToggle('${k}',this.checked)"> <span class="day-lbl">${l}</span></label>
+      <span class="tx-mute" style="font-size:11px">${d.on?'aktiv':'frei'}</span>
+      <input type="time" value="${d.from||'08:00'}" onchange="window._empHourSet('${k}','from',this.value)">
+      <input type="time" value="${d.to||'17:00'}" onchange="window._empHourSet('${k}','to',this.value)">
+    </div>`;
+  }).join('');
+}
+window._empHourToggle=function(k,on){ if(!_empHoursDraft)_empHoursDraft=defaultHours(); _empHoursDraft[k]=_empHoursDraft[k]||{from:'08:00',to:'17:00'}; _empHoursDraft[k].on=on; renderEmpHours(); };
+window._empHourSet=function(k,f,v){ if(!_empHoursDraft)_empHoursDraft=defaultHours(); _empHoursDraft[k]=_empHoursDraft[k]||{on:true,from:'08:00',to:'17:00'}; _empHoursDraft[k][f]=v; };
+window.openEmployeeForm=function(id){
+  if(!requireAdmin('Mitarbeiter verwalten')) return;
+  _editingEmployeeId=id||null;
+  const e=id?STATE.employees.find(x=>x.id===id):null;
+  document.getElementById('empFormTitle').textContent=e?'Mitarbeiter bearbeiten':'Neuer Mitarbeiter';
+  document.getElementById('efName').value=e?(e.name||''):'';
+  document.getElementById('efEmail').value=e?(e.email||''):'';
+  document.getElementById('efPhone').value=e?(e.phone||''):'';
+  document.getElementById('efRole').value=e?(e.role||'member'):'member';
+  const types=e?(e.types||[]):['Vor-Ort','Telefon','Video'];
+  document.getElementById('efTypeVorOrt').checked=types.includes('Vor-Ort');
+  document.getElementById('efTypeTelefon').checked=types.includes('Telefon');
+  document.getElementById('efTypeVideo').checked=types.includes('Video');
+  document.getElementById('efTypeTeams').checked=types.includes('Teams');
+  document.getElementById('efTeamsLink').value=e?(e.teamsLink||''):'';
+  document.getElementById('efNotes').value=e?(e.notes||''):'';
+  _empHoursDraft = e&&e.hours ? JSON.parse(JSON.stringify(e.hours)) : defaultHours();
+  renderEmpHours();
+  openModal('modalEmployee');
+};
+window.saveEmployee=function(){
+  if(!requireAdmin('Mitarbeiter verwalten')) return;
+  const name=document.getElementById('efName').value.trim();
+  if(!name){ showToast('Name fehlt','error'); return; }
+  const email=document.getElementById('efEmail').value.trim().toLowerCase();
+  const role=document.getElementById('efRole').value||'member';
+  const types=[];
+  if(document.getElementById('efTypeVorOrt').checked)types.push('Vor-Ort');
+  if(document.getElementById('efTypeTelefon').checked)types.push('Telefon');
+  if(document.getElementById('efTypeVideo').checked)types.push('Video');
+  if(document.getElementById('efTypeTeams').checked)types.push('Teams');
+  const rec={ name, email, phone:document.getElementById('efPhone').value.trim(), role, types,
+    teamsLink:document.getElementById('efTeamsLink').value.trim(), notes:document.getElementById('efNotes').value.trim(),
+    hours:_empHoursDraft||defaultHours(), active:true };
+  if(_editingEmployeeId){ const e=STATE.employees.find(x=>x.id===_editingEmployeeId); if(e)Object.assign(e,rec); }
+  else STATE.employees.push({ id:uid(), ...rec, created:new Date().toISOString() });
+  if(email) STATE.roles[email]=role;
+  saveState(); closeModal('modalEmployee'); window.renderEmployees();
+  if(typeof applyRoleUI==='function') applyRoleUI();
+  showToast('✓ Mitarbeiter gespeichert','success');
+};
+window.deleteEmployee=function(id){
+  if(!requireAdmin('Mitarbeiter löschen')) return;
+  if(!confirm('Mitarbeiter wirklich löschen? (Termine bleiben erhalten.)')) return;
+  STATE.employees=STATE.employees.filter(e=>e.id!==id); saveState(); window.renderEmployees(); showToast('Mitarbeiter gelöscht','success');
+};
+
+// ── Termine ──
+function apptStatusBadge(s){
+  const col={'Geplant':'#bf6a02','Bestätigt':'#1d8a4e','Abgesagt':'#e0314b','Erledigt':'#8a8a8e'}[s]||'#8a8a8e';
+  return `<span style="display:inline-block;padding:2px 9px;border-radius:980px;font-size:11px;font-weight:600;color:#fff;background:${col}">${escHtml(s||'Geplant')}</span>`;
+}
+window.renderAppointments=function(){
+  const body=document.getElementById('appointmentsBody'); if(!body) return;
+  const ql=((document.getElementById('apptSearch')||{}).value||'').toLowerCase();
+  const sf=(document.getElementById('apptStatusFilter')||{}).value||'';
+  let list=STATE.appointments.filter(a=>{
+    if(sf && (a.status||'Geplant')!==sf) return false;
+    if(ql && !((a.firma||'')+' '+(a.employeeName||'')).toLowerCase().includes(ql)) return false;
+    return true;
+  });
+  list.sort((a,b)=>((b.date||'')+(b.time||'')).localeCompare((a.date||'')+(a.time||'')));
+  document.getElementById('apptCount').textContent=list.length+' Termine';
+  if(!list.length){ body.innerHTML='<tr><td colspan="6" class="tx-mute" style="text-align:center;padding:30px">Noch keine Termine — plane den ersten.</td></tr>'; return; }
+  body.innerHTML=list.map(a=>`
+    <tr>
+      <td class="fw-bold">${a.date?fmtDate(a.date):'?'} · ${escHtml(a.time||'')}</td>
+      <td>${escHtml(a.firma||'—')}</td>
+      <td class="tx-mute">${escHtml(a.employeeName||'—')}</td>
+      <td>${apptTypeIcon(a.type)} ${escHtml(a.type||'')}</td>
+      <td>${apptStatusBadge(a.status)}</td>
+      <td class="tx-right">
+        <button class="btn btn-tiny btn-ghost" onclick="window.openAppointmentForm('${a.id}')">✎</button>
+        <button class="btn btn-tiny btn-ghost" onclick="window.apptIcs('${a.id}')" title="Kalenderdatei (.ics)">📅</button>
+        <button class="btn btn-tiny btn-ghost" onclick="window.apptInvite('${a.id}')" title="Einladung per E-Mail">✉</button>
+        <button class="btn btn-tiny btn-ghost admin-only" onclick="window.deleteAppointment('${a.id}')">🗑</button>
+      </td>
+    </tr>`).join('');
+};
+function fillApptSelects(empId, contactId){
+  const esel=document.getElementById('apEmployee');
+  const emps=[...STATE.employees].sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  esel.innerHTML = emps.length ? emps.map(e=>`<option value="${e.id}">${escHtml(e.name)}</option>`).join('') : '<option value="">— erst Mitarbeiter anlegen —</option>';
+  if(empId) esel.value=empId;
+  const csel=document.getElementById('apContact');
+  const contacts=[...STATE.contacts].sort((a,b)=>(a.firma||'').localeCompare(b.firma||''));
+  csel.innerHTML='<option value="">— Kontakt wählen (optional) —</option>'+contacts.map(c=>`<option value="${c.id}">${escHtml(c.firma||'?')}${c.kontakt?' · '+escHtml(c.kontakt):''}</option>`).join('');
+  if(contactId) csel.value=contactId;
+}
+window.openAppointmentForm=function(id, prefill){
+  _editingApptId=id||null;
+  const a=id?STATE.appointments.find(x=>x.id===id):null;
+  const src=a||prefill||{};
+  document.getElementById('apptFormTitle').textContent=a?'Termin bearbeiten':'Neuer Termin';
+  fillApptSelects(src.employeeId||'', src.contactId||'');
+  document.getElementById('apType').value=src.type||'Video';
+  document.getElementById('apFirma').value=src.firma||'';
+  document.getElementById('apKontakt').value=src.kontakt||'';
+  document.getElementById('apEmail').value=src.custEmail||'';
+  document.getElementById('apDate').value=src.date? src.date.slice(0,10) : todayISO();
+  document.getElementById('apTime').value=src.time||'10:00';
+  document.getElementById('apDuration').value=src.duration!=null?src.duration:30;
+  document.getElementById('apStatus').value=src.status||'Geplant';
+  document.getElementById('apLink').value=src.link||'';
+  document.getElementById('apLocation').value=src.location||'';
+  document.getElementById('apNotes').value=src.notes||'';
+  window.apTypeChange();
+  window.apCheckAvail();
+  openModal('modalAppointment');
+};
+window.apEmployeePick=function(){
+  const e=STATE.employees.find(x=>x.id===document.getElementById('apEmployee').value);
+  if(e){
+    const type=document.getElementById('apType').value;
+    if((e.types||[]).length && !(e.types||[]).includes(type)) document.getElementById('apType').value=e.types[0];
+  }
+  window.apTypeChange(); window.apCheckAvail();
+};
+window.apContactPick=function(){
+  const c=STATE.contacts.find(x=>x.id===document.getElementById('apContact').value);
+  if(c){
+    document.getElementById('apFirma').value=c.firma||'';
+    document.getElementById('apKontakt').value=c.kontakt||'';
+    if(!document.getElementById('apEmail').value.trim()) document.getElementById('apEmail').value=c.email||'';
+    if(!document.getElementById('apLocation').value.trim()) document.getElementById('apLocation').value=c.ort||'';
+  }
+};
+window.apTypeChange=function(){
+  const type=document.getElementById('apType').value;
+  const linkWrap=document.getElementById('apLinkWrap'), locWrap=document.getElementById('apLocWrap');
+  const label=document.getElementById('apLinkLabel'), genBtn=document.getElementById('apGenBtn');
+  const showLink=(type==='Video'||type==='Teams');
+  linkWrap.style.display=showLink?'block':'none';
+  locWrap.style.display=(type==='Vor-Ort')?'block':'none';
+  if(showLink){
+    label.textContent=(type==='Video'?'Video-Meeting-Link (automatisch, kostenlos)':'Teams-Meeting-Link');
+    genBtn.style.display=(type==='Video')?'inline-flex':'none';
+    const e=STATE.employees.find(x=>x.id===document.getElementById('apEmployee').value);
+    if(type==='Teams' && e && e.teamsLink && !document.getElementById('apLink').value.trim()) document.getElementById('apLink').value=e.teamsLink;
+    if(type==='Video' && !document.getElementById('apLink').value.trim()) window.apGenLink();
+  }
+};
+window.apGenLink=function(){ document.getElementById('apLink').value=jitsiLink(document.getElementById('apFirma').value); };
+window.apCheckAvail=function(){
+  const msg=document.getElementById('apAvailMsg'); if(!msg) return;
+  const e=STATE.employees.find(x=>x.id===document.getElementById('apEmployee').value);
+  const date=document.getElementById('apDate').value, time=document.getElementById('apTime').value;
+  const dur=parseInt(document.getElementById('apDuration').value)||30;
+  if(!e||!date||!time){ msg.textContent=''; return; }
+  const end=addMinutes(time,dur);
+  const wk=isoWeekdayKey(date); const h=(e.hours||{})[wk];
+  const warn=[];
+  if(!h||!h.on) warn.push('Tag ist frei (außerhalb Arbeitszeit)');
+  else if(time<h.from||end>h.to) warn.push('außerhalb der Arbeitszeit ('+h.from+'–'+h.to+')');
+  const clash=STATE.appointments.some(a=> a.id!==_editingApptId && a.employeeId===e.id && a.date===date && a.status!=='Abgesagt' && (time < addMinutes(a.time, a.duration||30)) && (a.time < end));
+  if(clash) warn.push('überschneidet sich mit einem anderen Termin');
+  if(warn.length){ msg.style.color='var(--danger)'; msg.textContent='⚠️ '+warn.join(' · '); }
+  else { msg.style.color='var(--good)'; msg.textContent='✓ '+e.name+' ist frei ('+time+'–'+end+')'; }
+};
+function apptFromForm(){
+  const e=STATE.employees.find(x=>x.id===document.getElementById('apEmployee').value);
+  return {
+    id:_editingApptId||('tmp_'+randToken(6)),
+    contactId:document.getElementById('apContact').value||null,
+    firma:document.getElementById('apFirma').value.trim(),
+    kontakt:document.getElementById('apKontakt').value.trim(),
+    custEmail:document.getElementById('apEmail').value.trim(),
+    employeeId:e?e.id:null, employeeName:e?e.name:'',
+    date:document.getElementById('apDate').value, time:document.getElementById('apTime').value,
+    duration:parseInt(document.getElementById('apDuration').value)||30,
+    type:document.getElementById('apType').value, link:document.getElementById('apLink').value.trim(),
+    location:document.getElementById('apLocation').value.trim(), status:document.getElementById('apStatus').value,
+    notes:document.getElementById('apNotes').value.trim()
+  };
+}
+window.saveAppointment=function(){
+  const e=STATE.employees.find(x=>x.id===document.getElementById('apEmployee').value);
+  if(!e){ showToast('Bitte einen Mitarbeiter wählen (ggf. erst anlegen)','error'); return; }
+  const firma=document.getElementById('apFirma').value.trim();
+  if(!firma){ showToast('Firma fehlt','error'); return; }
+  const date=document.getElementById('apDate').value, time=document.getElementById('apTime').value;
+  if(!date||!time){ showToast('Datum & Uhrzeit fehlen','error'); return; }
+  const rec=apptFromForm(); delete rec.id;
+  if(_editingApptId){ const a=STATE.appointments.find(x=>x.id===_editingApptId); if(a){ Object.assign(a,rec); a.updated=new Date().toISOString(); } }
+  else STATE.appointments.push({ id:uid(), ...rec, created:new Date().toISOString(), updated:new Date().toISOString() });
+  saveState(); closeModal('modalAppointment'); window.renderAppointments(); showToast('✓ Termin gespeichert','success');
+};
+window.deleteAppointment=function(id){
+  if(!requireAdmin('Termine löschen')) return;
+  if(!confirm('Termin wirklich löschen?')) return;
+  STATE.appointments=STATE.appointments.filter(a=>a.id!==id); saveState(); window.renderAppointments(); showToast('Termin gelöscht','success');
+};
+function apptLocationText(a){
+  if(a.type==='Vor-Ort') return a.location||'Vor Ort';
+  if(a.type==='Telefon') return 'Telefon';
+  if(a.type==='Video'||a.type==='Teams') return a.link||(a.type+'-Meeting');
+  return '';
+}
+function icsLocal(date, time){ return (date||'').replace(/-/g,'') + 'T' + (time||'00:00').replace(':','') + '00'; }
+function buildIcs(a){
+  const start=icsLocal(a.date,a.time), end=icsLocal(a.date, addMinutes(a.time, a.duration||30));
+  const stamp=new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d+Z$/,'Z');
+  const esc=s=>String(s||'').replace(/([,;\\])/g,'\\$1').replace(/\n/g,'\\n');
+  const desc=[a.type+'-Termin'+(a.employeeName?(' mit '+a.employeeName):''), a.link?('Link: '+a.link):'', a.notes||''].filter(Boolean).join('\\n');
+  return ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Nexa//DE','CALSCALE:GREGORIAN','BEGIN:VEVENT',
+    'UID:'+(a.id||randToken(8))+'@nexa','DTSTAMP:'+stamp,'DTSTART:'+start,'DTEND:'+end,
+    'SUMMARY:'+esc('Termin: '+(a.firma||'')+' ('+a.type+')'),'DESCRIPTION:'+esc(desc),'LOCATION:'+esc(apptLocationText(a)),
+    'END:VEVENT','END:VCALENDAR'].join('\r\n');
+}
+function downloadText(filename, text, mime){
+  try{
+    const blob=new Blob([text],{type:mime||'text/plain'}), url=URL.createObjectURL(blob);
+    const a=document.createElement('a'); a.href=url; a.download=filename; document.body.appendChild(a); a.click();
+    setTimeout(()=>{ document.body.removeChild(a); URL.revokeObjectURL(url); },100);
+  }catch(e){ showToast('Download fehlgeschlagen','error'); }
+}
+function resolveAppt(id){ return id ? STATE.appointments.find(a=>a.id===id) : apptFromForm(); }
+window.apptIcs=function(id){
+  const a=resolveAppt(id);
+  if(!a||!a.firma||!a.date){ showToast('Bitte Firma, Datum & Uhrzeit ausfüllen','error'); return; }
+  downloadText((a.firma||'Termin').replace(/[^\w]+/g,'_')+'_'+(a.date||'')+'.ics', buildIcs(a), 'text/calendar');
+  showToast('📅 Kalenderdatei (.ics) erstellt','success');
+};
+window.apptInvite=function(id){
+  const a=resolveAppt(id);
+  if(!a||!a.firma||!a.date){ showToast('Bitte Firma, Datum & Uhrzeit ausfüllen','error'); return; }
+  const comp=loadCompany(), end=addMinutes(a.time, a.duration||30);
+  const lines=[
+    'Guten Tag'+(a.kontakt?' '+a.kontakt:''),'',
+    'hiermit bestätige ich unseren Termin:','',
+    'Datum: '+(a.date?fmtDate(a.date):'')+' , '+a.time+'–'+end+' Uhr',
+    'Art: '+a.type+(a.employeeName?(' (mit '+a.employeeName+')'):''),
+    (a.type==='Video'||a.type==='Teams') && a.link ? ('Link: '+a.link) : '',
+    a.type==='Vor-Ort' && a.location ? ('Ort: '+a.location) : '',
+    a.type==='Telefon' ? 'Wir rufen Sie zur vereinbarten Zeit an.' : '',
+    a.notes?('\n'+a.notes):'',
+    '', 'Freundliche Grüsse', comp||''
+  ].filter(x=>x!=='');
+  const subject=encodeURIComponent('Terminbestätigung: '+(a.date?fmtDate(a.date):'')+' '+a.time);
+  const body=encodeURIComponent(lines.join('\n'));
+  const to=a.custEmail?encodeURIComponent(a.custEmail):'';
+  if(a.contactId){
+    const c=STATE.contacts.find(x=>x.id===a.contactId);
+    if(c){ STATE.activities.push({ id:uid(), contactId:a.contactId, date:todayISO(), typ:'Meeting', sum:'Termin '+a.type+' am '+fmtDate(a.date)+' '+a.time, next:'', newWv:null, newStatus:null, created:new Date().toISOString() }); saveState(); }
+  }
+  window.location.href='mailto:'+to+'?subject='+subject+'&body='+body;
+  if(!to) showToast('Einladung erstellt — keine Kunden-E-Mail hinterlegt','warn'); else showToast('✉ Einladung im Mail-Programm','success');
+};
+
 // Entry point: auth gate (Supabase) decides login / local mode, then runs init()
 if(document.readyState === 'loading'){
   document.addEventListener('DOMContentLoaded', bootstrap);
@@ -9579,6 +9968,80 @@ if(document.readyState === 'loading'){
 <!-- ═══════════════════════════════════════════════════════════════════════ -->
 <!-- MODAL: Wochenbericht                                                    -->
 <!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- MODAL: Mitarbeiter -->
+<div class="modal-bg" id="modalEmployee">
+  <div class="modal lg" style="max-width:640px">
+    <div class="modal-h">
+      <div class="modal-title" id="empFormTitle">Neuer Mitarbeiter</div>
+      <button class="modal-x" onclick="window.closeModal('modalEmployee')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="field"><label>Name *</label><input id="efName"></div>
+        <div class="field"><label>E-Mail (= Supabase-Login)</label><input id="efEmail" type="email" placeholder="mitarbeiter@firma.ch"></div>
+        <div class="field"><label>Telefon</label><input id="efPhone"></div>
+        <div class="field"><label>Rolle</label><select id="efRole"><option value="member">Mitarbeiter</option><option value="admin">Admin</option></select></div>
+      </div>
+      <p class="tx-mute" style="font-size:11.5px;line-height:1.5;margin:6px 0 0">Die E-Mail verknüpft den Mitarbeiter mit seinem Supabase-Login &amp; seiner Rolle. Das eigentliche Konto legt der Mitarbeiter über den Login-Screen an (Konto erstellen) — danach greift die hier gewählte Rolle.</p>
+      <div class="section-h">Meeting-Arten, die dieser Mitarbeiter anbietet</div>
+      <div class="row gap-md" style="flex-wrap:wrap">
+        <label class="chk"><input type="checkbox" id="efTypeVorOrt" checked> Vor-Ort</label>
+        <label class="chk"><input type="checkbox" id="efTypeTelefon" checked> Telefon</label>
+        <label class="chk"><input type="checkbox" id="efTypeVideo" checked> Video</label>
+        <label class="chk"><input type="checkbox" id="efTypeTeams"> Teams</label>
+      </div>
+      <div class="field mt-md"><label>Standard Teams-Meeting-Link (optional)</label><input id="efTeamsLink" placeholder="https://teams.microsoft.com/l/meetup-join/..."></div>
+      <div class="section-h">Arbeitszeiten / Verfügbarkeit</div>
+      <div id="empHoursRows"></div>
+      <div class="field full mt-md"><label>Notiz</label><textarea id="efNotes" rows="2"></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="window.closeModal('modalEmployee')">Abbrechen</button>
+      <button class="btn btn-primary" onclick="window.saveEmployee()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Termin -->
+<div class="modal-bg" id="modalAppointment">
+  <div class="modal lg" style="max-width:660px">
+    <div class="modal-h">
+      <div class="modal-title" id="apptFormTitle">Neuer Termin</div>
+      <button class="modal-x" onclick="window.closeModal('modalAppointment')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="field"><label>Mitarbeiter *</label><select id="apEmployee" onchange="window.apEmployeePick()"></select></div>
+        <div class="field"><label>Meeting-Art</label><select id="apType" onchange="window.apTypeChange()"><option>Vor-Ort</option><option>Telefon</option><option>Video</option><option>Teams</option></select></div>
+        <div class="field full"><label>Kontakt aus CRM (optional)</label><select id="apContact" onchange="window.apContactPick()"></select></div>
+        <div class="field"><label>Firma *</label><input id="apFirma"></div>
+        <div class="field"><label>Ansprechpartner</label><input id="apKontakt"></div>
+        <div class="field"><label>Kunde E-Mail (für Einladung)</label><input id="apEmail" type="email"></div>
+        <div class="field"><label>Datum *</label><input id="apDate" type="date" onchange="window.apCheckAvail()"></div>
+        <div class="field"><label>Uhrzeit *</label><input id="apTime" type="time" onchange="window.apCheckAvail()"></div>
+        <div class="field"><label>Dauer (Min.)</label><input id="apDuration" type="number" step="5" value="30" onchange="window.apCheckAvail()"></div>
+        <div class="field"><label>Status</label><select id="apStatus"><option>Geplant</option><option>Bestätigt</option><option>Abgesagt</option><option>Erledigt</option></select></div>
+      </div>
+      <div class="field" id="apLinkWrap" style="margin-top:6px"><label id="apLinkLabel">Meeting-Link</label>
+        <div class="row gap-md" style="flex-wrap:wrap">
+          <input id="apLink" placeholder="https://..." style="flex:1;min-width:200px">
+          <button class="btn btn-ghost btn-sm" id="apGenBtn" onclick="window.apGenLink()">🔗 Video-Link erzeugen</button>
+        </div>
+      </div>
+      <div class="field" id="apLocWrap" style="margin-top:6px"><label>Ort / Adresse</label><input id="apLocation"></div>
+      <div id="apAvailMsg" style="font-size:12.5px;margin-top:8px"></div>
+      <div class="field full mt-md"><label>Notiz / Agenda</label><textarea id="apNotes" rows="2"></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="window.closeModal('modalAppointment')">Abbrechen</button>
+      <button class="btn btn-ghost btn-sm" onclick="window.apptIcs()" title="Kalenderdatei herunterladen">📅 .ics</button>
+      <button class="btn btn-ghost btn-sm" onclick="window.apptInvite()" title="Einladung per E-Mail an den Kunden">✉ Einladung</button>
+      <span class="flex1"></span>
+      <button class="btn btn-primary" onclick="window.saveAppointment()">Speichern</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: Rechnung -->
 <div class="modal-bg" id="modalInvoice">
   <div class="modal lg" style="max-width:760px">
