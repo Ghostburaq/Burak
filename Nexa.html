@@ -2,7 +2,7 @@
 <html lang="de" data-theme="light">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" id="viewportMeta" content="width=device-width, initial-scale=1.0">
 <title>Nexa · Strix</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'><rect x='2' y='2' width='36' height='36' rx='11' fill='%230071e3'/><path d='M13 28 V12 L27 28 V12' fill='none' stroke='white' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'/></svg>">
 
@@ -1142,12 +1142,13 @@ input,select,textarea{font-family:inherit;font-size:14px}
   .nav{justify-content:flex-start}
 }
 @media (max-width: 640px){
-  #app{grid-template-rows:auto 1fr}
-  #sidebar{height:auto;padding:8px 12px;gap:10px}
+  #app{grid-template-rows:48px 1fr}
+  #sidebar{height:48px;padding:0 10px;gap:8px}
   .brand-text{display:none}
-  .sidebar-foot{display:none}
+  .sidebar-foot{display:flex}
   .nav{justify-content:flex-start}
-  .nav-item{padding:8px 11px}
+  .nav-item{padding:7px 10px;font-size:12px}
+  .profile-btn{padding:0 8px;height:30px}
   .topbar{position:sticky;top:0;flex-wrap:wrap;height:auto;padding:10px 14px;gap:8px}
   .topbar .tb-title{flex:1 1 auto;min-width:0}
   .topbar .tb-spacer{display:none}
@@ -1167,6 +1168,29 @@ input,select,textarea{font-family:inherit;font-size:14px}
   .modal-foot .btn{flex:1 1 auto;min-width:120px;justify-content:center}
   .modal-foot > .flex1{flex:0 0 100%;height:0}
 }
+
+/* View mode: mobile-optimized tweaks + first-visit prompt */
+body.mobile-view .widget{cursor:default}
+body.mobile-view .widget::before{display:none}
+body.mobile-view .content{padding:12px}
+body.mobile-view .table-wrap{border-radius:14px}
+body.mobile-view .tbl{font-size:12.5px}
+body.mobile-view .tbl th,body.mobile-view .tbl td{padding:8px}
+body.mobile-view .btn{min-height:38px}
+body.mobile-view .modal{width:96vw !important;max-width:96vw}
+body.mobile-view .today-grid,body.mobile-view .analytics-grid,body.mobile-view .form-grid{grid-template-columns:1fr}
+body.mobile-view .welcome-dashboard{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+
+#viewPrompt{position:fixed;inset:0;z-index:6000;display:none;align-items:center;justify-content:center;padding:22px;
+  background:rgba(5,10,20,0.55);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+#viewPrompt.open{display:flex}
+.viewprompt-card{background:var(--bg-card);border:1px solid var(--line);border-radius:22px;max-width:400px;width:100%;
+  padding:26px 24px;box-shadow:0 24px 70px rgba(0,0,0,0.35);text-align:center}
+.viewprompt-card .vp-icon{font-size:40px;line-height:1;margin-bottom:8px}
+.viewprompt-card h3{margin:0 0 6px;font-size:20px;font-weight:700;letter-spacing:-0.02em;color:var(--text)}
+.viewprompt-card p{margin:0 0 20px;color:var(--text-mute);font-size:14px;line-height:1.5}
+.viewprompt-btns{display:flex;gap:10px}
+.viewprompt-btns .btn{flex:1;justify-content:center;padding:13px}
 
 /* ─── Print stylesheet ─── */
 @media print{
@@ -1416,6 +1440,7 @@ alter publication supabase_realtime add table public.crm_state;</pre>
           <div class="profile-api"><span class="api-dot" id="apiDot2"></span><span id="apiStatus">API-Key fehlt</span></div>
           <button class="navmenu-item" onclick="window.openApiKey();window.closeProfile()">🔑 API-Key konfigurieren</button>
           <button class="navmenu-item admin-only" data-page="settings" onclick="window.nav('settings');window.closeProfile()">⚙ Einstellungen</button>
+          <button class="navmenu-item" onclick="window.toggleViewMode()"><span id="viewToggleLabel">📱 Mobile-Ansicht</span></button>
           <div class="navmenu-sep"></div>
           <button class="navmenu-item" id="profileSignout" onclick="window.cloudSignOut();window.closeProfile()" style="display:none">⎋ Abmelden</button>
         </div>
@@ -2135,6 +2160,19 @@ alter publication supabase_realtime add table public.crm_state;</pre>
 
 <!-- FAB -->
 <button class="fab" onclick="window.openContactForm()" title="Neuer Kontakt (n)">+</button>
+
+<!-- View-mode prompt (mobile first visit) -->
+<div id="viewPrompt">
+  <div class="viewprompt-card">
+    <div class="vp-icon">📱</div>
+    <h3>Handy erkannt</h3>
+    <p>Möchtest du die für dein Handy optimierte Ansicht verwenden — oder lieber die volle Desktop-Version?</p>
+    <div class="viewprompt-btns">
+      <button class="btn btn-ghost" onclick="window.setViewMode('desktop')">🖥 Desktop</button>
+      <button class="btn btn-primary" onclick="window.setViewMode('mobile')">📱 Mobile</button>
+    </div>
+  </div>
+</div>
 
 <!-- Toasts -->
 <div id="toasts"></div>
@@ -2976,6 +3014,8 @@ function startAppLocal(){
 
 // Entry point — decides: local mode / setup / login / authenticated
 async function bootstrap(){
+  // Apply saved/auto view mode (desktop vs mobile) as early as possible
+  if(typeof applyViewMode === 'function') applyViewMode();
   // Local-only mode explicitly chosen
   if(localStorage.getItem(SB_LOCAL_KEY) === '1' && !cloudConfigured()){
     return startAppLocal();
@@ -8791,6 +8831,8 @@ function init(){
   renderToday();
   updateSidebarBadge();
   populateKiSelects();
+  // Desktop/Mobile: apply mode, and on a phone (first visit) ask which view to use
+  if(typeof maybeAskViewMode === 'function') setTimeout(maybeAskViewMode, 400);
   // Periodic alarm bell refresh (every 60s) — catches items becoming due mid-session
   setInterval(()=>{ updateAlarmBell(); renderOverdueBanner(); checkTimeReminders(); }, 30*1000);
   // Run once shortly after load (lets user see anything already pending)
@@ -10029,6 +10071,40 @@ window.apptInvite=function(id){
   window.location.href='mailto:'+to+'?subject='+subject+'&body='+body;
   if(!to) showToast('Einladung erstellt — keine Kunden-E-Mail hinterlegt','warn'); else showToast('✉ Einladung im Mail-Programm','success');
 };
+
+// ════════════════════════════════════════════════════════════════════════
+//  ANSICHT — Desktop / Mobile (Geräte-Erkennung + Umschaltung)
+// ════════════════════════════════════════════════════════════════════════
+const VIEW_KEY = 'nexa_view';
+function isMobileDevice(){
+  try{ return window.matchMedia('(max-width: 820px)').matches || /Mobi|Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent||''); }
+  catch(e){ return false; }
+}
+function loadViewPref(){ const v=localStorage.getItem(VIEW_KEY); return (v==='mobile'||v==='desktop')?v:''; }
+function effectiveView(){ const p=loadViewPref(); if(p) return p; return isMobileDevice()?'mobile':'desktop'; }
+function applyViewMode(){
+  const mode=effectiveView();
+  const meta=document.getElementById('viewportMeta');
+  if(meta){ meta.setAttribute('content', (mode==='desktop' && isMobileDevice()) ? 'width=1280' : 'width=device-width, initial-scale=1'); }
+  document.body.classList.toggle('mobile-view', mode==='mobile');
+  const lbl=document.getElementById('viewToggleLabel');
+  if(lbl) lbl.textContent = (mode==='mobile') ? '🖥 Desktop-Ansicht' : '📱 Mobile-Ansicht';
+}
+window.setViewMode=function(mode){
+  if(mode!=='mobile'&&mode!=='desktop') mode='desktop';
+  localStorage.setItem(VIEW_KEY, mode);
+  const p=document.getElementById('viewPrompt'); if(p) p.classList.remove('open');
+  applyViewMode();
+  if(typeof window.closeProfile==='function') window.closeProfile();
+  showToast(mode==='mobile'?'📱 Mobile-Ansicht aktiv':'🖥 Desktop-Ansicht aktiv','success');
+};
+window.toggleViewMode=function(){ window.setViewMode(effectiveView()==='mobile'?'desktop':'mobile'); };
+function maybeAskViewMode(){
+  applyViewMode();
+  if(isMobileDevice() && !loadViewPref()){
+    const p=document.getElementById('viewPrompt'); if(p) p.classList.add('open');
+  }
+}
 
 // Entry point: auth gate (Supabase) decides login / local mode, then runs init()
 if(document.readyState === 'loading'){
