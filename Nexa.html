@@ -3015,7 +3015,7 @@ function startAppLocal(){
 // Entry point — decides: local mode / setup / login / authenticated
 async function bootstrap(){
   // Apply saved/auto view mode (desktop vs mobile) as early as possible
-  if(typeof applyViewMode === 'function') applyViewMode();
+  try{ if(typeof applyViewMode === 'function') applyViewMode(); }catch(e){ console.warn('view mode', e); }
   // Local-only mode explicitly chosen
   if(localStorage.getItem(SB_LOCAL_KEY) === '1' && !cloudConfigured()){
     return startAppLocal();
@@ -3236,8 +3236,8 @@ function renderToday(){
       </tr>
     `).join('');
 
-  // Trend chart
-  drawTrendChart();
+  // Trend chart (never let a chart failure break the dashboard)
+  try{ drawTrendChart(); }catch(e){ console.warn('trend chart', e); }
   // Goal progress bar + stale alert
   renderGoalAndStale();
   // Welcome Dashboard widgets (live clock, weather, currency, …)
@@ -3735,7 +3735,7 @@ function statusClass(s){
 
 function drawTrendChart(){
   const canvas = document.getElementById('trendChart');
-  if(!canvas) return;
+  if(!canvas || typeof Chart === 'undefined') return;
   const days = 14;
   const labels = [];
   const data = [];
@@ -5031,6 +5031,7 @@ function renderAktivitaeten(){
   const typAll = ['Anruf','Mail','Meeting','Demo','Angebot','WhatsApp','Sonstiges','Status'];
   const counts = typAll.map(t => all.filter(a => a.typ === t).length);
   const canvas = document.getElementById('aktChart');
+  if(!canvas || typeof Chart === 'undefined') return;
   if(aktChart) aktChart.destroy();
   aktChart = new Chart(canvas,{
     type:'bar',
@@ -10100,10 +10101,12 @@ window.setViewMode=function(mode){
 };
 window.toggleViewMode=function(){ window.setViewMode(effectiveView()==='mobile'?'desktop':'mobile'); };
 function maybeAskViewMode(){
-  applyViewMode();
-  if(isMobileDevice() && !loadViewPref()){
-    const p=document.getElementById('viewPrompt'); if(p) p.classList.add('open');
-  }
+  try{
+    applyViewMode();
+    if(isMobileDevice() && !loadViewPref()){
+      const p=document.getElementById('viewPrompt'); if(p) p.classList.add('open');
+    }
+  }catch(e){ console.warn('view prompt', e); }
 }
 
 // Entry point: auth gate (Supabase) decides login / local mode, then runs init()
