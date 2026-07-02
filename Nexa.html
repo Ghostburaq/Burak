@@ -4,6 +4,30 @@
 <meta charset="UTF-8">
 <meta name="viewport" id="viewportMeta" content="width=device-width, initial-scale=1.0">
 <title>Nexa · Strix</title>
+<!-- Global error surface: shows real errors on-device instead of a silent failure -->
+<script>
+(function(){
+  function showErr(msg){
+    try{
+      var b=document.getElementById('globalErrBanner');
+      if(!b){
+        b=document.createElement('div'); b.id='globalErrBanner';
+        b.style.cssText='position:fixed;top:0;left:0;right:0;z-index:99999;background:#e0314b;color:#fff;font:12.5px/1.45 -apple-system,BlinkMacSystemFont,sans-serif;padding:10px 40px 10px 14px;box-shadow:0 2px 12px rgba(0,0,0,.35);white-space:pre-wrap;word-break:break-word;max-height:45vh;overflow:auto;cursor:pointer';
+        (document.body||document.documentElement).appendChild(b);
+      }
+      b.textContent='⚠️ Fehler: '+msg+'\n\n(Bitte Screenshot senden. Tippen zum Ausblenden.)';
+      b.onclick=function(){ b.remove(); };
+    }catch(_){}
+  }
+  window.__nexaShowErr=showErr;
+  window.addEventListener('error', function(e){
+    if(e && e.message) showErr(e.message + (e.filename? ('  ['+String(e.filename).split('/').pop()+':'+e.lineno+']'):''));
+  });
+  window.addEventListener('unhandledrejection', function(e){
+    var r=e&&e.reason; showErr('Promise: '+((r&&r.message)||r||'unbekannt'));
+  });
+})();
+</script>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'><rect x='2' y='2' width='36' height='36' rx='11' fill='%230071e3'/><path d='M13 28 V12 L27 28 V12' fill='none' stroke='white' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'/></svg>">
 
 <!-- Apply saved/system theme before paint to avoid flash -->
