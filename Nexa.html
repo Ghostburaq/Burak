@@ -4862,19 +4862,21 @@ window.startOnboarding = function(force){
   if(!force && localStorage.getItem(ONBOARD_KEY)) return;
   const steps = [
     {sel:'#sidebar', title:'Willkommen bei Nexa', text:'Hier deine Navigation. Drück Ctrl/⌘+K für die Schnellsuche jederzeit.'},
-    {sel:'[data-page="today"]', title:'Heute', text:'Dein Tagesfokus: KPIs, Hot Leads und fällige Wiedervorlagen — alles auf einen Blick.'},
+    {sel:'[data-page="kontakte"]', title:'Kontakte', text:'Deine Leads & Kunden — mit Score, Segment, Status und Wiedervorlagen.'},
     {sel:'[data-page="pipeline"]', title:'Pipeline', text:'Drag & Drop zwischen Spalten — beim Schließen fragt das CRM nach dem Grund (Win/Loss-Analyse).'},
-    {sel:'[data-page="ki"]', title:'KI-Assist', text:'Generiere personalisierte Emails, Anruf-Talking-Points und Einwand-Antworten mit Claude.'},
-    {sel:'[data-page="analytics"]', title:'Analytics', text:'Forecast, Funnel, Win-Rate nach Segment und Cycle-Time — dein strategischer Überblick.'},
+    {sel:'[data-page="angebote"]', title:'Angebote & Rechnungen', text:'Angebote und Rechnungen mit Positionen und PDF erstellen.'},
+    {sel:'#navMoreBtn', title:'Mehr ▾', text:'Hier findest du Produkte, Vermietung, Termine, KI-Assist und Analytics.'},
     {sel:'#alarmBtn', title:'🔔 Alarm-Glocke', text:'Fällige Wiedervorlagen pulsieren hier. Klick öffnet die Liste mit Quick-Actions.'},
-    {sel:'.fab', title:'Schnell starten', text:'Großer + Button: neuer Kontakt mit einem Klick. Oder schau im Settings-Menü vorbei.'}
+    {sel:'#profileBtn', title:'Dein Konto', text:'API-Key, Einstellungen, Ansicht (Desktop/Mobile) und Abmelden.'},
+    {sel:'.fab', title:'Schnell starten', text:'Großer + Button: neuer Kontakt mit einem Klick.'}
   ];
   let i = 0;
   const showStep = ()=>{
     const ov = document.getElementById('tourOverlay'); if(!ov) return;
     if(i >= steps.length){ ov.classList.add('hidden'); localStorage.setItem(ONBOARD_KEY, '1'); return; }
     const s = steps[i]; const el = document.querySelector(s.sel);
-    if(!el){ i++; showStep(); return; }
+    // Skip steps whose target is missing or not visible (e.g. hidden on mobile)
+    if(!el || el.offsetParent === null){ i++; if(i>steps.length){ ov.classList.add('hidden'); return; } showStep(); return; }
     const r = el.getBoundingClientRect();
     ov.classList.remove('hidden');
     document.getElementById('tourBox').innerHTML = `
@@ -8864,10 +8866,10 @@ function init(){
   setTimeout(checkTimeReminders, 4000);
   // Backup reminder (toast if last export >7d)
   checkBackupReminder();
-  // Onboarding tour on very first visit
-  if(!localStorage.getItem(ONBOARD_KEY) && STATE.contacts.length === 0){
-    setTimeout(()=>window.startOnboarding(), 1200);
-  }
+  // NOTE: The onboarding tour is NOT auto-started — a full-screen overlay on
+  // first load blocked all clicks and read as "nothing works". It's available
+  // on demand via Einstellungen → "🎓 Onboarding-Tour erneut anzeigen".
+  localStorage.setItem(ONBOARD_KEY, '1');
   // Init browser notifications (after short delay so page loads first)
   setTimeout(initNotifications, 1500);
   // Re-check notifications when tab becomes visible again
@@ -10600,7 +10602,7 @@ if(document.readyState === 'loading'){
 <!-- ═══════════════════════════════════════════════════════════════════════ -->
 <!-- TOUR OVERLAY                                                              -->
 <!-- ═══════════════════════════════════════════════════════════════════════ -->
-<div id="tourOverlay" class="hidden">
+<div id="tourOverlay" class="hidden" onclick="if(event.target===this)window._tourSkip()">
   <div id="tourSpot"></div>
   <div id="tourBox"></div>
 </div>
