@@ -1449,6 +1449,7 @@ alter publication supabase_realtime add table public.crm_state;</pre>
       <button class="auth-link" id="authToggle" onclick="window.authToggleMode()">Konto erstellen</button>
     </div>
     <div class="auth-alt">
+      <button class="auth-link" onclick="window.cloudTeamLink()">🔗 Team-Link für weitere Geräte kopieren</button>
       <button class="auth-link" onclick="window.cloudReconfigure()" style="color:var(--text-dim)">⚙ Cloud-Einstellungen</button>
     </div>
   </div>
@@ -2942,6 +2943,43 @@ window.cloudReconfigure = function(){
   showCard('setup');
 };
 
+// ─── Team-Link: trägt die Verbindung im Link selbst ───────────────────────
+// Einmal auf dem eingerichteten Gerät den Link kopieren → auf JEDEM anderen
+// Gerät öffnen → Nexa verbindet sich automatisch (kein Einrichten mehr).
+function cloudConsumeTeamLink(){
+  try{
+    const h = location.hash || '';
+    const m = h.match(/[#&]team=([^&]+)/);
+    if(!m) return false;
+    const payload = JSON.parse(atob(decodeURIComponent(m[1])));
+    const u = (payload.u||'').trim().replace(/\/+$/,'');
+    const k = (payload.k||'').trim();
+    if(u && k){
+      localStorage.setItem(SB_URL_KEY, u);
+      localStorage.setItem(SB_ANON_KEY, k);
+      localStorage.removeItem(SB_LOCAL_KEY);
+      CLOUD.url = u; CLOUD.key = k;
+    }
+    // Token aus der Adresszeile entfernen (sauber + nicht versehentlich teilen)
+    const clean = location.pathname + location.search;
+    try{ history.replaceState(null, '', clean); }catch(_){ location.hash=''; }
+    return true;
+  }catch(e){ console.warn('team link', e); return false; }
+}
+window.cloudTeamLink = function(){
+  if(!cloudConfigured()){
+    showToast('Erst verbinden, dann Team-Link erzeugen','error'); return;
+  }
+  const token = encodeURIComponent(btoa(JSON.stringify({ u:CLOUD.url, k:CLOUD.key })));
+  const link  = location.origin + location.pathname + '#team=' + token;
+  const done = ()=>showToast('Team-Link kopiert — auf jedem Gerät öffnen ✓','success');
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(link).then(done).catch(()=>window.prompt('Team-Link (kopieren):', link));
+  } else {
+    window.prompt('Team-Link (kopieren):', link);
+  }
+};
+
 // ─── Login / Signup actions ────────────────────────────────────────────
 window.authToggleMode = function(){
   _authMode = (_authMode==='login') ? 'signup' : 'login';
@@ -3146,6 +3184,8 @@ function startAppLocal(){
 async function bootstrap(){
   // Apply saved/auto view mode (desktop vs mobile) as early as possible
   try{ if(typeof applyViewMode === 'function') applyViewMode(); }catch(e){ console.warn('view mode', e); }
+  // Team-Link im Aufruf? → Verbindung übernehmen, damit jedes Gerät sofort verbunden ist
+  try{ cloudConsumeTeamLink(); }catch(e){ console.warn('team link', e); }
   // Local-only mode explicitly chosen
   if(localStorage.getItem(SB_LOCAL_KEY) === '1' && !cloudConfigured()){
     return startAppLocal();
