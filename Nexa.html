@@ -1216,10 +1216,48 @@ body.mobile-view .welcome-dashboard{grid-template-columns:repeat(auto-fit,minmax
 .viewprompt-btns{display:flex;gap:10px}
 .viewprompt-btns .btn{flex:1;justify-content:center;padding:13px}
 
+/* ── Online-Radio Mini-Player ── */
+#radioPlayer{position:fixed;left:18px;bottom:18px;z-index:70;width:300px;font-family:var(--font)}
+#radioPlayer .radio-bar{display:flex;align-items:center;gap:10px;background:rgba(22,22,23,0.92);
+  -webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);color:#f5f5f7;border-radius:14px;padding:9px 12px;
+  box-shadow:0 10px 34px rgba(0,0,0,0.30);cursor:pointer;border:1px solid rgba(255,255,255,0.08)}
+#radioPlayer .radio-ico{font-size:20px;flex-shrink:0}
+#radioPlayer .radio-bar-info{flex:1;min-width:0}
+#radioPlayer .radio-now{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#radioPlayer .radio-sub{font-size:11px;color:#a1a1a6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#radioPlayer .radio-playpause{width:34px;height:34px;border-radius:50%;border:none;background:var(--brand);color:#fff;font-size:14px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+#radioPlayer .radio-panel{display:none;margin-bottom:8px;background:var(--bg-card);border:1px solid var(--line);border-radius:16px;box-shadow:0 18px 50px rgba(0,0,0,0.28);overflow:hidden}
+#radioPlayer:not(.collapsed) .radio-panel{display:block}
+.radio-panel-h{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;font-weight:700;font-size:14px;border-bottom:1px solid var(--line);color:var(--text)}
+.radio-panel-h button{border:none;background:transparent;font-size:16px;cursor:pointer;color:var(--text-mute)}
+.radio-search{display:flex;gap:6px;padding:10px 12px 8px}
+.radio-search input{flex:1;padding:8px 10px;border:1px solid var(--line2);border-radius:9px;background:var(--bg-input);color:var(--text);font-size:13px;outline:none}
+.radio-search input:focus{border-color:var(--brand)}
+.radio-search button{padding:8px 12px;border:none;border-radius:9px;background:var(--brand);color:#fff;font-size:13px;cursor:pointer}
+.radio-genres{display:flex;flex-wrap:wrap;gap:5px;padding:0 12px 8px}
+.radio-genres button{padding:4px 10px;border:1px solid var(--line2);border-radius:980px;background:transparent;color:var(--text-mute);font-size:11.5px;cursor:pointer}
+.radio-genres button:hover{border-color:var(--brand);color:var(--brand)}
+.radio-vol{display:flex;align-items:center;gap:8px;padding:0 14px 8px;font-size:13px;color:var(--text-mute)}
+.radio-vol input{flex:1;accent-color:var(--brand)}
+.radio-tabs{display:flex;gap:4px;padding:0 12px 8px}
+.radio-tabs button{flex:1;padding:6px;border:none;border-radius:8px;background:var(--bg2);color:var(--text-mute);font-size:12px;font-weight:600;cursor:pointer}
+.radio-tabs button.active{background:var(--brand);color:#fff}
+.radio-list{max-height:230px;overflow-y:auto;padding:4px 8px 10px}
+.radio-st{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:9px;cursor:pointer}
+.radio-st:hover{background:var(--bg2)}
+.radio-st.playing{background:var(--brand-soft)}
+.radio-st-info{flex:1;min-width:0}
+.radio-st-name{font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
+.radio-st-meta{font-size:10.5px;color:var(--text-mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.radio-st-fav{border:none;background:transparent;cursor:pointer;font-size:14px;flex-shrink:0;color:var(--warn)}
+.radio-empty{padding:20px;text-align:center;color:var(--text-mute);font-size:12.5px}
+@media (max-width:640px){ #radioPlayer{left:8px;right:8px;bottom:8px;width:auto} }
+body.mobile-view #radioPlayer{left:8px;right:8px;bottom:8px;width:auto}
+
 /* ─── Print stylesheet ─── */
 @media print{
   body{background:#fff !important;overflow:visible !important}
-  #sidebar,.topbar,.fab,#bulkBar,#alarmWrap,.modal-bg:not(.open),#tourOverlay,#overdueBanner,#staleAlert,
+  #sidebar,.topbar,.fab,#bulkBar,#alarmWrap,.modal-bg:not(.open),#tourOverlay,#overdueBanner,#staleAlert,#radioPlayer,#globalErrBanner,
   .btn,.kpi-grid + .today-grid .quick-grid,.modal-foot{display:none !important}
   #main{overflow:visible !important}
   .content{overflow:visible !important;padding:0 !important;background:#fff}
@@ -2196,6 +2234,33 @@ alter publication supabase_realtime add table public.crm_state;</pre>
       <button class="btn btn-primary" onclick="window.setViewMode('mobile')">📱 Mobile</button>
     </div>
   </div>
+</div>
+
+<!-- Online-Radio Mini-Player -->
+<div id="radioPlayer" class="collapsed">
+  <div class="radio-panel" id="radioPanel">
+    <div class="radio-panel-h"><span>📻 Radio</span><button onclick="window.radioToggle()" title="Schliessen">✕</button></div>
+    <div class="radio-search">
+      <input id="radioSearch" placeholder="Sender suchen… z.B. SRF, NRJ, Jazz" onkeydown="if(event.key==='Enter')window.radioSearch()">
+      <button onclick="window.radioSearch()">Suchen</button>
+    </div>
+    <div class="radio-genres" id="radioGenres"></div>
+    <div class="radio-vol">🔊 <input type="range" id="radioVol" min="0" max="100" value="80" oninput="window.radioSetVol(this.value)"></div>
+    <div class="radio-tabs">
+      <button class="active" data-rtab="results" onclick="window.radioTab('results')">Ergebnisse</button>
+      <button data-rtab="favs" onclick="window.radioTab('favs')">★ Favoriten</button>
+    </div>
+    <div class="radio-list" id="radioList"></div>
+  </div>
+  <div class="radio-bar" onclick="window.radioToggle()">
+    <span class="radio-ico">📻</span>
+    <div class="radio-bar-info">
+      <div class="radio-now" id="radioNow">Radio</div>
+      <div class="radio-sub" id="radioSub">Tippen zum Öffnen</div>
+    </div>
+    <button class="radio-playpause" id="radioPlayBtn" onclick="event.stopPropagation();window.radioTogglePlay()">▶</button>
+  </div>
+  <audio id="radioAudio"></audio>
 </div>
 
 <!-- Toasts -->
@@ -8860,6 +8925,8 @@ function init(){
   populateKiSelects();
   // Desktop/Mobile: apply mode, and on a phone (first visit) ask which view to use
   if(typeof maybeAskViewMode === 'function') setTimeout(maybeAskViewMode, 400);
+  // Online radio mini-player
+  try{ initRadio(); }catch(e){ console.warn('radio', e); }
   // Periodic alarm bell refresh (every 60s) — catches items becoming due mid-session
   setInterval(()=>{ updateAlarmBell(); renderOverdueBanner(); checkTimeReminders(); }, 30*1000);
   // Run once shortly after load (lets user see anything already pending)
@@ -10133,6 +10200,93 @@ function maybeAskViewMode(){
       const p=document.getElementById('viewPrompt'); if(p) p.classList.add('open');
     }
   }catch(e){ console.warn('view prompt', e); }
+}
+
+// ════════════════════════════════════════════════════════════════════════
+//  MODULE: ONLINE-RADIO (Radio-Browser API — kostenlos, kein Key)
+// ════════════════════════════════════════════════════════════════════════
+const RADIO_SERVERS = ['https://de1.api.radio-browser.info','https://nl1.api.radio-browser.info','https://at1.api.radio-browser.info'];
+const RADIO_FAV_KEY = 'nexa_radio_favs', RADIO_VOL_KEY = 'nexa_radio_vol';
+const RADIO_GENRES = ['Pop','Rock','Jazz','Lo-Fi','News','Klassik','Dance','80s','Schlager','Hip-Hop','Chill','Electronic'];
+let _radioResults = [], _radioFavs = [], _radioCurrent = null, _radioTab = 'results';
+
+function radioLoadFavs(){ try{ const a=JSON.parse(localStorage.getItem(RADIO_FAV_KEY)); return Array.isArray(a)?a:[]; }catch(e){ return []; } }
+function radioSaveFavs(){ try{ localStorage.setItem(RADIO_FAV_KEY, JSON.stringify(_radioFavs)); }catch(e){} }
+
+window.radioToggle = function(){ document.getElementById('radioPlayer').classList.toggle('collapsed'); };
+window.radioTab = function(t){
+  _radioTab = t;
+  document.querySelectorAll('#radioPlayer [data-rtab]').forEach(b=>b.classList.toggle('active', b.dataset.rtab===t));
+  radioRenderList();
+};
+window.radioSetVol = function(v){ const a=document.getElementById('radioAudio'); if(a) a.volume=Math.max(0,Math.min(1,(parseInt(v)||0)/100)); try{ localStorage.setItem(RADIO_VOL_KEY, String(v)); }catch(e){} };
+
+async function radioApi(path){
+  for(const base of RADIO_SERVERS){
+    try{ const r=await fetch(base+path, {headers:{'accept':'application/json'}}); if(r && r.ok) return await r.json(); }catch(e){}
+  }
+  throw new Error('Radio-Dienst nicht erreichbar — Internet prüfen');
+}
+function radioMap(s){ return { uuid:s.stationuuid||s.url_resolved||s.url, name:s.name||'?', url:s.url_resolved||s.url, country:s.country||'', bitrate:s.bitrate||0, codec:s.codec||'' }; }
+async function radioQuery(qs){
+  const list=document.getElementById('radioList'); if(list) list.innerHTML='<div class="radio-empty">Suche…</div>';
+  try{
+    const data=await radioApi('/json/stations/search?'+qs+'&limit=30&order=clickcount&reverse=true&hidebroken=true');
+    _radioResults=(data||[]).map(radioMap).filter(s=>s.url);
+    window.radioTab('results');
+    if(!_radioResults.length && list) list.innerHTML='<div class="radio-empty">Keine Sender gefunden.</div>';
+  }catch(e){ if(list) list.innerHTML='<div class="radio-empty">'+escHtml(e.message)+'</div>'; }
+}
+window.radioSearch = function(){ const q=(document.getElementById('radioSearch').value||'').trim(); if(!q) return; radioQuery('name='+encodeURIComponent(q)); };
+window.radioGenre = function(g){ const inp=document.getElementById('radioSearch'); if(inp) inp.value=''; radioQuery('tag='+encodeURIComponent(String(g).toLowerCase())); };
+
+function radioRenderList(){
+  const list=document.getElementById('radioList'); if(!list) return;
+  const arr = _radioTab==='favs' ? _radioFavs : _radioResults;
+  if(!arr.length){ list.innerHTML='<div class="radio-empty">'+(_radioTab==='favs'?'Noch keine Favoriten — tippe auf ☆.':'Sender suchen oder ein Genre wählen.')+'</div>'; return; }
+  list.innerHTML=arr.map((s,i)=>`
+    <div class="radio-st ${_radioCurrent&&_radioCurrent.uuid===s.uuid?'playing':''}" onclick="window.radioPlayIdx(${i},'${_radioTab}')">
+      <div class="radio-st-info">
+        <div class="radio-st-name">${escHtml(s.name)}</div>
+        <div class="radio-st-meta">${escHtml(s.country||'')}${s.bitrate?(' · '+s.bitrate+'kbps'):''}${s.codec?(' · '+escHtml(s.codec)):''}</div>
+      </div>
+      <button class="radio-st-fav" onclick="event.stopPropagation();window.radioFav(${i},'${_radioTab}')" title="Favorit">${_radioFavs.some(f=>f.uuid===s.uuid)?'★':'☆'}</button>
+    </div>`).join('');
+}
+window.radioPlayIdx = function(i, tab){ const arr=(tab==='favs'?_radioFavs:_radioResults); const s=arr[i]; if(s) radioPlayStation(s); };
+function radioPlayStation(s){
+  const a=document.getElementById('radioAudio'); if(!a||!s.url) return;
+  _radioCurrent=s;
+  a.src=s.url;
+  a.play().catch(()=>showToast('Sender nicht erreichbar — anderen wählen','warn'));
+  const now=document.getElementById('radioNow'), sub=document.getElementById('radioSub');
+  if(now) now.textContent=s.name;
+  if(sub) sub.textContent=(s.country||'Läuft')+(s.bitrate?(' · '+s.bitrate+'kbps'):'');
+  radioRenderList(); updateRadioPlayBtn();
+}
+window.radioTogglePlay = function(){
+  const a=document.getElementById('radioAudio'); if(!a) return;
+  if(!a.src){ document.getElementById('radioPlayer').classList.remove('collapsed'); return; }
+  if(a.paused) a.play().catch(()=>{}); else a.pause();
+  updateRadioPlayBtn();
+};
+function updateRadioPlayBtn(){ const a=document.getElementById('radioAudio'), b=document.getElementById('radioPlayBtn'); if(a&&b) b.textContent=(!a.src||a.paused)?'▶':'⏸'; }
+window.radioFav = function(i, tab){
+  const arr=(tab==='favs'?_radioFavs:_radioResults); const s=arr[i]; if(!s) return;
+  const idx=_radioFavs.findIndex(f=>f.uuid===s.uuid);
+  if(idx>=0) _radioFavs.splice(idx,1); else _radioFavs.push(s);
+  radioSaveFavs(); radioRenderList();
+};
+function initRadio(){
+  const genres=document.getElementById('radioGenres');
+  if(genres) genres.innerHTML=RADIO_GENRES.map(g=>`<button onclick="window.radioGenre('${g}')">${escHtml(g)}</button>`).join('');
+  _radioFavs=radioLoadFavs();
+  const v=parseInt(localStorage.getItem(RADIO_VOL_KEY)); const vol=isNaN(v)?80:v;
+  const vs=document.getElementById('radioVol'); if(vs) vs.value=vol;
+  const a=document.getElementById('radioAudio');
+  if(a){ a.volume=vol/100; a.addEventListener('play',updateRadioPlayBtn); a.addEventListener('pause',updateRadioPlayBtn);
+    a.addEventListener('error',()=>{ if(_radioCurrent) showToast('Sender „'+_radioCurrent.name+'" nicht erreichbar','warn'); updateRadioPlayBtn(); }); }
+  radioRenderList(); updateRadioPlayBtn();
 }
 
 // Entry point: auth gate (Supabase) decides login / local mode, then runs init()
