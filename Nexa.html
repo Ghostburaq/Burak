@@ -2828,12 +2828,24 @@ function loadState(){
 const SB_URL_KEY   = 'nexa_sb_url';
 const SB_ANON_KEY  = 'nexa_sb_key';
 const SB_LOCAL_KEY = 'nexa_local_mode';
+
+// ────────────────────────────────────────────────────────────────────────
+//  FESTE FIRMEN-VERBINDUNG  →  einmal hier eintragen = gilt auf JEDEM Gerät.
+//  Sobald diese beiden Werte gesetzt sind, ist jeder PC / jedes Handy, das
+//  den Link öffnet, sofort verbunden — der Einrichtungs-Bildschirm entfällt,
+//  es kommt direkt der Login. Der anon/public-Key ist öffentlich & sicher
+//  (Schutz läuft über Row-Level-Security). NIEMALS den service_role-Key!
+const NEXA_DEFAULT_SB_URL = ''; // z.B. 'https://abcdxyz.supabase.co'
+const NEXA_DEFAULT_SB_KEY = ''; // anon/public: 'eyJ...' oder 'sb_publishable_...'
+// ────────────────────────────────────────────────────────────────────────
+
 const CLOUD = {
   client:null, user:null, channel:null,
   ready:false, applying:false, saveTimer:null, lastPushTs:0,
   ORG:'default',
-  url:  (localStorage.getItem(SB_URL_KEY)  || '').trim(),
-  key:  (localStorage.getItem(SB_ANON_KEY) || '').trim(),
+  // Reihenfolge: eigene Geräte-Einstellung  →  sonst feste Firmen-Vorgabe.
+  url:  (localStorage.getItem(SB_URL_KEY)  || NEXA_DEFAULT_SB_URL || '').trim(),
+  key:  (localStorage.getItem(SB_ANON_KEY) || NEXA_DEFAULT_SB_KEY || '').trim(),
 };
 let _authMode = 'login'; // 'login' | 'signup'
 
