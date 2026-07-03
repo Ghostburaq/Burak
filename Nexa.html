@@ -2948,20 +2948,24 @@ window.cloudReconfigure = function(){
 // Gerät öffnen → Nexa verbindet sich automatisch (kein Einrichten mehr).
 function cloudConsumeTeamLink(){
   try{
-    const h = location.hash || '';
-    const m = h.match(/[#&]team=([^&]+)/);
+    // Token kann im #hash ODER im ?query stehen (manche Mail-/Chat-Apps
+    // entfernen das #). Beide Stellen prüfen.
+    const src = (location.hash||'') + '&' + (location.search||'');
+    const m = src.match(/[#&?]team=([^&#]+)/);
     if(!m) return false;
     const payload = JSON.parse(atob(decodeURIComponent(m[1])));
     const u = (payload.u||'').trim().replace(/\/+$/,'');
     const k = (payload.k||'').trim();
     if(u && k){
-      localStorage.setItem(SB_URL_KEY, u);
-      localStorage.setItem(SB_ANON_KEY, k);
-      localStorage.removeItem(SB_LOCAL_KEY);
+      try{
+        localStorage.setItem(SB_URL_KEY, u);
+        localStorage.setItem(SB_ANON_KEY, k);
+        localStorage.removeItem(SB_LOCAL_KEY);
+      }catch(_){ /* localStorage evtl. blockiert — CLOUD unten reicht für diese Sitzung */ }
       CLOUD.url = u; CLOUD.key = k;
     }
     // Token aus der Adresszeile entfernen (sauber + nicht versehentlich teilen)
-    const clean = location.pathname + location.search;
+    const clean = location.pathname;
     try{ history.replaceState(null, '', clean); }catch(_){ location.hash=''; }
     return true;
   }catch(e){ console.warn('team link', e); return false; }
