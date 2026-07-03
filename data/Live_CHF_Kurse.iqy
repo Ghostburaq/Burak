@@ -1,0 +1,11 @@
+WEB
+1
+https://api.frankfurter.app/latest?from=CHF&to=EUR,USD,GBP
+
+Selection=EntirePage
+Formatting=None
+PreFormattedTextToColumns=True
+ConsecutiveDelimitersAsOne=True
+SingleBlockTextImport=False
+DisableDateRecognition=False
+DisableRedirections=False

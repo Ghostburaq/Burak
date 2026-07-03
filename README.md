@@ -35,6 +35,29 @@ deterministisch und ohne externe Abhängigkeiten zur Laufzeit.
 | `src/render_preview.py`| Rendert die echte `.pptx` zur visuellen Kontrolle (PNG/PDF) |
 | `assets/`              | Portrait, Original-Icons, generierte Assets |
 | `docs/`                | Vorschaubilder + PDF-Vorschau |
+| `src/build_excel.py`   | Baut das Vertriebs-Cockpit → `Vertriebs_Cockpit_AVIA_VOLT.xlsx` |
+| `data/`                | Online-Abruf-Dateien (`.iqy` Web-Abfrage, Power-Query-`.m`-Vorlagen) |
+
+## Vertriebs-Cockpit (Excel)
+
+Voll ausgestattete, filterbare Excel-Arbeitsmappe für den Vertrieb —
+**[`Vertriebs_Cockpit_AVIA_VOLT.xlsx`](Vertriebs_Cockpit_AVIA_VOLT.xlsx)** — code-generiert,
+reproduzierbar und sofort einsatzbereit.
+
+- **Dashboard** — KPIs (Pipeline gesamt, gewichteter Forecast, Win-Rate, Ø Deal-Größe …)
+  plus zwei Diagramme (Pipeline nach Phase, Forecast je Verantwortlich), alles automatisch berechnet.
+- **Pipeline** — strukturierte Excel-Tabelle mit **AutoFilter & Sortierung**, **Dropdowns**
+  (Datenvalidierung), **Formeln** (Wahrscheinlichkeit per `XLOOKUP` aus der Phase, gewichteter
+  Wert, Tage bis Abschluss) und **Ampel-Logik** (bedingte Formatierung 🔴🟡🟢).
+- **Live-Daten** — Online-Abruf **per Knopfdruck** (`Daten ▸ Alle aktualisieren`): CHF-Wechselkurse
+  über eine Web-Abfrage (`data/Live_CHF_Kurse.iqy`) sowie fertige **Power-Query-M-Vorlagen**
+  (`data/PowerQuery_Vorlagen.m`) für eine eigene SQL-/Cloud-Datenbank.
+- **Anleitung** — Schritt-für-Schritt-Blatt direkt in der Mappe.
+
+```bash
+pip install openpyxl
+python3 src/build_excel.py   # -> Vertriebs_Cockpit_AVIA_VOLT.xlsx + data/*
+```
 
 ## Neu bauen
 
