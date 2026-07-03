@@ -1216,6 +1216,31 @@ body.mobile-view .welcome-dashboard{grid-template-columns:repeat(auto-fit,minmax
 .viewprompt-btns{display:flex;gap:10px}
 .viewprompt-btns .btn{flex:1;justify-content:center;padding:13px}
 
+/* ── Anpassbares Dashboard (Edit-Modus) ── */
+.dash-toolbar{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.dash-edit-hint{font-size:11.5px;color:var(--text-mute);display:none}
+body.dash-edit .dash-edit-hint{display:inline}
+body.dash-edit .welcome-dashboard .widget{outline:1.5px dashed var(--line2);outline-offset:2px}
+.widget-editctrls{position:absolute;top:8px;right:8px;display:flex;gap:5px;z-index:4}
+.wctrl{width:24px;height:24px;border-radius:50%;border:none;background:var(--bg2);color:var(--text);cursor:pointer;font-size:12px;box-shadow:0 1px 5px rgba(0,0,0,0.18);display:flex;align-items:center;justify-content:center}
+.wctrl:hover{background:var(--bg3)}
+.wctrl-x:hover{background:var(--danger);color:#fff}
+.widget.widget-add{display:flex;flex-direction:column;gap:8px;border:2px dashed var(--line2);background:transparent;cursor:default;box-shadow:none;user-select:auto}
+.widget.widget-add:hover{transform:none;box-shadow:none}
+.widget.widget-add::before{display:none}
+.widget-add-title{font-weight:700;font-size:13px;color:var(--text-mute)}
+.widget-add-list{display:flex;flex-direction:column;gap:5px}
+.widget-add-list button{text-align:left;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:var(--bg-card);color:var(--text);font-size:12px;cursor:pointer}
+.widget-add-list button:hover{border-color:var(--brand);color:var(--brand)}
+.mini-list{display:flex;flex-direction:column;gap:2px}
+.mini-row{display:flex;align-items:center;gap:10px;padding:5px 0;border-top:1px solid var(--line);font-size:12.5px}
+.mini-row:first-child{border-top:none}
+.mini-time{font-family:var(--font-mono);font-size:11.5px;color:var(--text-mute);flex-shrink:0;min-width:56px}
+.mini-time.tx-danger{color:var(--danger)}
+.mini-name{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.notes-area{width:100%;min-height:80px;border:1px solid var(--line2);border-radius:10px;background:var(--bg-input);color:var(--text);padding:8px 10px;font-family:inherit;font-size:13px;resize:vertical;outline:none;margin-top:6px;-webkit-user-select:text;user-select:text}
+.notes-area:focus{border-color:var(--brand)}
+
 /* ── Online-Radio Mini-Player ── */
 #radioPlayer{position:fixed;left:18px;bottom:18px;z-index:70;width:300px;font-family:var(--font)}
 #radioPlayer .radio-bar{display:flex;align-items:center;gap:10px;background:rgba(22,22,23,0.92);
@@ -1558,6 +1583,10 @@ alter publication supabase_realtime add table public.crm_state;</pre>
     <div class="content">
       <!-- ═══ TODAY PAGE ═══ -->
       <div class="page active" id="page-today">
+        <div class="dash-toolbar">
+          <button class="btn btn-ghost btn-sm" id="dashEditBtn" onclick="window.toggleDashEdit()">🎛 Dashboard anpassen</button>
+          <span class="dash-edit-hint" id="dashEditHint">Kacheln per Drag &amp; Drop verschieben · ⚙ zum Einstellen · ✕ zum Entfernen · „＋ Kachel" zum Hinzufügen</span>
+        </div>
         <!-- Welcome Dashboard — Live widgets (clock, weather, currency, stats etc.) -->
         <div id="welcomeDashboard" class="welcome-dashboard"></div>
 
@@ -3373,11 +3402,20 @@ window.saveWeatherCity = function(){
 
 // ─── Widget render — main entry point ────────────────────────────────
 let _clockTimer = null, _pomodoroTimer = null, _pomodoroEnd = null, _pomodoroPaused = 0;
+// ── Per-widget configuration (data selection) ──
+const WCFG_KEY = 'nexa_widget_cfg';
+function loadWCfg(){ try{ return JSON.parse(localStorage.getItem(WCFG_KEY)) || {}; }catch(e){ return {}; } }
+function saveWCfg(c){ try{ localStorage.setItem(WCFG_KEY, JSON.stringify(c)); }catch(e){} }
+function wcfg(id){ const c=loadWCfg(); return c[id] || {}; }
+// Which widgets have configurable options (used to show the ⚙ button)
+const WIDGET_CONFIGURABLE = { clock:true, weather:true, currency:true };
+
 function widgetBuilders(){
   return {
     clock: widgetClockHTML, weather: widgetWeatherHTML, sunRise: widgetSunHTML,
     currency: widgetCurrencyHTML, pomodoro: widgetPomodoroHTML, stats: widgetStatsHTML,
-    quote: widgetQuoteHTML, nearby: widgetNearbyHTML
+    quote: widgetQuoteHTML, nearby: widgetNearbyHTML,
+    termine: widgetTermineHTML, wvtoday: widgetWvTodayHTML, notes: widgetNotesHTML
   };
 }
 let _dashDragEl = null;
@@ -3388,8 +3426,29 @@ function renderWelcomeDashboard(){
   const order = loadEnabledWidgets().filter(id => builders[id]);
   const enabled = new Set(order);
   root.innerHTML = order.map(id => builders[id]()).join('');
-  // Tag each tile so it can be dragged + reordered
-  [...root.children].forEach((el, i) => { el.setAttribute('draggable','true'); el.dataset.wid = order[i]; });
+  const editing = document.body.classList.contains('dash-edit');
+  // Tag each tile; only draggable in edit mode (avoids accidental drags + input conflicts)
+  [...root.children].forEach((el, i) => { el.setAttribute('draggable', editing ? 'true' : 'false'); el.dataset.wid = order[i]; });
+  if(editing){
+    [...root.children].forEach(el => {
+      const id = el.dataset.wid;
+      const ctr = document.createElement('div');
+      ctr.className = 'widget-editctrls';
+      ctr.innerHTML =
+        (WIDGET_CONFIGURABLE[id] ? `<button class="wctrl" title="Einstellen" onclick="event.stopPropagation();window.openWidgetConfig('${id}')">⚙</button>` : '') +
+        `<button class="wctrl wctrl-x" title="Entfernen" onclick="event.stopPropagation();window.dashRemoveWidget('${id}')">✕</button>`;
+      el.appendChild(ctr);
+    });
+    // "+ Kachel" tile listing widgets that are not yet on the dashboard
+    const avail = WIDGET_LIST.filter(w => !enabled.has(w.id));
+    const add = document.createElement('div');
+    add.className = 'widget widget-add';
+    add.innerHTML = `<div class="widget-add-title">＋ Kachel hinzufügen</div>` +
+      (avail.length ? `<div class="widget-add-list">` + avail.map(w =>
+        `<button onclick="window.dashAddWidget('${w.id}')">${escHtml(w.label)}</button>`).join('') + `</div>`
+        : `<div class="tx-mute" style="font-size:12px;padding:8px 0">Alle Kacheln sind aktiv.</div>`);
+    root.appendChild(add);
+  }
   attachDashDnD(root);
   // Schedule live updates
   if(_clockTimer) clearInterval(_clockTimer);
@@ -3407,7 +3466,7 @@ function renderWelcomeDashboard(){
 }
 // Drag & drop to reorder dashboard tiles (persists order; no re-render so live widgets keep running)
 function attachDashDnD(root){
-  [...root.children].forEach(el => {
+  [...root.children].filter(el => el.dataset.wid).forEach(el => {
     el.addEventListener('dragstart', e => {
       _dashDragEl = el; el.classList.add('dragging');
       e.dataTransfer.effectAllowed = 'move';
@@ -3435,6 +3494,102 @@ function persistDashOrder(root){
   if(order.length) saveEnabledWidgets(order);
 }
 
+// ── Dashboard edit mode: add / remove / configure tiles ──
+window.toggleDashEdit = function(){
+  const on = document.body.classList.toggle('dash-edit');
+  const btn = document.getElementById('dashEditBtn');
+  if(btn){ btn.textContent = on ? '✓ Fertig' : '🎛 Dashboard anpassen'; btn.classList.toggle('btn-primary', on); }
+  renderWelcomeDashboard();
+};
+window.dashAddWidget = function(id){
+  const order = loadEnabledWidgets();
+  if(!order.includes(id)) order.push(id);
+  saveEnabledWidgets(order);
+  renderWelcomeDashboard();
+  if(typeof renderWidgetSettings === 'function') renderWidgetSettings();
+};
+window.dashRemoveWidget = function(id){
+  const order = loadEnabledWidgets().filter(x => x !== id);
+  saveEnabledWidgets(order);
+  renderWelcomeDashboard();
+  if(typeof renderWidgetSettings === 'function') renderWidgetSettings();
+};
+
+// ── Per-tile configuration modal ──
+let _cfgWidgetId = null;
+window.openWidgetConfig = function(id){
+  _cfgWidgetId = id;
+  const body = document.getElementById('wcfgBody'); if(!body) return;
+  const titles = {clock:'🕐 Uhr', weather:'🌤 Wetter', currency:'💱 Währung'};
+  document.getElementById('wcfgTitle').textContent = (titles[id]||'Kachel')+' einstellen';
+  const c = wcfg(id);
+  let html='';
+  if(id==='clock'){
+    html = `<label class="chk" style="margin-bottom:12px"><input type="checkbox" id="wcfgH24" ${c.h24!==false?'checked':''}> 24-Stunden-Format</label><br>
+      <label class="chk"><input type="checkbox" id="wcfgSec" ${c.seconds!==false?'checked':''}> Sekunden anzeigen</label>`;
+  } else if(id==='weather'){
+    const cities = Object.keys(KNOWN_CITIES);
+    html = `<div class="field"><label>Stadt</label>
+      <input id="wcfgCity" list="wcfgCityList" value="${escHtml(loadWeatherCity())}" placeholder="z.B. Zürich">
+      <datalist id="wcfgCityList">${cities.map(x=>`<option>${escHtml(x)}</option>`).join('')}</datalist>
+      <div class="tx-mute" style="font-size:11.5px;margin-top:6px">Beliebige Stadt eingeben — wird automatisch gefunden.</div></div>`;
+  } else if(id==='currency'){
+    const base = fxBase(); const opts=['CHF','EUR','USD','GBP','JPY','AUD','CAD','SEK','NOK','PLN'];
+    html = `<div class="field"><label>Basiswährung</label>
+      <select id="wcfgBaseSel">${opts.map(o=>`<option ${o===base?'selected':''}>${o}</option>`).join('')}</select>
+      <div class="tx-mute" style="font-size:11.5px;margin-top:6px">Kurse werden gegen 4 andere Währungen angezeigt.</div></div>`;
+  } else {
+    html = '<div class="tx-mute" style="font-size:13px">Diese Kachel hat keine zusätzlichen Einstellungen.</div>';
+  }
+  body.innerHTML = html;
+  openModal('modalWidgetCfg');
+};
+window.saveWidgetConfig = function(){
+  const id=_cfgWidgetId; if(!id){ closeModal('modalWidgetCfg'); return; }
+  const cfg = loadWCfg();
+  if(id==='clock'){
+    cfg.clock = { h24: document.getElementById('wcfgH24').checked, seconds: document.getElementById('wcfgSec').checked };
+    saveWCfg(cfg);
+  } else if(id==='weather'){
+    const v=(document.getElementById('wcfgCity').value||'').trim();
+    if(v){ localStorage.setItem(WEATHER_CITY_KEY, v); try{ localStorage.removeItem(WEATHER_CACHE_KEY); }catch(e){} }
+  } else if(id==='currency'){
+    cfg.currency = { base: document.getElementById('wcfgBaseSel').value };
+    saveWCfg(cfg); try{ localStorage.removeItem(FX_CACHE_KEY); }catch(e){}
+  }
+  closeModal('modalWidgetCfg');
+  renderWelcomeDashboard();
+  showToast('✓ Kachel aktualisiert','success');
+};
+
+// ── New widget: Termine heute ──
+function widgetTermineHTML(){
+  const t = todayISO();
+  const list = (STATE.appointments||[]).filter(a => a.date && a.date.slice(0,10)===t && a.status!=='Abgesagt')
+    .sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+  const rows = list.length ? list.slice(0,4).map(a =>
+    `<div class="mini-row"><span class="mini-time">${escHtml(a.time||'')}</span><span class="mini-name">${escHtml(a.firma||'')}</span></div>`).join('')
+    : '<div class="tx-mute" style="font-size:12px;padding:8px 0">Keine Termine heute 🎉</div>';
+  return `<div class="widget"><div class="widget-h"><span>📅 Termine heute</span><span class="widget-h-sub">${list.length}</span></div><div class="mini-list">${rows}</div></div>`;
+}
+// ── New widget: Wiedervorlagen heute/überfällig ──
+function widgetWvTodayHTML(){
+  const t = todayISO();
+  const due = STATE.contacts.filter(c => c.wv && c.wv.slice(0,10) <= t && !['Gewonnen','Verloren','Pausiert','Erledigt'].includes(c.status))
+    .sort((a,b)=>(a.wv||'').localeCompare(b.wv||''));
+  const rows = due.length ? due.slice(0,4).map(c =>
+    `<div class="mini-row" style="cursor:pointer" onclick="window.openContact('${c.id}')"><span class="mini-time ${c.wv.slice(0,10)<t?'tx-danger':''}">${fmtDate(c.wv)}</span><span class="mini-name">${escHtml(c.firma||'')}</span></div>`).join('')
+    : '<div class="tx-mute" style="font-size:12px;padding:8px 0">Nichts fällig ✓</div>';
+  return `<div class="widget"><div class="widget-h"><span>↻ Fällige Wiedervorlagen</span><span class="widget-h-sub">${due.length}</span></div><div class="mini-list">${rows}</div></div>`;
+}
+// ── New widget: Notizen (persisted) ──
+const NOTES_KEY = 'nexa_dash_notes';
+function widgetNotesHTML(){
+  const txt = localStorage.getItem(NOTES_KEY) || '';
+  return `<div class="widget"><div class="widget-h"><span>📝 Notizen</span></div>
+    <textarea class="notes-area" oninput="try{localStorage.setItem('${NOTES_KEY}',this.value)}catch(e){}" placeholder="Schnelle Notizen…">${escHtml(txt)}</textarea></div>`;
+}
+
 // ─── Widget 1: Live Clock + Date + KW ─────────────────────────────────
 function widgetClockHTML(){
   return `<div class="widget widget-clock">
@@ -3446,11 +3601,16 @@ function widgetClockHTML(){
 }
 function updateClockWidget(){
   const time = document.getElementById('wClockTime'); if(!time) return;
+  const cfg = wcfg('clock');
+  const h24 = cfg.h24 !== false;      // default 24h
+  const showSec = cfg.seconds !== false; // default with seconds
   const now = new Date();
-  const hh = String(now.getHours()).padStart(2,'0');
+  let h = now.getHours(); let suffix = '';
+  if(!h24){ suffix = h < 12 ? ' AM' : ' PM'; h = h % 12; if(h===0) h = 12; }
+  const hh = String(h).padStart(2,'0');
   const mm = String(now.getMinutes()).padStart(2,'0');
   const ss = String(now.getSeconds()).padStart(2,'0');
-  time.textContent = hh+':'+mm+':'+ss;
+  time.textContent = hh+':'+mm+(showSec?(':'+ss):'')+suffix;
   const dayNames = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
   const months = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
   document.getElementById('wClockDate').textContent = dayNames[now.getDay()] + ', ' + now.getDate() + '. ' + months[now.getMonth()] + ' ' + now.getFullYear();
@@ -3573,37 +3733,36 @@ async function fetchSun(){
 }
 
 // ─── Widget 4: Currency (CHF / EUR / USD) — exchangerate.host free ────
+function fxBase(){ const b=(wcfg('currency').base||'CHF').toUpperCase(); return /^[A-Z]{3}$/.test(b)?b:'CHF'; }
+function fxTargets(base){ return ['EUR','USD','GBP','JPY','CHF'].filter(c=>c!==base).slice(0,4); }
 function widgetCurrencyHTML(){
+  const base = fxBase();
   return `<div class="widget widget-currency">
-    <div class="widget-h"><span>💱 Währung</span><span class="widget-h-sub">Basis CHF</span></div>
+    <div class="widget-h"><span>💱 Währung</span><span class="widget-h-sub">Basis ${escHtml(base)}</span></div>
     <div id="wCurrencyBody"><div class="widget-loading">Lade Kurse…</div></div>
   </div>`;
 }
 async function fetchCurrency(){
   const body = document.getElementById('wCurrencyBody'); if(!body) return;
+  const base = fxBase();
   try{
     const cached = JSON.parse(localStorage.getItem(FX_CACHE_KEY)||'null');
-    if(cached && Date.now() - cached.ts < 60*60*1000){ renderCurrency(cached.rates, body); return; }
-    // open.er-api.com is free, no key, CORS-OK
-    const r = await fetch('https://open.er-api.com/v6/latest/CHF');
+    if(cached && cached.base===base && Date.now() - cached.ts < 60*60*1000){ renderCurrency(cached.rates, cached.base, body); return; }
+    const r = await fetch('https://open.er-api.com/v6/latest/'+base);
     const d = await r.json();
     if(d.result !== 'success') throw new Error('Kurs-API offline');
-    const rates = {EUR:d.rates.EUR, USD:d.rates.USD, GBP:d.rates.GBP, JPY:d.rates.JPY};
-    localStorage.setItem(FX_CACHE_KEY, JSON.stringify({rates, ts:Date.now()}));
-    renderCurrency(rates, body);
+    const rates = {}; fxTargets(base).forEach(c=>{ rates[c]=d.rates[c]; });
+    localStorage.setItem(FX_CACHE_KEY, JSON.stringify({rates, base, ts:Date.now()}));
+    renderCurrency(rates, base, body);
   }catch(err){
     body.innerHTML = '<div class="widget-error">Kurse offline</div>';
   }
 }
-function renderCurrency(rates, body){
-  const fmt = n => (Math.round(n*10000)/10000).toFixed(4);
-  body.innerHTML = `
-    <div class="fx-row"><span class="fx-pair">CHF → EUR</span><span class="fx-rate">${fmt(rates.EUR)}</span></div>
-    <div class="fx-row"><span class="fx-pair">CHF → USD</span><span class="fx-rate">${fmt(rates.USD)}</span></div>
-    <div class="fx-row"><span class="fx-pair">CHF → GBP</span><span class="fx-rate">${fmt(rates.GBP)}</span></div>
-    <div class="fx-row"><span class="fx-pair">CHF → JPY</span><span class="fx-rate">${(Math.round(rates.JPY*100)/100).toFixed(2)}</span></div>
-    <div class="fx-meta">Aktualisiert ${new Date().toLocaleTimeString('de-CH',{hour:'2-digit',minute:'2-digit'})}</div>
-  `;
+function renderCurrency(rates, base, body){
+  const fmt = (c,n)=> c==='JPY' ? (Math.round(n*100)/100).toFixed(2) : (Math.round(n*10000)/10000).toFixed(4);
+  body.innerHTML = fxTargets(base).map(c =>
+    `<div class="fx-row"><span class="fx-pair">${escHtml(base)} → ${c}</span><span class="fx-rate">${rates[c]!=null?fmt(c,rates[c]):'—'}</span></div>`).join('') +
+    `<div class="fx-meta">Aktualisiert ${new Date().toLocaleTimeString('de-CH',{hour:'2-digit',minute:'2-digit'})}</div>`;
 }
 
 // ─── Widget 5: Pomodoro Timer ─────────────────────────────────────────
@@ -3771,7 +3930,10 @@ const WIDGET_LIST = [
   {id:'pomodoro', label:'🍅 Pomodoro-Fokus-Timer (25/50/5 min)'},
   {id:'stats',    label:'📊 Tages-Stats + Werktags-Streak'},
   {id:'quote',    label:'💡 Sales-Zitat des Tages'},
-  {id:'nearby',   label:'📍 Kunden in der Nähe (Geolocation)'}
+  {id:'nearby',   label:'📍 Kunden in der Nähe (Geolocation)'},
+  {id:'termine',  label:'📅 Termine heute'},
+  {id:'wvtoday',  label:'↻ Fällige Wiedervorlagen'},
+  {id:'notes',    label:'📝 Notizen (Schnellzettel)'}
 ];
 function renderWidgetSettings(){
   const wrap = document.getElementById('widgetSettings'); if(!wrap) return;
@@ -10302,6 +10464,21 @@ if(document.readyState === 'loading'){
 <!-- ═══════════════════════════════════════════════════════════════════════ -->
 <!-- MODAL: Wochenbericht                                                    -->
 <!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- MODAL: Kachel einstellen -->
+<div class="modal-bg" id="modalWidgetCfg">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-h">
+      <div class="modal-title" id="wcfgTitle">Kachel einstellen</div>
+      <button class="modal-x" onclick="window.closeModal('modalWidgetCfg')">✕</button>
+    </div>
+    <div class="modal-body" id="wcfgBody"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="window.closeModal('modalWidgetCfg')">Abbrechen</button>
+      <button class="btn btn-primary" onclick="window.saveWidgetConfig()">Speichern</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: Mitarbeiter -->
 <div class="modal-bg" id="modalEmployee">
   <div class="modal lg" style="max-width:640px">
