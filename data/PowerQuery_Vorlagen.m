@@ -1,31 +1,30 @@
 // ============================================================
-// Power-Query-Vorlagen für das Vertriebs-Cockpit
-// Einfügen über:  Daten ▸ Daten abrufen ▸ Leere Abfrage ▸ Erweiterter Editor
+// Power-Query-Vorlagen — Vertriebs-Cockpit AVIA VOLT
+// Einfügen: Daten ▸ Daten abrufen ▸ Leere Abfrage ▸ Erweiterter Editor
+// Danach genügt „Alle aktualisieren“ (Strg+Alt+F5) als Knopfdruck.
 // ============================================================
 
-// --- 1) LIVE CHF-WECHSELKURSE (Web-API, ohne Zugangsdaten) ---------------
+// --- 1) LIVE CHF-WECHSELKURSE (ECB, ohne Zugangsdaten) ------------------
 let
-    Quelle   = Json.Document(Web.Contents("https://api.frankfurter.app/latest?from=CHF&to=EUR,USD,GBP")),
-    Datum    = Quelle[date],
-    Kurse    = Quelle[rates],
-    AlsTab   = Record.ToTable(Kurse),
-    Umbenannt= Table.RenameColumns(AlsTab, {{"Name","Waehrung"}, {"Value","Kurs"}}),
-    MitDatum = Table.AddColumn(Umbenannt, "Stand", each Datum, type text)
+    Xml      = Xml.Tables(Web.Contents("https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml")),
+    Cube     = Xml{0}[Cube]{0}[Cube],
+    Tabelle  = Table.SelectColumns(Cube, {"Attribute:currency", "Attribute:rate"}),
+    Umbenannt= Table.RenameColumns(Tabelle, {{"Attribute:currency","Waehrung"}, {"Attribute:rate","Kurs_pro_EUR"}})
 in
-    MitDatum
+    Umbenannt
 
-// --- 2) EIGENE SQL-DATENBANK (Server/DB anpassen) -----------------------
+// --- 2) EIGENE SQL-DATENBANK (Server/DB anpassen) ----------------------
 // let
 //     Quelle = Sql.Database("SERVERNAME", "DATENBANK",
-//                 [Query="SELECT firma, region, phase, volumen FROM deals"])
+//                 [Query="SELECT firma, region, phase, volumen, erw_abschluss FROM deals"])
 // in
 //     Quelle
 
-// --- 3) MySQL / PostgreSQL ----------------------------------------------
-// MySQL:       Quelle = MySQL.Database("host:3306", "db")
-// PostgreSQL:  Quelle = PostgreSQL.Database("host", "db")
+// --- 3) MySQL / PostgreSQL ---------------------------------------------
+// MySQL:       Quelle = MySQL.Database("host:3306", "db", [Query="SELECT * FROM deals"])
+// PostgreSQL:  Quelle = PostgreSQL.Database("host", "db", [Query="SELECT * FROM deals"])
 
-// --- 4) GOOGLE SHEETS / SHAREPOINT (per Freigabe-CSV-Link) ---------------
+// --- 4) GOOGLE SHEETS / SHAREPOINT (Freigabe-CSV-Link) -----------------
 // let
 //     Quelle = Csv.Document(Web.Contents("https://.../export?format=csv"),
 //                 [Delimiter=",", Encoding=65001]),

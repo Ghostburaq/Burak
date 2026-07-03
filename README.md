@@ -36,23 +36,25 @@ deterministisch und ohne externe Abhängigkeiten zur Laufzeit.
 | `assets/`              | Portrait, Original-Icons, generierte Assets |
 | `docs/`                | Vorschaubilder + PDF-Vorschau |
 | `src/build_excel.py`   | Baut das Vertriebs-Cockpit → `Vertriebs_Cockpit_AVIA_VOLT.xlsx` |
-| `data/`                | Online-Abruf-Dateien (`.iqy` Web-Abfrage, Power-Query-`.m`-Vorlagen) |
+| `data/`                | Online-Abruf-Dateien (ECB-Web-Abfrage `.iqy`, Power-Query-`.m`-Vorlagen) |
 
 ## Vertriebs-Cockpit (Excel)
 
-Voll ausgestattete, filterbare Excel-Arbeitsmappe für den Vertrieb —
+Umfangreiche, filterbare Excel-Arbeitsmappe für den Vertrieb —
 **[`Vertriebs_Cockpit_AVIA_VOLT.xlsx`](Vertriebs_Cockpit_AVIA_VOLT.xlsx)** — code-generiert,
-reproduzierbar und sofort einsatzbereit.
+reproduzierbar und sofort einsatzbereit. **9 Blätter, 42 Beispiel-Deals.**
 
-- **Dashboard** — KPIs (Pipeline gesamt, gewichteter Forecast, Win-Rate, Ø Deal-Größe …)
-  plus zwei Diagramme (Pipeline nach Phase, Forecast je Verantwortlich), alles automatisch berechnet.
+- **Dashboard** — KPIs (Pipeline gesamt, gewichteter Forecast, Win-Rate, Ø Deal-Größe …),
+  **Sales-Funnel** sowie Auswertungen nach **Region / Branche / Verantwortlichem** (5 Diagramme).
 - **Pipeline** — strukturierte Excel-Tabelle mit **AutoFilter & Sortierung**, **Dropdowns**
   (Datenvalidierung), **Formeln** (Wahrscheinlichkeit per `XLOOKUP` aus der Phase, gewichteter
   Wert, Tage bis Abschluss) und **Ampel-Logik** (bedingte Formatierung 🔴🟡🟢).
-- **Live-Daten** — Online-Abruf **per Knopfdruck** (`Daten ▸ Alle aktualisieren`): CHF-Wechselkurse
-  über eine Web-Abfrage (`data/Live_CHF_Kurse.iqy`) sowie fertige **Power-Query-M-Vorlagen**
-  (`data/PowerQuery_Vorlagen.m`) für eine eigene SQL-/Cloud-Datenbank.
-- **Anleitung** — Schritt-für-Schritt-Blatt direkt in der Mappe.
+- **Aktivitäten** — Aufgaben/Termine mit Fälligkeits-Ampel (überfällig = rot). **Kontakte** — CRM-Liste.
+- **Forecast** — gewichteter Umsatz je Monat vs. Ziel (Soll/Ist). **Ziele** — Zielerreichung je Verantwortlicher.
+- **Live-Daten** — Online-Abruf **per Knopfdruck (Taste F9)**: aktuelle **CHF-Wechselkurse** live vom
+  ECB-Feed über `WEBSERVICE` + `FILTERXML` (Windows-Desktop-Excel, ohne Einrichtung). Für eigene
+  **SQL-/Cloud-Datenbanken** fertige **Power-Query-M-Vorlagen** in `data/PowerQuery_Vorlagen.m`.
+- **Anleitung** — Schritt-für-Schritt-Blatt direkt in der Mappe · druckfertiges Layout · Formelzellen schützbar.
 
 ```bash
 pip install openpyxl

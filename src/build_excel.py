@@ -1,17 +1,26 @@
 """
 AVIA VOLT — Vertriebs-Cockpit Generator (Burak Ücöz)
 
-Baut eine voll ausgestattete Excel-Arbeitsmappe für den Vertrieb:
-Dashboard mit KPIs & Diagrammen, filterbare Pipeline-Tabelle mit Formeln,
-Dropdowns (Datenvalidierung), Ampel-Regeln (bedingte Formatierung),
-sowie ein "Live-Daten"-Blatt mit Online-Abruf per Knopfdruck.
+Baut eine umfangreiche, sofort einsatzbereite Excel-Arbeitsmappe für den
+Vertrieb. 100% deterministisch, keine Netzwerkzugriffe beim Bauen.
 
-100% deterministisch, keine Netzwerkzugriffe beim Bauen.
+Blätter:
+  Dashboard   – KPIs, Funnel, Auswertungen nach Region/Branche, Diagramme
+  Pipeline    – filterbare Deal-Tabelle mit Formeln, Dropdowns, Ampel
+  Aktivitäten – Aufgaben/Termine mit Fälligkeits-Ampel
+  Kontakte    – Firmen & Ansprechpartner (CRM)
+  Forecast    – Monats-Forecast Soll/Ist + Diagramm
+  Ziele       – Zielerreichung je Verantwortlicher
+  Live-Daten  – Online-Abruf per F9 (WEBSERVICE/FILTERXML) + eigene DB
+  Listen      – Stammdaten für Dropdowns / Lookups
+  Anleitung   – Schritt-für-Schritt
+
+Live-Daten (Windows-Desktop-Excel): CHF-Kurse über WEBSERVICE+FILTERXML gegen
+den ECB-Feed – Aktualisieren per Taste F9. Für eigene Datenbanken liegen
+Power-Query-M-Vorlagen in data/PowerQuery_Vorlagen.m.
 
 Run:  pip install openpyxl && python3 src/build_excel.py
-Out:  Vertriebs_Cockpit_AVIA_VOLT.xlsx
-      data/Live_CHF_Kurse.iqy          (Online-Abruf per Doppelklick/Knopf)
-      data/PowerQuery_Vorlagen.m        (M-Code für eigene SQL-/Cloud-DB)
+Out:  Vertriebs_Cockpit_AVIA_VOLT.xlsx  +  data/*
 """
 from __future__ import annotations
 
@@ -19,10 +28,11 @@ import os
 from datetime import date, timedelta
 
 from openpyxl import Workbook
-from openpyxl.chart import BarChart, PieChart, Reference
+from openpyxl.chart import BarChart, LineChart, PieChart, Reference
 from openpyxl.chart.label import DataLabelList
-from openpyxl.formatting.rule import CellIsRule, ColorScaleRule, IconSetRule
-from openpyxl.styles import (Alignment, Border, Font, PatternFill, Side)
+from openpyxl.formatting.rule import (CellIsRule, ColorScaleRule, DataBarRule,
+                                      FormulaRule, IconSetRule)
+from openpyxl.styles import Alignment, Border, Font, PatternFill, Protection, Side
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.datavalidation import DataValidation
 from openpyxl.worksheet.table import Table, TableStyleInfo
@@ -31,176 +41,232 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "Vertriebs_Cockpit_AVIA_VOLT.xlsx")
 DATA = os.path.join(ROOT, "data")
 
-# ---- Design-System (an AVIA VOLT angelehnt) -----------------------------
-NAVY = "1B2430"
-NAVY_SOFT = "2A3543"
-RED = "E2001A"
-RED_DK = "B30015"
+# ---- Design-System (AVIA VOLT) ------------------------------------------
+NAVY, NAVY_SOFT = "1B2430", "2A3543"
+RED, RED_DK = "E2001A", "B30015"
 WHITE = "FFFFFF"
 PAPER = "F5F7F9"
 CARD = "FFFFFF"
 MUTE = "5A6573"
 LINE = "E3E8ED"
-GREEN = "1E9E5A"
-AMBER = "E8A400"
-GREY_ROW = "F2F5F8"
-
+GREEN, AMBER = "1E9E5A", "E8A400"
+GREY_ROW = "F3F6F9"
 FONT = "Calibri"
-HEAD_FONT = "Calibri"
 
 thin = Side(style="thin", color=LINE)
 med = Side(style="medium", color=NAVY)
 box = Border(left=thin, right=thin, top=thin, bottom=thin)
+CENTER = Alignment(horizontal="center", vertical="center", wrap_text=True)
+LEFT = Alignment(horizontal="left", vertical="center", wrap_text=True)
+RIGHT = Alignment(horizontal="right", vertical="center")
+LOCKED = Protection(locked=True)
+UNLOCKED = Protection(locked=False)
 
 
 def fill(hex_):
     return PatternFill("solid", fgColor=hex_)
 
 
-def font(size=11, bold=False, color="1B2430", name=FONT, italic=False):
+def font(size=11, bold=False, color=NAVY, name=FONT, italic=False):
     return Font(name=name, size=size, bold=bold, color=color, italic=italic)
 
 
-CENTER = Alignment(horizontal="center", vertical="center", wrap_text=True)
-LEFT = Alignment(horizontal="left", vertical="center", wrap_text=True)
-RIGHT = Alignment(horizontal="right", vertical="center")
+def xl(fn_formula):
+    """Neuere Funktionen brauchen das _xlfn.-Präfix im Dateiformat."""
+    return fn_formula
+
 
 # ---------------------------------------------------------------------------
-# Stammdaten für Dropdowns / Lookups
+# Stammdaten
 # ---------------------------------------------------------------------------
-PHASEN = [
-    ("Lead", 0.10),
-    ("Qualifiziert", 0.25),
-    ("Angebot", 0.50),
-    ("Verhandlung", 0.75),
-    ("Gewonnen", 1.00),
-    ("Verloren", 0.00),
-]
+PHASEN = [("Lead", 0.10), ("Qualifiziert", 0.25), ("Angebot", 0.50),
+          ("Verhandlung", 0.75), ("Gewonnen", 1.00), ("Verloren", 0.00)]
+PHASENAMEN = [p for p, _ in PHASEN]
 PRIOS = ["Hoch", "Mittel", "Niedrig"]
 REGIONEN = ["Zürich", "Bern", "Waadt", "Genf", "Basel", "Aargau",
             "St. Gallen", "Tessin", "Luzern", "Wallis"]
 BRANCHEN = ["Detailhandel", "Logistik", "Immobilien", "Hotellerie",
             "Öffentliche Hand", "Industrie", "Tankstellen", "Flottenbetrieb"]
-PRODUKTE = ["AC-Ladestation 22 kW", "DC-Schnelllader 60 kW",
-            "DC-HPC 150 kW", "Lastmanagement-System", "Full-Service Betrieb",
-            "PV + Speicher Kombi"]
+PRODUKTE = ["AC-Ladestation 22 kW", "DC-Schnelllader 60 kW", "DC-HPC 150 kW",
+            "Lastmanagement-System", "Full-Service Betrieb", "PV + Speicher Kombi"]
 TEAM = ["Burak Ücöz", "S. Meier", "L. Rossi", "N. Keller", "A. Favre"]
+AKTIV_TYP = ["Anruf", "E-Mail", "Termin vor Ort", "Web-Demo", "Angebot", "Follow-up"]
 
-# ---------------------------------------------------------------------------
-# Beispiel-Pipeline (realistische CH-B2B-Deals, deterministisch)
-# ---------------------------------------------------------------------------
 T0 = date(2026, 7, 3)
 
 
-def d(offset_days):
-    return T0 + timedelta(days=offset_days)
+def d(off):
+    return T0 + timedelta(days=off)
 
 
-# Firma, Ansprechpartner, Region, Branche, Produkt, Phase, Prio, Volumen, Erstkontakt, Erw.Abschluss, Verantwortlich, Nächster Schritt
-DEALS = [
-    ("Migros Ostschweiz", "R. Brunner", "St. Gallen", "Detailhandel", "DC-HPC 150 kW", "Verhandlung", "Hoch", 340000, d(-52), d(24), "Burak Ücöz", "Vertrag final abstimmen"),
-    ("Planzer Transport", "M. Planzer", "Zürich", "Logistik", "Lastmanagement-System", "Angebot", "Hoch", 210000, d(-31), d(38), "Burak Ücöz", "Angebot nachfassen"),
-    ("SBB Immobilien", "C. Wyss", "Bern", "Immobilien", "DC-Schnelllader 60 kW", "Qualifiziert", "Hoch", 480000, d(-18), d(75), "S. Meier", "Standort-Audit terminieren"),
-    ("Coop Mineraloel", "T. Frei", "Aargau", "Tankstellen", "DC-HPC 150 kW", "Verhandlung", "Hoch", 620000, d(-64), d(15), "Burak Ücöz", "Preisstaffel bestätigen"),
-    ("Hotel Belvédère", "G. Rossi", "Wallis", "Hotellerie", "AC-Ladestation 22 kW", "Angebot", "Mittel", 48000, d(-22), d(30), "L. Rossi", "Referenzbesuch anbieten"),
-    ("Stadt Zürich TAZ", "P. Huber", "Zürich", "Öffentliche Hand", "Full-Service Betrieb", "Qualifiziert", "Hoch", 390000, d(-40), d(90), "N. Keller", "Ausschreibungsunterlagen prüfen"),
-    ("Emmi Gruppe", "D. Schmid", "Luzern", "Industrie", "PV + Speicher Kombi", "Lead", "Mittel", 275000, d(-6), d(120), "S. Meier", "Erstgespräch vereinbaren"),
-    ("Groupe Mutuel", "J. Favre", "Waadt", "Immobilien", "AC-Ladestation 22 kW", "Angebot", "Mittel", 96000, d(-27), d(42), "A. Favre", "Angebot v2 senden"),
-    ("Läderach", "S. Läderach", "Aargau", "Detailhandel", "AC-Ladestation 22 kW", "Gewonnen", "Mittel", 62000, d(-88), d(-4), "Burak Ücöz", "Umsetzung übergeben"),
-    ("Post Fleet", "M. Berger", "Bern", "Flottenbetrieb", "Lastmanagement-System", "Verhandlung", "Hoch", 540000, d(-48), d(20), "Burak Ücöz", "Rahmenvertrag verhandeln"),
-    ("TCS Genf", "F. Dubois", "Genf", "Öffentliche Hand", "DC-Schnelllader 60 kW", "Qualifiziert", "Mittel", 180000, d(-15), d(66), "A. Favre", "Bedarf konkretisieren"),
-    ("IKEA Spreitenbach", "K. Nilsson", "Aargau", "Detailhandel", "DC-HPC 150 kW", "Angebot", "Hoch", 410000, d(-33), d(35), "S. Meier", "Business-Case rechnen"),
-    ("Manor AG", "B. Keller", "Basel", "Detailhandel", "DC-Schnelllader 60 kW", "Lead", "Niedrig", 150000, d(-4), d(110), "L. Rossi", "Entscheider identifizieren"),
-    ("Kambly SA", "E. Kambly", "Bern", "Industrie", "PV + Speicher Kombi", "Verloren", "Niedrig", 88000, d(-70), d(-10), "N. Keller", "Verloren an Wettbewerb"),
-    ("Autogrill Schweiz", "R. Conti", "Tessin", "Tankstellen", "DC-HPC 150 kW", "Angebot", "Hoch", 355000, d(-25), d(28), "Burak Ücöz", "Termin CFO fixieren"),
-    ("Bucherer", "V. Huber", "Luzern", "Detailhandel", "AC-Ladestation 22 kW", "Gewonnen", "Mittel", 54000, d(-95), d(-20), "L. Rossi", "Umsetzung läuft"),
-    ("Denner AG", "H. Müller", "Zürich", "Detailhandel", "Lastmanagement-System", "Qualifiziert", "Mittel", 230000, d(-12), d(70), "S. Meier", "Standortliste anfordern"),
-    ("Flughafen Genf", "P. Girard", "Genf", "Öffentliche Hand", "DC-HPC 150 kW", "Verhandlung", "Hoch", 780000, d(-58), d(18), "Burak Ücöz", "Vertragsentwurf senden"),
-    ("Valora / avec", "N. Weber", "St. Gallen", "Detailhandel", "AC-Ladestation 22 kW", "Lead", "Niedrig", 72000, d(-3), d(100), "A. Favre", "Bedarf klären"),
-    ("Aldi Suisse", "M. Fischer", "Aargau", "Detailhandel", "DC-Schnelllader 60 kW", "Angebot", "Hoch", 445000, d(-29), d(40), "Burak Ücöz", "Pilotstandort definieren"),
+# Basis-Deals (handverlesen, realistisch) --------------------------------
+BASE_DEALS = [
+    ("Migros Ostschweiz", "R. Brunner", "St. Gallen", "Detailhandel", "DC-HPC 150 kW", "Verhandlung", "Hoch", 340000, -52, 24, "Burak Ücöz", "Vertrag final abstimmen"),
+    ("Planzer Transport", "M. Planzer", "Zürich", "Logistik", "Lastmanagement-System", "Angebot", "Hoch", 210000, -31, 38, "Burak Ücöz", "Angebot nachfassen"),
+    ("SBB Immobilien", "C. Wyss", "Bern", "Immobilien", "DC-Schnelllader 60 kW", "Qualifiziert", "Hoch", 480000, -18, 75, "S. Meier", "Standort-Audit terminieren"),
+    ("Coop Mineraloel", "T. Frei", "Aargau", "Tankstellen", "DC-HPC 150 kW", "Verhandlung", "Hoch", 620000, -64, 15, "Burak Ücöz", "Preisstaffel bestätigen"),
+    ("Hotel Belvédère", "G. Rossi", "Wallis", "Hotellerie", "AC-Ladestation 22 kW", "Angebot", "Mittel", 48000, -22, 30, "L. Rossi", "Referenzbesuch anbieten"),
+    ("Stadt Zürich TAZ", "P. Huber", "Zürich", "Öffentliche Hand", "Full-Service Betrieb", "Qualifiziert", "Hoch", 390000, -40, 90, "N. Keller", "Ausschreibung prüfen"),
+    ("Emmi Gruppe", "D. Schmid", "Luzern", "Industrie", "PV + Speicher Kombi", "Lead", "Mittel", 275000, -6, 120, "S. Meier", "Erstgespräch vereinbaren"),
+    ("Groupe Mutuel", "J. Favre", "Waadt", "Immobilien", "AC-Ladestation 22 kW", "Angebot", "Mittel", 96000, -27, 42, "A. Favre", "Angebot v2 senden"),
+    ("Läderach", "S. Läderach", "Aargau", "Detailhandel", "AC-Ladestation 22 kW", "Gewonnen", "Mittel", 62000, -88, -4, "Burak Ücöz", "Umsetzung übergeben"),
+    ("Post Fleet", "M. Berger", "Bern", "Flottenbetrieb", "Lastmanagement-System", "Verhandlung", "Hoch", 540000, -48, 20, "Burak Ücöz", "Rahmenvertrag verhandeln"),
+    ("TCS Genf", "F. Dubois", "Genf", "Öffentliche Hand", "DC-Schnelllader 60 kW", "Qualifiziert", "Mittel", 180000, -15, 66, "A. Favre", "Bedarf konkretisieren"),
+    ("IKEA Spreitenbach", "K. Nilsson", "Aargau", "Detailhandel", "DC-HPC 150 kW", "Angebot", "Hoch", 410000, -33, 35, "S. Meier", "Business-Case rechnen"),
+    ("Manor AG", "B. Keller", "Basel", "Detailhandel", "DC-Schnelllader 60 kW", "Lead", "Niedrig", 150000, -4, 110, "L. Rossi", "Entscheider identifizieren"),
+    ("Kambly SA", "E. Kambly", "Bern", "Industrie", "PV + Speicher Kombi", "Verloren", "Niedrig", 88000, -70, -10, "N. Keller", "Verloren an Wettbewerb"),
+    ("Autogrill Schweiz", "R. Conti", "Tessin", "Tankstellen", "DC-HPC 150 kW", "Angebot", "Hoch", 355000, -25, 28, "Burak Ücöz", "Termin CFO fixieren"),
+    ("Bucherer", "V. Huber", "Luzern", "Detailhandel", "AC-Ladestation 22 kW", "Gewonnen", "Mittel", 54000, -95, -20, "L. Rossi", "Umsetzung läuft"),
+    ("Denner AG", "H. Müller", "Zürich", "Detailhandel", "Lastmanagement-System", "Qualifiziert", "Mittel", 230000, -12, 70, "S. Meier", "Standortliste anfordern"),
+    ("Flughafen Genf", "P. Girard", "Genf", "Öffentliche Hand", "DC-HPC 150 kW", "Verhandlung", "Hoch", 780000, -58, 18, "Burak Ücöz", "Vertragsentwurf senden"),
+    ("Valora / avec", "N. Weber", "St. Gallen", "Detailhandel", "AC-Ladestation 22 kW", "Lead", "Niedrig", 72000, -3, 100, "A. Favre", "Bedarf klären"),
+    ("Aldi Suisse", "M. Fischer", "Aargau", "Detailhandel", "DC-Schnelllader 60 kW", "Angebot", "Hoch", 445000, -29, 40, "Burak Ücöz", "Pilotstandort definieren"),
 ]
 
+# Weitere Firmen für zusätzliche, deterministisch erzeugte Deals ----------
+MORE_FIRMEN = [
+    ("Lidl Schweiz", "T. Wagner"), ("Galenica", "S. Baumann"), ("Swisscom Immobilien", "R. Meier"),
+    ("Kuoni Reisen", "L. Steiner"), ("Hilti AG", "M. Anliker"), ("Geberit", "D. Frei"),
+    ("Ricola", "P. Richterich"), ("Victorinox", "C. Elsener"), ("Stadler Rail", "F. Ahlburg"),
+    ("Mobility Carsharing", "A. Suter"), ("Migrol AG", "B. Lehmann"), ("Tamoil", "N. Rossi"),
+    ("Hotel Bellevue Bern", "G. Wyss"), ("Kongresshaus Zürich", "V. Keller"), ("Universität Basel", "H. Roth"),
+    ("Kantonsspital Aarau", "E. Bosshard"), ("Feldschlösschen", "R. Amrein"), ("Bell Food Group", "S. Zünd"),
+    ("Zweifel Pomy-Chips", "M. Zweifel"), ("Maerki Baumann", "L. Baumann"), ("EWZ", "P. Graf"),
+    ("SIG Group", "D. Meister"),
+]
+
+
+def build_all_deals():
+    deals = []
+    for row in BASE_DEALS:
+        (f, ap, reg, br, prod, ph, prio, vol, dk, da, verant, nx) = row
+        deals.append(dict(firma=f, ap=ap, region=reg, branche=br, produkt=prod,
+                          phase=ph, prio=prio, vol=vol, dk=d(dk), da=d(da),
+                          verant=verant, nx=nx))
+    # deterministisch erweitern
+    for i, (f, ap) in enumerate(MORE_FIRMEN):
+        prod = PRODUKTE[(i * 5) % len(PRODUKTE)]
+        reg = REGIONEN[(i * 3 + 1) % len(REGIONEN)]
+        br = BRANCHEN[(i * 7) % len(BRANCHEN)]
+        phase = PHASENAMEN[(i * 2 + 1) % 5]              # 0..4, kein "Verloren" per Default
+        if i % 9 == 4:
+            phase = "Verloren"
+        prio = PRIOS[(i) % 3]
+        vol = 40000 + ((i * 37) % 60) * 8000             # 40k..512k, deterministisch
+        dk = d(-(8 + (i * 11) % 90))
+        da = d(((i * 13) % 120) - 15)
+        nx = ["Erstgespräch planen", "Angebot erstellen", "Nachfassen",
+              "Standort prüfen", "Entscheider treffen", "Abschluss vorbereiten"][(i) % 6]
+        deals.append(dict(firma=f, ap=ap, region=reg, branche=br, produkt=prod,
+                          phase=phase, prio=prio, vol=vol, dk=dk, da=da,
+                          verant=TEAM[i % len(TEAM)], nx=nx))
+    return deals
+
+
+DEALS = build_all_deals()
+
 # ---------------------------------------------------------------------------
-# Spalten der Pipeline
+# Pipeline-Spalten
 # ---------------------------------------------------------------------------
 COLS = [
-    ("Deal-ID", 9),
-    ("Firma", 22),
-    ("Ansprechpartner", 16),
-    ("Region", 12),
-    ("Branche", 15),
-    ("Produkt / Lösung", 22),
-    ("Phase", 14),
-    ("Priorität", 11),
-    ("Volumen (CHF)", 15),
-    ("Wahrsch. %", 11),
-    ("Gew. Wert (CHF)", 16),
-    ("Erstkontakt", 13),
-    ("Erw. Abschluss", 14),
-    ("Tage bis Abschl.", 15),
-    ("Verantwortlich", 15),
-    ("Nächster Schritt", 26),
-    ("Ampel", 8),
+    ("Deal-ID", 9), ("Firma", 22), ("Ansprechpartner", 16), ("Region", 12),
+    ("Branche", 15), ("Produkt / Lösung", 22), ("Phase", 14), ("Priorität", 11),
+    ("Volumen (CHF)", 15), ("Wahrsch. %", 11), ("Gew. Wert (CHF)", 16),
+    ("Erstkontakt", 13), ("Erw. Abschluss", 14), ("Tage bis Abschl.", 15),
+    ("Verantwortlich", 15), ("Nächster Schritt", 26), ("Ampel", 8),
 ]
-# Spalten-Buchstaben-Map
 CL = {name: get_column_letter(i + 1) for i, (name, _) in enumerate(COLS)}
+FD = 5  # erste Datenzeile Pipeline
+LD = FD + len(DEALS) - 1
 
 
 # ===========================================================================
 def build():
     wb = Workbook()
-
     ws_dash = wb.active
     ws_dash.title = "Dashboard"
     ws_pipe = wb.create_sheet("Pipeline")
+    ws_akt = wb.create_sheet("Aktivitäten")
+    ws_kont = wb.create_sheet("Kontakte")
+    ws_fc = wb.create_sheet("Forecast")
+    ws_ziel = wb.create_sheet("Ziele")
     ws_live = wb.create_sheet("Live-Daten")
     ws_list = wb.create_sheet("Listen")
     ws_help = wb.create_sheet("Anleitung")
 
-    _build_listen(ws_list)
-    n_rows = _build_pipeline(ws_pipe)
-    _build_dashboard(ws_dash, n_rows)
-    _build_live(ws_live)
-    _build_help(ws_help)
+    _listen(ws_list)
+    _pipeline(ws_pipe)
+    _aktivitaeten(ws_akt)
+    _kontakte(ws_kont)
+    _forecast(ws_fc)
+    _ziele(ws_ziel)
+    _dashboard(ws_dash)
+    _live(ws_live)
+    _help(ws_help)
 
-    # Ansicht: Dashboard zuerst, Gitternetz aus wo sinnvoll
-    wb.active = 0
-    for ws in (ws_dash, ws_live, ws_help):
+    for ws in (ws_dash, ws_live, ws_help, ws_fc, ws_ziel):
         ws.sheet_view.showGridLines = False
+    wb.active = 0
 
+    _print_setup(wb)
     wb.save(OUT)
-    print(f"OK  {os.path.relpath(OUT, ROOT)}  ({n_rows} Deals)")
+    print(f"OK  {os.path.relpath(OUT, ROOT)}  ({len(DEALS)} Deals, {len(wb.sheetnames)} Blätter)")
 
 
 # ---------------------------------------------------------------------------
-def _build_listen(ws):
-    """Lookup-Tabellen für Dropdowns und XLOOKUP (Wahrscheinlichkeit)."""
+def _header(ws, cell, text, span_last, sub=None):
+    col0 = cell[0]
+    ws.merge_cells(f"{col0}1:{span_last}1")
+    ws[f"{col0}1"] = text
+    ws[f"{col0}1"].font = font(16, bold=True, color=WHITE)
+    ws[f"{col0}1"].fill = fill(NAVY)
+    ws[f"{col0}1"].alignment = Alignment(horizontal="left", vertical="center", indent=1)
+    ws.row_dimensions[1].height = 30
+    if sub:
+        ws.merge_cells(f"{col0}2:{span_last}2")
+        ws[f"{col0}2"] = sub
+        ws[f"{col0}2"].font = font(9, italic=True, color=MUTE)
+        ws[f"{col0}2"].alignment = Alignment(horizontal="left", vertical="center", indent=1)
+
+
+def _thead(ws, row, names, start_col=1, widths=None):
+    for i, name in enumerate(names):
+        c = ws.cell(row, start_col + i, name)
+        c.font = font(10, bold=True, color=WHITE)
+        c.fill = fill(NAVY)
+        c.alignment = CENTER
+        c.border = Border(left=thin, right=thin, top=med, bottom=med)
+        if widths:
+            ws.column_dimensions[get_column_letter(start_col + i)].width = widths[i]
+    ws.row_dimensions[row].height = 24
+
+
+# ---------------------------------------------------------------------------
+def _listen(ws):
     ws.sheet_view.showGridLines = False
     ws["A1"] = "Stammdaten / Lookups"
     ws["A1"].font = font(13, bold=True, color=NAVY)
-    ws["A2"] = "Diese Werte speisen die Dropdowns und die automatische Wahrscheinlichkeit."
+    ws["A2"] = "Speist Dropdowns & automatische Wahrscheinlichkeit. Werte hier pflegen."
     ws["A2"].font = font(9, italic=True, color=MUTE)
 
-    # Phase -> Wahrscheinlichkeit (für XLOOKUP)
-    ws["A4"] = "Phase"
-    ws["B4"] = "Wahrsch."
+    ws["A4"], ws["B4"] = "Phase", "Wahrsch."
     for c in ("A4", "B4"):
         ws[c].font = font(10, bold=True, color=WHITE)
         ws[c].fill = fill(NAVY)
         ws[c].alignment = CENTER
     for i, (name, p) in enumerate(PHASEN):
         ws.cell(5 + i, 1, name).border = box
-        cell = ws.cell(5 + i, 2, p)
-        cell.number_format = "0%"
-        cell.border = box
-        cell.alignment = CENTER
+        cc = ws.cell(5 + i, 2, p)
+        cc.number_format = "0%"
+        cc.border = box
+        cc.alignment = CENTER
     ws.column_dimensions["A"].width = 16
     ws.column_dimensions["B"].width = 11
 
-    # weitere Listen in Spalten D..I
     lists = [("D", "Prioritäten", PRIOS), ("E", "Regionen", REGIONEN),
              ("F", "Branchen", BRANCHEN), ("G", "Produkte", PRODUKTE),
-             ("H", "Team", TEAM), ("I", "Phasen", [p[0] for p in PHASEN])]
+             ("H", "Team", TEAM), ("I", "Phasen", PHASENAMEN),
+             ("J", "Aktivitätstyp", AKTIV_TYP), ("K", "Status", ["Offen", "Erledigt"])]
     for col, title, vals in lists:
         ws[f"{col}4"] = title
         ws[f"{col}4"].font = font(10, bold=True, color=WHITE)
@@ -214,57 +280,36 @@ def _build_listen(ws):
 
 
 # ---------------------------------------------------------------------------
-def _build_pipeline(ws):
+def _pipeline(ws):
     ws.sheet_view.showGridLines = False
     ws.freeze_panes = "A5"
-
-    # Titelzeile
-    ws.merge_cells("A1:Q1")
-    ws["A1"] = "VERTRIEBS-PIPELINE  ·  AVIA VOLT Suisse"
-    ws["A1"].font = font(16, bold=True, color=WHITE)
-    ws["A1"].fill = fill(NAVY)
-    ws["A1"].alignment = Alignment(horizontal="left", vertical="center", indent=1)
-    ws.row_dimensions[1].height = 30
-    ws.merge_cells("A2:Q2")
-    ws["A2"] = ("Tipp: Filtern über die Pfeile in der Kopfzeile · Phase/Priorität/Region per Dropdown · "
-                "Wahrscheinlichkeit, gewichteter Wert, Tage bis Abschluss & Ampel rechnen automatisch.")
-    ws["A2"].font = font(9, italic=True, color=MUTE)
-    ws["A2"].alignment = Alignment(horizontal="left", vertical="center", indent=1)
-    ws.row_dimensions[2].height = 16
-
-    header_row = 4
-    first_data = header_row + 1
-
-    # Kopfzeile
+    _header(ws, "A", "VERTRIEBS-PIPELINE  ·  AVIA VOLT Suisse", CL["Ampel"],
+            sub="Filtern über die Kopfzeilen-Pfeile · Dropdowns für Phase/Priorität/Region/… · "
+                "Wahrscheinlichkeit, gew. Wert, Tage bis Abschluss & Ampel rechnen automatisch.")
+    hr = 4
     for i, (name, width) in enumerate(COLS):
-        c = ws.cell(header_row, i + 1, name)
+        c = ws.cell(hr, i + 1, name)
         c.font = font(10, bold=True, color=WHITE)
         c.fill = fill(NAVY)
         c.alignment = CENTER
         c.border = Border(left=thin, right=thin, top=med, bottom=med)
         ws.column_dimensions[get_column_letter(i + 1)].width = width
-    ws.row_dimensions[header_row].height = 26
+    ws.row_dimensions[hr].height = 26
 
-    # Datenzeilen
+    pcol, phcol = CL["Phase"], CL["Wahrsch. %"]
+    volcol, gwcol = CL["Volumen (CHF)"], CL["Gew. Wert (CHF)"]
+    dacol, tcol, ampcol = CL["Erw. Abschluss"], CL["Tage bis Abschl."], CL["Ampel"]
+
     for r, deal in enumerate(DEALS):
-        row = first_data + r
-        (firma, ap, region, branche, produkt, phase, prio,
-         vol, dk, da, verant, naechst) = deal
-        deal_id = f"D-{1001 + r}"
+        row = FD + r
         vals = {
-            "Deal-ID": deal_id,
-            "Firma": firma,
-            "Ansprechpartner": ap,
-            "Region": region,
-            "Branche": branche,
-            "Produkt / Lösung": produkt,
-            "Phase": phase,
-            "Priorität": prio,
-            "Volumen (CHF)": vol,
-            "Erstkontakt": dk,
-            "Erw. Abschluss": da,
-            "Verantwortlich": verant,
-            "Nächster Schritt": naechst,
+            "Deal-ID": f"D-{1001 + r}", "Firma": deal["firma"],
+            "Ansprechpartner": deal["ap"], "Region": deal["region"],
+            "Branche": deal["branche"], "Produkt / Lösung": deal["produkt"],
+            "Phase": deal["phase"], "Priorität": deal["prio"],
+            "Volumen (CHF)": deal["vol"], "Erstkontakt": deal["dk"],
+            "Erw. Abschluss": deal["da"], "Verantwortlich": deal["verant"],
+            "Nächster Schritt": deal["nx"],
         }
         for name, _ in COLS:
             col = CL[name]
@@ -275,68 +320,46 @@ def _build_pipeline(ws):
             cell.font = font(10)
             if r % 2 == 1:
                 cell.fill = fill(GREY_ROW)
+            # Eingabespalten entsperren, Formeln gesperrt lassen
+            if name in ("Wahrsch. %", "Gew. Wert (CHF)", "Tage bis Abschl.", "Ampel", "Deal-ID"):
+                cell.protection = LOCKED
+            else:
+                cell.protection = UNLOCKED
 
-        # Formeln --------------------------------------------------------
-        pcol, phcol, volcol, gwcol = CL["Phase"], CL["Wahrsch. %"], CL["Volumen (CHF)"], CL["Gew. Wert (CHF)"]
-        dacol, tcol, ampcol = CL["Erw. Abschluss"], CL["Tage bis Abschl."], CL["Ampel"]
-
-        # Wahrscheinlichkeit automatisch aus Phase (XLOOKUP -> Fallback VLOOKUP)
         ws[f"{phcol}{row}"] = (
-            f'=IFERROR(XLOOKUP({pcol}{row},Listen!$A$5:$A$10,Listen!$B$5:$B$10),'
-            f'VLOOKUP({pcol}{row},Listen!$A$5:$B$10,2,FALSE))'
-        )
+            f'=IFERROR(_xlfn.XLOOKUP({pcol}{row},Listen!$A$5:$A$10,Listen!$B$5:$B$10),'
+            f'VLOOKUP({pcol}{row},Listen!$A$5:$B$10,2,FALSE))')
         ws[f"{phcol}{row}"].number_format = "0%"
         ws[f"{phcol}{row}"].alignment = CENTER
-
-        # Gewichteter Wert
         ws[f"{gwcol}{row}"] = f"={volcol}{row}*{phcol}{row}"
         ws[f"{gwcol}{row}"].number_format = '#,##0'
-        # Volumen Format
+        ws[f"{gwcol}{row}"].alignment = RIGHT
         ws[f"{volcol}{row}"].number_format = '#,##0'
         ws[f"{volcol}{row}"].alignment = RIGHT
-        ws[f"{gwcol}{row}"].alignment = RIGHT
-
-        # Datumsformate
         for dc in (CL["Erstkontakt"], CL["Erw. Abschluss"]):
             ws[f"{dc}{row}"].number_format = "DD.MM.YYYY"
             ws[f"{dc}{row}"].alignment = CENTER
-
-        # Tage bis Abschluss (nur wenn nicht Gewonnen/Verloren)
         ws[f"{tcol}{row}"] = (
-            f'=IF(OR({pcol}{row}="Gewonnen",{pcol}{row}="Verloren"),"—",{dacol}{row}-TODAY())'
-        )
+            f'=IF(OR({pcol}{row}="Gewonnen",{pcol}{row}="Verloren"),"—",{dacol}{row}-TODAY())')
         ws[f"{tcol}{row}"].alignment = CENTER
-
-        # Ampel (Emoji je nach Dringlichkeit/Phase)
         ws[f"{ampcol}{row}"] = (
-            f'=IF({pcol}{row}="Gewonnen","✅",'
-            f'IF({pcol}{row}="Verloren","⬛",'
-            f'IF({tcol}{row}<=14,"🔴",'
-            f'IF({tcol}{row}<=45,"🟡","🟢"))))'
-        )
+            f'=IF({pcol}{row}="Gewonnen","✅",IF({pcol}{row}="Verloren","⬛",'
+            f'IF({tcol}{row}<=14,"🔴",IF({tcol}{row}<=45,"🟡","🟢"))))')
         ws[f"{ampcol}{row}"].alignment = CENTER
         ws[f"{ampcol}{row}"].font = font(12)
-
         ws.row_dimensions[row].height = 20
 
-    last_data = first_data + len(DEALS) - 1
-
-    # Als Excel-Tabelle (AutoFilter, sortierbar) -------------------------
-    ref = f"A{header_row}:{CL['Ampel']}{last_data}"
+    ref = f"A{hr}:{CL['Ampel']}{LD}"
     tbl = Table(displayName="Pipeline", ref=ref)
-    tbl.tableStyleInfo = TableStyleInfo(
-        name="TableStyleMedium2", showRowStripes=False,
-        showFirstColumn=False, showLastColumn=False, showColumnStripes=False)
+    tbl.tableStyleInfo = TableStyleInfo(name="TableStyleMedium2", showRowStripes=False)
     ws.add_table(tbl)
 
-    # Datenvalidierung (Dropdowns) --------------------------------------
     def dv(formula, col):
         v = DataValidation(type="list", formula1=formula, allow_blank=True)
-        v.error = "Bitte einen Wert aus der Liste wählen."
-        v.errorTitle = "Ungültige Eingabe"
+        v.error, v.errorTitle = "Bitte aus der Liste wählen.", "Ungültige Eingabe"
         v.prompt = "Aus Dropdown wählen"
         ws.add_data_validation(v)
-        v.add(f"{col}{first_data}:{col}{last_data}")
+        v.add(f"{col}{FD}:{col}{LD}")
 
     dv("=Listen!$I$5:$I$10", CL["Phase"])
     dv("=Listen!$D$5:$D$7", CL["Priorität"])
@@ -345,19 +368,14 @@ def _build_pipeline(ws):
     dv("=Listen!$G$5:$G$10", CL["Produkt / Lösung"])
     dv("=Listen!$H$5:$H$9", CL["Verantwortlich"])
 
-    # Bedingte Formatierung ---------------------------------------------
-    vol_range = f"{CL['Volumen (CHF)']}{first_data}:{CL['Volumen (CHF)']}{last_data}"
-    ws.conditional_formatting.add(vol_range, ColorScaleRule(
-        start_type="min", start_color="FDE7E9",
-        mid_type="percentile", mid_value=50, mid_color="FBD5A5",
-        end_type="max", end_color="C6E7D0"))
-
-    prio_range = f"{CL['Priorität']}{first_data}:{CL['Priorität']}{last_data}"
+    vol_range = f"{volcol}{FD}:{volcol}{LD}"
+    ws.conditional_formatting.add(vol_range, DataBarRule(
+        start_type="min", end_type="max", color=RED, showValue=True))
+    prio_range = f"{CL['Priorität']}{FD}:{CL['Priorität']}{LD}"
     ws.conditional_formatting.add(prio_range, CellIsRule(
         operator="equal", formula=['"Hoch"'], fill=fill("FADBD8"),
         font=font(10, bold=True, color=RED_DK)))
-
-    phase_range = f"{CL['Phase']}{first_data}:{CL['Phase']}{last_data}"
+    phase_range = f"{pcol}{FD}:{pcol}{LD}"
     ws.conditional_formatting.add(phase_range, CellIsRule(
         operator="equal", formula=['"Gewonnen"'], fill=fill("D5F0DE"),
         font=font(10, bold=True, color=GREEN)))
@@ -365,13 +383,12 @@ def _build_pipeline(ws):
         operator="equal", formula=['"Verloren"'], fill=fill("EDEFF1"),
         font=font(10, color=MUTE)))
 
-    # Summenzeile -------------------------------------------------------
-    sr = last_data + 1
+    sr = LD + 1
     ws[f"{CL['Firma']}{sr}"] = "Σ Summe / Forecast"
     ws[f"{CL['Firma']}{sr}"].font = font(11, bold=True, color=NAVY)
-    for col in (CL["Volumen (CHF)"], CL["Gew. Wert (CHF)"]):
+    for col in (volcol, gwcol):
         c = ws[f"{col}{sr}"]
-        c.value = f"=SUBTOTAL(109,{col}{first_data}:{col}{last_data})"
+        c.value = f"=SUBTOTAL(109,{col}{FD}:{col}{LD})"
         c.number_format = '#,##0 "CHF"'
         c.font = font(11, bold=True, color=NAVY)
         c.fill = fill("EEF2F5")
@@ -379,17 +396,236 @@ def _build_pipeline(ws):
         c.border = Border(top=med, bottom=med)
     ws.row_dimensions[sr].height = 22
 
-    return len(DEALS)
+
+# ---------------------------------------------------------------------------
+def _aktivitaeten(ws):
+    ws.sheet_view.showGridLines = False
+    ws.freeze_panes = "A5"
+    _header(ws, "A", "AKTIVITÄTEN & AUFGABEN", "H",
+            sub="Fällige/überfällige Aufgaben werden farblich markiert. Status per Dropdown.")
+    names = ["Datum", "Firma", "Typ", "Beschreibung", "Fällig am", "Status", "Verantwortlich", "Ampel"]
+    widths = [13, 22, 15, 32, 13, 12, 15, 8]
+    hr = 4
+    _thead(ws, hr, names, widths=widths)
+    first = 5
+    # 1-2 Aktivitäten je aktivem Deal, deterministisch
+    rows = []
+    for i, deal in enumerate(DEALS):
+        if deal["phase"] in ("Gewonnen", "Verloren"):
+            continue
+        typ = AKTIV_TYP[i % len(AKTIV_TYP)]
+        faellig = d(((i * 9) % 40) - 8)     # teils überfällig
+        status = "Erledigt" if i % 4 == 0 else "Offen"
+        rows.append((d(-(i % 20)), deal["firma"], typ, deal["nx"], faellig, status, deal["verant"]))
+    for r, (dt, firma, typ, besch, faellig, status, verant) in enumerate(rows):
+        row = first + r
+        data = [dt, firma, typ, besch, faellig, status, verant]
+        for i, v in enumerate(data):
+            c = ws.cell(row, 1 + i, v)
+            c.border = box
+            c.font = font(10)
+            if r % 2 == 1:
+                c.fill = fill(GREY_ROW)
+            if i in (0, 4):
+                c.number_format = "DD.MM.YYYY"
+                c.alignment = CENTER
+        # Ampel: erledigt=✅, überfällig & offen=🔴, in 7T=🟡, sonst 🟢
+        ampel = (f'=IF(F{row}="Erledigt","✅",IF(E{row}<TODAY(),"🔴",'
+                 f'IF(E{row}<=TODAY()+7,"🟡","🟢")))')
+        ac = ws.cell(row, 8, ampel)
+        ac.alignment = CENTER
+        ac.font = font(12)
+        ac.border = box
+        ws.row_dimensions[row].height = 20
+    last = first + len(rows) - 1
+
+    tbl = Table(displayName="Aktivitaeten", ref=f"A{hr}:H{last}")
+    tbl.tableStyleInfo = TableStyleInfo(name="TableStyleMedium9", showRowStripes=False)
+    ws.add_table(tbl)
+
+    v = DataValidation(type="list", formula1="=Listen!$K$5:$K$6", allow_blank=True)
+    ws.add_data_validation(v)
+    v.add(f"F{first}:F{last}")
+    vt = DataValidation(type="list", formula1="=Listen!$J$5:$J$10", allow_blank=True)
+    ws.add_data_validation(vt)
+    vt.add(f"C{first}:C{last}")
+
+    # überfällige & offene Zeilen rot hinterlegen
+    ws.conditional_formatting.add(
+        f"A{first}:H{last}",
+        FormulaRule(formula=[f'AND($F{first}="Offen",$E{first}<TODAY())'],
+                    fill=fill("FDECEA")))
+    ws.conditional_formatting.add(
+        f"F{first}:F{last}",
+        CellIsRule(operator="equal", formula=['"Erledigt"'],
+                   font=font(10, color=GREEN), fill=fill("E7F6EE")))
 
 
 # ---------------------------------------------------------------------------
-def _build_dashboard(ws, n_rows):
+def _kontakte(ws):
+    ws.sheet_view.showGridLines = False
+    ws.freeze_panes = "A5"
+    _header(ws, "A", "KONTAKTE & FIRMEN (CRM)", "H",
+            sub="Alle Firmen & Ansprechpartner. E-Mail/Telefon deterministisch generiert (Demo).")
+    names = ["Firma", "Ansprechpartner", "Rolle", "E-Mail", "Telefon", "Region", "Branche", "Letzter Kontakt"]
+    widths = [24, 18, 16, 30, 16, 12, 15, 15]
+    hr = 4
+    _thead(ws, hr, names, widths=widths)
+    first = 5
+    seen = set()
+    uniq = []
+    for deal in DEALS:
+        if deal["firma"] in seen:
+            continue
+        seen.add(deal["firma"])
+        uniq.append(deal)
+    rollen = ["Geschäftsführung", "Einkauf", "Facility Management", "Fuhrpark", "Nachhaltigkeit"]
+    for r, deal in enumerate(uniq):
+        row = first + r
+        slug = "".join(ch for ch in deal["firma"].lower() if ch.isalnum())[:14]
+        mail = f"{deal['ap'].split('.')[-1].strip().lower()}@{slug}.ch"
+        tel = f"+41 {44 + (r % 40):02d} {200 + (r * 7) % 700:03d} {10 + (r % 89):02d} {(r * 3) % 100:02d}"
+        letzt = d(-(3 + (r * 5) % 60))
+        data = [deal["firma"], deal["ap"], rollen[r % len(rollen)], mail, tel,
+                deal["region"], deal["branche"], letzt]
+        for i, v in enumerate(data):
+            c = ws.cell(row, 1 + i, v)
+            c.border = box
+            c.font = font(10)
+            if r % 2 == 1:
+                c.fill = fill(GREY_ROW)
+            if i == 7:
+                c.number_format = "DD.MM.YYYY"
+                c.alignment = CENTER
+        ws.row_dimensions[row].height = 20
+    last = first + len(uniq) - 1
+    tbl = Table(displayName="Kontakte", ref=f"A{hr}:H{last}")
+    tbl.tableStyleInfo = TableStyleInfo(name="TableStyleMedium4", showRowStripes=False)
+    ws.add_table(tbl)
+
+
+# ---------------------------------------------------------------------------
+def _forecast(ws):
+    ws.sheet_view.showGridLines = False
+    _header(ws, "B", "MONATS-FORECAST  ·  Soll / Ist", "H",
+            sub="Gewichteter Forecast & gewonnener Umsatz je Monat. Ziel (Soll) editierbar.")
+    ws.column_dimensions["A"].width = 2
+    P = "Pipeline!"
+    gw = f"{P}{CL['Gew. Wert (CHF)']}{FD}:{CL['Gew. Wert (CHF)']}{LD}"
+    vol = f"{P}{CL['Volumen (CHF)']}{FD}:{CL['Volumen (CHF)']}{LD}"
+    ph = f"{P}{CL['Phase']}{FD}:{CL['Phase']}{LD}"
+    da = f"{P}{CL['Erw. Abschluss']}{FD}:{CL['Erw. Abschluss']}{LD}"
+
+    hr = 4
+    _thead(ws, hr, ["Monat", "Monatsanfang", "Monatsende", "Gew. Forecast",
+                    "Gewonnen (Ist)", "Ziel (Soll)", "Zielerreichung"],
+           start_col=2, widths=[14, 14, 14, 16, 16, 14, 15])
+    ws.column_dimensions["C"].hidden = False
+    months = [(2026, m) for m in range(7, 13)]
+    ziele = [700000, 750000, 800000, 850000, 900000, 950000]
+    first = 5
+    for i, (yy, mm) in enumerate(months):
+        row = first + i
+        ws.cell(row, 2, date(yy, mm, 1).strftime("%b %Y")).border = box
+        ws.cell(row, 2).font = font(10, bold=True)
+        anf = ws.cell(row, 3, date(yy, mm, 1))
+        end = ws.cell(row, 4, date(yy, mm, 28) + timedelta(days=4)
+                      - timedelta(days=(date(yy, mm, 28) + timedelta(days=4)).day))
+        for c in (anf, end):
+            c.number_format = "DD.MM.YYYY"
+            c.alignment = CENTER
+            c.border = box
+        fcast = ws.cell(row, 5,
+                        f'=SUMIFS({gw},{da},">="&C{row},{da},"<="&D{row},{ph},"<>Gewonnen",{ph},"<>Verloren")')
+        ist = ws.cell(row, 6,
+                      f'=SUMIFS({vol},{da},">="&C{row},{da},"<="&D{row},{ph},"Gewonnen")')
+        soll = ws.cell(row, 7, ziele[i])
+        soll.protection = UNLOCKED
+        err = ws.cell(row, 8, f'=IFERROR((E{row}+F{row})/G{row},0)')
+        err.number_format = "0%"
+        for c in (fcast, ist, soll):
+            c.number_format = '#,##0'
+            c.alignment = RIGHT
+        for c in (fcast, ist, soll, err):
+            c.border = box
+        ws.row_dimensions[row].height = 20
+    last = first + len(months) - 1
+
+    ws.conditional_formatting.add(
+        f"H{first}:H{last}",
+        ColorScaleRule(start_type="num", start_value=0, start_color="F8C9C4",
+                       mid_type="num", mid_value=0.8, mid_color="FCE9B8",
+                       end_type="num", end_value=1.2, end_color="C6E7D0"))
+
+    # Diagramm Forecast vs. Ziel
+    ch = BarChart()
+    ch.type = "col"
+    ch.title = "Gew. Forecast + Gewonnen vs. Ziel (CHF)"
+    ch.style = 10
+    ch.height, ch.width = 8, 17
+    data = Reference(ws, min_col=5, max_col=7, min_row=hr, max_row=last)
+    cats = Reference(ws, min_col=2, min_row=first, max_row=last)
+    ch.add_data(data, titles_from_data=True)
+    ch.set_categories(cats)
+    ws.add_chart(ch, f"B{last + 3}")
+
+
+# ---------------------------------------------------------------------------
+def _ziele(ws):
+    ws.sheet_view.showGridLines = False
+    _header(ws, "B", "ZIELE  ·  Zielerreichung je Verantwortlicher", "H",
+            sub="Jahresziel editierbar. Ist = gewonnener Umsatz, Pipeline = gewichteter Wert.")
+    ws.column_dimensions["A"].width = 2
+    P = "Pipeline!"
+    gw = f"{P}{CL['Gew. Wert (CHF)']}{FD}:{CL['Gew. Wert (CHF)']}{LD}"
+    vol = f"{P}{CL['Volumen (CHF)']}{FD}:{CL['Volumen (CHF)']}{LD}"
+    ph = f"{P}{CL['Phase']}{FD}:{CL['Phase']}{LD}"
+    vr = f"{P}{CL['Verantwortlich']}{FD}:{CL['Verantwortlich']}{LD}"
+    hr = 4
+    _thead(ws, hr, ["Verantwortlich", "Jahresziel", "Gewonnen (Ist)",
+                    "Gew. Pipeline", "Zielerreichung"],
+           start_col=2, widths=[18, 15, 16, 16, 15])
+    first = 5
+    ziele = [2500000, 1500000, 1200000, 1200000, 1000000]
+    for i, member in enumerate(TEAM):
+        row = first + i
+        ws.cell(row, 2, member).border = box
+        ws.cell(row, 2).font = font(10, bold=True)
+        z = ws.cell(row, 3, ziele[i])
+        z.protection = UNLOCKED
+        ist = ws.cell(row, 4, f'=SUMIFS({vol},{vr},B{row},{ph},"Gewonnen")')
+        pipe = ws.cell(row, 5, f'=SUMIFS({gw},{vr},B{row})')
+        err = ws.cell(row, 6, f'=IFERROR((D{row}+E{row})/C{row},0)')
+        err.number_format = "0%"
+        for c in (z, ist, pipe):
+            c.number_format = '#,##0'
+            c.alignment = RIGHT
+        for c in (z, ist, pipe, err):
+            c.border = box
+        ws.row_dimensions[row].height = 20
+    last = first + len(TEAM) - 1
+    ws.conditional_formatting.add(f"F{first}:F{last}", DataBarRule(
+        start_type="num", start_value=0, end_type="num", end_value=1.2, color=GREEN))
+
+    ch = BarChart()
+    ch.type = "bar"
+    ch.title = "Zielerreichung je Verantwortlicher"
+    ch.style = 12
+    ch.height, ch.width = 7, 15
+    data = Reference(ws, min_col=6, min_row=hr, max_row=last)
+    cats = Reference(ws, min_col=2, min_row=first, max_row=last)
+    ch.add_data(data, titles_from_data=True)
+    ch.set_categories(cats)
+    ch.legend = None
+    ws.add_chart(ch, f"B{last + 3}")
+
+
+# ---------------------------------------------------------------------------
+def _dashboard(ws):
     ws.sheet_view.showGridLines = False
     ws.column_dimensions["A"].width = 2
     for col in "BCDEFGH":
         ws.column_dimensions[col].width = 17
-
-    # Kopf
     ws.merge_cells("B2:H2")
     ws["B2"] = "VERTRIEBS-COCKPIT"
     ws["B2"].font = font(22, bold=True, color=NAVY)
@@ -398,14 +634,14 @@ def _build_dashboard(ws, n_rows):
     ws["B3"].font = font(11, color=RED, bold=True)
     ws.row_dimensions[2].height = 30
 
-    fd, ld = 5, 5 + n_rows - 1  # Datenzeilen auf Pipeline
     P = "Pipeline!"
-    vol = f"{P}{CL['Volumen (CHF)']}{fd}:{CL['Volumen (CHF)']}{ld}"
-    gw = f"{P}{CL['Gew. Wert (CHF)']}{fd}:{CL['Gew. Wert (CHF)']}{ld}"
-    ph = f"{P}{CL['Phase']}{fd}:{CL['Phase']}{ld}"
-    verant = f"{P}{CL['Verantwortlich']}{fd}:{CL['Verantwortlich']}{ld}"
+    vol = f"{P}{CL['Volumen (CHF)']}{FD}:{CL['Volumen (CHF)']}{LD}"
+    gw = f"{P}{CL['Gew. Wert (CHF)']}{FD}:{CL['Gew. Wert (CHF)']}{LD}"
+    ph = f"{P}{CL['Phase']}{FD}:{CL['Phase']}{LD}"
+    reg = f"{P}{CL['Region']}{FD}:{CL['Region']}{LD}"
+    br = f"{P}{CL['Branche']}{FD}:{CL['Branche']}{LD}"
+    verant = f"{P}{CL['Verantwortlich']}{FD}:{CL['Verantwortlich']}{LD}"
 
-    # KPI-Kacheln -------------------------------------------------------
     kpis = [
         ("Pipeline gesamt", f"=SUM({vol})", '#,##0 "CHF"', NAVY),
         ("Gewichteter Forecast", f"=SUM({gw})", '#,##0 "CHF"', RED),
@@ -414,262 +650,305 @@ def _build_dashboard(ws, n_rows):
         ("Win-Rate", f'=IFERROR(COUNTIF({ph},"Gewonnen")/(COUNTIF({ph},"Gewonnen")+COUNTIF({ph},"Verloren")),0)', '0%', NAVY),
         ("Ø Deal-Größe", f"=IFERROR(AVERAGE({vol}),0)", '#,##0 "CHF"', NAVY_SOFT),
     ]
-    r = 5
     positions = [("B", "C"), ("D", "E"), ("F", "G")]
+    r0 = 5
     for idx, (label, formula, numfmt, color) in enumerate(kpis):
-        rowbase = r + (idx // 3) * 4
+        rb = r0 + (idx // 3) * 4
         c0, c1 = positions[idx % 3]
-        ws.merge_cells(f"{c0}{rowbase}:{c1}{rowbase}")
-        ws[f"{c0}{rowbase}"] = label.upper()
-        ws[f"{c0}{rowbase}"].font = font(9, bold=True, color=MUTE)
-        ws[f"{c0}{rowbase}"].alignment = Alignment(horizontal="left", indent=1, vertical="center")
-        ws.merge_cells(f"{c0}{rowbase + 1}:{c1}{rowbase + 1}")
-        vcell = ws[f"{c0}{rowbase + 1}"]
-        vcell.value = formula
-        vcell.number_format = numfmt
-        vcell.font = font(20, bold=True, color=color)
-        vcell.alignment = Alignment(horizontal="left", indent=1, vertical="center")
-        ws.row_dimensions[rowbase + 1].height = 30
-        # Kachel-Rahmen
-        for rr in (rowbase, rowbase + 1):
+        ws.merge_cells(f"{c0}{rb}:{c1}{rb}")
+        ws[f"{c0}{rb}"] = label.upper()
+        ws[f"{c0}{rb}"].font = font(9, bold=True, color=MUTE)
+        ws[f"{c0}{rb}"].alignment = Alignment(horizontal="left", indent=1, vertical="center")
+        ws.merge_cells(f"{c0}{rb + 1}:{c1}{rb + 1}")
+        v = ws[f"{c0}{rb + 1}"]
+        v.value = formula
+        v.number_format = numfmt
+        v.font = font(20, bold=True, color=color)
+        v.alignment = Alignment(horizontal="left", indent=1, vertical="center")
+        ws.row_dimensions[rb + 1].height = 30
+        for rr in (rb, rb + 1):
             for cc in (c0, c1):
                 cur = ws[f"{cc}{rr}"]
-                top = med if rr == rowbase else None
-                bottom = med if rr == rowbase + 1 else None
                 cur.fill = fill(CARD)
                 cur.border = Border(
-                    top=Side(style="thin", color=LINE) if rr == rowbase else None,
-                    bottom=Side(style="thin", color=LINE) if rr == rowbase + 1 else None,
+                    top=Side(style="thin", color=LINE) if rr == rb else None,
+                    bottom=Side(style="thin", color=LINE) if rr == rb + 1 else None,
                     left=Side(style="thin", color=LINE) if cc == c0 else None,
                     right=Side(style="thin", color=LINE) if cc == c1 else None)
 
-    # Aggregationstabelle Phase (für Diagramm) --------------------------
-    agg_row = 15
-    ws[f"B{agg_row}"] = "Pipeline nach Phase"
-    ws[f"B{agg_row}"].font = font(12, bold=True, color=NAVY)
-    ws[f"B{agg_row + 1}"] = "Phase"
-    ws[f"C{agg_row + 1}"] = "Volumen (CHF)"
-    for cc in ("B", "C"):
-        ws[f"{cc}{agg_row + 1}"].font = font(10, bold=True, color=WHITE)
-        ws[f"{cc}{agg_row + 1}"].fill = fill(NAVY)
-        ws[f"{cc}{agg_row + 1}"].alignment = CENTER
-    for i, (pname, _) in enumerate(PHASEN):
-        rr = agg_row + 2 + i
-        ws[f"B{rr}"] = pname
-        ws[f"B{rr}"].border = box
-        cc = ws[f"C{rr}"]
-        cc.value = f'=SUMIFS({vol},{ph},B{rr})'
-        cc.number_format = '#,##0'
-        cc.border = box
-        cc.alignment = RIGHT
-    phase_last = agg_row + 1 + len(PHASEN)
+    # --- Hilfstabellen für Diagramme (Phase-Funnel, Region, Branche) ----
+    ar = 15
+    ws[f"B{ar}"] = "Funnel — Pipeline nach Phase (CHF)"
+    ws[f"B{ar}"].font = font(12, bold=True, color=NAVY)
+    _thead(ws, ar + 1, ["Phase", "Volumen"], start_col=2, widths=[16, 14])
+    funnel_order = ["Lead", "Qualifiziert", "Angebot", "Verhandlung", "Gewonnen"]
+    for i, pnm in enumerate(funnel_order):
+        rr = ar + 2 + i
+        ws.cell(rr, 2, pnm).border = box
+        c = ws.cell(rr, 3, f'=SUMIFS({vol},{ph},B{rr})')
+        c.number_format = '#,##0'
+        c.border = box
+        c.alignment = RIGHT
+    fun_last = ar + 1 + len(funnel_order)
 
-    # Aggregation Verantwortlich ----------------------------------------
-    t_row = agg_row
-    ws[f"E{t_row}"] = "Gew. Forecast je Verantwortlich"
-    ws[f"E{t_row}"].font = font(12, bold=True, color=NAVY)
-    ws[f"E{t_row + 1}"] = "Verantwortlich"
-    ws[f"F{t_row + 1}"] = "Gew. Wert (CHF)"
-    for cc in ("E", "F"):
-        ws[f"{cc}{t_row + 1}"].font = font(10, bold=True, color=WHITE)
-        ws[f"{cc}{t_row + 1}"].fill = fill(NAVY)
-        ws[f"{cc}{t_row + 1}"].alignment = CENTER
-    for i, member in enumerate(TEAM):
-        rr = t_row + 2 + i
-        ws[f"E{rr}"] = member
-        ws[f"E{rr}"].border = box
-        cc = ws[f"F{rr}"]
-        cc.value = f'=SUMIFS({gw},{verant},E{rr})'
-        cc.number_format = '#,##0'
-        cc.border = box
-        cc.alignment = RIGHT
-    team_last = t_row + 1 + len(TEAM)
+    # Region-Tabelle
+    ws[f"E{ar}"] = "Nach Region (gew. Wert)"
+    ws[f"E{ar}"].font = font(12, bold=True, color=NAVY)
+    _thead(ws, ar + 1, ["Region", "Gew. Wert"], start_col=5, widths=[14, 14])
+    top_reg = REGIONEN
+    for i, rg in enumerate(top_reg):
+        rr = ar + 2 + i
+        ws.cell(rr, 5, rg).border = box
+        c = ws.cell(rr, 6, f'=SUMIFS({gw},{reg},E{rr})')
+        c.number_format = '#,##0'
+        c.border = box
+        c.alignment = RIGHT
+    reg_last = ar + 1 + len(top_reg)
 
-    # Balkendiagramm Phase ----------------------------------------------
-    bar = BarChart()
-    bar.type = "col"
-    bar.title = "Pipeline nach Phase (CHF)"
-    bar.style = 10
-    bar.height = 7.5
-    bar.width = 13
-    data = Reference(ws, min_col=3, min_row=agg_row + 1, max_row=phase_last)
-    cats = Reference(ws, min_col=2, min_row=agg_row + 2, max_row=phase_last)
-    bar.add_data(data, titles_from_data=True)
-    bar.set_categories(cats)
-    bar.legend = None
-    bar.dataLabels = DataLabelList()
-    bar.dataLabels.showVal = True
-    ws.add_chart(bar, f"B{phase_last + 3}")
+    # Branche-Tabelle
+    bcol = ar + 2 + len(top_reg) + 1
+    ws[f"E{bcol}"] = "Nach Branche (gew. Wert)"
+    ws[f"E{bcol}"].font = font(12, bold=True, color=NAVY)
+    _thead(ws, bcol + 1, ["Branche", "Gew. Wert"], start_col=5, widths=[14, 14])
+    for i, bn in enumerate(BRANCHEN):
+        rr = bcol + 2 + i
+        ws.cell(rr, 5, bn).border = box
+        c = ws.cell(rr, 6, f'=SUMIFS({gw},{br},E{rr})')
+        c.number_format = '#,##0'
+        c.border = box
+        c.alignment = RIGHT
+    br_last = bcol + 1 + len(BRANCHEN)
 
-    # Balkendiagramm Verantwortlich -------------------------------------
-    bar2 = BarChart()
-    bar2.type = "bar"
-    bar2.title = "Gew. Forecast je Verantwortlich (CHF)"
-    bar2.style = 12
-    bar2.height = 7.5
-    bar2.width = 13
-    data2 = Reference(ws, min_col=6, min_row=t_row + 1, max_row=team_last)
-    cats2 = Reference(ws, min_col=5, min_row=t_row + 2, max_row=team_last)
-    bar2.add_data(data2, titles_from_data=True)
-    bar2.set_categories(cats2)
-    bar2.legend = None
-    ws.add_chart(bar2, f"E{team_last + 3}")
+    # Verantwortlich-Tabelle
+    ws[f"H{ar}"] = "Gew. Forecast je Verantwortlicher"
+    ws[f"H{ar}"].font = font(12, bold=True, color=NAVY)
+    _thead(ws, ar + 1, ["Verantwortlich", "Gew. Wert"], start_col=8, widths=[16, 14])
+    for i, m in enumerate(TEAM):
+        rr = ar + 2 + i
+        ws.cell(rr, 8, m).border = box
+        c = ws.cell(rr, 9, f'=SUMIFS({gw},{verant},H{rr})')
+        c.number_format = '#,##0'
+        c.border = box
+        c.alignment = RIGHT
+    team_last = ar + 1 + len(TEAM)
 
-    # Hinweis auf Live-Daten --------------------------------------------
-    note_r = 4
-    ws.merge_cells(f"B{note_r}:H{note_r}")
+    # --- Diagramme ------------------------------------------------------
+    funnel = BarChart()
+    funnel.type = "bar"
+    funnel.title = "Sales-Funnel (CHF nach Phase)"
+    funnel.style = 10
+    funnel.height, funnel.width = 8, 13
+    funnel.add_data(Reference(ws, min_col=3, min_row=ar + 1, max_row=fun_last), titles_from_data=True)
+    funnel.set_categories(Reference(ws, min_col=2, min_row=ar + 2, max_row=fun_last))
+    funnel.legend = None
+    funnel.dataLabels = DataLabelList()
+    funnel.dataLabels.showVal = True
+    ws.add_chart(funnel, f"B{max(br_last, team_last) + 3}")
+
+    pie = PieChart()
+    pie.title = "Gew. Wert nach Region"
+    pie.height, pie.width = 8, 12
+    pie.add_data(Reference(ws, min_col=6, min_row=ar + 1, max_row=reg_last), titles_from_data=True)
+    pie.set_categories(Reference(ws, min_col=5, min_row=ar + 2, max_row=reg_last))
+    ws.add_chart(pie, f"F{max(br_last, team_last) + 3}")
+
+    bar_br = BarChart()
+    bar_br.type = "col"
+    bar_br.title = "Gew. Wert nach Branche"
+    bar_br.style = 12
+    bar_br.height, bar_br.width = 8, 13
+    bar_br.add_data(Reference(ws, min_col=6, min_row=bcol + 1, max_row=br_last), titles_from_data=True)
+    bar_br.set_categories(Reference(ws, min_col=5, min_row=bcol + 2, max_row=br_last))
+    bar_br.legend = None
+    ws.add_chart(bar_br, f"B{max(br_last, team_last) + 20}")
 
 
 # ---------------------------------------------------------------------------
-def _build_live(ws):
+def _live(ws):
     ws.sheet_view.showGridLines = False
-    for col, w in (("A", 2), ("B", 20), ("C", 16), ("D", 16), ("E", 16), ("F", 30)):
+    for col, w in (("A", 2), ("B", 22), ("C", 18), ("D", 20), ("E", 18), ("F", 30)):
         ws.column_dimensions[col].width = w
-
     ws.merge_cells("B2:F2")
-    ws["B2"] = "LIVE-DATEN  ·  Online-Abruf per Knopfdruck"
+    ws["B2"] = "LIVE-DATEN  ·  Online-Abruf per Knopfdruck (F9)"
     ws["B2"].font = font(18, bold=True, color=NAVY)
     ws.merge_cells("B3:F3")
-    ws["B3"] = ("Aktuelle CHF-Wechselkurse & frei konfigurierbare Datenbank-Anbindung. "
-                "Aktualisieren mit  Daten ▸ Alle aktualisieren  (Strg+Alt+F5).")
+    ws["B3"] = ("Windows-Desktop-Excel: aktuelle CHF-Wechselkurse live vom ECB-Feed. "
+                "Aktualisieren = Taste F9 (Neu berechnen).")
     ws["B3"].font = font(10, italic=True, color=MUTE)
 
-    # "Button"-Optik ----------------------------------------------------
     ws.merge_cells("B5:D5")
     btn = ws["B5"]
-    btn.value = "🔄  LIVE-DATEN JETZT AKTUALISIEREN"
+    btn.value = "🔄  F9 DRÜCKEN = LIVE AKTUALISIEREN"
     btn.font = font(12, bold=True, color=WHITE)
-    btn.fill = fill(RED)
-    btn.alignment = CENTER
-    ws.row_dimensions[5].height = 30
     for cc in ("B5", "C5", "D5"):
         ws[cc].fill = fill(RED)
+    btn.alignment = CENTER
+    ws.row_dimensions[5].height = 30
     ws.merge_cells("E5:F5")
-    ws["E5"] = "→  Menüband: Daten ▸ Alle aktualisieren  ·  oder Strg+Alt+F5"
+    ws["E5"] = "→ Formel WEBSERVICE holt die Daten; FILTERXML liest die Kurse."
     ws["E5"].font = font(9, italic=True, color=MUTE)
     ws["E5"].alignment = LEFT
 
-    # Vorlage-Tabelle für die abgerufenen Kurse -------------------------
-    ws["B7"] = "Referenzwährung"
-    ws["C7"] = "CHF"
-    ws["B7"].font = font(10, bold=True, color=NAVY)
-    headers = ["Währung", "Kurs (1 CHF =)", "Stand", "Quelle"]
-    for i, h in enumerate(headers):
-        c = ws.cell(9, 2 + i, h)
-        c.font = font(10, bold=True, color=WHITE)
-        c.fill = fill(NAVY)
-        c.alignment = CENTER
-        c.border = box
-    seed = [("EUR", "", "", "frankfurter.app"),
-            ("USD", "", "", "frankfurter.app"),
-            ("GBP", "", "", "frankfurter.app")]
-    for r, row in enumerate(seed):
-        for i, v in enumerate(row):
-            c = ws.cell(10 + r, 2 + i, v)
-            c.border = box
-            c.alignment = CENTER if i != 3 else LEFT
-    ws["B14"] = ("Hinweis: Diese Tabelle füllt sich nach dem ersten Einrichten der Web-Abfrage automatisch. "
-                 "Schritt-für-Schritt in Blatt „Anleitung“.")
-    ws["B14"].font = font(9, italic=True, color=MUTE)
-    ws.merge_cells("B14:F15")
-    ws["B14"].alignment = LEFT
+    # Rohdaten-Zelle (WEBSERVICE) – etwas abgesetzt
+    ws["B7"] = "Roh-Feed (WEBSERVICE):"
+    ws["B7"].font = font(9, bold=True, color=MUTE)
+    ecb = "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml"
+    ws["C7"] = f'=IFERROR(_xlfn.WEBSERVICE("{ecb}"),"")'
+    ws["C7"].font = font(8, color=MUTE)
+    ws.row_dimensions[7].height = 14
+    RAW = "$C$7"
 
-    # Platz für eigene Datenbank ----------------------------------------
-    ws["B17"] = "Eigene Datenbank (SQL / Cloud) anbinden"
-    ws["B17"].font = font(12, bold=True, color=NAVY)
-    ws["B18"] = ("Power Query ▸ Daten abrufen ▸ Aus Datenbank (SQL Server / MySQL / PostgreSQL) "
-                 "oder ▸ Aus dem Web / SharePoint / Google Sheets. Fertige M-Vorlagen in data/PowerQuery_Vorlagen.m.")
-    ws.merge_cells("B18:F20")
-    ws["B18"].font = font(9, color=MUTE)
-    ws["B18"].alignment = LEFT
+    def chf_rate(ccy):
+        # 1 CHF = rate(ccy)/rate(CHF) ; EUR-Basis: rate(EUR)=1
+        num = (f'_xlfn.FILTERXML({RAW},"//*[local-name()=\'Cube\' and @currency=\'{ccy}\']/@rate")'
+               if ccy != "EUR" else "1")
+        den = f'_xlfn.FILTERXML({RAW},"//*[local-name()=\'Cube\' and @currency=\'CHF\']/@rate")'
+        return f'=IFERROR({num}/{den},"— (offline: F9 / online prüfen)")'
+
+    ws["B9"] = "Referenzwährung: 1 CHF ="
+    ws["B9"].font = font(10, bold=True, color=NAVY)
+    _thead(ws, 10, ["Währung", "Kurs (1 CHF =)", "Stand (ECB)", "Quelle"],
+           start_col=2, widths=[16, 18, 18, 24])
+    ccys = ["EUR", "USD", "GBP"]
+    for i, ccy in enumerate(ccys):
+        row = 11 + i
+        ws.cell(row, 2, ccy).border = box
+        ws.cell(row, 2).alignment = CENTER
+        kc = ws.cell(row, 3, chf_rate(ccy))
+        kc.number_format = "0.0000"
+        kc.alignment = CENTER
+        kc.border = box
+        st = ws.cell(row, 4,
+                     f'=IFERROR(_xlfn.FILTERXML({RAW},"//*[local-name()=\'Cube\' and @time]/@time"),"—")')
+        st.alignment = CENTER
+        st.border = box
+        src = ws.cell(row, 5, "ECB eurofxref-daily")
+        src.alignment = LEFT
+        src.border = box
+        ws.row_dimensions[row].height = 20
+
+    ws.merge_cells("B15:F16")
+    ws["B15"] = ("Hinweis: WEBSERVICE/FILTERXML gibt es nur in Excel für Windows (Desktop). "
+                 "Zeigt es „— (offline)“, kurz mit F9 neu berechnen bzw. Internetzugang prüfen. "
+                 "Auf Mac/Excel-Web stattdessen Power Query nutzen (siehe unten).")
+    ws["B15"].font = font(9, italic=True, color=MUTE)
+    ws["B15"].alignment = LEFT
+
+    ws["B18"] = "Eigene Datenbank (SQL / Cloud) anbinden — Power Query"
+    ws["B18"].font = font(12, bold=True, color=NAVY)
+    steps = [
+        "1) Menüband: Daten ▸ Daten abrufen ▸ Aus Datenbank (SQL Server / MySQL / PostgreSQL)",
+        "   – oder ▸ Aus dem Web / SharePoint / Google Sheets (Freigabe-CSV-Link).",
+        "2) Server / Datenbank / Zugangsdaten eintragen (fertige M-Vorlagen: data/PowerQuery_Vorlagen.m).",
+        "3) Laden ▸ die Abfrage erscheint als Tabelle; künftig genügt „Alle aktualisieren“ (Strg+Alt+F5).",
+        "4) Rechtsklick auf die Abfrage ▸ Eigenschaften ▸ „Aktualisieren beim Öffnen / alle X Min.“.",
+    ]
+    for i, s in enumerate(steps):
+        ws[f"B{19 + i}"] = s
+        ws[f"B{19 + i}"].font = font(9, color=NAVY if not s.startswith("   ") else MUTE)
+        ws.merge_cells(f"B{19 + i}:F{19 + i}")
+        ws[f"B{19 + i}"].alignment = LEFT
 
 
 # ---------------------------------------------------------------------------
-def _build_help(ws):
+def _help(ws):
     ws.sheet_view.showGridLines = False
     ws.column_dimensions["A"].width = 2
-    ws.column_dimensions["B"].width = 100
-
-    lines = [
+    ws.column_dimensions["B"].width = 110
+    L = [
         ("So arbeitest du perfekt mit diesem Cockpit", 16, True, NAVY),
         ("", 6, False, MUTE),
         ("1 · Dashboard", 12, True, RED),
-        ("KPIs (Pipeline, gewichteter Forecast, Win-Rate …) und Diagramme rechnen automatisch.", 10, False, "1B2430"),
-        ("Alles aktualisiert sich, sobald du in der Pipeline etwas änderst.", 10, False, "1B2430"),
+        ("KPIs, Sales-Funnel und Auswertungen nach Region/Branche/Verantwortlichem rechnen automatisch —", 10, False, NAVY),
+        ("alles aktualisiert sich, sobald du in der Pipeline etwas änderst.", 10, False, NAVY),
         ("", 6, False, MUTE),
         ("2 · Pipeline (Herzstück)", 12, True, RED),
-        ("• Filtern: Pfeile in der blauen Kopfzeile → nach Region, Phase, Verantwortlich … filtern & sortieren.", 10, False, "1B2430"),
-        ("• Dropdowns: Phase, Priorität, Region, Branche, Produkt, Verantwortlich – nur gültige Werte.", 10, False, "1B2430"),
-        ("• Automatik: Wahrscheinlichkeit folgt der Phase; Gew. Wert = Volumen × Wahrsch.;", 10, False, "1B2430"),
-        ("  Tage bis Abschluss & Ampel (🔴≤14 T, 🟡≤45 T, 🟢 sonst) rechnen selbst.", 10, False, "1B2430"),
-        ("• Neue Zeile: einfach unter der letzten Zeile weiterschreiben – die Tabelle wächst automatisch mit.", 10, False, "1B2430"),
+        ("• Filtern/Sortieren über die Pfeile in der blauen Kopfzeile (Region, Phase, Verantwortlich …).", 10, False, NAVY),
+        ("• Datenschnitte (Klick-Filter): Tabelle anklicken ▸ Menüband „Tabellenentwurf“ ▸ Datenschnitt einfügen.", 10, False, NAVY),
+        ("• Dropdowns für Phase/Priorität/Region/Branche/Produkt/Verantwortlich (nur gültige Werte).", 10, False, NAVY),
+        ("• Automatik: Wahrscheinlichkeit folgt der Phase; Gew. Wert = Volumen × Wahrsch.;", 10, False, NAVY),
+        ("  Tage bis Abschluss & Ampel (🔴 ≤14 T, 🟡 ≤45 T, 🟢 sonst, ✅ gewonnen).", 10, False, NAVY),
+        ("• Neue Zeile einfach unter der letzten schreiben – Tabelle & Dashboard wachsen automatisch mit.", 10, False, NAVY),
         ("", 6, False, MUTE),
-        ("3 · Live-Daten online abrufen (per Knopfdruck)", 12, True, RED),
-        ("Einmal einrichten – danach genügt „Alle aktualisieren“ (Strg+Alt+F5):", 10, False, "1B2430"),
-        ("  a) Daten ▸ Daten abrufen ▸ Aus Datei ▸ Web-Abfrage (.iqy)  →  data/Live_CHF_Kurse.iqy wählen.", 10, False, "1B2430"),
-        ("     (oder Doppelklick auf die .iqy-Datei – Excel öffnet die Abfrage direkt.)", 10, False, "1B2430"),
-        ("  b) Zielbereich = Blatt „Live-Daten“, Zelle B10.  Fertig.", 10, False, "1B2430"),
-        ("  c) Eigene Datenbank: Daten ▸ Aus Datenbank (SQL/MySQL/PostgreSQL) oder Aus dem Web –", 10, False, "1B2430"),
-        ("     M-Code-Vorlagen liegen in data/PowerQuery_Vorlagen.m (Server/Zugangsdaten eintragen).", 10, False, "1B2430"),
+        ("3 · Aktivitäten · Kontakte · Forecast · Ziele", 12, True, RED),
+        ("Aktivitäten: Aufgaben mit Fälligkeits-Ampel (überfällig = rot). Kontakte: Firmen-/CRM-Liste.", 10, False, NAVY),
+        ("Forecast: gewichteter Umsatz je Monat vs. Ziel. Ziele: Zielerreichung je Verantwortlicher.", 10, False, NAVY),
         ("", 6, False, MUTE),
-        ("4 · Automatisch aktualisieren", 12, True, RED),
-        ("Rechtsklick auf die Abfrage ▸ Eigenschaften ▸ „Aktualisieren beim Öffnen“ / alle X Minuten.", 10, False, "1B2430"),
+        ("4 · Live-Daten online abrufen — per Knopfdruck (F9)", 12, True, RED),
+        ("Blatt „Live-Daten“: CHF-Wechselkurse kommen live vom ECB-Feed (WEBSERVICE + FILTERXML).", 10, False, NAVY),
+        ("Aktualisieren = Taste F9. Funktioniert in Excel für Windows (Desktop).", 10, False, NAVY),
+        ("Eigene Datenbank: Daten ▸ Daten abrufen ▸ Aus Datenbank/Web – M-Vorlagen in data/PowerQuery_Vorlagen.m.", 10, False, NAVY),
         ("", 6, False, MUTE),
-        ("Farbwelt: AVIA-Navy #1B2430 + AVIA-Rot #E2001A. Reproduzierbar via  python3 src/build_excel.py.", 9, False, MUTE),
+        ("5 · Formelzellen schützen (optional)", 12, True, RED),
+        ("Formel-/Berechnungszellen sind als „gesperrt“ markiert, Eingabefelder als „frei“.", 10, False, NAVY),
+        ("Aktivieren mit: Überprüfen ▸ Blatt schützen (ohne Passwort bestätigen). Eingaben bleiben möglich.", 10, False, NAVY),
+        ("", 6, False, MUTE),
+        ("Reproduzierbar: python3 src/build_excel.py  ·  Farbwelt Navy #1B2430 + AVIA-Rot #E2001A.", 9, False, MUTE),
     ]
     r = 2
-    for text, size, bold, color in lines:
+    for text, size, bold, color in L:
         ws.cell(r, 2, text).font = font(size, bold=bold, color=color)
         ws.cell(r, 2).alignment = LEFT
         r += 1
 
 
+# ---------------------------------------------------------------------------
+def _print_setup(wb):
+    for ws in wb.worksheets:
+        ws.page_setup.orientation = "landscape"
+        ws.page_setup.fitToWidth = 1
+        ws.page_setup.fitToHeight = 0
+        ws.sheet_properties.pageSetUpPr.fitToPage = True
+        ws.print_options.horizontalCentered = True
+        ws.oddHeader.left.text = "AVIA VOLT Suisse — Vertriebs-Cockpit"
+        ws.oddHeader.right.text = "&D"
+        ws.oddFooter.left.text = "Burak Ücöz"
+        ws.oddFooter.right.text = "Seite &P von &N"
+    # Wiederholzeilen für Tabellenblätter
+    for name in ("Pipeline", "Aktivitäten", "Kontakte"):
+        wb[name].print_title_rows = "4:4"
+
+
 # ===========================================================================
 def write_companions():
-    """Begleitdateien für den Online-Abruf."""
     os.makedirs(DATA, exist_ok=True)
-
-    # Web-Abfrage (.iqy): CHF-Kurse als CSV von frankfurter.app
-    iqy = (
-        "WEB\r\n1\r\n"
-        "https://api.frankfurter.app/latest?from=CHF&to=EUR,USD,GBP\r\n"
-        "\r\nSelection=EntirePage\r\nFormatting=None\r\n"
-        "PreFormattedTextToColumns=True\r\nConsecutiveDelimitersAsOne=True\r\n"
-        "SingleBlockTextImport=False\r\nDisableDateRecognition=False\r\n"
-        "DisableRedirections=False\r\n"
-    )
-    with open(os.path.join(DATA, "Live_CHF_Kurse.iqy"), "w", newline="") as f:
+    # .iqy bleibt als Fallback für Mac/Alt-Excel (CSV-Web-Abfrage)
+    iqy = ("WEB\r\n1\r\n"
+           "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml\r\n"
+           "\r\nSelection=EntirePage\r\nFormatting=None\r\n"
+           "PreFormattedTextToColumns=True\r\nConsecutiveDelimitersAsOne=True\r\n"
+           "SingleBlockTextImport=False\r\nDisableDateRecognition=False\r\n"
+           "DisableRedirections=False\r\n")
+    with open(os.path.join(DATA, "Live_ECB_Kurse.iqy"), "w", newline="") as f:
         f.write(iqy)
 
-    # Power-Query-M-Vorlagen
     m = r'''// ============================================================
-// Power-Query-Vorlagen für das Vertriebs-Cockpit
-// Einfügen über:  Daten ▸ Daten abrufen ▸ Leere Abfrage ▸ Erweiterter Editor
+// Power-Query-Vorlagen — Vertriebs-Cockpit AVIA VOLT
+// Einfügen: Daten ▸ Daten abrufen ▸ Leere Abfrage ▸ Erweiterter Editor
+// Danach genügt „Alle aktualisieren“ (Strg+Alt+F5) als Knopfdruck.
 // ============================================================
 
-// --- 1) LIVE CHF-WECHSELKURSE (Web-API, ohne Zugangsdaten) ---------------
+// --- 1) LIVE CHF-WECHSELKURSE (ECB, ohne Zugangsdaten) ------------------
 let
-    Quelle   = Json.Document(Web.Contents("https://api.frankfurter.app/latest?from=CHF&to=EUR,USD,GBP")),
-    Datum    = Quelle[date],
-    Kurse    = Quelle[rates],
-    AlsTab   = Record.ToTable(Kurse),
-    Umbenannt= Table.RenameColumns(AlsTab, {{"Name","Waehrung"}, {"Value","Kurs"}}),
-    MitDatum = Table.AddColumn(Umbenannt, "Stand", each Datum, type text)
+    Xml      = Xml.Tables(Web.Contents("https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml")),
+    Cube     = Xml{0}[Cube]{0}[Cube],
+    Tabelle  = Table.SelectColumns(Cube, {"Attribute:currency", "Attribute:rate"}),
+    Umbenannt= Table.RenameColumns(Tabelle, {{"Attribute:currency","Waehrung"}, {"Attribute:rate","Kurs_pro_EUR"}})
 in
-    MitDatum
+    Umbenannt
 
-// --- 2) EIGENE SQL-DATENBANK (Server/DB anpassen) -----------------------
+// --- 2) EIGENE SQL-DATENBANK (Server/DB anpassen) ----------------------
 // let
 //     Quelle = Sql.Database("SERVERNAME", "DATENBANK",
-//                 [Query="SELECT firma, region, phase, volumen FROM deals"])
+//                 [Query="SELECT firma, region, phase, volumen, erw_abschluss FROM deals"])
 // in
 //     Quelle
 
-// --- 3) MySQL / PostgreSQL ----------------------------------------------
-// MySQL:       Quelle = MySQL.Database("host:3306", "db")
-// PostgreSQL:  Quelle = PostgreSQL.Database("host", "db")
+// --- 3) MySQL / PostgreSQL ---------------------------------------------
+// MySQL:       Quelle = MySQL.Database("host:3306", "db", [Query="SELECT * FROM deals"])
+// PostgreSQL:  Quelle = PostgreSQL.Database("host", "db", [Query="SELECT * FROM deals"])
 
-// --- 4) GOOGLE SHEETS / SHAREPOINT (per Freigabe-CSV-Link) ---------------
+// --- 4) GOOGLE SHEETS / SHAREPOINT (Freigabe-CSV-Link) -----------------
 // let
 //     Quelle = Csv.Document(Web.Contents("https://.../export?format=csv"),
 //                 [Delimiter=",", Encoding=65001]),
@@ -679,8 +958,7 @@ in
 '''
     with open(os.path.join(DATA, "PowerQuery_Vorlagen.m"), "w") as f:
         f.write(m)
-
-    print("OK  data/Live_CHF_Kurse.iqy")
+    print("OK  data/Live_ECB_Kurse.iqy")
     print("OK  data/PowerQuery_Vorlagen.m")
 
 

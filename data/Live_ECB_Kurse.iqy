@@ -1,6 +1,6 @@
 WEB
 1
-https://api.frankfurter.app/latest?from=CHF&to=EUR,USD,GBP
+https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml
 
 Selection=EntirePage
 Formatting=None
