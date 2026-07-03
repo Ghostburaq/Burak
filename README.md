@@ -35,13 +35,13 @@ deterministisch und ohne externe Abhängigkeiten zur Laufzeit.
 | `src/render_preview.py`| Rendert die echte `.pptx` zur visuellen Kontrolle (PNG/PDF) |
 | `assets/`              | Portrait, Original-Icons, generierte Assets |
 | `docs/`                | Vorschaubilder + PDF-Vorschau |
-| `src/build_excel.py`   | Baut das Vertriebs-Cockpit → `Vertriebs_Cockpit_AVIA_VOLT.xlsx` |
-| `data/`                | Online-Abruf-Dateien (ECB-Web-Abfrage `.iqy`, Power-Query-`.m`-Vorlagen) |
+| `src/build_excel.py`   | Baut das Vertriebs-Cockpit → `Vertriebs_Cockpit.xlsx` |
+| `data/`                | Online-Abruf: Power-Query-`.m`-Vorlagen (OpenChargeMap, Zefix, eigene DB) |
 
 ## Vertriebs-Cockpit (Excel)
 
-Umfangreiche, filterbare Excel-Arbeitsmappe für den Vertrieb —
-**[`Vertriebs_Cockpit_AVIA_VOLT.xlsx`](Vertriebs_Cockpit_AVIA_VOLT.xlsx)** — code-generiert,
+Umfangreiche, filterbare Excel-Arbeitsmappe für den Vertrieb (neutral, ohne Firmenbranding) —
+**[`Vertriebs_Cockpit.xlsx`](Vertriebs_Cockpit.xlsx)** — code-generiert,
 reproduzierbar und sofort einsatzbereit. **9 Blätter, 42 Beispiel-Deals.**
 
 - **Dashboard** — KPIs (Pipeline gesamt, gewichteter Forecast, Win-Rate, Ø Deal-Größe …),
@@ -51,14 +51,15 @@ reproduzierbar und sofort einsatzbereit. **9 Blätter, 42 Beispiel-Deals.**
   Wert, Tage bis Abschluss) und **Ampel-Logik** (bedingte Formatierung 🔴🟡🟢).
 - **Aktivitäten** — Aufgaben/Termine mit Fälligkeits-Ampel (überfällig = rot). **Kontakte** — CRM-Liste.
 - **Forecast** — gewichteter Umsatz je Monat vs. Ziel (Soll/Ist). **Ziele** — Zielerreichung je Verantwortlicher.
-- **Live-Daten** — Online-Abruf **per Knopfdruck (Taste F9)**: aktuelle **CHF-Wechselkurse** live vom
-  ECB-Feed über `WEBSERVICE` + `FILTERXML` (Windows-Desktop-Excel, ohne Einrichtung). Für eigene
-  **SQL-/Cloud-Datenbanken** fertige **Power-Query-M-Vorlagen** in `data/PowerQuery_Vorlagen.m`.
+- **Live-Daten (E-Mobilität)** — Online-Abruf **per Knopfdruck (Taste F9)**: öffentliche **Ladeinfrastruktur
+  Schweiz** live via **OpenChargeMap** (`WEBSERVICE` + `FILTERXML`, Windows-Desktop-Excel). Für mehr
+  Quellen (Handelsregister **Zefix**, **SQL/Cloud**-DB, Google Sheets) fertige **Power-Query-M-Vorlagen**
+  in `data/PowerQuery_Vorlagen.m` (auch Mac/Web).
 - **Anleitung** — Schritt-für-Schritt-Blatt direkt in der Mappe · druckfertiges Layout · Formelzellen schützbar.
 
 ```bash
 pip install openpyxl
-python3 src/build_excel.py   # -> Vertriebs_Cockpit_AVIA_VOLT.xlsx + data/*
+python3 src/build_excel.py   # -> Vertriebs_Cockpit.xlsx + data/*
 ```
 
 ## Neu bauen

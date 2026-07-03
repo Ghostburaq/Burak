@@ -1,8 +1,9 @@
 """
-AVIA VOLT — Vertriebs-Cockpit Generator (Burak Ücöz)
+Vertriebs-Cockpit — Generator
 
 Baut eine umfangreiche, sofort einsatzbereite Excel-Arbeitsmappe für den
-Vertrieb. 100% deterministisch, keine Netzwerkzugriffe beim Bauen.
+Vertrieb (neutral, ohne Firmenbranding).
+100% deterministisch, keine Netzwerkzugriffe beim Bauen.
 
 Blätter:
   Dashboard   – KPIs, Funnel, Auswertungen nach Region/Branche, Diagramme
@@ -15,12 +16,13 @@ Blätter:
   Listen      – Stammdaten für Dropdowns / Lookups
   Anleitung   – Schritt-für-Schritt
 
-Live-Daten (Windows-Desktop-Excel): CHF-Kurse über WEBSERVICE+FILTERXML gegen
-den ECB-Feed – Aktualisieren per Taste F9. Für eigene Datenbanken liegen
-Power-Query-M-Vorlagen in data/PowerQuery_Vorlagen.m.
+Live-Daten (E-Mobilität/Energie): öffentliche Ladeinfrastruktur Schweiz live
+über OpenChargeMap (WEBSERVICE+FILTERXML, Aktualisieren per Taste F9) plus
+Power-Query-M-Vorlagen (OpenChargeMap, Handelsregister Zefix, eigene DB) in
+data/PowerQuery_Vorlagen.m.
 
 Run:  pip install openpyxl && python3 src/build_excel.py
-Out:  Vertriebs_Cockpit_AVIA_VOLT.xlsx  +  data/*
+Out:  Vertriebs_Cockpit.xlsx  +  data/*
 """
 from __future__ import annotations
 
@@ -38,10 +40,10 @@ from openpyxl.worksheet.datavalidation import DataValidation
 from openpyxl.worksheet.table import Table, TableStyleInfo
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT = os.path.join(ROOT, "Vertriebs_Cockpit_AVIA_VOLT.xlsx")
+OUT = os.path.join(ROOT, "Vertriebs_Cockpit.xlsx")
 DATA = os.path.join(ROOT, "data")
 
-# ---- Design-System (AVIA VOLT) ------------------------------------------
+# ---- Design-System (neutral) --------------------------------------------
 NAVY, NAVY_SOFT = "1B2430", "2A3543"
 RED, RED_DK = "E2001A", "B30015"
 WHITE = "FFFFFF"
@@ -283,7 +285,7 @@ def _listen(ws):
 def _pipeline(ws):
     ws.sheet_view.showGridLines = False
     ws.freeze_panes = "A5"
-    _header(ws, "A", "VERTRIEBS-PIPELINE  ·  AVIA VOLT Suisse", CL["Ampel"],
+    _header(ws, "A", "VERTRIEBS-PIPELINE", CL["Ampel"],
             sub="Filtern über die Kopfzeilen-Pfeile · Dropdowns für Phase/Priorität/Region/… · "
                 "Wahrscheinlichkeit, gew. Wert, Tage bis Abschluss & Ampel rechnen automatisch.")
     hr = 4
@@ -630,7 +632,7 @@ def _dashboard(ws):
     ws["B2"] = "VERTRIEBS-COCKPIT"
     ws["B2"].font = font(22, bold=True, color=NAVY)
     ws.merge_cells("B3:H3")
-    ws["B3"] = "AVIA VOLT Suisse  ·  Pipeline-Steuerung & Forecast  ·  Burak Ücöz"
+    ws["B3"] = "Pipeline-Steuerung  ·  Forecast  ·  Live-Marktdaten"
     ws["B3"].font = font(11, color=RED, bold=True)
     ws.row_dimensions[2].height = 30
 
@@ -766,14 +768,14 @@ def _dashboard(ws):
 # ---------------------------------------------------------------------------
 def _live(ws):
     ws.sheet_view.showGridLines = False
-    for col, w in (("A", 2), ("B", 22), ("C", 18), ("D", 20), ("E", 18), ("F", 30)):
+    for col, w in (("A", 2), ("B", 26), ("C", 16), ("D", 12), ("E", 20), ("F", 14)):
         ws.column_dimensions[col].width = w
     ws.merge_cells("B2:F2")
-    ws["B2"] = "LIVE-DATEN  ·  Online-Abruf per Knopfdruck (F9)"
+    ws["B2"] = "LIVE-DATEN  ·  E-Mobilität & Markt (per F9)"
     ws["B2"].font = font(18, bold=True, color=NAVY)
     ws.merge_cells("B3:F3")
-    ws["B3"] = ("Windows-Desktop-Excel: aktuelle CHF-Wechselkurse live vom ECB-Feed. "
-                "Aktualisieren = Taste F9 (Neu berechnen).")
+    ws["B3"] = ("Öffentliche Ladeinfrastruktur Schweiz live via OpenChargeMap. "
+                "Aktualisieren = Taste F9 (Neu berechnen). Windows-Desktop-Excel.")
     ws["B3"].font = font(10, italic=True, color=MUTE)
 
     ws.merge_cells("B5:D5")
@@ -785,69 +787,89 @@ def _live(ws):
     btn.alignment = CENTER
     ws.row_dimensions[5].height = 30
     ws.merge_cells("E5:F5")
-    ws["E5"] = "→ Formel WEBSERVICE holt die Daten; FILTERXML liest die Kurse."
+    ws["E5"] = "→ WEBSERVICE holt den Feed; FILTERXML liest die Werte."
     ws["E5"].font = font(9, italic=True, color=MUTE)
     ws["E5"].alignment = LEFT
 
-    # Rohdaten-Zelle (WEBSERVICE) – etwas abgesetzt
+    # Optionaler (kostenloser) OpenChargeMap-API-Key --------------------
+    ws["B6"] = "OpenChargeMap API-Key (optional, gratis):"
+    ws["B6"].font = font(9, bold=True, color=MUTE)
+    keyc = ws["C6"]
+    keyc.value = ""       # hier eigenen Key eintragen (openchargemap.org/site/loginprovider)
+    keyc.fill = fill("FFF7D6")
+    keyc.border = box
+    keyc.protection = UNLOCKED
+    ws.merge_cells("C6:F6")
+
+    # Roh-Feed (WEBSERVICE) ---------------------------------------------
     ws["B7"] = "Roh-Feed (WEBSERVICE):"
     ws["B7"].font = font(9, bold=True, color=MUTE)
-    ecb = "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml"
-    ws["C7"] = f'=IFERROR(_xlfn.WEBSERVICE("{ecb}"),"")'
+    ocm = ("https://api.openchargemap.io/v3/poi/?output=xml&countrycode=CH"
+           "&maxresults=12&compact=true&verbose=false&key=")
+    ws["C7"] = f'=IFERROR(_xlfn.WEBSERVICE("{ocm}"&$C$6),"")'
     ws["C7"].font = font(8, color=MUTE)
+    ws.merge_cells("C7:F7")
     ws.row_dimensions[7].height = 14
     RAW = "$C$7"
 
-    def chf_rate(ccy):
-        # 1 CHF = rate(ccy)/rate(CHF) ; EUR-Basis: rate(EUR)=1
-        num = (f'_xlfn.FILTERXML({RAW},"//*[local-name()=\'Cube\' and @currency=\'{ccy}\']/@rate")'
-               if ccy != "EUR" else "1")
-        den = f'_xlfn.FILTERXML({RAW},"//*[local-name()=\'Cube\' and @currency=\'CHF\']/@rate")'
-        return f'=IFERROR({num}/{den},"— (offline: F9 / online prüfen)")'
+    def poi(i, path):
+        return (f'=IFERROR(_xlfn.FILTERXML({RAW},'
+                f'"(//*[local-name()=\'POI\'])[{i}]{path}"),"—")')
 
-    ws["B9"] = "Referenzwährung: 1 CHF ="
-    ws["B9"].font = font(10, bold=True, color=NAVY)
-    _thead(ws, 10, ["Währung", "Kurs (1 CHF =)", "Stand (ECB)", "Quelle"],
-           start_col=2, widths=[16, 18, 18, 24])
-    ccys = ["EUR", "USD", "GBP"]
-    for i, ccy in enumerate(ccys):
-        row = 11 + i
-        ws.cell(row, 2, ccy).border = box
-        ws.cell(row, 2).alignment = CENTER
-        kc = ws.cell(row, 3, chf_rate(ccy))
-        kc.number_format = "0.0000"
-        kc.alignment = CENTER
-        kc.border = box
-        st = ws.cell(row, 4,
-                     f'=IFERROR(_xlfn.FILTERXML({RAW},"//*[local-name()=\'Cube\' and @time]/@time"),"—")')
-        st.alignment = CENTER
-        st.border = box
-        src = ws.cell(row, 5, "ECB eurofxref-daily")
-        src.alignment = LEFT
-        src.border = box
-        ws.row_dimensions[row].height = 20
+    # Tabelle: aktuelle Ladestandorte -----------------------------------
+    ws["B9"] = "Öffentliche Ladestandorte Schweiz (live)"
+    ws["B9"].font = font(12, bold=True, color=NAVY)
+    _thead(ws, 10, ["Standort", "Ort", "Kanton", "Betreiber", "Ladepkt."],
+           start_col=2, widths=[26, 16, 12, 20, 14])
+    N = 8
+    for i in range(1, N + 1):
+        row = 10 + i
+        title = ws.cell(row, 2, poi(i, "/*[local-name()='AddressInfo']/*[local-name()='Title']"))
+        town = ws.cell(row, 3, poi(i, "/*[local-name()='AddressInfo']/*[local-name()='Town']"))
+        kanton = ws.cell(row, 4, poi(i, "/*[local-name()='AddressInfo']/*[local-name()='StateOrProvince']"))
+        op = ws.cell(row, 5, poi(i, "/*[local-name()='OperatorInfo']/*[local-name()='Title']"))
+        pts = ws.cell(row, 6, poi(i, "/*[local-name()='NumberOfPoints']"))
+        for c in (title, town, kanton, op, pts):
+            c.border = box
+            c.font = font(10)
+            if i % 2 == 0:
+                c.fill = fill(GREY_ROW)
+        title.alignment = LEFT
+        pts.alignment = CENTER
+        ws.row_dimensions[row].height = 19
+    last = 10 + N
 
-    ws.merge_cells("B15:F16")
-    ws["B15"] = ("Hinweis: WEBSERVICE/FILTERXML gibt es nur in Excel für Windows (Desktop). "
-                 "Zeigt es „— (offline)“, kurz mit F9 neu berechnen bzw. Internetzugang prüfen. "
-                 "Auf Mac/Excel-Web stattdessen Power Query nutzen (siehe unten).")
-    ws["B15"].font = font(9, italic=True, color=MUTE)
-    ws["B15"].alignment = LEFT
+    ws[f"B{last + 1}"] = "Angezeigte Standorte:"
+    ws[f"B{last + 1}"].font = font(9, bold=True, color=MUTE)
+    cnt = ws.cell(last + 1, 3, f'=SUMPRODUCT(--($B$11:$B${last}<>"—"),--($B$11:$B${last}<>""))')
+    cnt.font = font(11, bold=True, color=NAVY)
+    cnt.alignment = CENTER
 
-    ws["B18"] = "Eigene Datenbank (SQL / Cloud) anbinden — Power Query"
-    ws["B18"].font = font(12, bold=True, color=NAVY)
+    ws.merge_cells(f"B{last + 3}:F{last + 4}")
+    ws[f"B{last + 3}"] = ("Zeigt es „—“: einmal F9 drücken. Für Dauerbetrieb einen kostenlosen "
+                          "OpenChargeMap-API-Key oben in C6 eintragen (openchargemap.org). "
+                          "WEBSERVICE/FILTERXML gibt es nur in Excel für Windows (Desktop) — "
+                          "auf Mac/Web stattdessen die Power-Query-Vorlagen unten nutzen.")
+    ws[f"B{last + 3}"].font = font(9, italic=True, color=MUTE)
+    ws[f"B{last + 3}"].alignment = LEFT
+
+    # Weitere Online-Quellen & eigene Datenbank -------------------------
+    base = last + 6
+    ws[f"B{base}"] = "Weitere Online-Quellen & eigene Datenbank — Power Query"
+    ws[f"B{base}"].font = font(12, bold=True, color=NAVY)
     steps = [
-        "1) Menüband: Daten ▸ Daten abrufen ▸ Aus Datenbank (SQL Server / MySQL / PostgreSQL)",
-        "   – oder ▸ Aus dem Web / SharePoint / Google Sheets (Freigabe-CSV-Link).",
-        "2) Server / Datenbank / Zugangsdaten eintragen (fertige M-Vorlagen: data/PowerQuery_Vorlagen.m).",
-        "3) Laden ▸ die Abfrage erscheint als Tabelle; künftig genügt „Alle aktualisieren“ (Strg+Alt+F5).",
-        "4) Rechtsklick auf die Abfrage ▸ Eigenschaften ▸ „Aktualisieren beim Öffnen / alle X Min.“.",
+        "• Ladeinfrastruktur (voll): Daten ▸ Aus dem Web ▸ OpenChargeMap-JSON — filtern/aggregieren nach Kanton/Betreiber.",
+        "• Firmendaten anreichern: Handelsregister Zefix-API (UID, Adresse, Rechtsform) per Firma abrufen.",
+        "• Eigene DB: Daten ▸ Aus Datenbank (SQL Server / MySQL / PostgreSQL) — Server & Zugangsdaten eintragen.",
+        "• Google Sheets / SharePoint: Freigabe-CSV-Link als Quelle.",
+        "Fertige M-Vorlagen: data/PowerQuery_Vorlagen.m  ·  danach „Alle aktualisieren“ (Strg+Alt+F5).",
     ]
     for i, s in enumerate(steps):
-        ws[f"B{19 + i}"] = s
-        ws[f"B{19 + i}"].font = font(9, color=NAVY if not s.startswith("   ") else MUTE)
-        ws.merge_cells(f"B{19 + i}:F{19 + i}")
-        ws[f"B{19 + i}"].alignment = LEFT
+        r = base + 1 + i
+        ws[f"B{r}"] = s
+        ws[f"B{r}"].font = font(9, color=NAVY if s.startswith("•") else MUTE)
+        ws.merge_cells(f"B{r}:F{r}")
+        ws[f"B{r}"].alignment = LEFT
 
 
 # ---------------------------------------------------------------------------
@@ -875,15 +897,15 @@ def _help(ws):
         ("Forecast: gewichteter Umsatz je Monat vs. Ziel. Ziele: Zielerreichung je Verantwortlicher.", 10, False, NAVY),
         ("", 6, False, MUTE),
         ("4 · Live-Daten online abrufen — per Knopfdruck (F9)", 12, True, RED),
-        ("Blatt „Live-Daten“: CHF-Wechselkurse kommen live vom ECB-Feed (WEBSERVICE + FILTERXML).", 10, False, NAVY),
-        ("Aktualisieren = Taste F9. Funktioniert in Excel für Windows (Desktop).", 10, False, NAVY),
-        ("Eigene Datenbank: Daten ▸ Daten abrufen ▸ Aus Datenbank/Web – M-Vorlagen in data/PowerQuery_Vorlagen.m.", 10, False, NAVY),
+        ("Blatt „Live-Daten“: öffentliche Ladestandorte Schweiz live via OpenChargeMap (WEBSERVICE + FILTERXML).", 10, False, NAVY),
+        ("Aktualisieren = Taste F9 (Windows-Desktop-Excel). Gratis-API-Key in Zelle C6 für Dauerbetrieb.", 10, False, NAVY),
+        ("Mehr Quellen/eigene Datenbank (SQL/Zefix/Google Sheets): M-Vorlagen in data/PowerQuery_Vorlagen.m.", 10, False, NAVY),
         ("", 6, False, MUTE),
         ("5 · Formelzellen schützen (optional)", 12, True, RED),
         ("Formel-/Berechnungszellen sind als „gesperrt“ markiert, Eingabefelder als „frei“.", 10, False, NAVY),
         ("Aktivieren mit: Überprüfen ▸ Blatt schützen (ohne Passwort bestätigen). Eingaben bleiben möglich.", 10, False, NAVY),
         ("", 6, False, MUTE),
-        ("Reproduzierbar: python3 src/build_excel.py  ·  Farbwelt Navy #1B2430 + AVIA-Rot #E2001A.", 9, False, MUTE),
+        ("Reproduzierbar: python3 src/build_excel.py  ·  Farbwelt Navy #1B2430 + Akzent-Rot #E2001A.", 9, False, MUTE),
     ]
     r = 2
     for text, size, bold, color in L:
@@ -900,9 +922,9 @@ def _print_setup(wb):
         ws.page_setup.fitToHeight = 0
         ws.sheet_properties.pageSetUpPr.fitToPage = True
         ws.print_options.horizontalCentered = True
-        ws.oddHeader.left.text = "AVIA VOLT Suisse — Vertriebs-Cockpit"
+        ws.oddHeader.left.text = "Vertriebs-Cockpit"
         ws.oddHeader.right.text = "&D"
-        ws.oddFooter.left.text = "Burak Ücöz"
+        ws.oddFooter.left.text = "Vertraulich"
         ws.oddFooter.right.text = "Seite &P von &N"
     # Wiederholzeilen für Tabellenblätter
     for name in ("Pipeline", "Aktivitäten", "Kontakte"):
@@ -912,43 +934,54 @@ def _print_setup(wb):
 # ===========================================================================
 def write_companions():
     os.makedirs(DATA, exist_ok=True)
-    # .iqy bleibt als Fallback für Mac/Alt-Excel (CSV-Web-Abfrage)
-    iqy = ("WEB\r\n1\r\n"
-           "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml\r\n"
-           "\r\nSelection=EntirePage\r\nFormatting=None\r\n"
-           "PreFormattedTextToColumns=True\r\nConsecutiveDelimitersAsOne=True\r\n"
-           "SingleBlockTextImport=False\r\nDisableDateRecognition=False\r\n"
-           "DisableRedirections=False\r\n")
-    with open(os.path.join(DATA, "Live_ECB_Kurse.iqy"), "w", newline="") as f:
-        f.write(iqy)
 
     m = r'''// ============================================================
-// Power-Query-Vorlagen — Vertriebs-Cockpit AVIA VOLT
+// Power-Query-Vorlagen — Vertriebs-Cockpit (E-Mobilität / Energie)
 // Einfügen: Daten ▸ Daten abrufen ▸ Leere Abfrage ▸ Erweiterter Editor
 // Danach genügt „Alle aktualisieren“ (Strg+Alt+F5) als Knopfdruck.
+// Funktioniert auch auf Mac / Excel im Web (anders als WEBSERVICE).
 // ============================================================
 
-// --- 1) LIVE CHF-WECHSELKURSE (ECB, ohne Zugangsdaten) ------------------
+// --- 1) LADEINFRASTRUKTUR SCHWEIZ (OpenChargeMap, JSON) ----------------
+// Kostenlosen API-Key holen: openchargemap.org ▸ Profil ▸ API Key
 let
-    Xml      = Xml.Tables(Web.Contents("https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml")),
-    Cube     = Xml{0}[Cube]{0}[Cube],
-    Tabelle  = Table.SelectColumns(Cube, {"Attribute:currency", "Attribute:rate"}),
-    Umbenannt= Table.RenameColumns(Tabelle, {{"Attribute:currency","Waehrung"}, {"Attribute:rate","Kurs_pro_EUR"}})
+    Key      = "HIER-DEINEN-KOSTENLOSEN-KEY",
+    Url      = "https://api.openchargemap.io/v3/poi/?output=json&countrycode=CH&maxresults=500&compact=true&verbose=false&key=" & Key,
+    Quelle   = Json.Document(Web.Contents(Url)),
+    AlsTab   = Table.FromList(Quelle, Splitter.SplitByNothing(), {"POI"}),
+    Erweitert= Table.ExpandRecordColumn(AlsTab, "POI", {"AddressInfo","OperatorInfo","NumberOfPoints"}),
+    Adr      = Table.ExpandRecordColumn(Erweitert, "AddressInfo", {"Title","Town","StateOrProvince"}, {"Standort","Ort","Kanton"}),
+    Betr     = Table.ExpandRecordColumn(Adr, "OperatorInfo", {"Title"}, {"Betreiber"})
 in
-    Umbenannt
+    Betr
 
-// --- 2) EIGENE SQL-DATENBANK (Server/DB anpassen) ----------------------
+// Auswertung z. B.: Anzahl Ladepunkte je Kanton
+// = Table.Group(Betr, {"Kanton"}, {{"Ladepunkte", each List.Sum([NumberOfPoints]), type number}})
+
+// --- 2) FIRMENDATEN ANREICHERN (Handelsregister Zefix) ----------------
+// Sucht eine Firma und liefert UID / Rechtsform / Sitz.
+(FirmenName as text) =>
+let
+    Body   = "{""name"":""" & FirmenName & """,""languageKey"":""de""}",
+    Quelle = Json.Document(Web.Contents("https://www.zefix.ch/ZefixREST/api/v1/firm/search.json",
+                [Headers=[#"Content-Type"="application/json"], Content=Text.ToBinary(Body)])),
+    AlsTab = Table.FromList(Quelle, Splitter.SplitByNothing(), {"Firma"}),
+    Feld   = Table.ExpandRecordColumn(AlsTab, "Firma", {"name","uidFormatted","legalForm","legalSeat"})
+in
+    Feld
+
+// --- 3) EIGENE SQL-DATENBANK (Server/DB anpassen) ----------------------
 // let
 //     Quelle = Sql.Database("SERVERNAME", "DATENBANK",
 //                 [Query="SELECT firma, region, phase, volumen, erw_abschluss FROM deals"])
 // in
 //     Quelle
 
-// --- 3) MySQL / PostgreSQL ---------------------------------------------
+// --- 4) MySQL / PostgreSQL ---------------------------------------------
 // MySQL:       Quelle = MySQL.Database("host:3306", "db", [Query="SELECT * FROM deals"])
 // PostgreSQL:  Quelle = PostgreSQL.Database("host", "db", [Query="SELECT * FROM deals"])
 
-// --- 4) GOOGLE SHEETS / SHAREPOINT (Freigabe-CSV-Link) -----------------
+// --- 5) GOOGLE SHEETS / SHAREPOINT (Freigabe-CSV-Link) -----------------
 // let
 //     Quelle = Csv.Document(Web.Contents("https://.../export?format=csv"),
 //                 [Delimiter=",", Encoding=65001]),
@@ -958,7 +991,6 @@ in
 '''
     with open(os.path.join(DATA, "PowerQuery_Vorlagen.m"), "w") as f:
         f.write(m)
-    print("OK  data/Live_ECB_Kurse.iqy")
     print("OK  data/PowerQuery_Vorlagen.m")
 
 
