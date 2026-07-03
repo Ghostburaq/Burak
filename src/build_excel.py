@@ -125,43 +125,124 @@ BASE_DEALS = [
     ("Aldi Suisse", "M. Fischer", "Aargau", "Detailhandel", "DC-Schnelllader 60 kW", "Angebot", "Hoch", 445000, -29, 40, "Burak Ücöz", "Pilotstandort definieren"),
 ]
 
-# Weitere Firmen für zusätzliche, deterministisch erzeugte Deals ----------
-MORE_FIRMEN = [
-    ("Lidl Schweiz", "T. Wagner"), ("Galenica", "S. Baumann"), ("Swisscom Immobilien", "R. Meier"),
-    ("Kuoni Reisen", "L. Steiner"), ("Hilti AG", "M. Anliker"), ("Geberit", "D. Frei"),
-    ("Ricola", "P. Richterich"), ("Victorinox", "C. Elsener"), ("Stadler Rail", "F. Ahlburg"),
-    ("Mobility Carsharing", "A. Suter"), ("Migrol AG", "B. Lehmann"), ("Tamoil", "N. Rossi"),
-    ("Hotel Bellevue Bern", "G. Wyss"), ("Kongresshaus Zürich", "V. Keller"), ("Universität Basel", "H. Roth"),
-    ("Kantonsspital Aarau", "E. Bosshard"), ("Feldschlösschen", "R. Amrein"), ("Bell Food Group", "S. Zünd"),
-    ("Zweifel Pomy-Chips", "M. Zweifel"), ("Maerki Baumann", "L. Baumann"), ("EWZ", "P. Graf"),
-    ("SIG Group", "D. Meister"),
-]
+# Grosser Pool realer CH-B2B-Firmen, branchengerecht zugeordnet ----------
+_FIRMEN_NACH_BRANCHE = {
+    "Detailhandel": [
+        "Coop Genossenschaft", "Migros Aare", "Spar Schweiz", "Volg Konsumwaren",
+        "Landi Schweiz", "Otto's AG", "Ochsner Sport", "Fust AG", "Interdiscount",
+        "MediaMarkt Schweiz", "Jumbo-Markt", "Do it + Garden", "Athleticum",
+        "Vögele Shoes", "PKZ Burger-Kehl", "Globus", "Jelmoli", "Loeb AG",
+        "Import Parfumerie", "Dosenbach-Ochsner", "Lidl Schweiz", "Beldona",
+    ],
+    "Logistik": [
+        "Kühne + Nagel", "Camion Transport", "Galliker Transport", "Bertschi AG",
+        "Dreier AG", "Streck Transport", "Cargologic", "Swissport", "Planzer Paket",
+        "Chr. Cavegn AG", "Gondrand", "Fiege Logistik",
+    ],
+    "Immobilien": [
+        "Mobimo", "PSP Swiss Property", "Allreal", "Swiss Prime Site", "Zug Estates",
+        "Livit", "Wincasa", "Privera", "Halter AG", "Implenia", "Steiner AG", "Losinger Marazzi",
+    ],
+    "Hotellerie": [
+        "Mövenpick Hotels", "Bürgenstock Resort", "Grand Resort Bad Ragaz",
+        "The Dolder Grand", "Hotel Schweizerhof", "Kempinski Genf", "25hours Zürich",
+        "Hotel Krone", "Victoria-Jungfrau", "Hotel Metropol",
+    ],
+    "Öffentliche Hand": [
+        "Stadt Bern", "Stadt Winterthur", "Kanton Aargau", "Kanton Waadt",
+        "Energie Wasser Bern", "IWB Basel", "SIG Genève", "Werkbetriebe Frauenfeld",
+        "Gemeinde Köniz", "ZVB Zug", "Stadt Lugano",
+    ],
+    "Industrie": [
+        "ABB Schweiz", "Bühler Group", "Sulzer AG", "Georg Fischer", "Schindler Aufzüge",
+        "Sika AG", "Bobst Group", "Rieter AG", "Feintool", "Komax Group",
+        "Hilti AG", "Geberit",
+    ],
+    "Tankstellen": [
+        "Socar Energy", "Agrola AG", "BP Schweiz", "Shell Schweiz", "Eni Suisse",
+        "Ruedi Rüssel", "Oel-Pool AG", "Coop Pronto", "Miniprix", "Piquerez SA",
+    ],
+    "Flottenbetrieb": [
+        "AMAG Leasing", "Emil Frey Flotten", "Sixt Schweiz", "Europcar Schweiz",
+        "Hertz Schweiz", "Carvolution", "Auto AG Group", "Post CH Netz",
+        "Helvetia Fleet", "Bring! Logistik", "Mobility Carsharing",
+    ],
+}
+MORE_FIRMEN = [(name, br) for br, names in _FIRMEN_NACH_BRANCHE.items() for name in names]
+
+# Pools für Filler-Deals (regionale KMU), damit die Datenmenge gross wird ---
+NACHNAMEN = ["Meier", "Müller", "Keller", "Huber", "Weber", "Frei", "Rossi",
+             "Favre", "Steiner", "Baumann", "Graf", "Roth", "Suter", "Zünd",
+             "Brunner", "Wyss", "Fischer", "Berger", "Schmid", "Amrein",
+             "Bianchi", "Moser", "Widmer", "Gerber", "Kern", "Marti",
+             "Bühler", "Egli", "Hofer", "Vogel"]
+INITIALEN = list("ABCDEFGHJKLMNPRSTUVW")
+ORTE = ["Zürich", "Winterthur", "Bern", "Thun", "Basel", "Luzern", "St. Gallen",
+        "Genf", "Lausanne", "Lugano", "Chur", "Sion", "Fribourg", "Neuchâtel",
+        "Aarau", "Zug", "Baden", "Olten", "Biel", "Solothurn"]
+PREFIX = {
+    "Detailhandel": ["Center", "Markt", "Warenhaus", "Shopping"],
+    "Logistik": ["Trans", "Cargo", "Logistik", "Spedition"],
+    "Immobilien": ["Immo", "Wohnbau", "Areal", "Real Estate"],
+    "Hotellerie": ["Hotel", "Resort", "Gasthof", "Boutique-Hotel"],
+    "Öffentliche Hand": ["Stadtwerke", "Werkhof", "Gemeindebetrieb", "Kantonswerk"],
+    "Industrie": ["Werk", "Tech", "Manufaktur", "Industrie"],
+    "Tankstellen": ["Autohof", "Raststätte", "Garage", "Tankstelle"],
+    "Flottenbetrieb": ["Fleet", "Fuhrpark", "Mobility", "Transport"],
+}
+NAECHSTE = ["Erstgespräch planen", "Angebot erstellen", "Angebot nachfassen",
+            "Standort-Audit terminieren", "Entscheider treffen", "Business-Case rechnen",
+            "Referenz anbieten", "Vertrag vorbereiten", "Pilot definieren", "Bedarf klären"]
+TARGET_DEALS = 180
+
+
+def _contact(i):
+    return f"{INITIALEN[i % len(INITIALEN)]}. {NACHNAMEN[(i * 3) % len(NACHNAMEN)]}"
+
+
+def _synth(i, firma, branche):
+    prod = PRODUKTE[(i * 5) % len(PRODUKTE)]
+    reg = REGIONEN[(i * 3 + 1) % len(REGIONEN)]
+    # Phasenverteilung inkl. Gewonnen/Verloren (realistischer Trichter)
+    pcyc = ["Lead", "Qualifiziert", "Angebot", "Verhandlung", "Qualifiziert",
+            "Angebot", "Gewonnen", "Lead", "Verhandlung", "Verloren", "Angebot", "Lead"]
+    phase = pcyc[i % len(pcyc)]
+    prio = PRIOS[i % 3]
+    vol = 25000 + ((i * 37) % 95) * 7000                 # 25k .. ~683k
+    dk = d(-(8 + (i * 11) % 170))
+    da = d(-(2 + (i * 7) % 60)) if phase in ("Gewonnen", "Verloren") else d(5 + (i * 13) % 150)
+    return dict(firma=firma, ap=_contact(i), region=reg, branche=branche, produkt=prod,
+                phase=phase, prio=prio, vol=vol, dk=dk, da=da,
+                verant=TEAM[i % len(TEAM)], nx=NAECHSTE[i % len(NAECHSTE)])
 
 
 def build_all_deals():
-    deals = []
+    deals, seen, idx = [], set(), 0
     for row in BASE_DEALS:
         (f, ap, reg, br, prod, ph, prio, vol, dk, da, verant, nx) = row
         deals.append(dict(firma=f, ap=ap, region=reg, branche=br, produkt=prod,
                           phase=ph, prio=prio, vol=vol, dk=d(dk), da=d(da),
                           verant=verant, nx=nx))
-    # deterministisch erweitern
-    for i, (f, ap) in enumerate(MORE_FIRMEN):
-        prod = PRODUKTE[(i * 5) % len(PRODUKTE)]
-        reg = REGIONEN[(i * 3 + 1) % len(REGIONEN)]
-        br = BRANCHEN[(i * 7) % len(BRANCHEN)]
-        phase = PHASENAMEN[(i * 2 + 1) % 5]              # 0..4, kein "Verloren" per Default
-        if i % 9 == 4:
-            phase = "Verloren"
-        prio = PRIOS[(i) % 3]
-        vol = 40000 + ((i * 37) % 60) * 8000             # 40k..512k, deterministisch
-        dk = d(-(8 + (i * 11) % 90))
-        da = d(((i * 13) % 120) - 15)
-        nx = ["Erstgespräch planen", "Angebot erstellen", "Nachfassen",
-              "Standort prüfen", "Entscheider treffen", "Abschluss vorbereiten"][(i) % 6]
-        deals.append(dict(firma=f, ap=ap, region=reg, branche=br, produkt=prod,
-                          phase=phase, prio=prio, vol=vol, dk=dk, da=da,
-                          verant=TEAM[i % len(TEAM)], nx=nx))
+        seen.add(f)
+    for f, br in MORE_FIRMEN:
+        if f in seen:
+            continue
+        deals.append(_synth(idx, f, br))
+        seen.add(f)
+        idx += 1
+    # Mit regionalen KMU auf Zielgrösse auffüllen (variantenreiche, eindeutige Namen)
+    while len(deals) < TARGET_DEALS:
+        br = BRANCHEN[idx % len(BRANCHEN)]
+        pre = PREFIX[br][(idx * 3) % len(PREFIX[br])]
+        ort = ORTE[(idx * 7) % len(ORTE)]                # 7 teilerfremd zu 20 -> alle Orte
+        nn = NACHNAMEN[(idx * 13) % len(NACHNAMEN)]      # 13 teilerfremd zu 30
+        firma = f"{pre} {nn} {ort}"                      # z. B. "Garage Müller Chur"
+        if firma in seen:
+            nn2 = NACHNAMEN[(idx * 17 + 5) % len(NACHNAMEN)]
+            firma = f"{pre} {nn}-{nn2} {ort}"
+        deals.append(_synth(idx, firma, br))
+        seen.add(firma)
+        idx += 1
     return deals
 
 
@@ -805,7 +886,7 @@ def _live(ws):
     ws["B7"] = "Roh-Feed (WEBSERVICE):"
     ws["B7"].font = font(9, bold=True, color=MUTE)
     ocm = ("https://api.openchargemap.io/v3/poi/?output=xml&countrycode=CH"
-           "&maxresults=12&compact=true&verbose=false&key=")
+           "&maxresults=25&compact=true&verbose=false&key=")
     ws["C7"] = f'=IFERROR(_xlfn.WEBSERVICE("{ocm}"&$C$6),"")'
     ws["C7"].font = font(8, color=MUTE)
     ws.merge_cells("C7:F7")
@@ -821,7 +902,7 @@ def _live(ws):
     ws["B9"].font = font(12, bold=True, color=NAVY)
     _thead(ws, 10, ["Standort", "Ort", "Kanton", "Betreiber", "Ladepkt."],
            start_col=2, widths=[26, 16, 12, 20, 14])
-    N = 8
+    N = 18
     for i in range(1, N + 1):
         row = 10 + i
         title = ws.cell(row, 2, poi(i, "/*[local-name()='AddressInfo']/*[local-name()='Title']"))
