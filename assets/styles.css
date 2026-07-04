@@ -1,0 +1,695 @@
+/* =============================================================================
+   NEXA — Zentrales Stylesheet
+   Ein Stylesheet für index.html, impressum.html und datenschutz.html.
+
+   Aufbau:
+   1.  Design-Tokens (CSS-Variablen)
+   2.  Reset & Basis
+   3.  Typografie
+   4.  Layout-Helfer
+   5.  Buttons
+   6.  Navigation (sticky, Blur, Mobile-Menü)
+   7.  Hero
+   8.  Problem
+   9.  Leistungen
+   10. Warum NEXA
+   11. Ablauf (Timeline)
+   12. Kontakt / CTA
+   13. Footer
+   14. Rechtsseiten (Impressum / Datenschutz)
+   15. Scroll-Reveal & Motion-Preferences
+   ============================================================================= */
+
+/* =============================================================================
+   1. DESIGN-TOKENS
+   ============================================================================= */
+:root {
+  /* Farben — verbindliches Design-System, keine anderen Farben verwenden */
+  --bg:      #0A0A0B;   /* Basis-Hintergrund */
+  --panel:   #141417;   /* Karten, Sektionsflächen */
+  --panel-2: #1B1B20;   /* Hover, zweite Ebene */
+  --line:    #26262C;   /* Trennlinien, Rahmen */
+  --text:    #F5F5F7;   /* Fliesstext, Off-White */
+  --muted:   #8A8A94;   /* sekundärer Text */
+  --accent:  #2E6FF2;   /* Elektroblau — NUR für Buttons, Links, Hover, Akzente */
+  --accent-hover: #4A82F5;
+  --accent-soft:  rgba(46, 111, 242, 0.12);
+
+  /* Typografie */
+  --font-display: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif;
+  --font-body:    'Inter', 'Helvetica Neue', Arial, sans-serif;
+
+  /* Masse */
+  --container: 1120px;
+  --reading:   720px;   /* schmale Lesespalte für Rechtsseiten */
+  --radius:    18px;    /* weiche Ecken auf Karten und Buttons (14–20px) */
+  --radius-sm: 14px;
+
+  /* Grosszügige Sektionsabstände: 72px mobil → 128px Desktop (> 120px Vorgabe) */
+  --section-gap: clamp(72px, 10vw, 128px);
+
+  --nav-h: 68px;
+}
+
+/* =============================================================================
+   2. RESET & BASIS
+   ============================================================================= */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--nav-h) + 16px); /* Anker landen nicht unter der Nav */
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 17px;          /* Body 16–18px */
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+img, svg { display: block; max-width: 100%; }
+
+::selection { background: var(--accent); color: #fff; }
+
+/* Links: Akzentfarbe nur dort, wo geklickt wird */
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+/* Sichtbarer Tastatur-Fokus (Barrierefreiheit) */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Skip-Link: springt für Screenreader/Tastatur direkt zum Inhalt */
+.skip-link {
+  position: absolute;
+  left: 16px;
+  top: -60px;
+  z-index: 200;
+  background: var(--accent);
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  transition: top 0.2s ease;
+}
+.skip-link:focus { top: 16px; text-decoration: none; }
+
+/* =============================================================================
+   3. TYPOGRAFIE
+   ============================================================================= */
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;   /* negativer Tracking auf Headlines */
+  text-wrap: balance;
+}
+
+h2 { font-size: clamp(30px, 4.5vw, 50px); }
+h3 { font-size: clamp(20px, 2.4vw, 25px); font-weight: 600; }
+
+p { max-width: 62ch; }
+
+/* Eyebrow-Label über den Sektions-Headlines */
+.eyebrow {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 22px;
+}
+
+/* Einleitungstext unter Headlines */
+.lead {
+  color: var(--muted);
+  font-size: clamp(17px, 1.5vw, 20px);
+  line-height: 1.6;
+  max-width: 46ch;
+  margin-top: 22px;
+}
+
+/* Wortmarke-Akzent: das X in --accent */
+.accent { color: var(--accent); }
+
+/* =============================================================================
+   4. LAYOUT-HELFER
+   ============================================================================= */
+.container {
+  width: min(var(--container), 100% - 44px);
+  margin-inline: auto;
+}
+
+section { padding-block: var(--section-gap); }
+
+/* Feiner Trennstrich zwischen manchen Sektionen */
+.section--bordered { border-top: 1px solid var(--line); }
+
+/* Kopf einer Sektion (Eyebrow + Headline + Lead) */
+.section-head { max-width: 780px; }
+
+/* =============================================================================
+   5. BUTTONS
+   ============================================================================= */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--accent);
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1;
+  padding: 16px 30px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease,
+              border-color 0.2s ease, color 0.2s ease;
+}
+.btn:hover {
+  text-decoration: none;
+  background: var(--accent-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 14px 34px rgba(46, 111, 242, 0.32);
+}
+.btn:active { transform: translateY(0); }
+
+/* Sekundär: nur Umriss, füllt sich beim Hover dezent */
+.btn--ghost {
+  background: transparent;
+  color: var(--text);
+  border-color: var(--line);
+}
+.btn--ghost:hover {
+  background: var(--panel-2);
+  border-color: var(--accent);
+  color: var(--text);
+  box-shadow: none;
+}
+
+/* Kompakt für die Navigation */
+.btn--sm { padding: 11px 20px; font-size: 15px; }
+
+/* Textlink mit Pfeil (z. B. "Leistungen ansehen") */
+.link-arrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: var(--text);
+}
+.link-arrow::after {
+  content: "\2192";               /* → */
+  color: var(--accent);
+  transition: transform 0.2s ease;
+}
+.link-arrow:hover { text-decoration: none; }
+.link-arrow:hover::after { transform: translateX(4px); }
+
+/* =============================================================================
+   6. NAVIGATION
+   ============================================================================= */
+.nav {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 100;
+  background: transparent;
+  border-bottom: 1px solid transparent;
+  transition: background 0.35s ease, border-color 0.35s ease;
+}
+/* Zustand nach dem ersten Scrollen (per JS gesetzt).
+   Fallback ohne JS: Blur greift dauerhaft, sobald etwas hinter der Nav liegt. */
+.nav.is-scrolled {
+  background: rgba(10, 10, 11, 0.72);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+  border-bottom-color: var(--line);
+}
+
+.nav__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--nav-h);
+}
+
+/* Marke: Logo + Wortmarke */
+.nav__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text);
+}
+.nav__brand:hover { text-decoration: none; }
+.nav__logo { width: 30px; height: 30px; }
+.nav__word {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+}
+
+/* Menü (Links + CTA) */
+.nav__menu {
+  display: flex;
+  align-items: center;
+  gap: 34px;
+}
+.nav__links {
+  display: flex;
+  gap: 32px;
+  list-style: none;
+}
+.nav__links a {
+  color: var(--muted);
+  font-size: 15px;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+.nav__links a:hover { color: var(--text); text-decoration: none; }
+
+/* Hamburger-Button — nur mobil sichtbar */
+.nav__toggle {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 44px;
+  height: 44px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+.nav__toggle span {
+  display: block;
+  width: 24px;
+  height: 2px;
+  margin-inline: auto;
+  background: var(--text);
+  border-radius: 2px;
+  transition: transform 0.3s ease, opacity 0.2s ease;
+}
+/* Aktiv-Zustand: Hamburger wird zum X */
+.nav.is-open .nav__toggle span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.nav.is-open .nav__toggle span:nth-child(2) { opacity: 0; }
+.nav.is-open .nav__toggle span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+/* --- Mobile Navigation --- */
+@media (max-width: 760px) {
+  .nav__toggle { display: flex; }
+
+  .nav__menu {
+    position: fixed;
+    inset: var(--nav-h) 0 auto 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 24px 22px 32px;
+    background: rgba(10, 10, 11, 0.96);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--line);
+    /* Standard: eingeklappt. Ohne JS bleibt das Menü über :target erreichbar
+       (siehe Fallback unten). */
+    transform: translateY(-12px);
+    opacity: 0;
+    visibility: hidden;
+    transition: transform 0.28s ease, opacity 0.28s ease, visibility 0.28s;
+  }
+  .nav.is-open .nav__menu {
+    transform: translateY(0);
+    opacity: 1;
+    visibility: visible;
+  }
+  .nav__links {
+    flex-direction: column;
+    gap: 4px;
+  }
+  .nav__links a {
+    display: block;
+    padding: 14px 4px;
+    font-size: 18px;
+    color: var(--text);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav__menu .btn { width: 100%; margin-top: 12px; }
+
+  /* Fallback ohne JavaScript: Menü per :target aufklappen
+     (Hamburger ist dann ein Anker auf #nav-menu). */
+  .nav__menu:target {
+    transform: translateY(0);
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+/* =============================================================================
+   7. HERO
+   ============================================================================= */
+.hero {
+  position: relative;
+  min-height: 92svh;
+  display: flex;
+  align-items: center;
+  padding-block: calc(var(--nav-h) + 64px) 88px;
+  overflow: hidden;
+}
+
+/* Subtiler Glow hinter der Headline — reine CSS-Fläche, kein Bild */
+.hero::before {
+  content: "";
+  position: absolute;
+  top: 22%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(820px, 92vw);
+  height: 460px;
+  background: radial-gradient(ellipse closest-side,
+              rgba(46, 111, 242, 0.20), transparent 70%);
+  filter: blur(64px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hero__inner { position: relative; z-index: 1; max-width: 900px; }
+
+.hero h1 {
+  font-size: clamp(44px, 8vw, 92px);
+  letter-spacing: -0.02em;
+  max-width: 14ch;
+}
+
+.hero .lead { max-width: 54ch; }
+
+.hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px 28px;
+  margin-top: 40px;
+}
+
+/* =============================================================================
+   8. PROBLEM
+   ============================================================================= */
+.problem__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 24px;
+  margin-top: 56px;
+}
+.problem__item {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 32px 28px;
+}
+.problem__num {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  color: var(--accent);
+  display: block;
+  margin-bottom: 18px;
+}
+.problem__item p { color: var(--text); font-size: 17px; max-width: none; }
+
+/* =============================================================================
+   9. LEISTUNGEN
+   ============================================================================= */
+.services__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  margin-top: 56px;
+}
+
+.card {
+  position: relative;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 36px 30px;
+  transition: transform 0.3s ease, border-color 0.3s ease, background 0.3s ease,
+              box-shadow 0.3s ease;
+}
+.card:hover {
+  transform: translateY(-6px);
+  background: var(--panel-2);
+  border-color: rgba(46, 111, 242, 0.55);
+  box-shadow: 0 22px 46px rgba(0, 0, 0, 0.45);
+}
+
+.card__icon {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  margin-bottom: 26px;
+}
+.card h3 { margin-bottom: 18px; }
+
+.card__list {
+  list-style: none;
+  display: grid;
+  gap: 12px;
+}
+.card__list li {
+  position: relative;
+  color: var(--muted);
+  font-size: 16px;
+  padding-left: 26px;
+}
+.card__list li::before {
+  content: "\2192";                /* → */
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+}
+
+/* =============================================================================
+   10. WARUM NEXA
+   ============================================================================= */
+.why__inner {
+  display: grid;
+  gap: 40px;
+  align-items: start;
+}
+@media (min-width: 900px) {
+  .why__inner { grid-template-columns: 4fr 6fr; gap: 72px; }
+}
+.why__story p {
+  color: var(--muted);
+  font-size: clamp(17px, 1.5vw, 20px);
+  line-height: 1.7;
+  max-width: 60ch;
+}
+.why__story strong { color: var(--text); font-weight: 600; }
+
+/* =============================================================================
+   11. ABLAUF — horizontale Timeline
+   ============================================================================= */
+.process__steps {
+  display: grid;
+  gap: 44px;
+  margin-top: 64px;
+  position: relative;
+}
+@media (min-width: 860px) {
+  .process__steps { grid-template-columns: repeat(3, 1fr); gap: 40px; }
+  /* Verbindungslinie hinter den Nummern-Kreisen */
+  .process__steps::before {
+    content: "";
+    position: absolute;
+    top: 28px;
+    left: 8%;
+    right: 8%;
+    height: 1px;
+    background: linear-gradient(90deg,
+                transparent, var(--line) 12%, var(--line) 88%, transparent);
+    z-index: 0;
+  }
+}
+.step { position: relative; z-index: 1; }
+.step__num {
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--panel);
+  border: 1px solid rgba(46, 111, 242, 0.5);
+  color: var(--accent);
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 24px;
+}
+.step h3 { margin-bottom: 12px; }
+.step p { color: var(--muted); font-size: 16px; }
+
+/* =============================================================================
+   12. KONTAKT / CTA
+   ============================================================================= */
+.contact__box {
+  position: relative;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: calc(var(--radius) * 1.4);
+  padding: clamp(48px, 8vw, 88px) clamp(24px, 6vw, 72px);
+  text-align: center;
+  overflow: hidden;
+}
+/* Dezenter Glow innerhalb der Box */
+.contact__box::before {
+  content: "";
+  position: absolute;
+  top: -35%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 72%;
+  height: 80%;
+  background: radial-gradient(ellipse closest-side,
+              rgba(46, 111, 242, 0.16), transparent 70%);
+  filter: blur(54px);
+  pointer-events: none;
+}
+.contact__box > * { position: relative; }
+.contact__box .lead { margin-inline: auto; }
+.contact__box .btn { margin-top: 36px; }
+
+/* =============================================================================
+   13. FOOTER
+   ============================================================================= */
+.footer {
+  border-top: 1px solid var(--line);
+  padding-block: 40px;
+}
+.footer__inner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px 32px;
+  align-items: center;
+  justify-content: space-between;
+}
+.footer__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text);
+}
+.footer__brand:hover { text-decoration: none; }
+.footer__brand .nav__word { font-size: 17px; }
+.footer__logo { width: 24px; height: 24px; }
+
+.footer__links {
+  display: flex;
+  gap: 26px;
+  list-style: none;
+}
+.footer__links a {
+  color: var(--muted);
+  font-size: 15px;
+  transition: color 0.2s ease;
+}
+.footer__links a:hover { color: var(--text); text-decoration: none; }
+
+.footer__copy {
+  width: 100%;
+  color: var(--muted);
+  font-size: 14px;
+  margin-top: 6px;
+}
+
+/* =============================================================================
+   14. RECHTSSEITEN (Impressum / Datenschutz)
+   ============================================================================= */
+.legal {
+  padding-top: calc(var(--nav-h) + 72px);
+  padding-bottom: var(--section-gap);
+}
+.legal__inner { max-width: var(--reading); margin-inline: auto; }
+
+.legal h1 { font-size: clamp(34px, 5vw, 52px); margin-bottom: 12px; }
+.legal .updated { color: var(--muted); font-size: 15px; margin-bottom: 48px; }
+
+.legal h2 {
+  font-size: clamp(20px, 2.4vw, 26px);
+  margin-top: 44px;
+  margin-bottom: 14px;
+}
+.legal h3 {
+  font-size: 18px;
+  margin-top: 26px;
+  margin-bottom: 8px;
+}
+.legal p { color: var(--muted); margin-bottom: 14px; max-width: none; }
+.legal strong { color: var(--text); font-weight: 600; }
+
+/* Adress-/Kontaktblock */
+.legal address {
+  font-style: normal;
+  color: var(--text);
+  line-height: 1.8;
+  padding: 22px 26px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  margin-block: 8px 20px;
+}
+.legal address .muted { color: var(--muted); }
+
+.legal a { text-decoration: underline; text-underline-offset: 3px; }
+
+.back-home {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 56px;
+  font-weight: 600;
+  color: var(--text);
+}
+.back-home::before { content: "\2190"; color: var(--accent); } /* ← */
+.back-home:hover { text-decoration: none; }
+
+/* =============================================================================
+   15. SCROLL-REVEAL & MOTION-PREFERENCES
+   ============================================================================= */
+/* Reveal-Effekt greift NUR, wenn JS aktiv ist (html.js). Ohne JS bleibt
+   alles sofort sichtbar und lesbar. */
+html.js [data-reveal] {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+  transition-delay: var(--reveal-delay, 0s);
+}
+html.js [data-reveal].is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Nutzerwunsch respektieren: keine Bewegung erzwingen */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  html.js [data-reveal] { opacity: 1; transform: none; transition: none; }
+  .hero::before { filter: blur(64px); }
+  * { animation: none !important; }
+  .btn, .card, .link-arrow::after { transition: none; }
+}

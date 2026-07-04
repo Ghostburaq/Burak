@@ -1,0 +1,6 @@
+<svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Vereinfachtes N ohne Knoten, Strichstärke 8, transparenter Grund -->
+  <line x1="28" y1="74" x2="28" y2="26" stroke="#F5F5F7" stroke-width="8" stroke-linecap="round"/>
+  <line x1="28" y1="26" x2="72" y2="74" stroke="#2E6FF2" stroke-width="8" stroke-linecap="round"/>
+  <line x1="72" y1="74" x2="72" y2="26" stroke="#F5F5F7" stroke-width="8" stroke-linecap="round"/>
+</svg>
