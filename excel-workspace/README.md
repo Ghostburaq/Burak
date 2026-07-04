@@ -47,13 +47,26 @@ Deliverable: [`MiT_GESAMTMAPPE_2026.xlsm`](MiT_GESAMTMAPPE_2026.xlsm) (30 Reiter
 
 Testsuite: `test_structure.py`, `test_recalc.py`, `test_final.py` (LibreOffice-UNO-Harness).
 
+## Zwei Varianten
+
+| Datei | Zweck |
+|---|---|
+| `MiT_GESAMTMAPPE_2026.xlsm` | **Vollversion** mit Import-Automatik (Makro-Freigabe nötig, s.u.) |
+| `MiT_GESAMTMAPPE_2026_OHNE_MAKROS.xlsx` | **Sofort nutzbar ohne jede Warnung** — alles ausser der Import-/Export-Automatik |
+| `MiT_GESAMTMAPPE_2026_Vollversion.zip` | Vollversion als ZIP — mit 7-Zip/WinRAR entpackt entsteht die Sperre oft gar nicht |
+
 ## Wichtig: Makro-Freigabe bei heruntergeladenen Dateien
 
 Excel **blockiert Makros** in Dateien aus Downloads/Chats (Mark-of-the-Web). Einmalig freigeben:
 
-1. Excel schliessen → im Explorer **Rechtsklick auf die Datei → Eigenschaften**.
-2. Unten Haken bei **„Zulassen" (Unblock)** setzen → OK.
-3. Datei öffnen → gelbe Leiste **„Inhalt aktivieren"** klicken.
+**Weg 1 (normaler PC):** Excel schliessen → Explorer → Rechtsklick auf Datei → **Eigenschaften** →
+Haken bei **„Zulassen" (Unblock)** → OK → öffnen → **„Inhalt aktivieren"**.
+
+**Weg 2 (Firmen-PC, kein „Zulassen"-Haken):** Excel → Datei → Optionen → **Trust Center** →
+Einstellungen → **Vertrauenswürdige Speicherorte** → Ordner hinzufügen (z.B. `C:\MiT`) →
+Datei dort ablegen → öffnen. Die Sperre ist dauerhaft weg.
+
+**Weg 3:** Das ZIP mit 7-Zip/WinRAR entpacken — Windows setzt die Internet-Markierung dann meist gar nicht.
 
 Ohne Makros funktioniert trotzdem alles Übrige (Formeln, Verknüpfungen, Dropdowns, Filter, Diagramme) —
 nur die Import-/Export-Automatik braucht die Freigabe. Die Anleitung steht auch gross auf `00_START`.

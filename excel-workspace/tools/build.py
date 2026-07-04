@@ -6,7 +6,7 @@ Konventionen (wichtig, VBA verlässt sich darauf):
   - Alle Listen-Tabs: Zeile 1 = Titel, Zeile 2 = Navigation, Zeile 4 = Header, Daten ab Zeile 5
   - Header, die mit '_' beginnen, sind Hilfsspalten (Import ignoriert sie)
 """
-import pickle, re, datetime
+import os, pickle, re, datetime
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
@@ -15,7 +15,8 @@ from openpyxl.formatting.rule import FormulaRule
 from openpyxl.workbook.defined_name import DefinedName
 
 D = pickle.load(open("extracted.pkl", "rb"))
-OUT_FILE = "MiT_GESAMTMAPPE_2026.xlsx"
+OHNE_MAKROS = os.environ.get("OHNE_MAKROS") == "1"
+OUT_FILE = "MiT_GESAMTMAPPE_2026_OHNE_MAKROS.xlsx" if OHNE_MAKROS else "MiT_GESAMTMAPPE_2026.xlsx"
 HEUTE = "04.07.2026"
 
 # ----------------------------------------------------------------------------
@@ -1471,15 +1472,31 @@ for bereich, farbe, tabs in nav:
         r += 1
 r += 1
 ws.merge_cells(start_row=r, start_column=2, end_row=r, end_column=6)
-put(ws, r, 2, "⚠ WICHTIG — FALLS EXCEL MAKROS BLOCKIERT (Datei aus Download/Chat)", font=F_SECT, fill="C00000")
+if OHNE_MAKROS:
+    put(ws, r, 2, "ℹ MAKROFREIE VERSION (.xlsx) — läuft ohne jede Sicherheitswarnung", font=F_SECT, fill="1F4E79")
+else:
+    put(ws, r, 2, "⚠ FALLS EXCEL MELDET: 'Ein potenziell gefährliches Makro wurde blockiert'", font=F_SECT, fill="C00000")
 r += 1
-motw = [
-    "Excel blockiert Makros bei heruntergeladenen Dateien. So gibst du sie EINMALIG frei:",
-    "1.  Excel schliessen  →  im Explorer RECHTSKLICK auf die Datei  →  Eigenschaften.",
-    "2.  Unten im Reiter 'Allgemein' den Haken bei  „Zulassen / Unblock“  setzen  →  OK.",
-    "3.  Datei neu öffnen  →  gelbe Leiste  „Inhalt aktivieren“  anklicken. Fertig — Import & Shortcuts laufen.",
-    "Auch OHNE Makros funktioniert alles Übrige zu 100%: alle Reiter, Formeln, Verknüpfungen, Dropdowns, Filter, Diagramme.",
-]
+if OHNE_MAKROS:
+    motw = [
+        "Diese Version enthält KEINE Makros — Excel zeigt keine Warnung, alles ist sofort nutzbar:",
+        "Alle 30 Reiter, sämtliche Formeln, Verknüpfungen, Dropdowns, Filter, Diagramme, Berichte — 100% funktionsfähig.",
+        "Nur die Automatik-Funktionen (Ctrl+Shift+I Import, Ctrl+Shift+M Monatsreport-Export) gibt es ausschliesslich",
+        "in der Vollversion 'MiT_GESAMTMAPPE_2026.xlsm' (Freischaltung: siehe Reiter 99_INFO).",
+        "Neue Daten kannst du hier ganz normal von Hand anhängen: unten in der jeweiligen Liste weiterschreiben oder einfügen.",
+    ]
+else:
+    motw = [
+        "Das ist Microsofts Standard-Sperre für Dateien aus dem Internet. DREI Wege, sie EINMALIG zu lösen:",
+        "WEG 1 (normaler PC):  Excel schliessen → Explorer → RECHTSKLICK auf die Datei → Eigenschaften →",
+        "     unten Haken bei „Zulassen / Unblock“ setzen → OK → Datei öffnen → „Inhalt aktivieren“ klicken.",
+        "WEG 2 (Firmen-PC / kein 'Zulassen'-Haken sichtbar):  Excel → Datei → Optionen → Trust Center →",
+        "     Einstellungen für das Trust Center → Vertrauenswürdige Speicherorte → Neuen Speicherort hinzufügen →",
+        "     deinen Ordner (z.B. C:\\MiT) wählen → OK. Datei in diesen Ordner legen → öffnen. Sperre weg — dauerhaft.",
+        "WEG 3:  Die Datei als ZIP erhalten und mit 7-Zip/WinRAR entpacken — dann setzt Windows die Sperre gar nicht erst.",
+        "Auch OHNE Makros funktioniert alles Übrige zu 100%: alle Reiter, Formeln, Verknüpfungen, Dropdowns, Filter, Diagramme.",
+        "Zusätzlich liegt eine komplett makrofreie Version bei: MiT_GESAMTMAPPE_2026_OHNE_MAKROS.xlsx (keinerlei Warnung).",
+    ]
 for h in motw:
     ws.merge_cells(start_row=r, start_column=2, end_row=r, end_column=6)
     put(ws, r, 2, h, font=Font(size=10, bold=h.startswith("Excel"), color="9C0006"))
