@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="de-CH">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="NEXA — Agentur für KI-Automation, CRM-Systeme und Web-/App-Entwicklung für KMU und technische Unternehmen im DACH-Raum.">
+  <meta name="theme-color" content="#0A0A0B">
+  <title>NEXA — KI-Automation, CRM &amp; Entwicklung</title>
+
+  <!-- ============================================================
+       FONTS — Space Grotesk (Headlines) + Inter (Body)
+       ============================================================ -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+
+  <!-- Progressive Enhancement: markiert <html> als JS-fähig, BEVOR
+       das erste Rendering passiert. Alle Scroll-Animationen greifen
+       nur unter html.js — ohne JavaScript bleibt die Seite
+       vollständig sichtbar und lesbar. -->
+  <script>document.documentElement.classList.add('js');</script>
+
+  <style>
+    /* ============================================================
+       1. DESIGN-TOKENS
+       ============================================================ */
+    :root {
+      --bg:          #0A0A0B;   /* Grundfläche */
+      --bg-elevated: #141417;   /* Karten, erhöhte Flächen */
+      --text:        #F5F5F7;   /* Primärtext */
+      --text-muted:  #A1A1A8;   /* Sekundärtext */
+      --accent:      #2E6FF2;   /* Einzige Akzentfarbe — ANPASSEN falls andere Palette */
+      --accent-soft: rgba(46, 111, 242, 0.14);
+      --line:        rgba(255, 255, 255, 0.08);  /* Haarlinien */
+
+      --font-display: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif;
+      --font-body:    'Inter', 'Helvetica Neue', Arial, sans-serif;
+
+      --container: 1120px;
+      --radius:    20px;
+
+      /* Grosszügiger Sektionsabstand: 88px mobil → 160px Desktop
+         (Desktop immer über der 120px-Vorgabe) */
+      --section-gap: clamp(88px, 12vw, 160px);
+    }
+
+    /* ============================================================
+       2. RESET & BASIS
+       ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 88px; /* Anker landen nicht unter der Sticky-Nav */
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 17px;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      overflow-x: hidden;
+    }
+
+    ::selection { background: var(--accent); color: #fff; }
+
+    img, svg { display: block; max-width: 100%; }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+    :focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 3px;
+      border-radius: 4px;
+    }
+
+    .container {
+      width: min(var(--container), 100% - 48px);
+      margin-inline: auto;
+    }
+
+    section { padding-block: var(--section-gap); }
+
+    /* ============================================================
+       3. TYPOGRAFIE
+       ============================================================ */
+    h1, h2, h3 {
+      font-family: var(--font-display);
+      font-weight: 700;
+      line-height: 1.08;
+      letter-spacing: -0.02em;
+      text-wrap: balance;
+    }
+
+    h2 { font-size: clamp(32px, 4.5vw, 52px); }
+    h3 { font-size: clamp(20px, 2.2vw, 24px); font-weight: 500; }
+
+    /* Kleine Zeile über jeder Sektions-Headline */
+    .eyebrow {
+      display: block;
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 20px;
+    }
+
+    .lead {
+      color: var(--text-muted);
+      font-size: clamp(17px, 1.6vw, 20px);
+      max-width: 40em;
+      margin-top: 24px;
+    }
+
+    /* ============================================================
+       4. BUTTONS
+       ============================================================ */
+    .btn {
+      display: inline-block;
+      background: var(--accent);
+      color: #fff;
+      font-family: var(--font-body);
+      font-size: 16px;
+      font-weight: 600;
+      padding: 15px 32px;
+      border-radius: 999px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+    .btn:hover {
+      text-decoration: none;
+      background: #4A82F5;
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(46, 111, 242, 0.35);
+    }
+    .btn:active { transform: translateY(0); }
+
+    /* Kompakte Variante für die Navigation */
+    .btn--nav { font-size: 14px; padding: 9px 20px; }
+
+    /* ============================================================
+       5. NAVIGATION — sticky, beim Scrollen transparent + Blur
+       ============================================================ */
+    .nav {
+      position: fixed;
+      inset: 0 0 auto 0;
+      z-index: 100;
+      background: transparent;
+      border-bottom: 1px solid transparent;
+      transition: background 0.35s ease, border-color 0.35s ease,
+                  backdrop-filter 0.35s ease;
+    }
+    /* Zustand nach dem ersten Scrollen (per JS gesetzt).
+       Fallback ohne JS: Nav bleibt transparent — Inhalt bleibt lesbar. */
+    .nav.is-scrolled {
+      background: rgba(10, 10, 11, 0.72);
+      -webkit-backdrop-filter: saturate(180%) blur(20px);
+      backdrop-filter: saturate(180%) blur(20px);
+      border-bottom-color: var(--line);
+    }
+
+    .nav__inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+    }
+
+    .nav__logo {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: var(--text);
+    }
+    .nav__logo:hover { text-decoration: none; color: var(--accent); }
+
+    .nav__links {
+      display: flex;
+      gap: 32px;
+      list-style: none;
+    }
+    .nav__links a {
+      color: var(--text-muted);
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s ease;
+    }
+    .nav__links a:hover { color: var(--text); text-decoration: none; }
+
+    /* Mobil: Links ausblenden, Logo + CTA genügen (One-Pager) */
+    @media (max-width: 720px) {
+      .nav__links { display: none; }
+    }
+
+    /* ============================================================
+       6. HERO — grosse Headline mit dezentem Glow
+       ============================================================ */
+    .hero {
+      position: relative;
+      min-height: 100svh;
+      display: flex;
+      align-items: center;
+      padding-block: 140px 96px;
+    }
+
+    /* Dezenter Glow hinter der Headline — reine CSS-Fläche, kein Bild */
+    .hero::before {
+      content: "";
+      position: absolute;
+      top: 18%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(760px, 90vw);
+      height: 420px;
+      background: radial-gradient(ellipse closest-side,
+                  rgba(46, 111, 242, 0.22), transparent 70%);
+      filter: blur(60px);
+      pointer-events: none;
+      animation: glow-pulse 7s ease-in-out infinite;
+    }
+    @keyframes glow-pulse {
+      0%, 100% { opacity: 0.7; }
+      50%      { opacity: 1; }
+    }
+
+    .hero__inner { position: relative; text-align: center; }
+
+    .hero h1 {
+      font-size: clamp(48px, 8vw, 88px);
+      max-width: 12ch;
+      margin-inline: auto;
+    }
+    /* Schutz für sehr schmale Geräte (< 390px): das längste Wort
+       ("Automatisiert.") darf die Container-Breite nicht sprengen. */
+    @media (max-width: 479px) {
+      .hero h1 { font-size: clamp(38px, 12.5vw, 48px); }
+    }
+
+    .hero .lead {
+      margin-inline: auto;
+      text-align: center;
+      max-width: 34em;
+    }
+
+    .hero__cta { margin-top: 44px; }
+
+    /* Dezente Kennzahlen-Zeile unter dem CTA */
+    .hero__meta {
+      margin-top: 64px;
+      display: flex;
+      justify-content: center;
+      gap: 12px 32px;
+      flex-wrap: wrap;
+      color: var(--text-muted);
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+    }
+    .hero__meta span::before {
+      content: "—";
+      color: var(--accent);
+      margin-right: 10px;
+    }
+
+    /* ============================================================
+       7. PROBLEM — drei harte Aussagen
+       ============================================================ */
+    .problem__grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 48px 40px;
+      margin-top: 64px;
+    }
+
+    .problem__item {
+      border-top: 1px solid var(--line);
+      padding-top: 28px;
+    }
+    .problem__item h3 {
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+    .problem__item p { color: var(--text-muted); }
+
+    /* Nummerierung als typografisches Element */
+    .problem__item .num {
+      display: block;
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      color: var(--accent);
+      margin-bottom: 18px;
+    }
+
+    /* ============================================================
+       8. LEISTUNGEN — drei Karten mit Hover-Effekt
+       ============================================================ */
+    .services { background: transparent; }
+
+    .services__grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      margin-top: 64px;
+    }
+
+    .card {
+      background: var(--bg-elevated);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 40px 32px;
+      transition: transform 0.3s ease, border-color 0.3s ease,
+                  box-shadow 0.3s ease;
+    }
+    .card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(46, 111, 242, 0.55);
+      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45),
+                  0 0 0 1px rgba(46, 111, 242, 0.25);
+    }
+
+    .card__icon {
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      margin-bottom: 28px;
+    }
+    .card h3 { margin-bottom: 14px; font-weight: 700; }
+    .card p  { color: var(--text-muted); font-size: 16px; }
+
+    .card ul {
+      list-style: none;
+      margin-top: 22px;
+      display: grid;
+      gap: 10px;
+    }
+    .card li {
+      color: var(--text-muted);
+      font-size: 15px;
+      padding-left: 22px;
+      position: relative;
+    }
+    .card li::before {
+      content: "→";
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+    }
+
+    /* ============================================================
+       9. WARUM NEXA — Story-Block
+       ============================================================ */
+    .why__inner {
+      display: grid;
+      gap: 48px;
+      align-items: start;
+    }
+    @media (min-width: 880px) {
+      .why__inner { grid-template-columns: 5fr 7fr; gap: 80px; }
+    }
+
+    .why__story p {
+      color: var(--text-muted);
+      font-size: clamp(17px, 1.5vw, 19px);
+    }
+    .why__story p + p { margin-top: 22px; }
+    .why__story strong { color: var(--text); font-weight: 600; }
+
+    /* Drei knappe Prinzipien als typografische Liste */
+    .why__facts {
+      margin-top: 40px;
+      border-top: 1px solid var(--line);
+      list-style: none;
+    }
+    .why__facts li {
+      display: flex;
+      gap: 20px;
+      align-items: baseline;
+      padding-block: 18px;
+      border-bottom: 1px solid var(--line);
+      font-size: 16px;
+    }
+    .why__facts .label {
+      font-family: var(--font-display);
+      font-weight: 500;
+      color: var(--accent);
+      min-width: 110px;
+      font-size: 14px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .why__facts .value { color: var(--text-muted); }
+
+    /* ============================================================
+       10. ABLAUF — horizontale Timeline (mobil vertikal)
+       ============================================================ */
+    .process__steps {
+      display: grid;
+      gap: 56px;
+      margin-top: 72px;
+      position: relative;
+    }
+    @media (min-width: 880px) {
+      .process__steps { grid-template-columns: repeat(3, 1fr); gap: 48px; }
+      /* Verbindungslinie durch die Nummern-Kreise */
+      .process__steps::before {
+        content: "";
+        position: absolute;
+        top: 27px;
+        left: 8%;
+        right: 8%;
+        height: 1px;
+        background: linear-gradient(90deg,
+                    transparent, var(--line) 15%, var(--line) 85%, transparent);
+      }
+    }
+
+    .step { position: relative; }
+
+    .step__num {
+      position: relative;
+      z-index: 1;
+      width: 56px;
+      height: 56px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--bg-elevated);
+      border: 1px solid rgba(46, 111, 242, 0.45);
+      color: var(--accent);
+      font-family: var(--font-display);
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      margin-bottom: 26px;
+    }
+
+    .step h3 { font-weight: 700; margin-bottom: 12px; }
+    .step p  { color: var(--text-muted); font-size: 16px; max-width: 34em; }
+
+    /* ============================================================
+       11. KONTAKT — CTA-Sektion
+       ============================================================ */
+    .contact { position: relative; }
+
+    .contact__box {
+      position: relative;
+      background: var(--bg-elevated);
+      border: 1px solid var(--line);
+      border-radius: calc(var(--radius) * 1.4);
+      padding: clamp(56px, 8vw, 96px) clamp(24px, 6vw, 80px);
+      text-align: center;
+      overflow: hidden;
+    }
+    /* Dezenter Glow innerhalb der Box */
+    .contact__box::before {
+      content: "";
+      position: absolute;
+      top: -40%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 70%;
+      height: 80%;
+      background: radial-gradient(ellipse closest-side,
+                  rgba(46, 111, 242, 0.18), transparent 70%);
+      filter: blur(50px);
+      pointer-events: none;
+    }
+
+    .contact__box > * { position: relative; }
+    .contact__box .lead { margin-inline: auto; max-width: 32em; }
+    .contact__box .btn { margin-top: 40px; }
+
+    .contact__hint {
+      margin-top: 20px;
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    /* ============================================================
+       12. FOOTER
+       ============================================================ */
+    .footer {
+      border-top: 1px solid var(--line);
+      padding-block: 40px;
+    }
+    .footer__inner {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px 32px;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+    .footer__links {
+      display: flex;
+      gap: 28px;
+      list-style: none;
+    }
+    .footer__links a {
+      color: var(--text-muted);
+      transition: color 0.2s ease;
+    }
+    .footer__links a:hover { color: var(--text); text-decoration: none; }
+
+    /* ============================================================
+       13. SCROLL-REVEAL — nur aktiv, wenn JS verfügbar ist
+       ============================================================ */
+    html.js [data-reveal] {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+      transition-delay: var(--reveal-delay, 0s);
+    }
+    html.js [data-reveal].is-visible {
+      opacity: 1;
+      transform: none;
+    }
+
+    /* Nutzerpräferenz respektieren: keine Bewegung erzwingen */
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      html.js [data-reveal] { opacity: 1; transform: none; transition: none; }
+      .hero::before { animation: none; }
+      .btn, .card { transition: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============================================================
+       NAVIGATION
+       ============================================================ -->
+  <header class="nav" id="nav">
+    <div class="container nav__inner">
+      <a class="nav__logo" href="#top" aria-label="NEXA — zum Seitenanfang">NEXA</a>
+      <nav aria-label="Hauptnavigation">
+        <ul class="nav__links">
+          <li><a href="#problem">Problem</a></li>
+          <li><a href="#leistungen">Leistungen</a></li>
+          <li><a href="#warum">Warum NEXA</a></li>
+          <li><a href="#ablauf">Ablauf</a></li>
+        </ul>
+      </nav>
+      <a class="btn btn--nav" href="#kontakt">Erstgespräch buchen</a>
+    </div>
+  </header>
+
+  <main id="top">
+
+    <!-- ==========================================================
+         1. HERO
+         ========================================================== -->
+    <section class="hero">
+      <div class="container hero__inner">
+        <!-- ANPASSEN (Du oder Sie): Für durchgängiges Siezen die
+             Headline auf "Ihr Business. Automatisiert." ändern. -->
+        <h1 data-reveal>Dein Business. Automatisiert.</h1>
+        <p class="lead" data-reveal style="--reveal-delay: 0.1s">
+          NEXA baut KI-Automationen, CRM-Systeme und digitale Produkte
+          für KMU und technische Unternehmen im DACH-Raum.
+          Weniger Handarbeit, keine verlorenen Leads, Systeme, die skalieren.
+        </p>
+        <div class="hero__cta" data-reveal style="--reveal-delay: 0.2s">
+          <a class="btn" href="#kontakt">Erstgespräch buchen</a>
+        </div>
+        <p class="hero__meta" data-reveal style="--reveal-delay: 0.3s">
+          <span>KI-Automation</span>
+          <span>CRM &amp; Vertrieb</span>
+          <span>Web &amp; App</span>
+        </p>
+      </div>
+    </section>
+
+    <!-- ==========================================================
+         2. PROBLEM — drei Schmerzpunkte
+         ========================================================== -->
+    <section class="problem" id="problem">
+      <div class="container">
+        <span class="eyebrow" data-reveal>Das Problem</span>
+        <h2 data-reveal>Was Sie jeden Monat<br>Umsatz kostet.</h2>
+
+        <div class="problem__grid">
+          <div class="problem__item" data-reveal>
+            <span class="num">01</span>
+            <h3>Manuelle Prozesse</h3>
+            <p>Ihr Team kopiert Daten von Hand von A nach B. Jeden Tag.
+               Das ist keine Arbeit — das ist Verschwendung.</p>
+          </div>
+          <div class="problem__item" data-reveal style="--reveal-delay: 0.1s">
+            <span class="num">02</span>
+            <h3>Versandende Leads</h3>
+            <p>Anfragen liegen tagelang unbeantwortet im Postfach.
+               Ihre Konkurrenz antwortet in Minuten — und macht den Abschluss.</p>
+          </div>
+          <div class="problem__item" data-reveal style="--reveal-delay: 0.2s">
+            <span class="num">03</span>
+            <h3>Fehlende Systeme</h3>
+            <p>Excel, Zettel, Zuruf. Ohne System skaliert nichts —
+               auch Ihr Umsatz nicht.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================================
+         3. LEISTUNGEN — drei Karten
+         ========================================================== -->
+    <section class="services" id="leistungen">
+      <div class="container">
+        <span class="eyebrow" data-reveal>Leistungen</span>
+        <h2 data-reveal>Drei Hebel.<br>Ein Ziel: Wachstum.</h2>
+
+        <div class="services__grid">
+          <!-- Karte 1: KI-Automation -->
+          <article class="card" data-reveal>
+            <div class="card__icon" aria-hidden="true">
+              <!-- Blitz-Icon: Geschwindigkeit / Automation -->
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                   stroke-linejoin="round">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+              </svg>
+            </div>
+            <h3>KI-Automation &amp; Workflows</h3>
+            <p>Repetitive Abläufe laufen automatisch — von der Anfrage
+               bis zum Reporting. Ihr Team arbeitet an dem, was Umsatz bringt.</p>
+            <ul>
+              <li>Prozess-Automatisierung mit KI</li>
+              <li>Angebots- und Dokumenten-Workflows</li>
+              <li>Anbindung bestehender Tools</li>
+            </ul>
+          </article>
+
+          <!-- Karte 2: CRM & Vertrieb -->
+          <article class="card" data-reveal style="--reveal-delay: 0.1s">
+            <div class="card__icon" aria-hidden="true">
+              <!-- Trend-Icon: Pipeline / Wachstum -->
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                   stroke-linejoin="round">
+                <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/>
+                <polyline points="16 7 22 7 22 13"/>
+              </svg>
+            </div>
+            <h3>CRM &amp; Vertriebsprozesse</h3>
+            <p>Ein CRM, das Ihr Vertrieb wirklich nutzt: saubere Pipeline,
+               automatisierte Follow-ups, volle Transparenz über jeden Lead.</p>
+            <ul>
+              <li>CRM-Auswahl, Setup und Migration</li>
+              <li>Automatisierte Lead-Qualifizierung</li>
+              <li>Vertriebsreporting in Echtzeit</li>
+            </ul>
+          </article>
+
+          <!-- Karte 3: Web & App -->
+          <article class="card" data-reveal style="--reveal-delay: 0.2s">
+            <div class="card__icon" aria-hidden="true">
+              <!-- Code-Icon: Entwicklung -->
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                   stroke-linejoin="round">
+                <polyline points="16 18 22 12 16 6"/>
+                <polyline points="8 6 2 12 8 18"/>
+              </svg>
+            </div>
+            <h3>Web- &amp; App-Entwicklung</h3>
+            <p>Schnelle, wartbare Websites und Anwendungen — gebaut für
+               Konversion und Alltagstauglichkeit, nicht für Designpreise.</p>
+            <ul>
+              <li>Websites &amp; Landingpages</li>
+              <li>Interne Tools &amp; Portale</li>
+              <li>Schnittstellen &amp; Integrationen</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================================
+         4. WARUM NEXA — Story-Block
+         ANPASSEN: eigene Story-Details ergänzen (Name, Werdegang,
+         Branchen, konkrete Resultate).
+         ========================================================== -->
+    <section class="why" id="warum">
+      <div class="container why__inner">
+        <div>
+          <span class="eyebrow" data-reveal>Warum NEXA</span>
+          <h2 data-reveal>Praxis statt Theorie.</h2>
+        </div>
+
+        <div class="why__story" data-reveal style="--reveal-delay: 0.1s">
+          <p>
+            Hinter NEXA steht ein <strong>Ingenieur mit B2B-Vertriebserfahrung
+            und militärischem Hintergrund</strong>. Das heisst: strukturierte
+            Analyse, klare Kommunikation, disziplinierte Umsetzung —
+            unter realen Bedingungen, nicht auf Folien.
+          </p>
+          <p>
+            Wir kennen beide Seiten: die Technik, die funktionieren muss,
+            und den Vertrieb, der davon leben soll. Deshalb bauen wir keine
+            Konzepte, die in der Schublade landen, sondern Systeme,
+            die ab Tag eins im Tagesgeschäft arbeiten.
+          </p>
+
+          <ul class="why__facts">
+            <li>
+              <span class="label">Herkunft</span>
+              <span class="value">Ingenieurwesen, B2B-Vertrieb, Militär — Struktur ist kein Buzzword.</span>
+            </li>
+            <li>
+              <span class="label">Arbeitsweise</span>
+              <span class="value">Direkt, messbar, ohne Agentur-Theater und ohne 80-Folien-Strategie.</span>
+            </li>
+            <li>
+              <span class="label">Anspruch</span>
+              <span class="value">Systeme, die Ihr Team wirklich nutzt — sonst haben wir unseren Job nicht gemacht.</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================================
+         5. ABLAUF — drei Schritte als Timeline
+         ========================================================== -->
+    <section class="process" id="ablauf">
+      <div class="container">
+        <span class="eyebrow" data-reveal>Ablauf</span>
+        <h2 data-reveal>In drei Schritten<br>zum laufenden System.</h2>
+
+        <div class="process__steps">
+          <div class="step" data-reveal>
+            <div class="step__num">01</div>
+            <h3>Analyse</h3>
+            <p>Wir zerlegen Ihre Prozesse und finden die Stellen mit dem
+               grössten Hebel. Sie erhalten einen konkreten Plan —
+               keine Folienschlacht.</p>
+          </div>
+          <div class="step" data-reveal style="--reveal-delay: 0.15s">
+            <div class="step__num">02</div>
+            <h3>Umsetzung</h3>
+            <p>Wir bauen, integrieren und testen. In Wochen, nicht Monaten.
+               Ihr Team wird eingebunden, nicht überfahren.</p>
+          </div>
+          <div class="step" data-reveal style="--reveal-delay: 0.3s">
+            <div class="step__num">03</div>
+            <h3>Skalierung</h3>
+            <p>Was funktioniert, wird ausgebaut. Wir messen, optimieren
+               und erweitern Ihre Systeme Schritt für Schritt.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================================
+         6. KONTAKT — CTA-Sektion
+         ANPASSEN: mailto-Adresse durch echte Adresse oder
+         Buchungslink (z. B. Cal.com / Calendly) ersetzen.
+         ========================================================== -->
+    <section class="contact" id="kontakt">
+      <div class="container">
+        <div class="contact__box" data-reveal>
+          <span class="eyebrow">Kontakt</span>
+          <h2>Bereit für Systeme,<br>die arbeiten?</h2>
+          <p class="lead">
+            Buchen Sie ein unverbindliches Erstgespräch: 30 Minuten,
+            eine ehrliche Einschätzung, keine Verkaufsshow.
+          </p>
+          <a class="btn" href="mailto:kontakt@nexa.example?subject=Erstgespräch%20NEXA">
+            Erstgespräch buchen
+          </a>
+          <p class="contact__hint">Antwort innerhalb von 24 Stunden — werktags.</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============================================================
+       7. FOOTER
+       ============================================================ -->
+  <footer class="footer">
+    <div class="container footer__inner">
+      <span>© 2026 NEXA. Alle Rechte vorbehalten.</span>
+      <ul class="footer__links">
+        <!-- ANPASSEN: echte Unterseiten oder Anker verlinken -->
+        <li><a href="#">Impressum</a></li>
+        <li><a href="#">Datenschutz</a></li>
+      </ul>
+    </div>
+  </footer>
+
+  <!-- ============================================================
+       JAVASCRIPT — rein progressive Verbesserung.
+       Ohne JS: keine Animationen, aber vollständige Lesbarkeit.
+       ============================================================ -->
+  <script>
+    (function () {
+      'use strict';
+
+      /* --- Sticky-Nav: nach dem ersten Scrollen Blur + Transparenz --- */
+      var nav = document.getElementById('nav');
+      function updateNav() {
+        nav.classList.toggle('is-scrolled', window.scrollY > 8);
+      }
+      window.addEventListener('scroll', updateNav, { passive: true });
+      updateNav(); // Initialzustand (z. B. bei Reload mitten auf der Seite)
+
+      /* --- Scroll-Reveal: Sektionen sanft einblenden --- */
+      var revealables = document.querySelectorAll('[data-reveal]');
+      var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+      if ('IntersectionObserver' in window && !reduceMotion.matches) {
+        var observer = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('is-visible');
+              observer.unobserve(entry.target); // nur einmal animieren
+            }
+          });
+        }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+
+        revealables.forEach(function (el) { observer.observe(el); });
+      } else {
+        /* Fallback: alles sofort sichtbar machen */
+        revealables.forEach(function (el) { el.classList.add('is-visible'); });
+      }
+    })();
+  </script>
+</body>
+</html>
