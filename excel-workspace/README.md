@@ -1,18 +1,18 @@
 # MiT × Aggreko — GESAMTMAPPE 2026
 
 **Eine einzige Excel-Arbeitsmappe als Workspace** — ersetzt 15 Einzeldateien.
-Deliverable: [`MiT_GESAMTMAPPE_2026.xlsm`](MiT_GESAMTMAPPE_2026.xlsm) (28 Reiter, 9'003 Formeln, VBA-Import-Automatik).
+Deliverable: [`MiT_GESAMTMAPPE_2026.xlsm`](MiT_GESAMTMAPPE_2026.xlsm) (30 Reiter, 10'332 Formeln, 5 Live-Diagramme, VBA-Import-Automatik).
 
 ## Aufbau (28 Reiter, logisch getrennt & verknüpft)
 
 | Bereich | Reiter | Inhalt |
 |---|---|---|
 | Navigation | `00_START`, `01_DASHBOARD` | Navigation + Live-KPIs über alle Bereiche |
-| Vertrieb Strom CH | `02_PIPELINE` … `07_KUNDENANALYSE` | 47 Deals (aus 3 Versionen dedupliziert), 798 CRM-Firmen, 1'133 Kundenkontakte, Forecast, Monatsreport |
-| Datacenter CH | `08_DC_BETREIBER` … `12_DC_DOSSIERS` | 30 Betreiber, 16 Bauprojekte (3 Quellen gemerged), 38 Standorte, Kontakte, Dossiers |
-| Global | `13_GLOBAL_PROJEKTE` … `15_GLOBAL_ANALYTICS` | 10'572 DC-Projekte, 8'502 Kontakte, Live-Analytics |
-| Produkte & Preise | `16_KATALOG` … `18_PREISLISTE_INTL` | 466 Produkte, Preislisten CHF + International |
-| Werkzeuge | `19_GEN_RECHNER` … `24_SYSTEME_WISSEN` | Generator-Rechner, Angebotskalkulator, Marktvolumen, Normen, Akquiseplan |
+| Vertrieb Strom CH | `02_PIPELINE` … `09_KUNDENANALYSE` | 47 Deals (neueste CEO/CFO-Version als Basis), 798 CRM-Firmen, 1'133 Kundenkontakte, Forecast, Monatsreport, **CEO-Report**, **Diagramme** |
+| Datacenter CH | `10_DC_BETREIBER` … `14_DC_DOSSIERS` | 30 Betreiber, 16 Bauprojekte (3 Quellen gemerged), 38 Standorte, Kontakte, Dossiers |
+| Global | `15_GLOBAL_PROJEKTE` … `17_GLOBAL_ANALYTICS` | 10'572 DC-Projekte, 8'502 Kontakte, Live-Analytics |
+| Produkte & Preise | `18_KATALOG` … `20_PREISLISTE_INTL` | 466 Produkte, Preislisten CHF + International |
+| Werkzeuge | `21_GEN_RECHNER` … `26_SYSTEME_WISSEN` | Generator-Rechner, Angebotskalkulator, Marktvolumen, Normen, Akquiseplan |
 | System | `90_IMPORT`, `91_LISTEN`, `99_INFO` | Import-Zentrale, Dropdown-Quellen, Doku |
 
 ## Import-Automatik (VBA)
@@ -47,7 +47,13 @@ Deliverable: [`MiT_GESAMTMAPPE_2026.xlsm`](MiT_GESAMTMAPPE_2026.xlsm) (28 Reiter
 
 Testsuite: `test_structure.py`, `test_recalc.py`, `test_final.py` (LibreOffice-UNO-Harness).
 
-## Hinweis
+## Wichtig: Makro-Freigabe bei heruntergeladenen Dateien
 
-Beim ersten Öffnen in Excel: **„Inhalt aktivieren"** klicken (Makros), sonst funktionieren
-Import & Shortcuts nicht — alle Formeln/Verknüpfungen laufen auch ohne Makros.
+Excel **blockiert Makros** in Dateien aus Downloads/Chats (Mark-of-the-Web). Einmalig freigeben:
+
+1. Excel schliessen → im Explorer **Rechtsklick auf die Datei → Eigenschaften**.
+2. Unten Haken bei **„Zulassen" (Unblock)** setzen → OK.
+3. Datei öffnen → gelbe Leiste **„Inhalt aktivieren"** klicken.
+
+Ohne Makros funktioniert trotzdem alles Übrige (Formeln, Verknüpfungen, Dropdowns, Filter, Diagramme) —
+nur die Import-/Export-Automatik braucht die Freigabe. Die Anleitung steht auch gross auf `00_START`.

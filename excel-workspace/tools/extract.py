@@ -19,6 +19,7 @@ F = {
     "preis_intl":   f"{U}/4fdb6b33-MIT_PriceList_Confidential.xlsx",
     "ceo_alt":      f"{U}/5484bfa1-CH_MiT_Strom_Customer_CEO_CFO.xlsx",
     "ceo_neu":      f"{U}/6a0818d2-CH_MiT_Strom_Customer_CEO_CFO.xlsx",
+    "ceo_neu2":     f"{U}/51e7a364-CH_MiT_Strom_Customer_CEO_CFO.xlsx",
     "preis_chf":    f"{U}/68c35401-202605_MIT_PriceList_CHF.xlsx",
     "rsrg":         f"{U}/822a71f1-RSRG_Kundenanalyse_MiT_2026.xlsx",
     "gesamt":       f"{U}/b977007b-MiT_DC_GESAMTMAPPE_2026_FIXED.xlsx",
@@ -115,6 +116,7 @@ def get_pipeline(key, sheet):
     rows2 = [r for r in rows2 if r[ki]]
     return h2, rows2
 
+p_neu2_h, p_neu2 = get_pipeline("ceo_neu2", "MiT Strom Pipeline")
 p_new_h, p_new = get_pipeline("ceo_neu", "MiT Strom Pipeline")
 p_old_h, p_old = get_pipeline("ceo_alt", "MiT Strom Pipeline")
 p_mon_h, p_mon = get_pipeline("monthly", "MiT Strom Pipeline")
@@ -127,9 +129,9 @@ def pipe_key(h, row):
     return (norm_key(d.get("Kunde / Unternehmen")), norm_key(d.get("Leistung / Fleet")),
             str(d.get("Start") or ""))
 
-# Basis = Version mit den meisten Zeilen; andere anhängen falls Schlüssel fehlt
-candidates = [("ceo_neu", p_new_h, p_new), ("monthly", p_mon_h, p_mon), ("ceo_alt", p_old_h, p_old)]
-candidates.sort(key=lambda t: len(t[2]), reverse=True)
+# Basis = NEUESTE Datei (ceo_neu2); andere anhängen falls Schlüssel fehlt
+candidates = [("ceo_neu2", p_neu2_h, p_neu2), ("ceo_alt", p_old_h, p_old),
+              ("ceo_neu", p_new_h, p_new), ("monthly", p_mon_h, p_mon)]
 base_name, base_h, base_rows = candidates[0]
 seen = {pipe_key(base_h, r) for r in base_rows}
 merged = [dict(zip(base_h, r)) for r in base_rows]

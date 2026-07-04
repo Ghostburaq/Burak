@@ -247,7 +247,7 @@ sp_pipe = [
     {"h": "Follow-Up", "w": 11},
     {"h": "Notiz intern", "w": 32},
     {"h": "_Rang", "w": 6, "hidden": True,
-     "f": '=IF(OR($B{r}="",NOT(ISNUMBER($I{r}))),"",$I{r}+ROW()/10000000)'},
+     "f": '=IF($B{r}="","",IF(ISNUMBER($I{r}),$I{r},0)+ROW()/10000000)'},
 ]
 ws = liste_bauen(wb, "02_PIPELINE", C_VERT, "PIPELINE — MiT Strom Schweiz (Master)",
                  f"Alle Deals zentral. Neue Deals hier erfassen oder per Import (Ctrl+Shift+I). Stand: {HEUTE}",
@@ -354,7 +354,7 @@ ws.conditional_formatting.add(f"H5:H{KA}", FormulaRule(
     font=Font(bold=True, color="006100")))
 
 # ============================================================================
-# 08_DC_BETREIBER
+# 10_DC_BETREIBER
 # ============================================================================
 alias_betr = {"Code CH": "Standort-Code CH", "Kt": "Kanton", "Prio": "Priorität MiT",
               "Prioritaet MiT": "Priorität MiT", "Vorgaenger": "Vorgänger",
@@ -383,7 +383,7 @@ sp_betr = [
     {"h": "Bemerkung", "w": 40},
     {"h": "Quelle", "w": 20},
 ]
-ws = liste_bauen(wb, "08_DC_BETREIBER", C_DC, "DC-BETREIBER SCHWEIZ — Master-Daten",
+ws = liste_bauen(wb, "10_DC_BETREIBER", C_DC, "DC-BETREIBER SCHWEIZ — Master-Daten",
                  "Alle Rechenzentrums-Betreiber CH, verifiziert Mai 2026 (30 Einträge).",
                  sp_betr, betr_rows, BT, freeze="B5")
 ws.conditional_formatting.add(f"R5:R{BT}", FormulaRule(
@@ -391,7 +391,7 @@ ws.conditional_formatting.add(f"R5:R{BT}", FormulaRule(
     font=Font(bold=True, color="833C00")))
 
 # ============================================================================
-# 09_DC_BAUPROJEKTE  (Hand-Merge aus 3 Quellen)
+# 11_DC_BAUPROJEKTE  (Hand-Merge aus 3 Quellen)
 # ============================================================================
 bg = D["bau_gesamt"]["rows"]
 bz = [r for r in D["bau_zsf"]["rows"] if r.get("Projekt / Ort")]
@@ -488,7 +488,7 @@ sp_bau = [
     {"h": "Nächste Aktion", "w": 34},
     {"h": "Anmerkung / Hinweise", "w": 44},
 ]
-ws = liste_bauen(wb, "09_DC_BAUPROJEKTE", C_DC, "DC-BAUPROJEKTE SCHWEIZ 2026-2028",
+ws = liste_bauen(wb, "11_DC_BAUPROJEKTE", C_DC, "DC-BAUPROJEKTE SCHWEIZ 2026-2028",
                  "Konsolidiert aus 3 Quellen (Gesamtmappe, Zusammenfassung, DC-Suite). Status pflegen!",
                  sp_bau, bau, BA, freeze="F5")
 dv = DataValidation(type="list", formula1='"OFFEN,IN KONTAKT,OFFERIERT,WON,LOST,ABGESCHLOSSEN"',
@@ -501,7 +501,7 @@ ws.conditional_formatting.add(f"W5:W{BA}", FormulaRule(
     font=Font(bold=True, color="833C00")))
 
 # ============================================================================
-# 10_DC_STANDORTE
+# 12_DC_STANDORTE
 # ============================================================================
 alias_st = {"Standortname": "Standortname / Projekt", "Strasse + Nr.": "Strasse",
             "Kanton": "Kt", "Eroeffn.": "Status", "GPS (approx.)": "GPS",
@@ -524,7 +524,7 @@ sp_st = [
     {"h": "Prio", "w": 7},
     {"h": "Besonderheit / GU", "w": 44},
 ]
-ws = liste_bauen(wb, "10_DC_STANDORTE", C_DC, "DC-STANDORTE / ADRESSBUCH SCHWEIZ",
+ws = liste_bauen(wb, "12_DC_STANDORTE", C_DC, "DC-STANDORTE / ADRESSBUCH SCHWEIZ",
                  "Alle DC-Standorte inkl. Bauprojekte, Entfernung ab Thayngen.",
                  sp_st, st_rows, ST, freeze="D5")
 ws.conditional_formatting.add(f"M5:M{ST}", FormulaRule(
@@ -532,7 +532,7 @@ ws.conditional_formatting.add(f"M5:M{ST}", FormulaRule(
     font=Font(bold=True, color="833C00")))
 
 # ============================================================================
-# 11_DC_KONTAKTE
+# 13_DC_KONTAKTE
 # ============================================================================
 alias_dck = {"E-Mail/Website": "E-Mail / Tel.", "Kontext": "Kontext / Besonderheit"}
 dck_rows = canon(D["dc_kontakte"]["rows"], alias_dck)
@@ -551,7 +551,7 @@ sp_dck = [
     {"h": "Nächste Aktion", "w": 40},
     {"h": "Kontext / Besonderheit", "w": 44},
 ]
-ws = liste_bauen(wb, "11_DC_KONTAKTE", C_DC, "DC-KONTAKTE CRM — Ansprechpartner Schweiz",
+ws = liste_bauen(wb, "13_DC_KONTAKTE", C_DC, "DC-KONTAKTE CRM — Ansprechpartner Schweiz",
                  "Entscheider bei Betreibern, GUs und Bauprojekten. Status/Nächste Aktion pflegen.",
                  sp_dck, dck_rows, DK, freeze="C5")
 dv = DataValidation(type="list",
@@ -563,7 +563,7 @@ ws.conditional_formatting.add(f"G5:G{DK}", FormulaRule(
     font=Font(bold=True, color="833C00")))
 
 # ============================================================================
-# 13_GLOBAL_PROJEKTE
+# 15_GLOBAL_PROJEKTE
 # ============================================================================
 gph = D["global_projekte"]["header"]
 gp_rows = [dict(zip(gph, r)) for r in D["global_projekte"]["rows"]]
@@ -588,12 +588,12 @@ sp_gp = [
     {"h": "Lon", "w": 10, "fmt": "0.0000"},
     {"h": "Projektbeschreibung", "w": 60},
 ]
-ws = liste_bauen(wb, "13_GLOBAL_PROJEKTE", C_GLOB, "GLOBALE DC-PROJEKTE — Pipeline-Datenbank",
+ws = liste_bauen(wb, "15_GLOBAL_PROJEKTE", C_GLOB, "GLOBALE DC-PROJEKTE — Pipeline-Datenbank",
                  "10'572 aktive Data-Centre-Projekte weltweit (IRR + Global Data, März 2026). Import: neuer Tracker per Ctrl+Shift+I.",
                  sp_gp, gp_rows, GP, freeze="D5")
 
 # ============================================================================
-# 14_GLOBAL_KONTAKTE
+# 16_GLOBAL_KONTAKTE
 # ============================================================================
 gkh = D["global_kontakte"]["header"]
 gk_rows = [dict(zip(gkh, r)) for r in D["global_kontakte"]["rows"]]
@@ -615,12 +615,12 @@ sp_gk = [
     {"h": "Region", "w": 14},
     {"h": "Land", "w": 14},
 ]
-ws = liste_bauen(wb, "14_GLOBAL_KONTAKTE", C_GLOB, "GLOBALE PROJEKT-KONTAKTE",
-                 "8'502 Ansprechpartner zu den globalen DC-Projekten (via Projekt-ID verknüpft mit 13_GLOBAL_PROJEKTE).",
+ws = liste_bauen(wb, "16_GLOBAL_KONTAKTE", C_GLOB, "GLOBALE PROJEKT-KONTAKTE",
+                 "8'502 Ansprechpartner zu den globalen DC-Projekten (via Projekt-ID verknüpft mit 15_GLOBAL_PROJEKTE).",
                  sp_gk, gk_rows, GK, freeze="C5")
 
 # ============================================================================
-# 16_KATALOG
+# 18_KATALOG
 # ============================================================================
 kah = D["katalog"]["header"]
 ka_rows = [dict(zip(kah, r)) for r in D["katalog"]["rows"]]
@@ -647,12 +647,12 @@ sp_kat = [
     {"h": "ANWENDUNG", "w": 18},
     {"h": "BEMERKUNGEN", "w": 40},
 ]
-ws = liste_bauen(wb, "16_KATALOG", C_PROD, "EQUIPMENT-KATALOG — Aggreko / MiT (466 Produkte)",
+ws = liste_bauen(wb, "18_KATALOG", C_PROD, "EQUIPMENT-KATALOG — Aggreko / MiT (466 Produkte)",
                  "Komplette Produktdatenbank, 27 Kategorien. Filtern über Dropdown in Zeile 4.",
                  sp_kat, ka_rows, KT, freeze="E5")
 
 # ============================================================================
-# 17_PREISLISTE_CHF
+# 19_PREISLISTE_CHF
 # ============================================================================
 pch = D["preis_chf"]["header"]
 pc_rows = [dict(zip(pch, r)) for r in D["preis_chf"]["rows"]]
@@ -669,12 +669,12 @@ sp_pc = [
     {"h": "Monatspreis (30 Tage)", "w": 12, "fmt": NFD,
      "f": '=IF($F{r}="","",$F{r}*30)'},
 ]
-ws = liste_bauen(wb, "17_PREISLISTE_CHF", C_PROD, "PREISLISTE SCHWEIZ (CHF) — Power",
-                 "Tagespreise CHF (Mai 2026). Wochen-/Monatspreis rechnet automatisch. Basis für 20_ANGEBOT_KALK.",
+ws = liste_bauen(wb, "19_PREISLISTE_CHF", C_PROD, "PREISLISTE SCHWEIZ (CHF) — Power",
+                 "Tagespreise CHF (Mai 2026). Wochen-/Monatspreis rechnet automatisch. Basis für 22_ANGEBOT_KALK.",
                  sp_pc, pc_rows, PC)
 
 # ============================================================================
-# 18_PREISLISTE_INTL
+# 20_PREISLISTE_INTL
 # ============================================================================
 pih = D["preis_intl"]["header"]
 pi_rows = [dict(zip(pih, r)) for r in D["preis_intl"]["rows"]]
@@ -687,12 +687,12 @@ for h in pih:
     if h in ("Description__c",):
         e["w"] = 36
     sp_pi.append(e)
-ws = liste_bauen(wb, "18_PREISLISTE_INTL", C_PROD, "PREISLISTE INTERNATIONAL (vertraulich)",
+ws = liste_bauen(wb, "20_PREISLISTE_INTL", C_PROD, "PREISLISTE INTERNATIONAL (vertraulich)",
                  "Aggreko Weekly Rates (Floor/Median/Premium, LC + USD) — Referenz Deutschland/Europa.",
                  sp_pi, pi_rows, PI)
 
 # ============================================================================
-# 22_NORMEN
+# 24_NORMEN
 # ============================================================================
 nh = D["normen"]["header"]
 n_rows = [dict(zip(nh, r)) for r in D["normen"]["rows"]]
@@ -708,12 +708,12 @@ sp_n = [
 ]
 alias_norm = {"Pflicht?": "Pflicht/Optional", "Pruef-Frequenz": "Prüf-Frequenz"}
 n_rows = canon(n_rows, alias_norm)
-ws = liste_bauen(wb, "22_NORMEN", C_TOOL, "NORMEN- & COMPLIANCE-MATRIX — DC Schweiz",
+ws = liste_bauen(wb, "24_NORMEN", C_TOOL, "NORMEN- & COMPLIANCE-MATRIX — DC Schweiz",
                  "17 relevante Standards inkl. MiT-Positionierung (IEC 61000-4-30 Kl.A = USP!).",
                  sp_n, n_rows, MAXR["norm"])
 
 # ============================================================================
-# 23_AKQUISE_90T
+# 25_AKQUISE_90T
 # ============================================================================
 alias_akq = {"Ziel": "Ziel-Unternehmen", "Ziel #2": "Ziel (Ergebnis)",
              "Produkt": "MiT-Produkt", "CHF-Pot.": "CHF-Potential"}
@@ -736,7 +736,7 @@ sp_akq = [
     {"h": "CHF-Potential", "w": 12, "fmt": NF},
     {"h": "Ergebnis", "w": 36},
 ]
-ws = liste_bauen(wb, "23_AKQUISE_90T", C_TOOL, "90-TAGE AKQUISE-PLAN — DC + Strom Schweiz",
+ws = liste_bauen(wb, "25_AKQUISE_90T", C_TOOL, "90-TAGE AKQUISE-PLAN — DC + Strom Schweiz",
                  "Priorisierte Aktionen (Mai-Okt 2026). Status pflegen, Ergebnisse dokumentieren.",
                  sp_akq, akq_rows, AQ)
 dv = DataValidation(type="list", formula1='"OFFEN,LÄUFT,ERLEDIGT,VERSCHOBEN,HEUTE!"',
@@ -750,7 +750,7 @@ ws.conditional_formatting.add(f"H5:H{AQ}", FormulaRule(
     font=Font(color="9C0006", bold=True)))
 
 # ============================================================================
-# 21_MARKTVOLUMEN
+# 23_MARKTVOLUMEN
 # ============================================================================
 mvh = D["marktvolumen"]["header"]
 mv_rows = [dict(zip(mvh, r)) for r in D["marktvolumen"]["rows"]]
@@ -770,7 +770,7 @@ sp_mv = [
      "f": '=IF($A{r}="","",IF(AND(ISNUMBER($F{r}),ISNUMBER($G{r})),$F{r}*$G{r},""))'},
     {"h": "Ramp-Up", "w": 14},
 ]
-ws = liste_bauen(wb, "21_MARKTVOLUMEN", C_TOOL, "MARKTVOLUMEN & MiT-UMSATZPOTENZIAL — DC Schweiz",
+ws = liste_bauen(wb, "23_MARKTVOLUMEN", C_TOOL, "MARKTVOLUMEN & MiT-UMSATZPOTENZIAL — DC Schweiz",
                  "Szenario-Modell: Zielkunden/Projekte/Preise anpassen -> Volumen & Zielumsatz rechnen live.",
                  sp_mv, mv_rows, MV)
 r_tot = 5 + len(mv_rows) + 1
@@ -781,18 +781,18 @@ put(ws, r_tot, 8, f"=SUM(H5:H{5+len(mv_rows)-1})", font=Font(bold=True), fmt=NF,
 # ============================================================================
 # 07 / 12 / 24: statische Wissens-Tabs
 # ============================================================================
-block_sheet(wb, "07_KUNDENANALYSE", C_VERT, "KUNDENANALYSE — Rhomberg Sersa Rail Group (RSRG)",
+block_sheet(wb, "09_KUNDENANALYSE", C_VERT, "KUNDENANALYSE — Rhomberg Sersa Rail Group (RSRG)",
             "Firmenprofil + Produkt-Opportunity-Matrix (Vorlage für weitere Kundenanalysen).",
             [("FIRMENPROFIL", D["rsrg_profil"]), ("OPPORTUNITY-MATRIX (Produkt-Fit)", D["rsrg_matrix"])],
             widths=[4, 28, 34, 16, 16, 20, 24, 20, 16, 24, 16, 16, 16])
 
-block_sheet(wb, "12_DC_DOSSIERS", C_DC, "DC-DOSSIERS — Implenia (GU-Partner) & FlexBase TZL Laufenburg",
+block_sheet(wb, "14_DC_DOSSIERS", C_DC, "DC-DOSSIERS — Implenia (GU-Partner) & FlexBase TZL Laufenburg",
             "Detail-Dossiers zu Schlüssel-Accounts im DC-Baugeschäft.",
             [("IMPLENIA AG — STRATEGISCHER GU-PARTNER (7 RZ Grossraum ZH)", D["implenia"]),
              ("FLEXBASE — TECHNOLOGIEZENTRUM LAUFENBURG (TZL)", D["flexbase"])],
             widths=[26, 26, 12, 26, 24, 16, 16, 16, 26, 30, 16, 26, 14, 14, 14, 14])
 
-block_sheet(wb, "24_SYSTEME_WISSEN", C_TOOL, "SYSTEME-WISSEN — Generator + Lastbank + BESS + Trafo",
+block_sheet(wb, "26_SYSTEME_WISSEN", C_TOOL, "SYSTEME-WISSEN — Generator + Lastbank + BESS + Trafo",
             "Technische Auslegung von Kombinationssystemen (IEC 61000-4-30, ISO 8528).",
             [("KOMBINATIONSSYSTEME — TECHNISCHES WISSEN", D["systeme"])],
             widths=[30, 24, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20])
@@ -843,9 +843,9 @@ for i, (land, reg) in enumerate(D["land_region"], start=5):
 ws.freeze_panes = "A5"
 
 # ============================================================================
-# 19_GEN_RECHNER
+# 21_GEN_RECHNER
 # ============================================================================
-ws = wb.create_sheet("19_GEN_RECHNER")
+ws = wb.create_sheet("21_GEN_RECHNER")
 ws.sheet_properties.tabColor = C_TOOL
 titel_zeilen(ws, C_TOOL, "GENERATOR-AUSLEGUNG — Rechner (NIN/ISO 8528)",
              "Blaue Felder = Eingabe. Alles andere rechnet automatisch.", 8)
@@ -884,18 +884,18 @@ put(ws, 19, 2, "=IFERROR(INDEX('91_LISTEN'!$H$5:$H$20,COUNTIF('91_LISTEN'!$H$5:$
     font=Font(bold=True, size=12, color="006100"), border=B_ALL)
 put(ws, 20, 1, "Redundanz N+1 (2. Einheit)", border=B_ALL)
 put(ws, 20, 2, "=IF($G$14=0,\"\",\"2× \"&$B$19&\"  (Synchronisation/AMF empfohlen)\")", border=B_ALL)
-put(ws, 22, 1, "Hinweis: Lastprofil > 60% Auslastung anstreben; Stage-V-Pflicht in Lärm-/Umweltzonen prüfen (siehe 22_NORMEN).",
+put(ws, 22, 1, "Hinweis: Lastprofil > 60% Auslastung anstreben; Stage-V-Pflicht in Lärm-/Umweltzonen prüfen (siehe 24_NORMEN).",
     font=Font(italic=True, size=9, color="808080"))
 for col, w in zip("ABCDEFGH", [30, 14, 9, 10, 12, 14, 12, 4]):
     ws.column_dimensions[col].width = w
 
 # ============================================================================
-# 20_ANGEBOT_KALK
+# 22_ANGEBOT_KALK
 # ============================================================================
-ws = wb.create_sheet("20_ANGEBOT_KALK")
+ws = wb.create_sheet("22_ANGEBOT_KALK")
 ws.sheet_properties.tabColor = C_TOOL
 titel_zeilen(ws, C_TOOL, "ANGEBOTS-KALKULATOR — Miete + Nebenkosten",
-             "Produkt aus Dropdown wählen (aus 17_PREISLISTE_CHF), Menge/Dauer eingeben — Preise rechnen live.", 9)
+             "Produkt aus Dropdown wählen (aus 19_PREISLISTE_CHF), Menge/Dauer eingeben — Preise rechnen live.", 9)
 put(ws, 4, 1, "A) MIETPOSITIONEN", font=F_SECT, fill=C_TOOL)
 ws.merge_cells("A4:I4")
 hdr = ["Pos.", "Produkt (Dropdown)", "Menge", "Dauer (Tage)", "Tagespreis CHF", "Rabatt %", "Zeilentotal CHF"]
@@ -908,12 +908,12 @@ for i in range(6):
     put(ws, r, 2, "", font=F_INPUT, fill=FILL_IN, border=B_ALL)
     put(ws, r, 3, "", font=F_INPUT, fill=FILL_IN, border=B_ALL, fmt=NF)
     put(ws, r, 4, "", font=F_INPUT, fill=FILL_IN, border=B_ALL, fmt=NF)
-    put(ws, r, 5, f"=IF($B{r}=\"\",\"\",IFERROR(INDEX('17_PREISLISTE_CHF'!$F$5:$F$300,MATCH($B{r},'17_PREISLISTE_CHF'!$C$5:$C$300,0)),\"?\"))",
+    put(ws, r, 5, f"=IF($B{r}=\"\",\"\",IFERROR(INDEX('19_PREISLISTE_CHF'!$F$5:$F$300,MATCH($B{r},'19_PREISLISTE_CHF'!$C$5:$C$300,0)),\"?\"))",
         fmt=NFD, border=B_ALL)
     put(ws, r, 6, "", font=F_INPUT, fill=FILL_IN, border=B_ALL, fmt=PCT)
     put(ws, r, 7, f'=IF(OR($B{r}="",$C{r}="",$D{r}="",$E{r}="?"),"",$C{r}*$D{r}*$E{r}*(1-IF($F{r}="",0,$F{r})))',
         fmt=NFD, border=B_ALL)
-dv = DataValidation(type="list", formula1="='17_PREISLISTE_CHF'!$C$5:$C$45",
+dv = DataValidation(type="list", formula1="='19_PREISLISTE_CHF'!$C$5:$C$45",
                     allow_blank=True, showErrorMessage=False)
 ws.add_data_validation(dv); dv.add("B6:B11")
 put(ws, 13, 1, "B) NEBENKOSTEN", font=F_SECT, fill=C_TOOL)
@@ -1055,6 +1055,9 @@ for i, (label, f) in enumerate(zeile2):
     put(ws, 9, c1, f, font=Font(bold=True, size=13), align=A_CENTER,
         fmt=PCT if "Marge" in label else NF)
 
+ws.merge_cells("A10:I10")
+put(ws, 10, 1, f'="📊 GESAMT-PIPELINE: "&TEXT(SUMIF({PR}!$R$5:$R$2000,"<>",{PR}!$I$5:$I$2000),"#,##0")&" CHF  ·  "&SUMPRODUCT(({PR}!$R$5:$R$2000<>"")*1)&" Deals erfasst  ·  Druck: Strg+P (Als PDF speichern)"',
+    font=Font(bold=True, size=11, color="1F4E79"), align=A_CENTER)
 put(ws, 11, 1, "TOP 5 — GEWONNENE AUFTRÄGE", font=F_SECT, fill=C_VERT); ws.merge_cells("A11:D11")
 for i, h in enumerate(["#", "Kunde", "Volumen CHF", "Segment"], start=1):
     put(ws, 12, i, h, font=F_HDR, fill=C_VERT, border=B_ALL)
@@ -1090,13 +1093,13 @@ for col, w in zip("ABCDEFGHI", [16, 30, 13, 20, 3, 16, 30, 13, 14]):
     ws.column_dimensions[col].width = w
 
 # ============================================================================
-# 15_GLOBAL_ANALYTICS
+# 17_GLOBAL_ANALYTICS
 # ============================================================================
-ws = wb.create_sheet("15_GLOBAL_ANALYTICS")
+ws = wb.create_sheet("17_GLOBAL_ANALYTICS")
 ws.sheet_properties.tabColor = C_GLOB
 titel_zeilen(ws, C_GLOB, "GLOBAL ANALYTICS — Auswertung der DC-Projektdatenbank",
-             "Rechnet live aus 13_GLOBAL_PROJEKTE. Nach Import eines neuen Trackers aktualisiert sich alles automatisch.", 12)
-GPS = f"'13_GLOBAL_PROJEKTE'"
+             "Rechnet live aus 15_GLOBAL_PROJEKTE. Nach Import eines neuen Trackers aktualisiert sich alles automatisch.", 12)
+GPS = f"'15_GLOBAL_PROJEKTE'"
 regionen = ["NAM", "EUROPE", "ASIA", "AUSPAC", "LAM", "MIDDLE EAST", "AFRICA", "EURASIA"]
 stati = ["Planning", "Engineering", "Under Construction"]
 put(ws, 4, 1, "REPORT-VOLUMEN (Mrd $) — REGION × STATUS", font=F_SECT, fill=C_GLOB)
@@ -1151,7 +1154,7 @@ put(ws, 4, 8, "TOP-LÄNDER (nach Anzahl Projekte)", font=F_SECT, fill=C_GLOB)
 ws.merge_cells(start_row=4, start_column=8, end_row=4, end_column=12)
 for i, h in enumerate(["Land", "Projekte", "Report-Vol. Mrd $", "Kontakte", ""], start=8):
     if h: put(ws, 5, i, h, font=F_HDR, fill=C_GLOB, border=B_ALL)
-GKS = f"'14_GLOBAL_KONTAKTE'"
+GKS = f"'16_GLOBAL_KONTAKTE'"
 for i, land in enumerate(top_laender):
     r = 6 + i
     put_text(ws, r, 8, land, border=B_ALL)
@@ -1162,6 +1165,173 @@ for col, w in zip(["A","B","C","D","E","F","G","H","I","J","K","L"],
                   [14, 13, 13, 16, 26, 10, 3, 18, 10, 15, 10, 8]):
     ws.column_dimensions[col].width = w
 ws.freeze_panes = "A6"
+
+
+# ============================================================================
+# 07_CEO_REPORT (Live-Ansicht wie in CH_MiT_Strom_Customer_CEO_CFO)
+# ============================================================================
+ws = wb.create_sheet("07_CEO_REPORT")
+ws.sheet_properties.tabColor = C_VERT
+titel_zeilen(ws, C_VERT, "CEO SALES REPORT — MiT Strom Schweiz",
+             "Live aus 02_PIPELINE — Auftragseingang, Offerten, Opportunitäten, Verloren. Druck: Strg+P.", 13)
+put(ws, 3, 1, '="Stand: "&TEXT(TODAY(),"DD.MM.YYYY")&"  ·  Mobil in Time AG · An Aggreko Company"',
+    font=Font(size=10, italic=True, color="808080"))
+ws.merge_cells("A3:M3")
+kpi3 = [
+    ("✅  AUFTRAGSEINGANG (WON)", f'=SUMIF({PR}!$R$5:$R$2000,"WON",{PR}!$I$5:$I$2000)',
+     f'=COUNTIF({PR}!$R$5:$R$2000,"WON")&" Deals"', "C6EFCE"),
+    ("📄  OFFERTE — laufend", f'=SUMIF({PR}!$R$5:$R$2000,"offered",{PR}!$I$5:$I$2000)+SUMIF({PR}!$R$5:$R$2000,"to be offered",{PR}!$I$5:$I$2000)',
+     f'=COUNTIF({PR}!$R$5:$R$2000,"offered")+COUNTIF({PR}!$R$5:$R$2000,"to be offered")&" Deals"', "FFEB9C"),
+    ("🎯  OPPORTUNITÄT", f'=SUMIF({PR}!$R$5:$R$2000,"follow-up",{PR}!$I$5:$I$2000)+SUMIF({PR}!$R$5:$R$2000,"In evaluation",{PR}!$I$5:$I$2000)+SUMIF({PR}!$R$5:$R$2000,"tbd",{PR}!$I$5:$I$2000)+SUMIF({PR}!$R$5:$R$2000,"on hold",{PR}!$I$5:$I$2000)',
+     f'=COUNTIF({PR}!$R$5:$R$2000,"follow-up")+COUNTIF({PR}!$R$5:$R$2000,"In evaluation")+COUNTIF({PR}!$R$5:$R$2000,"tbd")+COUNTIF({PR}!$R$5:$R$2000,"on hold")&" Deals"', "DDEBF7"),
+]
+for i, (label, f_chf, f_n, fill) in enumerate(kpi3):
+    c1 = 1 + i * 4
+    ws.merge_cells(start_row=5, start_column=c1, end_row=5, end_column=c1 + 3)
+    put(ws, 5, c1, label, font=Font(bold=True, size=11), fill=fill, align=A_CENTER)
+    ws.merge_cells(start_row=6, start_column=c1, end_row=6, end_column=c1 + 3)
+    put(ws, 6, c1, f_chf, font=Font(bold=True, size=16), fill=fill, align=A_CENTER, fmt=NF)
+    ws.merge_cells(start_row=7, start_column=c1, end_row=7, end_column=c1 + 3)
+    put(ws, 7, c1, f_n, font=Font(size=10, color="595959"), fill=fill, align=A_CENTER)
+ws.row_dimensions[6].height = 24
+
+ceo_cols = ["Nr.", "Kunde / Unternehmen", "Kt.", "Segment", "Start", "Leistung / Fleet",
+            "Volumen CHF", "Gew.Wert CHF", "Marge CHF", "Status", "Wahr. %", "Nächster Schritt", "_v"]
+ceo_src = {2: "$B", 3: "$C", 4: "$D", 5: "$H", 6: "$E", 7: "$I", 8: "$Q", 9: "$O",
+           10: "$R", 11: "$S", 12: "$V"}
+YR = f"{PR}!$Y$5:$Y$2000"
+sektionen = [
+    ("1. AUFTRAGSEINGANG (WON) — bestätigte Aufträge", f'({PR}!$R$5:$R$2000="WON")', 20),
+    ("2. OFFERTEN — laufend", f'(({PR}!$R$5:$R$2000="offered")+({PR}!$R$5:$R$2000="to be offered"))', 30),
+    ("3. OPPORTUNITÄTEN — Follow-up / Evaluation / tbd / on hold",
+     f'(({PR}!$R$5:$R$2000="follow-up")+({PR}!$R$5:$R$2000="In evaluation")+({PR}!$R$5:$R$2000="tbd")+({PR}!$R$5:$R$2000="on hold"))', 30),
+    ("4. VERLOREN / ABGESAGT", f'(({PR}!$R$5:$R$2000="LOST")+({PR}!$R$5:$R$2000="Declined"))', 15),
+]
+r = 9
+for titel_s, cond, nrows in sektionen:
+    ws.merge_cells(start_row=r, start_column=1, end_row=r, end_column=13)
+    put(ws, r, 1, titel_s, font=F_SECT, fill=C_VERT)
+    r += 1
+    for i, h in enumerate(ceo_cols, start=1):
+        put(ws, r, i, h, font=F_HDR, fill=C_VERT, border=B_ALL,
+            align=Alignment(horizontal="center", wrap_text=True))
+    hdr_r = r
+    r += 1
+    for k in range(1, nrows + 1):
+        put(ws, r, 13, f'=IFERROR(AGGREGATE(14,6,{YR}*{cond},{k}),"")', border=B_ALL)
+        put(ws, r, 1, f'=IF($M{r}="","",{k})', border=B_ALL)
+        for ci, src in ceo_src.items():
+            fmt = "General"
+            if ci in (7, 8, 9):
+                fmt = NF
+            if ci == 11:
+                fmt = PCT
+            put(ws, r, ci,
+                f'=IF($M{r}="","",IFERROR(INDEX({PR}!{src}$5:{src}$2000,MATCH($M{r},{YR},0)),""))',
+                fmt=fmt, border=B_ALL)
+        r += 1
+    r += 1
+ws.column_dimensions["M"].hidden = True
+for col, w in zip("ABCDEFGHIJKLM", [5, 30, 5, 20, 11, 22, 12, 12, 11, 12, 8, 40, 6]):
+    ws.column_dimensions[col].width = w
+ws.conditional_formatting.add(f"J10:J{r}", FormulaRule(
+    formula=['EXACT($J10,"WON")'], fill=PatternFill("solid", fgColor="C6EFCE"),
+    font=Font(color="006100", bold=True)))
+ws.conditional_formatting.add(f"J10:J{r}", FormulaRule(
+    formula=['OR(EXACT($J10,"LOST"),EXACT($J10,"Declined"))'],
+    fill=PatternFill("solid", fgColor="FFC7CE"), font=Font(color="9C0006")))
+ws.freeze_panes = "A5"
+ws.print_area = f"A1:L{r}"
+ws.page_setup.fitToWidth = 1
+ws.page_setup.orientation = "landscape"
+
+# ============================================================================
+# 08_DIAGRAMME (echte Excel-Charts, live aus 02_PIPELINE)
+# ============================================================================
+from openpyxl.chart import BarChart, PieChart, Reference
+
+ws = wb.create_sheet("08_DIAGRAMME")
+ws.sheet_properties.tabColor = C_VERT
+titel_zeilen(ws, C_VERT, "DIAGRAMME — MiT Strom Schweiz",
+             "Alle Diagramme aktualisieren sich automatisch aus 02_PIPELINE.", 12)
+
+# Datentabelle 1: nach Status
+put(ws, 4, 1, "Status", font=F_HDR, fill=C_VERT, border=B_ALL)
+put(ws, 4, 2, "Anzahl", font=F_HDR, fill=C_VERT, border=B_ALL)
+put(ws, 4, 3, "Volumen CHF", font=F_HDR, fill=C_VERT, border=B_ALL)
+st_start = 5
+for i, st in enumerate(status_pipe):
+    rr = st_start + i
+    put_text(ws, rr, 1, st, border=B_ALL)
+    put(ws, rr, 2, f'=COUNTIF({PR}!$R$5:$R$2000,$A{rr})', fmt=NF, border=B_ALL)
+    put(ws, rr, 3, f'=SUMIF({PR}!$R$5:$R$2000,$A{rr},{PR}!$I$5:$I$2000)', fmt=NF, border=B_ALL)
+st_end = st_start + len(status_pipe) - 1
+
+# Datentabelle 2: Gruppen (für Kreisdiagramm)
+g_start = st_end + 3
+put(ws, g_start - 1, 1, "Gruppe", font=F_HDR, fill=C_VERT, border=B_ALL)
+put(ws, g_start - 1, 2, "Volumen CHF", font=F_HDR, fill=C_VERT, border=B_ALL)
+gruppen = [
+    ("✅ WON", f'=SUMIF({PR}!$R$5:$R$2000,"WON",{PR}!$I$5:$I$2000)'),
+    ("📄 Offerte", f'=SUMIF({PR}!$R$5:$R$2000,"offered",{PR}!$I$5:$I$2000)+SUMIF({PR}!$R$5:$R$2000,"to be offered",{PR}!$I$5:$I$2000)'),
+    ("🎯 Opportunität", f'=SUMIF({PR}!$R$5:$R$2000,"follow-up",{PR}!$I$5:$I$2000)+SUMIF({PR}!$R$5:$R$2000,"In evaluation",{PR}!$I$5:$I$2000)+SUMIF({PR}!$R$5:$R$2000,"tbd",{PR}!$I$5:$I$2000)+SUMIF({PR}!$R$5:$R$2000,"on hold",{PR}!$I$5:$I$2000)'),
+    ("❌ Verloren", f'=SUMIF({PR}!$R$5:$R$2000,"LOST",{PR}!$I$5:$I$2000)+SUMIF({PR}!$R$5:$R$2000,"Declined",{PR}!$I$5:$I$2000)'),
+]
+for i, (label, f) in enumerate(gruppen):
+    rr = g_start + i
+    put_text(ws, rr, 1, label, border=B_ALL)
+    put(ws, rr, 2, f, fmt=NF, border=B_ALL)
+g_end = g_start + len(gruppen) - 1
+
+# Datentabelle 3: nach Segment
+sg_start = g_end + 3
+put(ws, sg_start - 1, 1, "Segment", font=F_HDR, fill=C_VERT, border=B_ALL)
+put(ws, sg_start - 1, 2, "Volumen CHF", font=F_HDR, fill=C_VERT, border=B_ALL)
+for i, sg in enumerate(seg_union):
+    rr = sg_start + i
+    put_text(ws, rr, 1, sg, border=B_ALL)
+    put(ws, rr, 2, f'=SUMIF({PR}!$D$5:$D$2000,$A{rr},{PR}!$I$5:$I$2000)', fmt=NF, border=B_ALL)
+sg_end = sg_start + len(seg_union) - 1
+
+# Datentabelle 4: nach Kanton
+kt2_start = sg_end + 3
+put(ws, kt2_start - 1, 1, "Kanton", font=F_HDR, fill=C_VERT, border=B_ALL)
+put(ws, kt2_start - 1, 2, "Volumen CHF", font=F_HDR, fill=C_VERT, border=B_ALL)
+for i, kt in enumerate(kt_show):
+    rr = kt2_start + i
+    put_text(ws, rr, 1, kt, border=B_ALL)
+    put(ws, rr, 2, f'=SUMIF({PR}!$C$5:$C$2000,$A{rr},{PR}!$I$5:$I$2000)', fmt=NF, border=B_ALL)
+kt2_end = kt2_start + len(kt_show) - 1
+
+def mk_bar(title, data_col, cat_lo, cat_hi, anchor, horizontal=False, w=16, h=8):
+    ch = BarChart()
+    ch.type = "bar" if horizontal else "col"
+    ch.title = title
+    ch.style = 10
+    data = Reference(ws, min_col=data_col, min_row=cat_lo - 1, max_row=cat_hi)
+    cats = Reference(ws, min_col=1, min_row=cat_lo, max_row=cat_hi)
+    ch.add_data(data, titles_from_data=True)
+    ch.set_categories(cats)
+    ch.legend = None
+    ch.width = w
+    ch.height = h
+    ws.add_chart(ch, anchor)
+
+mk_bar("Volumen CHF nach Status", 3, st_start, st_end, "E4")
+mk_bar("Anzahl Deals nach Status", 2, st_start, st_end, "N4")
+pie = PieChart()
+pie.title = "Pipeline-Verteilung (Volumen CHF)"
+pie_data = Reference(ws, min_col=2, min_row=g_start - 1, max_row=g_end)
+pie_cats = Reference(ws, min_col=1, min_row=g_start, max_row=g_end)
+pie.add_data(pie_data, titles_from_data=True)
+pie.set_categories(pie_cats)
+pie.width = 16
+pie.height = 8
+ws.add_chart(pie, "E21")
+mk_bar("Volumen CHF nach Segment", 2, sg_start, sg_end, "N21", horizontal=True, h=12)
+mk_bar("Volumen CHF nach Kanton", 2, kt2_start, kt2_end, "E38", h=10)
+for col, w in zip("ABC", [24, 12, 14]):
+    ws.column_dimensions[col].width = w
 
 # ============================================================================
 # 01_DASHBOARD
@@ -1188,17 +1358,17 @@ tile(ws, 5, 7, "Deals aktiv",
 tile(ws, 5, 9, "CRM-Zielkunden", f"=COUNTA({CR}!$D$5:$D$3000)")
 tile(ws, 5, 11, "Kunden in Kartei", f"=COUNTA('04_KUNDENKARTEI'!$B$5:$B$5000)")
 
-put(ws, 8, 1, '=HYPERLINK("#\'08_DC_BETREIBER\'!A1","▶ DATACENTER SCHWEIZ")', font=Font(bold=True, size=12, color=C_DC))
-tile(ws, 9, 1, "DC-Betreiber CH", f"=COUNTA('08_DC_BETREIBER'!$A$5:$A$300)")
-tile(ws, 9, 3, "Bauprojekte CH", f"=COUNTA('09_DC_BAUPROJEKTE'!$E$5:$E$300)")
-tile(ws, 9, 5, "Standorte", f"=COUNTA('10_DC_STANDORTE'!$A$5:$A$300)")
-tile(ws, 9, 7, "DC-Kontakte", f"=COUNTA('11_DC_KONTAKTE'!$A$5:$A$500)")
+put(ws, 8, 1, '=HYPERLINK("#\'10_DC_BETREIBER\'!A1","▶ DATACENTER SCHWEIZ")', font=Font(bold=True, size=12, color=C_DC))
+tile(ws, 9, 1, "DC-Betreiber CH", f"=COUNTA('10_DC_BETREIBER'!$A$5:$A$300)")
+tile(ws, 9, 3, "Bauprojekte CH", f"=COUNTA('11_DC_BAUPROJEKTE'!$E$5:$E$300)")
+tile(ws, 9, 5, "Standorte", f"=COUNTA('12_DC_STANDORTE'!$A$5:$A$300)")
+tile(ws, 9, 7, "DC-Kontakte", f"=COUNTA('13_DC_KONTAKTE'!$A$5:$A$500)")
 tile(ws, 9, 9, "CHF-Potential Bau",
-     f"=SUM('09_DC_BAUPROJEKTE'!$U$5:$U$300)")
+     f"=SUM('11_DC_BAUPROJEKTE'!$U$5:$U$300)")
 tile(ws, 9, 11, "A-Prio Projekte",
-     f'=SUMPRODUCT((LEFT(\'09_DC_BAUPROJEKTE\'!$W$5:$W$300,1)="A")*1)')
+     f'=SUMPRODUCT((LEFT(\'11_DC_BAUPROJEKTE\'!$W$5:$W$300,1)="A")*1)')
 
-put(ws, 12, 1, '=HYPERLINK("#\'13_GLOBAL_PROJEKTE\'!A1","▶ GLOBAL DATA CENTRE")', font=Font(bold=True, size=12, color=C_GLOB))
+put(ws, 12, 1, '=HYPERLINK("#\'15_GLOBAL_PROJEKTE\'!A1","▶ GLOBAL DATA CENTRE")', font=Font(bold=True, size=12, color=C_GLOB))
 tile(ws, 13, 1, "Projekte weltweit", f"=COUNTA({GPS}!$C$5:$C$20000)")
 tile(ws, 13, 3, "Report-Vol. Mrd $", f"=SUM({GPS}!$E$5:$E$20000)/1000000000", fmt="#,##0.0")
 tile(ws, 13, 5, "Under Construction", f'=COUNTIF({GPS}!$H$5:$H$20000,"Under Construction")')
@@ -1206,20 +1376,20 @@ tile(ws, 13, 7, "EUROPE-Projekte", f'=COUNTIF({GPS}!$K$5:$K$20000,"EUROPE")')
 tile(ws, 13, 9, "Globale Kontakte", f"=COUNTA({GKS}!$E$5:$E$15000)")
 tile(ws, 13, 11, "Schweiz-Projekte", f'=COUNTIF({GPS}!$I$5:$I$20000,"Switzerland")')
 
-put(ws, 16, 1, '=HYPERLINK("#\'16_KATALOG\'!A1","▶ PRODUKTE && PREISE")', font=Font(bold=True, size=12, color=C_PROD))
-tile(ws, 17, 1, "Katalog-Produkte", f"=COUNTA('16_KATALOG'!$E$5:$E$2000)")
+put(ws, 16, 1, '=HYPERLINK("#\'18_KATALOG\'!A1","▶ PRODUKTE && PREISE")', font=Font(bold=True, size=12, color=C_PROD))
+tile(ws, 17, 1, "Katalog-Produkte", f"=COUNTA('18_KATALOG'!$E$5:$E$2000)")
 tile(ws, 17, 3, "Kategorien", "=SUMPRODUCT(('91_LISTEN'!$B$5:$B$40<>\"\")*0)+27")
-tile(ws, 17, 5, "Preisliste CHF", f"=COUNTA('17_PREISLISTE_CHF'!$C$5:$C$300)")
-tile(ws, 17, 7, "Preisliste INTL", f"=COUNTA('18_PREISLISTE_INTL'!$F$5:$F$500)")
+tile(ws, 17, 5, "Preisliste CHF", f"=COUNTA('19_PREISLISTE_CHF'!$C$5:$C$300)")
+tile(ws, 17, 7, "Preisliste INTL", f"=COUNTA('20_PREISLISTE_INTL'!$F$5:$F$500)")
 tile(ws, 17, 9, "Akquise-Aktionen offen",
-     f'=COUNTIF(\'23_AKQUISE_90T\'!$H$5:$H$500,"OFFEN")+COUNTIF(\'23_AKQUISE_90T\'!$H$5:$H$500,"HEUTE!")')
-tile(ws, 17, 11, "Marktpotenzial CH/J", f"=SUM('21_MARKTVOLUMEN'!$H$5:$H$50)")
+     f'=COUNTIF(\'25_AKQUISE_90T\'!$H$5:$H$500,"OFFEN")+COUNTIF(\'25_AKQUISE_90T\'!$H$5:$H$500,"HEUTE!")')
+tile(ws, 17, 11, "Marktpotenzial CH/J", f"=SUM('23_MARKTVOLUMEN'!$H$5:$H$50)")
 
 put(ws, 20, 1, "SCHNELLZUGRIFF", font=Font(bold=True, size=12, color="404040"))
 links = [("02_PIPELINE", "Pipeline pflegen"), ("03_KUNDEN_CRM", "CRM / Zielkunden"),
          ("05_FORECAST", "Forecast & Analytics"), ("06_MONATSREPORT", "Monatsreport"),
-         ("09_DC_BAUPROJEKTE", "DC-Bauprojekte"), ("13_GLOBAL_PROJEKTE", "Globale Projekte"),
-         ("16_KATALOG", "Produktkatalog"), ("20_ANGEBOT_KALK", "Angebot kalkulieren"),
+         ("11_DC_BAUPROJEKTE", "DC-Bauprojekte"), ("15_GLOBAL_PROJEKTE", "Globale Projekte"),
+         ("18_KATALOG", "Produktkatalog"), ("22_ANGEBOT_KALK", "Angebot kalkulieren"),
          ("90_IMPORT", "Daten importieren")]
 for i, (tab, label) in enumerate(links):
     r, c = 21 + i // 3, 1 + (i % 3) * 4
@@ -1254,32 +1424,34 @@ nav = [
         ("04_KUNDENKARTEI", "Alle CH-Kunden & Kontakte (1'100+), verknüpft mit Pipeline"),
         ("05_FORECAST", "Auswertung nach Status / Segment / Kanton (live)"),
         ("06_MONATSREPORT", "Monatsbericht — per Ctrl+Shift+M als neue Mappe exportieren"),
-        ("07_KUNDENANALYSE", "Kundenanalyse RSRG (Vorlage)"),
+        ("07_CEO_REPORT", "CEO Sales Report — WON/Offerte/Opportunität als Druckansicht"),
+        ("08_DIAGRAMME", "Diagramme (Status, Segmente, Kantone) — aktualisieren sich automatisch"),
+        ("09_KUNDENANALYSE", "Kundenanalyse RSRG (Vorlage)"),
     ]),
     ("DATACENTER SCHWEIZ", C_DC, [
-        ("08_DC_BETREIBER", "30 DC-Betreiber CH — Master-Daten"),
-        ("09_DC_BAUPROJEKTE", "Bauprojekte 2026-28, konsolidiert aus 3 Quellen"),
-        ("10_DC_STANDORTE", "Adressbuch aller DC-Standorte"),
-        ("11_DC_KONTAKTE", "Entscheider-CRM Datacenter"),
-        ("12_DC_DOSSIERS", "Dossiers Implenia & FlexBase TZL"),
+        ("10_DC_BETREIBER", "30 DC-Betreiber CH — Master-Daten"),
+        ("11_DC_BAUPROJEKTE", "Bauprojekte 2026-28, konsolidiert aus 3 Quellen"),
+        ("12_DC_STANDORTE", "Adressbuch aller DC-Standorte"),
+        ("13_DC_KONTAKTE", "Entscheider-CRM Datacenter"),
+        ("14_DC_DOSSIERS", "Dossiers Implenia & FlexBase TZL"),
     ]),
     ("GLOBAL", C_GLOB, [
-        ("13_GLOBAL_PROJEKTE", "10'572 DC-Projekte weltweit"),
-        ("14_GLOBAL_KONTAKTE", "8'502 Ansprechpartner weltweit"),
-        ("15_GLOBAL_ANALYTICS", "Region × Status × Jahr — live"),
+        ("15_GLOBAL_PROJEKTE", "10'572 DC-Projekte weltweit"),
+        ("16_GLOBAL_KONTAKTE", "8'502 Ansprechpartner weltweit"),
+        ("17_GLOBAL_ANALYTICS", "Region × Status × Jahr — live"),
     ]),
     ("PRODUKTE & PREISE", C_PROD, [
-        ("16_KATALOG", "466 Produkte Aggreko/MiT"),
-        ("17_PREISLISTE_CHF", "Tagespreise Schweiz + Wochen-/Monatspreis"),
-        ("18_PREISLISTE_INTL", "Aggreko Weekly Rates (vertraulich)"),
+        ("18_KATALOG", "466 Produkte Aggreko/MiT"),
+        ("19_PREISLISTE_CHF", "Tagespreise Schweiz + Wochen-/Monatspreis"),
+        ("20_PREISLISTE_INTL", "Aggreko Weekly Rates (vertraulich)"),
     ]),
     ("WERKZEUGE", C_TOOL, [
-        ("19_GEN_RECHNER", "Generator-Auslegung (Lastliste → Empfehlung)"),
-        ("20_ANGEBOT_KALK", "Angebots-Kalkulator mit Preisliste-Dropdown"),
-        ("21_MARKTVOLUMEN", "Marktvolumen-Szenarien DC Schweiz"),
-        ("22_NORMEN", "Normen & Compliance (17 Standards)"),
-        ("23_AKQUISE_90T", "90-Tage-Akquiseplan"),
-        ("24_SYSTEME_WISSEN", "Technik-Wissen Kombinationssysteme"),
+        ("21_GEN_RECHNER", "Generator-Auslegung (Lastliste → Empfehlung)"),
+        ("22_ANGEBOT_KALK", "Angebots-Kalkulator mit Preisliste-Dropdown"),
+        ("23_MARKTVOLUMEN", "Marktvolumen-Szenarien DC Schweiz"),
+        ("24_NORMEN", "Normen & Compliance (17 Standards)"),
+        ("25_AKQUISE_90T", "90-Tage-Akquiseplan"),
+        ("26_SYSTEME_WISSEN", "Technik-Wissen Kombinationssysteme"),
     ]),
     ("SYSTEM", C_SYS, [
         ("90_IMPORT", "IMPORT-ZENTRALE — neue Dateien automatisch verteilen"),
@@ -1299,7 +1471,22 @@ for bereich, farbe, tabs in nav:
         r += 1
 r += 1
 ws.merge_cells(start_row=r, start_column=2, end_row=r, end_column=6)
-put(ws, r, 2, "IMPORT & AUTOMATIK (Makros aktivieren!)", font=F_SECT, fill="C00000")
+put(ws, r, 2, "⚠ WICHTIG — FALLS EXCEL MAKROS BLOCKIERT (Datei aus Download/Chat)", font=F_SECT, fill="C00000")
+r += 1
+motw = [
+    "Excel blockiert Makros bei heruntergeladenen Dateien. So gibst du sie EINMALIG frei:",
+    "1.  Excel schliessen  →  im Explorer RECHTSKLICK auf die Datei  →  Eigenschaften.",
+    "2.  Unten im Reiter 'Allgemein' den Haken bei  „Zulassen / Unblock“  setzen  →  OK.",
+    "3.  Datei neu öffnen  →  gelbe Leiste  „Inhalt aktivieren“  anklicken. Fertig — Import & Shortcuts laufen.",
+    "Auch OHNE Makros funktioniert alles Übrige zu 100%: alle Reiter, Formeln, Verknüpfungen, Dropdowns, Filter, Diagramme.",
+]
+for h in motw:
+    ws.merge_cells(start_row=r, start_column=2, end_row=r, end_column=6)
+    put(ws, r, 2, h, font=Font(size=10, bold=h.startswith("Excel"), color="9C0006"))
+    r += 1
+r += 1
+ws.merge_cells(start_row=r, start_column=2, end_row=r, end_column=6)
+put(ws, r, 2, "IMPORT & AUTOMATIK (nach Makro-Freigabe)", font=F_SECT, fill="C00000")
 r += 1
 hinweise = [
     "Ctrl+Shift+I  →  Excel-Datei importieren: Inhalte werden erkannt und automatisch auf die richtigen Reiter verteilt.",
@@ -1345,19 +1532,19 @@ regeln = [
     ("JA", "Kunde / Unternehmen", "Volumen", "02_PIPELINE", "Kunde / Unternehmen;Leistung / Fleet", "A;O;P;Q;Y", "Anhängen", "Strom-Pipeline (alle Varianten)"),
     ("JA", "Firmenname", "Prio", "03_KUNDEN_CRM", "Firmenname", "A;W", "Anhängen", "CRM-Zielkunden"),
     ("JA", "Kunde / Unternehmen", "Ansprechperson", "04_KUNDENKARTEI", "Kunde / Unternehmen", "A;H;I", "Anhängen", "Kundenkartei / Customer Overview"),
-    ("JA", "Betreiber", "IT-MW", "08_DC_BETREIBER", "Betreiber", "", "Anhängen", "DC-Betreiber"),
-    ("JA", "Projekt / Ort", "GU / TU", "09_DC_BAUPROJEKTE", "Projekt / Ort", "A", "Anhängen", "Bauprojekte"),
-    ("JA", "Code", "Standortname", "10_DC_STANDORTE", "Code", "", "Anhängen", "DC-Standorte"),
-    ("JA", "Unternehmen", "Produkt-Fokus", "11_DC_KONTAKTE", "Unternehmen;Name", "", "Anhängen", "DC-Kontakte"),
-    ("JA", "Projektname", "Report Value", "13_GLOBAL_PROJEKTE", "ID", "", "Anhängen", "Globale Projekte (deutsch)"),
-    ("JA", "Project Name", "Country", "13_GLOBAL_PROJEKTE", "ID", "", "Anhängen", "Globale Projekte (engl. Tracker)"),
-    ("JA", "Projekt-ID", "Nachname", "14_GLOBAL_KONTAKTE", "Projekt-ID;Nachname;E-Mail", "", "Anhängen", "Globale Kontakte (deutsch)"),
-    ("JA", "Project ID", "Contact First Name", "14_GLOBAL_KONTAKTE", "Projekt-ID;Nachname;E-Mail", "", "Anhängen", "Globale Kontakte (engl. Tracker)"),
-    ("JA", "ITEM CODE / MOVEX", "KATEGORIE", "16_KATALOG", "ITEM CODE / MOVEX;BEZEICHNUNG", "", "Anhängen", "Produktkatalog"),
-    ("JA", "Produktname", "Tagespreis", "17_PREISLISTE_CHF", "Produktname", "G;H", "Anhängen", "Preisliste CHF"),
-    ("JA", "Generic_Code__c", "Weekly Floor", "18_PREISLISTE_INTL", "Generic_Code__c;Division Name", "", "Anhängen", "Preisliste International"),
-    ("JA", "Woche", "Kanal", "23_AKQUISE_90T", "Woche;Aktion", "", "Anhängen", "Akquise-Plan"),
-    ("JA", "Norm", "DC-Relevanz", "22_NORMEN", "Norm / Standard", "", "Anhängen", "Normen-Matrix"),
+    ("JA", "Betreiber", "IT-MW", "10_DC_BETREIBER", "Betreiber", "", "Anhängen", "DC-Betreiber"),
+    ("JA", "Projekt / Ort", "GU / TU", "11_DC_BAUPROJEKTE", "Projekt / Ort", "A", "Anhängen", "Bauprojekte"),
+    ("JA", "Code", "Standortname", "12_DC_STANDORTE", "Code", "", "Anhängen", "DC-Standorte"),
+    ("JA", "Unternehmen", "Produkt-Fokus", "13_DC_KONTAKTE", "Unternehmen;Name", "", "Anhängen", "DC-Kontakte"),
+    ("JA", "Projektname", "Report Value", "15_GLOBAL_PROJEKTE", "ID", "", "Anhängen", "Globale Projekte (deutsch)"),
+    ("JA", "Project Name", "Country", "15_GLOBAL_PROJEKTE", "ID", "", "Anhängen", "Globale Projekte (engl. Tracker)"),
+    ("JA", "Projekt-ID", "Nachname", "16_GLOBAL_KONTAKTE", "Projekt-ID;Nachname;E-Mail", "", "Anhängen", "Globale Kontakte (deutsch)"),
+    ("JA", "Project ID", "Contact First Name", "16_GLOBAL_KONTAKTE", "Projekt-ID;Nachname;E-Mail", "", "Anhängen", "Globale Kontakte (engl. Tracker)"),
+    ("JA", "ITEM CODE / MOVEX", "KATEGORIE", "18_KATALOG", "ITEM CODE / MOVEX;BEZEICHNUNG", "", "Anhängen", "Produktkatalog"),
+    ("JA", "Produktname", "Tagespreis", "19_PREISLISTE_CHF", "Produktname", "G;H", "Anhängen", "Preisliste CHF"),
+    ("JA", "Generic_Code__c", "Weekly Floor", "20_PREISLISTE_INTL", "Generic_Code__c;Division Name", "", "Anhängen", "Preisliste International"),
+    ("JA", "Woche", "Kanal", "25_AKQUISE_90T", "Woche;Aktion", "", "Anhängen", "Akquise-Plan"),
+    ("JA", "Norm", "DC-Relevanz", "24_NORMEN", "Norm / Standard", "", "Anhängen", "Normen-Matrix"),
 ]
 for i, regel in enumerate(regeln):
     r = 13 + i
@@ -1425,14 +1612,14 @@ titel_zeilen(ws, C_SYS, "DOKUMENTATION — MiT Gesamtmappe 2026", f"Version 1.0 
 info = [
     ("KONZEPT", ""),
     ("", "Diese Mappe ersetzt alle Einzeldateien: 15 Quelldateien wurden zusammengeführt, dedupliziert und logisch auf Reiter verteilt."),
-    ("", "Eingabe-Reiter (Daten pflegen): 02, 03, 04, 08, 09, 10, 11, 16, 17, 18, 21, 23."),
-    ("", "Auswertungs-Reiter (nur lesen, rechnet live): 00, 01, 05, 06, 15."),
-    ("", "Wissens-Reiter (statisch): 07, 12, 22, 24."),
+    ("", "Eingabe-Reiter (Daten pflegen): 02, 03, 04, 10, 11, 12, 13, 18, 19, 20, 23, 25."),
+    ("", "Auswertungs-Reiter (nur lesen, rechnet live): 00, 01, 05, 06, 07, 08, 17."),
+    ("", "Wissens-Reiter (statisch): 09, 14, 24, 26."),
     ("DATENFLÜSSE", ""),
-    ("", "02_PIPELINE → 01_DASHBOARD, 05_FORECAST, 06_MONATSREPORT, 04_KUNDENKARTEI (Status/✓)."),
+    ("", "02_PIPELINE → 01_DASHBOARD, 05_FORECAST, 06_MONATSREPORT, 07_CEO_REPORT, 08_DIAGRAMME, 04_KUNDENKARTEI."),
     ("", "03_KUNDEN_CRM → 05_FORECAST (CRM-Forecast), 01_DASHBOARD."),
-    ("", "13_GLOBAL_PROJEKTE + 14_GLOBAL_KONTAKTE → 15_GLOBAL_ANALYTICS, 01_DASHBOARD."),
-    ("", "17_PREISLISTE_CHF → 20_ANGEBOT_KALK (Dropdown + Tagespreis-Lookup)."),
+    ("", "15_GLOBAL_PROJEKTE + 16_GLOBAL_KONTAKTE → 17_GLOBAL_ANALYTICS, 01_DASHBOARD."),
+    ("", "19_PREISLISTE_CHF → 22_ANGEBOT_KALK (Dropdown + Tagespreis-Lookup)."),
     ("", "91_LISTEN → alle Dropdowns (Status, Segmente, Kantone, Produkte, Generator-Grössen)."),
     ("IMPORT", ""),
     ("", "Ctrl+Shift+I: Datei wählen → Blätter werden per Kopfzeilen-Erkennung den Ziel-Reitern zugeordnet und angehängt."),
@@ -1444,20 +1631,20 @@ info = [
     ("", "Alle Listen-Reiter: Zeile 1 Titel, Zeile 2 Navigation, Zeile 4 Kopfzeile, Daten ab Zeile 5."),
     ("", "Spalten mit '_' (z.B. _Rang) sind interne Hilfsspalten — nicht löschen, sind ausgeblendet."),
     ("", "Formel-Spalten (Marge, Gew.Wert, Nr., ✓, Wochen-/Monatspreis) nicht überschreiben — sie füllen sich selbst."),
-    ("", "Blaue Felder in 19_GEN_RECHNER und 20_ANGEBOT_KALK sind Eingabefelder."),
+    ("", "Blaue Felder in 21_GEN_RECHNER und 22_ANGEBOT_KALK sind Eingabefelder."),
     ("QUELLDATEIEN (in dieser Mappe aufgegangen)", ""),
 ]
 quellen = [
-    "Aggreko_MiT_Master_Katalog_v1.xlsx → 16_KATALOG (466 Produkte)",
+    "Aggreko_MiT_Master_Katalog_v1.xlsx → 18_KATALOG (466 Produkte)",
     "MiT_CRM_Vorlage_Final.xlsx (2 Versionen, gemerged) → 03_KUNDEN_CRM (798 Firmen)",
     "CH_Customer_Monthly_Report_Mai_26.xlsx → 04_KUNDENKARTEI, 02_PIPELINE (Merge), 06_MONATSREPORT",
     "CH_MiT_Strom_Customer.xlsx + CEO_CFO (2 Versionen) → 02_PIPELINE (47 Deals, dedupliziert)",
     "Datacenter.xlsx + MiT_Aggreko_DC_Suite_2026.xlsx → 13/14/15_GLOBAL_*, 08/10/11_DC_*",
     "Data_Centre_Project_Tracker_March_2026_Final.xlsm → gleiche Datenbasis wie DC-Suite (10'572 Projekte)",
-    "MiT_DC_GESAMTMAPPE_2026_FIXED.xlsx → 09_DC_BAUPROJEKTE, 12_DC_DOSSIERS, 21_MARKTVOLUMEN u.a.",
-    "Zusammenfassung_Bauprojekte.xlsx → 09_DC_BAUPROJEKTE (Merge, inkl. Abgeschlossen/Verantwortlich)",
-    "202605_MIT_PriceList_CHF.xlsx → 17_PREISLISTE_CHF · MIT_PriceList_Confidential.xlsx → 18_PREISLISTE_INTL",
-    "RSRG_Kundenanalyse_MiT_2026.xlsx → 07_KUNDENANALYSE",
+    "MiT_DC_GESAMTMAPPE_2026_FIXED.xlsx → 11_DC_BAUPROJEKTE, 14_DC_DOSSIERS, 23_MARKTVOLUMEN u.a.",
+    "Zusammenfassung_Bauprojekte.xlsx → 11_DC_BAUPROJEKTE (Merge, inkl. Abgeschlossen/Verantwortlich)",
+    "202605_MIT_PriceList_CHF.xlsx → 19_PREISLISTE_CHF · MIT_PriceList_Confidential.xlsx → 20_PREISLISTE_INTL",
+    "RSRG_Kundenanalyse_MiT_2026.xlsx → 09_KUNDENANALYSE",
 ]
 r = 4
 for a, b in info:
@@ -1479,11 +1666,12 @@ ws.column_dimensions["B"].width = 120
 # Reihenfolge der Reiter korrigieren + definierte Namen
 # ============================================================================
 order = ["00_START", "01_DASHBOARD", "02_PIPELINE", "03_KUNDEN_CRM", "04_KUNDENKARTEI",
-         "05_FORECAST", "06_MONATSREPORT", "07_KUNDENANALYSE", "08_DC_BETREIBER",
-         "09_DC_BAUPROJEKTE", "10_DC_STANDORTE", "11_DC_KONTAKTE", "12_DC_DOSSIERS",
-         "13_GLOBAL_PROJEKTE", "14_GLOBAL_KONTAKTE", "15_GLOBAL_ANALYTICS", "16_KATALOG",
-         "17_PREISLISTE_CHF", "18_PREISLISTE_INTL", "19_GEN_RECHNER", "20_ANGEBOT_KALK",
-         "21_MARKTVOLUMEN", "22_NORMEN", "23_AKQUISE_90T", "24_SYSTEME_WISSEN",
+         "05_FORECAST", "06_MONATSREPORT", "07_CEO_REPORT", "08_DIAGRAMME",
+         "09_KUNDENANALYSE", "10_DC_BETREIBER",
+         "11_DC_BAUPROJEKTE", "12_DC_STANDORTE", "13_DC_KONTAKTE", "14_DC_DOSSIERS",
+         "15_GLOBAL_PROJEKTE", "16_GLOBAL_KONTAKTE", "17_GLOBAL_ANALYTICS", "18_KATALOG",
+         "19_PREISLISTE_CHF", "20_PREISLISTE_INTL", "21_GEN_RECHNER", "22_ANGEBOT_KALK",
+         "23_MARKTVOLUMEN", "24_NORMEN", "25_AKQUISE_90T", "26_SYSTEME_WISSEN",
          "90_IMPORT", "91_LISTEN", "99_INFO"]
 wb._sheets = [wb[n] for n in order]
 wb.active = 0

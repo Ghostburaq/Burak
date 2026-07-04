@@ -27,9 +27,11 @@ proben = [
     ("01_DASHBOARD", "A6", (int, float)),     # WON-Kachel
     ("05_FORECAST", "C6", (int, float)),      # Status-Volumen
     ("06_MONATSREPORT", "A6", (int, float)),  # WON KPI
-    ("15_GLOBAL_ANALYTICS", "B6", (int, float)),
-    ("17_PREISLISTE_CHF", "G5", (int, float)),
-    ("19_GEN_RECHNER", "B18", (int, float)),
+    ("17_GLOBAL_ANALYTICS", "B6", (int, float)),
+    ("07_CEO_REPORT", "A6", (int, float)),
+    ("08_DIAGRAMME", "C5", (int, float)),
+    ("19_PREISLISTE_CHF", "G5", (int, float)),
+    ("21_GEN_RECHNER", "B18", (int, float)),
     ("04_KUNDENKARTEI", "A5", (int, float)),  # Nr.-Formel
 ]
 proben_fail = []
@@ -47,6 +49,6 @@ for f in proben_fail:
     print("  ", f)
 print("Beispielwerte: WON-Kachel =", val("01_DASHBOARD", "A6"),
       "| Marge O5 =", val("02_PIPELINE", "O5"),
-      "| GlobAnalytics B6 =", val("15_GLOBAL_ANALYTICS", "B6"),
+      "| GlobAnalytics B6 =", val("17_GLOBAL_ANALYTICS", "B6"), "| CEO A6 =", val("07_CEO_REPORT", "A6"),
       "| Kartei-Status I5 =", val("04_KUNDENKARTEI", "I5"))
 sys.exit(1 if (fehler or proben_fail) else 0)
