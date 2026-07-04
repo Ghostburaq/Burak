@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LinkedIn-Post-Generator</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <button id="theme-toggle" class="theme-toggle" title="Dark Mode umschalten">🌙</button>
+
+    <header>
+      <h1>🚀 LinkedIn-Post-Generator</h1>
+      <p class="subtitle">Tippen oder wählen · Live-Websuche · menschliche Texte · Bild-Prompt</p>
+    </header>
+
+    <main>
+      <form id="generator-form">
+        <!-- 1. Über dich -->
+        <fieldset>
+          <legend>1 · Über dich</legend>
+          <div class="grid">
+            <label>
+              Name
+              <input name="name" placeholder="z. B. Burak Ücöz" />
+            </label>
+            <label>
+              Rolle / Position
+              <input name="role" list="roles-list" placeholder="z. B. Sales Engineer – Power" />
+            </label>
+            <label>
+              Branche
+              <input name="industry" list="industries-list" placeholder="z. B. Temporäre Energie" />
+            </label>
+            <label>
+              Zielgruppe
+              <input name="audience" list="audiences-list" placeholder="z. B. Rechenzentren" />
+            </label>
+          </div>
+        </fieldset>
+
+        <!-- 2. Thema -->
+        <fieldset>
+          <legend>2 · Thema <span class="req">*</span></legend>
+          <label>
+            Frei eintippen oder aus über 90 Vorlagen wählen
+            <input name="topic" id="topic" list="topics-list" placeholder="z. B. BESS für Rechenzentren – oder beliebiges Thema" />
+          </label>
+          <div class="btn-row">
+            <button type="button" id="ideas-btn" class="ghost small">💡 Themen-Ideen</button>
+            <button type="button" id="plan-btn" class="ghost small">📅 14-Tage-Plan</button>
+          </div>
+          <div id="ideas-box" class="hidden"></div>
+          <details class="sub">
+            <summary>➕ Eigenen Entwurf / Stil hinzufügen (optional)</summary>
+            <label>
+              Bestehenden Entwurf einfügen (wird optimiert)
+              <textarea name="draft" rows="3" placeholder="Rohtext einfügen – wird verbessert."></textarea>
+            </label>
+            <label>
+              „Schreib wie ich" – alte Posts einfügen (Stil wird imitiert)
+              <textarea name="styleSamples" id="styleSamples" rows="3" placeholder="1–3 Beispiel-Posts von dir."></textarea>
+            </label>
+            <button type="button" id="save-style" class="ghost small">💾 Stil dauerhaft merken</button>
+          </details>
+        </fieldset>
+
+        <!-- 3. Einstellungen (einklappbar) -->
+        <details class="settings-box">
+          <summary>⚙️ Einstellungen <span class="hint">(Sprache, Länge, Tonfall …)</span></summary>
+          <div class="grid">
+            <label>
+              Ziel
+              <select name="goal">
+                <option>Reichweite &amp; Sichtbarkeit</option>
+                <option>Personal Branding</option>
+                <option>Leads / Kundengewinnung</option>
+                <option>Recruiting / Employer Branding</option>
+                <option>Thought Leadership</option>
+                <option>Event / Ankündigung</option>
+                <option>Produkt / Case Study</option>
+                <option>Diskussion anstoßen</option>
+              </select>
+            </label>
+            <label>
+              Tonfall
+              <select name="tone">
+                <option>professionell, nahbar</option>
+                <option>locker &amp; humorvoll</option>
+                <option>inspirierend</option>
+                <option>sachlich &amp; datengetrieben</option>
+                <option>provokant &amp; meinungsstark</option>
+                <option>erzählerisch / Storytelling</option>
+                <option>technisch &amp; fachlich</option>
+              </select>
+            </label>
+            <label>
+              Natürlichkeit (Anti-KI)
+              <select name="naturalness">
+                <option value="hoch" selected>Sehr menschlich</option>
+                <option value="mittel">Ausgewogen</option>
+                <option value="fachlich">Seriös &amp; fachlich</option>
+              </select>
+            </label>
+            <label>
+              Sprache
+              <select name="language">
+                <option>Deutsch</option>
+                <option>Schweizerdeutsch (Hochdeutsch, CH)</option>
+                <option>Englisch</option>
+                <option>Türkisch</option>
+                <option>Französisch</option>
+                <option>Spanisch</option>
+                <option>Italienisch</option>
+              </select>
+            </label>
+            <label>
+              Markt / Region
+              <select name="region">
+                <option>Schweiz</option>
+                <option>DACH (D-A-CH)</option>
+                <option>Deutschland</option>
+                <option>Europa</option>
+                <option>Global</option>
+                <option>USA</option>
+                <option>Naher Osten</option>
+              </select>
+            </label>
+            <label>
+              Perspektive
+              <select name="perspective">
+                <option value="ich">Ich-Form</option>
+                <option value="wir">Wir-Form</option>
+                <option value="neutral">Neutral</option>
+              </select>
+            </label>
+            <label>
+              Länge
+              <select name="length">
+                <option value="kurz">Kurz</option>
+                <option value="mittel" selected>Mittel</option>
+                <option value="lang">Lang</option>
+              </select>
+            </label>
+            <label>
+              Varianten
+              <select name="variants">
+                <option>1</option>
+                <option>2</option>
+                <option selected>3</option>
+                <option>4</option>
+                <option>5</option>
+              </select>
+            </label>
+            <label>
+              Emojis
+              <select name="emoji">
+                <option value="keine">Keine</option>
+                <option value="dezent" selected>Dezent</option>
+                <option value="viel">Viele</option>
+              </select>
+            </label>
+            <label>
+              Hashtags
+              <select name="hashtags">
+                <option value="0">Keine</option>
+                <option value="3">3</option>
+                <option value="4" selected>4</option>
+                <option value="5">5</option>
+                <option value="8">8</option>
+              </select>
+            </label>
+            <label>
+              Hook-Stil
+              <select name="hook">
+                <option value="automatisch">Automatisch</option>
+                <option value="frage">Frage</option>
+                <option value="statistik">Statistik</option>
+                <option value="these">Kühne These</option>
+                <option value="story">Story</option>
+                <option value="zitat">Zitat</option>
+              </select>
+            </label>
+            <label>
+              Call-to-Action
+              <select name="cta">
+                <option value="automatisch">Automatisch</option>
+                <option value="kommentar">Kommentieren</option>
+                <option value="teilen">Teilen</option>
+                <option value="dm">DM einladen</option>
+                <option value="link">Link / Aktion</option>
+                <option value="keine">Keiner</option>
+              </select>
+            </label>
+            <label>
+              Recherche-Tiefe
+              <select name="depth">
+                <option value="standard" selected>Standard</option>
+                <option value="tief">Gründlich</option>
+              </select>
+            </label>
+            <label>
+              KI-Modell
+              <select name="model">
+                <option value="claude-sonnet-4-6">Standard (beste Qualität)</option>
+                <option value="claude-haiku-4-5-20251001">Schnell &amp; günstig</option>
+              </select>
+            </label>
+            <label class="checkbox">
+              <input type="checkbox" name="webSearch" id="webSearch" checked />
+              🔎 Live-Websuche nutzen
+            </label>
+          </div>
+        </details>
+
+        <!-- API-Key -->
+        <label class="apikey">
+          🔑 Anthropic API-Key <span class="req">*</span>
+          <input type="password" name="apiKey" id="apiKey" placeholder="sk-ant-..." autocomplete="off" />
+          <small>
+            Nur im Browser gespeichert, direkt an Anthropic gesendet. Key holen:
+            <a href="https://console.anthropic.com/" target="_blank" rel="noopener">console.anthropic.com</a>.
+          </small>
+        </label>
+
+        <button type="submit" id="submit-btn">✨ Posts generieren</button>
+      </form>
+
+      <section id="status" class="hidden">
+        <div class="spinner"></div>
+        <p id="status-text">Recherchiere &amp; schreibe deine Posts …</p>
+      </section>
+
+      <section id="result" class="hidden">
+        <div class="result-header">
+          <h2>Deine Posts</h2>
+          <div class="header-actions">
+            <button id="poll-btn" class="ghost">📊 Umfrage</button>
+            <button id="ics-btn" class="ghost">🔔 .ics</button>
+            <button id="export-all" class="ghost">⬇️ Alle</button>
+            <button id="regen-btn" class="ghost">🔄 Neu</button>
+          </div>
+        </div>
+        <div id="cards"></div>
+        <div id="sources"></div>
+      </section>
+
+      <details class="tools-wrap">
+        <summary>🧰 Extra-Werkzeuge (Kommentar-Antworten &amp; Text wiederverwerten)</summary>
+        <div class="tool-box">
+          <h3>💬 Kommentar-Antwort-Helfer</h3>
+          <textarea id="comment-input" rows="3" placeholder="Kommentar hier einfügen …"></textarea>
+          <button id="comment-btn" class="ghost small">💬 Antworten vorschlagen</button>
+          <div id="comment-out"></div>
+        </div>
+        <div class="tool-box">
+          <h3>🔁 Aus langem Text Posts machen</h3>
+          <textarea id="repurpose-input" rows="4" placeholder="Blogartikel / Notizen einfügen …"></textarea>
+          <button id="repurpose-btn" class="ghost small">🔁 Posts daraus erstellen</button>
+        </div>
+      </details>
+
+      <section id="history-section" class="hidden">
+        <div class="result-header">
+          <h2>🕘 Verlauf</h2>
+          <button id="clear-history" class="ghost">🗑️ Löschen</button>
+        </div>
+        <div id="history"></div>
+      </section>
+
+      <section id="error" class="hidden error-box"></section>
+    </main>
+
+    <footer>
+      <p>Quellen stammen aus der Live-Websuche von Claude. Bitte vor dem Posten prüfen.</p>
+    </footer>
+
+    <datalist id="roles-list">
+      <option>Geschäftsführer:in / CEO</option>
+      <option>Gründer:in / Founder</option>
+      <option>Sales Engineer</option>
+      <option>Sales Engineer – Power / Energy Rental</option>
+      <option>Sector Sales Manager</option>
+      <option>Vertriebsleiter:in</option>
+      <option>Account Manager:in</option>
+      <option>Key Account Manager:in</option>
+      <option>Business Development Manager:in</option>
+      <option>Rental Solutions Specialist</option>
+      <option>Application / Solutions Engineer</option>
+      <option>Marketing Manager:in</option>
+      <option>Ingenieur:in</option>
+      <option>Projektleiter:in</option>
+      <option>Berater:in / Consultant</option>
+      <option>HR Manager:in / Recruiter:in</option>
+      <option>Freelancer:in / Selbstständig</option>
+    </datalist>
+
+    <datalist id="industries-list">
+      <option>IT / Software</option>
+      <option>SaaS / Cloud</option>
+      <option>E-Commerce</option>
+      <option>Energie / Versorgung (EVU)</option>
+      <option>Temporäre Energie / Aggregate-Vermietung</option>
+      <option>Erneuerbare Energien</option>
+      <option>Bergbau / Mining</option>
+      <option>Öl &amp; Gas / Petrochemie</option>
+      <option>Rechenzentren / Data Center</option>
+      <option>Events / Veranstaltungstechnik</option>
+      <option>Maschinenbau</option>
+      <option>Automotive</option>
+      <option>Bau / Immobilien</option>
+      <option>Logistik / Transport</option>
+      <option>Gesundheitswesen / Spital</option>
+      <option>Beratung / Consulting</option>
+      <option>Finanzen / Banking</option>
+      <option>Öffentlicher Sektor</option>
+    </datalist>
+
+    <datalist id="audiences-list">
+      <option>Geschäftsführer:innen / Entscheider</option>
+      <option>IT-Leiter:innen / CTOs</option>
+      <option>Einkäufer:innen</option>
+      <option>Vertriebs-Verantwortliche</option>
+      <option>HR / Recruiter:innen</option>
+      <option>KMU / Mittelstand</option>
+      <option>Großunternehmen / Konzerne</option>
+      <option>Energieversorger (EVU)</option>
+      <option>Spitäler / Kliniken</option>
+      <option>Bauunternehmen</option>
+      <option>Veranstalter / Event-Organisatoren</option>
+      <option>Bergbau-Betreiber</option>
+      <option>Rechenzentrums-Betreiber</option>
+      <option>Öl- &amp; Gas-Unternehmen</option>
+      <option>Industriebetriebe</option>
+      <option>Netzbetreiber / Versorger</option>
+      <option>Jobsuchende</option>
+      <option>Mein Netzwerk allgemein</option>
+    </datalist>
+
+    <datalist id="topics-list">
+      <option>Temporäre Stromversorgung – wann sie sich lohnt</option>
+      <option>Notstrom-Konzepte für kritische Infrastruktur</option>
+      <option>Diesel- vs. Gasgeneratoren: Vor- &amp; Nachteile</option>
+      <option>HVO-Kraftstoff: bis zu 90 % weniger CO₂</option>
+      <option>Stage-V-Generatoren &amp; Emissionsvorschriften</option>
+      <option>Lastmanagement &amp; Generator-Dimensionierung</option>
+      <option>Redundanz (N+1) in der Stromplanung</option>
+      <option>Brückenstrom während Netzumbau</option>
+      <option>Was ein Batteriespeicher (BESS) auf der Baustelle bringt</option>
+      <option>Hybrid: Solar + Batterie + Generator</option>
+      <option>BESS zur Spitzenlastkappung (Peak Shaving)</option>
+      <option>Wie BESS Diesel &amp; Laufzeiten spart</option>
+      <option>Netzdienstleistungen mit Batteriespeichern</option>
+      <option>BESS für erneuerbare Projekte</option>
+      <option>Emissionsfreie Stromversorgung mit Batterien</option>
+      <option>Transformatoren im temporären Netz</option>
+      <option>Lastbänke: Testen unter Last</option>
+      <option>Elektrische Verteilung &amp; Verkabelung</option>
+      <option>Grid-Emulation: temporäres Netz</option>
+      <option>Inbetriebnahme &amp; Commissioning</option>
+      <option>Solar-Hybrid an abgelegenen Standorten</option>
+      <option>Mikronetze (Microgrids) für netzferne Projekte</option>
+      <option>Dekarbonisierung mit Greener-Upgrades</option>
+      <option>Energieeffizienz: in kWh statt kVA denken</option>
+      <option>Weg von Diesel: realistische Roadmap</option>
+      <option>PV-Integration in Stromkonzepte</option>
+      <option>Mobile Kühlung für Rechenzentren</option>
+      <option>Prozesskühlung in der Industrie</option>
+      <option>Temperaturmanagement für Batteriefarmen</option>
+      <option>Stromversorgung für Rechenzentren</option>
+      <option>Power &amp; Kühlung im Bergbau</option>
+      <option>Temporäre Energie für Großveranstaltungen</option>
+      <option>Versorger: Brückenlösungen bei Netzengpässen</option>
+      <option>Öl &amp; Gas: zuverlässige Energie vor Ort</option>
+      <option>Bau: Strom &amp; Klima auf der Baustelle</option>
+      <option>Industrie: Turnarounds absichern</option>
+      <option>Wie KI meinen Arbeitsalltag verändert</option>
+      <option>Mein bester Sales-Tipp</option>
+      <option>Wie ich einen schwierigen Deal gewonnen habe</option>
+      <option>Was gute Führung ausmacht</option>
+      <option>Mein Karriereweg bisher</option>
+      <option>Eine Lektion aus dem Scheitern</option>
+      <option>Die wichtigsten Trends in meiner Branche</option>
+      <option>Wie ich auf LinkedIn sichtbar wurde</option>
+      <option>Neue Stelle / Jobwechsel verkünden</option>
+      <option>Mein Jahresrückblick</option>
+      <option>Danke an mein Team</option>
+    </datalist>
+
+    <script src="app.js"></script>
+  </body>
+</html>
