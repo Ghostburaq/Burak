@@ -18,8 +18,11 @@
      1. NAVIGATION — beim Scrollen halbtransparent mit Blur
      --------------------------------------------------------------------------- */
   if (nav) {
+    // Seiten ohne Hero (Impressum/Datenschutz) haben keinen transparenten
+    // Startbereich → Nav dort dauerhaft solide halten.
+    var hasHero = !!document.querySelector('.hero');
     var onScroll = function () {
-      nav.classList.toggle('is-scrolled', window.scrollY > 8);
+      nav.classList.toggle('is-scrolled', !hasHero || window.scrollY > 8);
     };
     window.addEventListener('scroll', onScroll, { passive: true });
     onScroll(); // Initialzustand (z. B. bei Reload mitten auf der Seite)
@@ -38,13 +41,23 @@
       toggle.setAttribute('aria-label', open ? 'Menü schliessen' : 'Menü öffnen');
     };
 
-    toggle.addEventListener('click', function () {
+    toggle.addEventListener('click', function (e) {
+      // Verhindert die Anker-Navigation zu #nav-menu (der href ist nur der
+      // No-JS-Fallback). Mit JS steuert die Klasse .is-open das Menü.
+      e.preventDefault();
       setMenu(!nav.classList.contains('is-open'));
     });
 
     // Menü schliessen, sobald ein Link angeklickt wird
     menu.addEventListener('click', function (e) {
       if (e.target.closest('a')) { setMenu(false); }
+    });
+
+    // Menü schliessen bei Klick ausserhalb (Tap auf den restlichen Inhalt)
+    document.addEventListener('click', function (e) {
+      if (nav.classList.contains('is-open') && !nav.contains(e.target)) {
+        setMenu(false);
+      }
     });
 
     // Menü mit Escape schliessen
