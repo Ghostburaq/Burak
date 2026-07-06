@@ -11,8 +11,11 @@ import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.datavalidation import DataValidation
-from openpyxl.formatting.rule import FormulaRule
+from openpyxl.formatting.rule import (FormulaRule, DataBarRule, IconSetRule, ColorScaleRule)
 from openpyxl.workbook.defined_name import DefinedName
+from openpyxl.worksheet.properties import PageSetupProperties
+from openpyxl.chart import BarChart, PieChart, Reference
+from openpyxl.chart.label import DataLabelList
 
 D = pickle.load(open("extracted.pkl", "rb"))
 OHNE_MAKROS = os.environ.get("OHNE_MAKROS") == "1"
@@ -34,6 +37,48 @@ ZEBRA   = {C_VERT: "EEF3F9", C_DC: "EAF4F1", C_GLOB: "F3EDF7", C_PROD: "FCF0E4",
 
 THIN = Side(style="thin", color="BFBFBF")
 B_ALL = Border(left=THIN, right=THIN, top=THIN, bottom=THIN)
+
+# In-Zellen-Datenbalken je Bereichsfarbe
+BAR = {C_VERT: "9DC3E6", C_DC: "8FD0C2", C_GLOB: "CBA6DE", C_PROD: "F4B183",
+       C_TOOL: "DED08A", C_SYS: "C9C9C9", C_NAV: "C9C9C9"}
+VALUE_KEYS = ("Volumen CHF", "Wert CHF", "CHF-Potential", "IT-MW", "Total-MW",
+              "Marktvolumen", "MiT-Zielumsatz", "Gew.Wert", "Gew. Forecast",
+              "Report Value", "Projektwert", "Tagespreis", "Wochenpreis",
+              "Monatspreis", "Weekly Median", "Invest. CHF")
+
+def deko_liste(ws, spalten, maxrow, farbe):
+    """Datenbalken auf Wertspalten, Ampel-Icons auf Wahrscheinlichkeit, Farbskala auf Marge."""
+    bar = BAR.get(farbe, "BFBFBF")
+    for i, sp in enumerate(spalten, start=1):
+        h = sp["h"]
+        if h is None or h.startswith("_"):
+            continue
+        col = get_column_letter(i)
+        rng = f"{col}5:{col}{maxrow}"
+        try:
+            if h in ("Wahr. %", "Wahrsch. %"):
+                ws.conditional_formatting.add(rng, IconSetRule(
+                    "3TrafficLights1", "percent", [0, 34, 67], showValue=True))
+            elif h == "Marge %":
+                ws.conditional_formatting.add(rng, ColorScaleRule(
+                    start_type="num", start_value=0, start_color="F8696B",
+                    mid_type="num", mid_value=0.15, mid_color="FFEB84",
+                    end_type="num", end_value=0.35, end_color="63BE7B"))
+            elif h == "kW" or any(k in h for k in VALUE_KEYS):
+                ws.conditional_formatting.add(rng, DataBarRule(
+                    start_type="min", end_type="max", color=bar))
+        except Exception:
+            pass
+
+def setup_print(ws, titles="1:4", landscape=True):
+    ws.page_setup.orientation = "landscape" if landscape else "portrait"
+    ws.page_setup.fitToWidth = 1
+    ws.page_setup.fitToHeight = 0
+    ws.sheet_properties.pageSetUpPr = PageSetupProperties(fitToPage=True)
+    ws.page_margins.left = ws.page_margins.right = 0.3
+    ws.page_margins.top = ws.page_margins.bottom = 0.5
+    if titles:
+        ws.print_title_rows = titles
 
 ILLEGAL = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f]")
 
@@ -78,14 +123,20 @@ A_WRAP   = Alignment(horizontal="left", vertical="top", wrap_text=True)
 def titel_zeilen(ws, farbe, titel, untertitel, breite):
     """Zeile 1 Titel, Zeile 2 Nav-Link + Hinweis. breite = Anzahl Spalten."""
     ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=breite)
-    put(ws, 1, 1, titel, font=F_TITLE, fill=farbe, align=A_LEFT)
-    ws.row_dimensions[1].height = 26
+    put(ws, 1, 1, "   " + titel, font=Font(size=16, bold=True, color="FFFFFF"), fill=farbe, align=A_LEFT)
+    ws.row_dimensions[1].height = 32
     for col in range(1, breite + 1):
         ws.cell(row=1, column=col).fill = PatternFill("solid", fgColor=farbe)
-    put(ws, 2, 1, "=HYPERLINK(\"#'00_START'!A1\",\"← START\")", font=F_LINK)
+    put(ws, 2, 1, "=HYPERLINK(\"#'00_START'!A1\",\"◄ START\")", font=F_LINK, align=A_LEFT)
     if untertitel:
         ws.merge_cells(start_row=2, start_column=2, end_row=2, end_column=breite)
         put(ws, 2, 2, untertitel, font=Font(size=9, italic=True, color="808080"))
+    # dünne Akzentlinie unter der Titelzeile
+    acc = Side(style="medium", color=farbe)
+    for col in range(1, breite + 1):
+        cc = ws.cell(row=3, column=col)
+        cc.border = Border(bottom=acc)
+    ws.row_dimensions[3].height = 4
 
 def liste_bauen(wb, name, farbe, titel, untertitel, spalten, zeilen, maxrow,
                 freeze="A5", filter_on=True):
@@ -135,12 +186,21 @@ def liste_bauen(wb, name, farbe, titel, untertitel, spalten, zeilen, maxrow,
         ws.auto_filter.ref = f"A4:{get_column_letter(n)}{maxrow}"
     # Zebra
     zf = ZEBRA.get(farbe, "F2F2F2")
-    anchor = spalten[1]["h"] if n > 1 else spalten[0]["h"]
     anker_col = "$B" if n > 1 else "$A"
     ws.conditional_formatting.add(
         f"A5:{get_column_letter(n)}{maxrow}",
         FormulaRule(formula=[f"AND({anker_col}5<>\"\",MOD(ROW(),2)=0)"],
                     fill=PatternFill("solid", fgColor=zf), stopIfTrue=False))
+    # kräftige Trennlinie unter der Kopfzeile
+    for i in range(1, n + 1):
+        cc = ws.cell(row=4, column=i)
+        cc.border = Border(left=THIN, right=THIN, top=THIN,
+                           bottom=Side(style="medium", color="FFFFFF"))
+    # In-Zellen-Grafik + Druck-Layout + saubere Optik
+    deko_liste(ws, spalten, maxrow, farbe)
+    ws.sheet_view.showGridLines = False
+    setup_print(ws)
+    ws.sheet_view.zoomScale = 100
     return ws
 
 def block_sheet(wb, name, farbe, titel, untertitel, bloecke, widths=None):
@@ -249,6 +309,17 @@ sp_pipe = [
     {"h": "Notiz intern", "w": 32},
     {"h": "_Rang", "w": 6, "hidden": True,
      "f": '=IF($B{r}="","",IF(ISNUMBER($I{r}),$I{r},0)+ROW()/10000000)'},
+    # Rang-Spalten je Kategorie (Volumen + eindeutiger Tiebreak) -> LARGE-fähig in Excel UND LibreOffice
+    {"h": "_WON", "w": 6, "hidden": True,
+     "f": '=IF(AND($B{r}<>"",$R{r}="WON",ISNUMBER($I{r})),$I{r}+ROW()/100000000,"")'},
+    {"h": "_OFF", "w": 6, "hidden": True,
+     "f": '=IF(AND($B{r}<>"",OR($R{r}="offered",$R{r}="to be offered"),ISNUMBER($I{r})),$I{r}+ROW()/100000000,"")'},
+    {"h": "_OPP", "w": 6, "hidden": True,
+     "f": '=IF(AND($B{r}<>"",OR($R{r}="follow-up",$R{r}="In evaluation",$R{r}="tbd",$R{r}="on hold"),ISNUMBER($I{r})),$I{r}+ROW()/100000000,"")'},
+    {"h": "_LOSTX", "w": 6, "hidden": True,
+     "f": '=IF(AND($B{r}<>"",OR($R{r}="LOST",$R{r}="Declined"),ISNUMBER($I{r})),$I{r}+ROW()/100000000,"")'},
+    {"h": "_ACT", "w": 6, "hidden": True,
+     "f": '=IF(AND($B{r}<>"",$R{r}<>"WON",$R{r}<>"LOST",$R{r}<>"Declined",$R{r}<>"",ISNUMBER($I{r})),$I{r}+ROW()/100000000,"")'},
 ]
 ws = liste_bauen(wb, "02_PIPELINE", C_VERT, "PIPELINE — MiT Strom Schweiz (Master)",
                  f"Alle Deals zentral. Neue Deals hier erfassen oder per Import (Ctrl+Shift+I). Stand: {HEUTE}",
@@ -775,9 +846,11 @@ ws = liste_bauen(wb, "23_MARKTVOLUMEN", C_TOOL, "MARKTVOLUMEN & MiT-UMSATZPOTENZ
                  "Szenario-Modell: Zielkunden/Projekte/Preise anpassen -> Volumen & Zielumsatz rechnen live.",
                  sp_mv, mv_rows, MV)
 r_tot = 5 + len(mv_rows) + 1
+MV_DATA_LAST = 5 + len(mv_rows) - 1          # letzte Datenzeile (ohne TOTAL)
+MV_TOTAL_CHF = f"'23_MARKTVOLUMEN'!$H${r_tot}"
 put(ws, r_tot, 5, "TOTAL:", font=Font(bold=True), align=Alignment(horizontal="right"))
-put(ws, r_tot, 6, f"=SUM(F5:F{5+len(mv_rows)-1})", font=Font(bold=True), fmt=NF, border=B_ALL)
-put(ws, r_tot, 8, f"=SUM(H5:H{5+len(mv_rows)-1})", font=Font(bold=True), fmt=NF, border=B_ALL)
+put(ws, r_tot, 6, f"=SUM(F5:F{MV_DATA_LAST})", font=Font(bold=True), fmt=NF, border=B_ALL)
+put(ws, r_tot, 8, f"=SUM(H5:H{MV_DATA_LAST})", font=Font(bold=True), fmt=NF, border=B_ALL)
 
 # ============================================================================
 # 07 / 12 / 24: statische Wissens-Tabs
@@ -998,6 +1071,18 @@ for i, kt in enumerate(kt_show):
     put(ws, r, 4, f'=SUMIFS({PR}!$I$5:$I$2000,{PR}!$C$5:$C$2000,$A{r},{PR}!$R$5:$R$2000,"WON")', fmt=NF, border=B_ALL)
 kt_end = kt_start + len(kt_show) - 1
 
+# --- Diagramme rechts (Spalte N ff.) ---
+def _fc_bar(title, cat_lo, cat_hi, data_col, anchor, h=8):
+    ch = BarChart(); ch.type = "bar"; ch.title = title; ch.style = 10
+    data = Reference(ws, min_col=data_col, min_row=cat_lo - 1, max_row=cat_hi)
+    cats = Reference(ws, min_col=1, min_row=cat_lo, max_row=cat_hi)
+    ch.add_data(data, titles_from_data=True); ch.set_categories(cats)
+    ch.legend = None; ch.width = 13; ch.height = h
+    ws.add_chart(ch, anchor)
+_fc_bar("Volumen CHF nach Status", 6, 6 + len(status_pipe) - 1, 3, "N4")
+_fc_bar("Volumen CHF nach Segment", seg_start, seg_end, 3, "N20", h=11)
+_fc_bar("Volumen CHF nach Kanton", kt_start, kt_end, 3, "N38", h=10)
+
 # CRM-Forecast rechts (Spalten H..L)
 put(ws, 4, 8, "CRM-FORECAST NACH SEGMENT (aus 03_KUNDEN_CRM)", font=F_SECT, fill=C_VERT)
 ws.merge_cells(start_row=4, start_column=8, end_row=4, end_column=13)
@@ -1062,24 +1147,25 @@ put(ws, 10, 1, f'="📊 GESAMT-PIPELINE: "&TEXT(SUMIF({PR}!$R$5:$R$2000,"<>",{PR
 put(ws, 11, 1, "TOP 5 — GEWONNENE AUFTRÄGE", font=F_SECT, fill=C_VERT); ws.merge_cells("A11:D11")
 for i, h in enumerate(["#", "Kunde", "Volumen CHF", "Segment"], start=1):
     put(ws, 12, i, h, font=F_HDR, fill=C_VERT, border=B_ALL)
+WONR = f"{PR}!$Z$5:$Z$2000"   # _WON-Rangspalte
 for k in range(1, 6):
     r = 12 + k
     put(ws, r, 1, k, border=B_ALL)
-    put(ws, r, 2, f'=IFERROR(INDEX({PR}!$B$5:$B$2000,MATCH(AGGREGATE(14,6,{PR}!$Y$5:$Y$2000*({PR}!$R$5:$R$2000="WON"),{k}),{PR}!$Y$5:$Y$2000,0)),"–")', border=B_ALL)
-    put(ws, r, 3, f'=IFERROR(ROUND(AGGREGATE(14,6,{PR}!$Y$5:$Y$2000*({PR}!$R$5:$R$2000="WON"),{k}),0),"")', fmt=NF, border=B_ALL)
-    put(ws, r, 4, f'=IFERROR(INDEX({PR}!$D$5:$D$2000,MATCH(AGGREGATE(14,6,{PR}!$Y$5:$Y$2000*({PR}!$R$5:$R$2000="WON"),{k}),{PR}!$Y$5:$Y$2000,0)),"")', border=B_ALL)
+    put(ws, r, 2, f'=IFERROR(INDEX({PR}!$B$5:$B$2000,MATCH(LARGE({WONR},{k}),{WONR},0)),"–")', border=B_ALL)
+    put(ws, r, 3, f'=IFERROR(INT(LARGE({WONR},{k})),"")', fmt=NF, border=B_ALL)
+    put(ws, r, 4, f'=IFERROR(INDEX({PR}!$D$5:$D$2000,MATCH(LARGE({WONR},{k}),{WONR},0)),"")', border=B_ALL)
 
 put(ws, 11, 6, "TOP 5 — OFFENE CHANCEN", font=F_SECT, fill=C_VERT)
 ws.merge_cells(start_row=11, start_column=6, end_row=11, end_column=9)
 for i, h in enumerate(["#", "Kunde", "Volumen CHF", "Status"], start=6):
     put(ws, 12, i, h, font=F_HDR, fill=C_VERT, border=B_ALL)
-offen_cond = f'({PR}!$R$5:$R$2000<>"WON")*({PR}!$R$5:$R$2000<>"LOST")*({PR}!$R$5:$R$2000<>"Declined")*({PR}!$R$5:$R$2000<>"")'
+ACTR = f"{PR}!$AD$5:$AD$2000"  # _ACT-Rangspalte (offene/aktive Deals)
 for k in range(1, 6):
     r = 12 + k
     put(ws, r, 6, k, border=B_ALL)
-    put(ws, r, 7, f'=IFERROR(INDEX({PR}!$B$5:$B$2000,MATCH(AGGREGATE(14,6,{PR}!$Y$5:$Y$2000*{offen_cond},{k}),{PR}!$Y$5:$Y$2000,0)),"–")', border=B_ALL)
-    put(ws, r, 8, f'=IFERROR(ROUND(AGGREGATE(14,6,{PR}!$Y$5:$Y$2000*{offen_cond},{k}),0),"")', fmt=NF, border=B_ALL)
-    put(ws, r, 9, f'=IFERROR(INDEX({PR}!$R$5:$R$2000,MATCH(AGGREGATE(14,6,{PR}!$Y$5:$Y$2000*{offen_cond},{k}),{PR}!$Y$5:$Y$2000,0)),"")', border=B_ALL)
+    put(ws, r, 7, f'=IFERROR(INDEX({PR}!$B$5:$B$2000,MATCH(LARGE({ACTR},{k}),{ACTR},0)),"–")', border=B_ALL)
+    put(ws, r, 8, f'=IFERROR(INT(LARGE({ACTR},{k})),"")', fmt=NF, border=B_ALL)
+    put(ws, r, 9, f'=IFERROR(INDEX({PR}!$R$5:$R$2000,MATCH(LARGE({ACTR},{k}),{ACTR},0)),"")', border=B_ALL)
 
 put(ws, 20, 1, "STATUS-ÜBERSICHT", font=F_SECT, fill=C_VERT); ws.merge_cells("A20:D20")
 for i, h in enumerate(["Status", "Anzahl", "Volumen CHF", "Gew. Wert"], start=1):
@@ -1200,16 +1286,16 @@ ceo_cols = ["Nr.", "Kunde / Unternehmen", "Kt.", "Segment", "Start", "Leistung /
             "Volumen CHF", "Gew.Wert CHF", "Marge CHF", "Status", "Wahr. %", "Nächster Schritt", "_v"]
 ceo_src = {2: "$B", 3: "$C", 4: "$D", 5: "$H", 6: "$E", 7: "$I", 8: "$Q", 9: "$O",
            10: "$R", 11: "$S", 12: "$V"}
-YR = f"{PR}!$Y$5:$Y$2000"
+# Rang über kategorie-spezifische Hilfsspalten (LARGE -> Excel + LibreOffice)
 sektionen = [
-    ("1. AUFTRAGSEINGANG (WON) — bestätigte Aufträge", f'({PR}!$R$5:$R$2000="WON")', 20),
-    ("2. OFFERTEN — laufend", f'(({PR}!$R$5:$R$2000="offered")+({PR}!$R$5:$R$2000="to be offered"))', 30),
-    ("3. OPPORTUNITÄTEN — Follow-up / Evaluation / tbd / on hold",
-     f'(({PR}!$R$5:$R$2000="follow-up")+({PR}!$R$5:$R$2000="In evaluation")+({PR}!$R$5:$R$2000="tbd")+({PR}!$R$5:$R$2000="on hold"))', 30),
-    ("4. VERLOREN / ABGESAGT", f'(({PR}!$R$5:$R$2000="LOST")+({PR}!$R$5:$R$2000="Declined"))', 15),
+    ("1. AUFTRAGSEINGANG (WON) — bestätigte Aufträge", "$Z", 20),
+    ("2. OFFERTEN — laufend", "$AA", 30),
+    ("3. OPPORTUNITÄTEN — Follow-up / Evaluation / tbd / on hold", "$AB", 30),
+    ("4. VERLOREN / ABGESAGT", "$AC", 15),
 ]
 r = 9
-for titel_s, cond, nrows in sektionen:
+for titel_s, rankcol, nrows in sektionen:
+    RC = f"{PR}!{rankcol}$5:{rankcol}$2000"
     ws.merge_cells(start_row=r, start_column=1, end_row=r, end_column=13)
     put(ws, r, 1, titel_s, font=F_SECT, fill=C_VERT)
     r += 1
@@ -1219,7 +1305,7 @@ for titel_s, cond, nrows in sektionen:
     hdr_r = r
     r += 1
     for k in range(1, nrows + 1):
-        put(ws, r, 13, f'=IFERROR(AGGREGATE(14,6,{YR}*{cond},{k}),"")', border=B_ALL)
+        put(ws, r, 13, f'=IFERROR(LARGE({RC},{k}),"")', border=B_ALL)
         put(ws, r, 1, f'=IF($M{r}="","",{k})', border=B_ALL)
         for ci, src in ceo_src.items():
             fmt = "General"
@@ -1228,7 +1314,7 @@ for titel_s, cond, nrows in sektionen:
             if ci == 11:
                 fmt = PCT
             put(ws, r, ci,
-                f'=IF($M{r}="","",IFERROR(INDEX({PR}!{src}$5:{src}$2000,MATCH($M{r},{YR},0)),""))',
+                f'=IF($M{r}="","",IFERROR(INDEX({PR}!{src}$5:{src}$2000,MATCH($M{r},{RC},0)),""))',
                 fmt=fmt, border=B_ALL)
         r += 1
     r += 1
@@ -1342,13 +1428,25 @@ ws.sheet_properties.tabColor = C_NAV
 titel_zeilen(ws, C_NAV, "DASHBOARD — Gesamtübersicht Workspace",
              "Alle Kennzahlen live aus den Daten-Reitern. Klick auf Bereichstitel = Sprung zum Reiter.", 12)
 
-def tile(ws, row, col, label, formula, fmt=NF, span=2, fill="F2F2F2"):
+TILE_ACCENT = [C_VERT]
+def tile(ws, row, col, label, formula, fmt=NF, span=2, fill="FFFFFF"):
+    acc = TILE_ACCENT[0]
     ws.merge_cells(start_row=row, start_column=col, end_row=row, end_column=col + span - 1)
-    put(ws, row, col, label, font=F_KPI_L, fill=fill, align=A_CENTER)
+    put(ws, row, col, label, font=Font(size=9, bold=True, color="808080"), fill=fill, align=A_CENTER)
     ws.merge_cells(start_row=row + 1, start_column=col, end_row=row + 1, end_column=col + span - 1)
-    put(ws, row + 1, col, formula, font=F_KPI_V, fill=fill, align=A_CENTER, fmt=fmt)
+    put(ws, row + 1, col, formula, font=Font(size=13, bold=True, color=acc), fill=fill, align=A_CENTER, fmt=fmt)
+    topacc = Side(style="thick", color=acc)
+    for j in range(span):
+        cc = col + j
+        left = THIN if j == 0 else None
+        right = THIN if j == span - 1 else None
+        ws.cell(row=row, column=cc).border = Border(top=topacc, left=left, right=right)
+        ws.cell(row=row + 1, column=cc).border = Border(bottom=THIN, left=left, right=right)
+    ws.row_dimensions[row].height = 15
+    ws.row_dimensions[row + 1].height = 24
 
-put(ws, 4, 1, '=HYPERLINK("#\'02_PIPELINE\'!A1","▶ VERTRIEB STROM CH")', font=Font(bold=True, size=12, color=C_VERT))
+TILE_ACCENT[0] = C_VERT
+put(ws, 4, 1, '=HYPERLINK("#\'02_PIPELINE\'!A1","▶ VERTRIEB STROM CH")', font=Font(bold=True, size=13, color=C_VERT))
 tile(ws, 5, 1, "WON Umsatz CHF", f'=SUMIF({PR}!$R$5:$R$2000,"WON",{PR}!$I$5:$I$2000)')
 tile(ws, 5, 3, "Offene Pipeline CHF",
      f'=SUMIF({PR}!$R$5:$R$2000,"<>",{PR}!$I$5:$I$2000)-SUMIF({PR}!$R$5:$R$2000,"WON",{PR}!$I$5:$I$2000)-SUMIF({PR}!$R$5:$R$2000,"LOST",{PR}!$I$5:$I$2000)-SUMIF({PR}!$R$5:$R$2000,"Declined",{PR}!$I$5:$I$2000)')
@@ -1359,7 +1457,8 @@ tile(ws, 5, 7, "Deals aktiv",
 tile(ws, 5, 9, "CRM-Zielkunden", f"=COUNTA({CR}!$D$5:$D$3000)")
 tile(ws, 5, 11, "Kunden in Kartei", f"=COUNTA('04_KUNDENKARTEI'!$B$5:$B$5000)")
 
-put(ws, 8, 1, '=HYPERLINK("#\'10_DC_BETREIBER\'!A1","▶ DATACENTER SCHWEIZ")', font=Font(bold=True, size=12, color=C_DC))
+TILE_ACCENT[0] = C_DC
+put(ws, 8, 1, '=HYPERLINK("#\'10_DC_BETREIBER\'!A1","▶ DATACENTER SCHWEIZ")', font=Font(bold=True, size=13, color=C_DC))
 tile(ws, 9, 1, "DC-Betreiber CH", f"=COUNTA('10_DC_BETREIBER'!$A$5:$A$300)")
 tile(ws, 9, 3, "Bauprojekte CH", f"=COUNTA('11_DC_BAUPROJEKTE'!$E$5:$E$300)")
 tile(ws, 9, 5, "Standorte", f"=COUNTA('12_DC_STANDORTE'!$A$5:$A$300)")
@@ -1369,7 +1468,8 @@ tile(ws, 9, 9, "CHF-Potential Bau",
 tile(ws, 9, 11, "A-Prio Projekte",
      f'=SUMPRODUCT((LEFT(\'11_DC_BAUPROJEKTE\'!$W$5:$W$300,1)="A")*1)')
 
-put(ws, 12, 1, '=HYPERLINK("#\'15_GLOBAL_PROJEKTE\'!A1","▶ GLOBAL DATA CENTRE")', font=Font(bold=True, size=12, color=C_GLOB))
+TILE_ACCENT[0] = C_GLOB
+put(ws, 12, 1, '=HYPERLINK("#\'15_GLOBAL_PROJEKTE\'!A1","▶ GLOBAL DATA CENTRE")', font=Font(bold=True, size=13, color=C_GLOB))
 tile(ws, 13, 1, "Projekte weltweit", f"=COUNTA({GPS}!$C$5:$C$20000)")
 tile(ws, 13, 3, "Report-Vol. Mrd $", f"=SUM({GPS}!$E$5:$E$20000)/1000000000", fmt="#,##0.0")
 tile(ws, 13, 5, "Under Construction", f'=COUNTIF({GPS}!$H$5:$H$20000,"Under Construction")')
@@ -1377,14 +1477,15 @@ tile(ws, 13, 7, "EUROPE-Projekte", f'=COUNTIF({GPS}!$K$5:$K$20000,"EUROPE")')
 tile(ws, 13, 9, "Globale Kontakte", f"=COUNTA({GKS}!$E$5:$E$15000)")
 tile(ws, 13, 11, "Schweiz-Projekte", f'=COUNTIF({GPS}!$I$5:$I$20000,"Switzerland")')
 
-put(ws, 16, 1, '=HYPERLINK("#\'18_KATALOG\'!A1","▶ PRODUKTE && PREISE")', font=Font(bold=True, size=12, color=C_PROD))
+TILE_ACCENT[0] = C_PROD
+put(ws, 16, 1, '=HYPERLINK("#\'18_KATALOG\'!A1","▶ PRODUKTE && PREISE")', font=Font(bold=True, size=13, color=C_PROD))
 tile(ws, 17, 1, "Katalog-Produkte", f"=COUNTA('18_KATALOG'!$E$5:$E$2000)")
 tile(ws, 17, 3, "Kategorien", "=SUMPRODUCT(('91_LISTEN'!$B$5:$B$40<>\"\")*0)+27")
 tile(ws, 17, 5, "Preisliste CHF", f"=COUNTA('19_PREISLISTE_CHF'!$C$5:$C$300)")
 tile(ws, 17, 7, "Preisliste INTL", f"=COUNTA('20_PREISLISTE_INTL'!$F$5:$F$500)")
 tile(ws, 17, 9, "Akquise-Aktionen offen",
      f'=COUNTIF(\'25_AKQUISE_90T\'!$H$5:$H$500,"OFFEN")+COUNTIF(\'25_AKQUISE_90T\'!$H$5:$H$500,"HEUTE!")')
-tile(ws, 17, 11, "Marktpotenzial CH/J", f"=SUM('23_MARKTVOLUMEN'!$H$5:$H$50)")
+tile(ws, 17, 11, "Marktpotenzial CH/J Mio", f"={MV_TOTAL_CHF}/1000000", fmt='#,##0.0" Mio"')
 
 put(ws, 20, 1, "SCHNELLZUGRIFF", font=Font(bold=True, size=12, color="404040"))
 links = [("02_PIPELINE", "Pipeline pflegen"), ("03_KUNDEN_CRM", "CRM / Zielkunden"),
@@ -1397,8 +1498,12 @@ for i, (tab, label) in enumerate(links):
     ws.merge_cells(start_row=r, start_column=c, end_row=r, end_column=c + 3)
     put(ws, r, c, f'=HYPERLINK("#\'{tab}\'!A1","→ {label}")', font=F_LINK)
 for i in range(1, 13):
-    ws.column_dimensions[get_column_letter(i)].width = 11
+    ws.column_dimensions[get_column_letter(i)].width = 12.5
+for rr in (4, 8, 12, 16, 20):
+    ws.row_dimensions[rr].height = 20
 ws.sheet_view.showGridLines = False
+ws.sheet_view.zoomScale = 100
+setup_print(ws, titles=None)
 
 # ============================================================================
 # 00_START
@@ -1453,6 +1558,7 @@ nav = [
         ("24_NORMEN", "Normen & Compliance (17 Standards)"),
         ("25_AKQUISE_90T", "90-Tage-Akquiseplan"),
         ("26_SYSTEME_WISSEN", "Technik-Wissen Kombinationssysteme"),
+        ("27_AKTIONEN", "Aktions-Zentrale — offene To-Dos & Follow-ups gebündelt"),
     ]),
     ("SYSTEM", C_SYS, [
         ("90_IMPORT", "IMPORT-ZENTRALE — neue Dateien automatisch verteilen"),
@@ -1643,7 +1749,8 @@ info = [
     ("", "Duplikate werden über Schlüssel-Spalten erkannt und übersprungen (Regeln: Reiter 90_IMPORT)."),
     ("", "Unbekannte Blätter → automatisch neues rotes Blatt 'IMP ...' (nichts geht verloren)."),
     ("", "Ctrl+Shift+M: Monatsreport als neue Arbeitsmappe (Werte eingefroren) im gleichen Ordner speichern."),
-    ("", "Ctrl+Shift+B: neues leeres Listen-Blatt anlegen."),
+    ("", "Ctrl+Shift+B: neues leeres Listen-Blatt anlegen.  ·  Ctrl+Shift+F: Suche über die ganze Mappe."),
+    ("", "Ctrl+Shift+D: alle Berichte (Dashboard/Forecast/Monatsreport/CEO/Diagramme) als EIN PDF speichern."),
     ("KONVENTIONEN", ""),
     ("", "Alle Listen-Reiter: Zeile 1 Titel, Zeile 2 Navigation, Zeile 4 Kopfzeile, Daten ab Zeile 5."),
     ("", "Spalten mit '_' (z.B. _Rang) sind interne Hilfsspalten — nicht löschen, sind ausgeblendet."),
@@ -1680,6 +1787,95 @@ ws.column_dimensions["A"].width = 4
 ws.column_dimensions["B"].width = 120
 
 # ============================================================================
+# 27_AKTIONEN  (Aktions-Zentrale — was ist als Nächstes zu tun?)
+# ============================================================================
+ws = wb.create_sheet("27_AKTIONEN")
+ws.sheet_properties.tabColor = C_TOOL
+titel_zeilen(ws, C_TOOL, "AKTIONS-ZENTRALE — To-Do & Follow-ups",
+             "Bündelt offene Deals, Akquise-Aufgaben und Prio-A-Kunden. Alles live aus den Daten-Reitern.", 12)
+AK = "'25_AKQUISE_90T'"
+active_cond = (f'({PR}!$R$5:$R$2000<>"WON")*({PR}!$R$5:$R$2000<>"LOST")'
+               f'*({PR}!$R$5:$R$2000<>"Declined")*({PR}!$R$5:$R$2000<>"")')
+
+TILE_ACCENT[0] = C_TOOL
+tile(ws, 4, 1, "Aktive Deals", f'=SUMPRODUCT({active_cond})')
+tile(ws, 4, 3, "Offerten offen",
+     f'=COUNTIF({PR}!$R$5:$R$2000,"offered")+COUNTIF({PR}!$R$5:$R$2000,"to be offered")')
+tile(ws, 4, 5, "Akquise offen/heute",
+     f'=COUNTIF({AK}!$H$5:$H$500,"OFFEN")+COUNTIF({AK}!$H$5:$H$500,"HEUTE!")+COUNTIF({AK}!$H$5:$H$500,"LÄUFT")')
+tile(ws, 4, 7, "Prio-A CRM offen",
+     f'=COUNTIFS({CR}!$B$5:$B$3000,"A",{CR}!$M$5:$M$3000,"offen")')
+tile(ws, 4, 9, "Offene Pipeline CHF",
+     f'=SUMIF({PR}!$R$5:$R$2000,"<>",{PR}!$I$5:$I$2000)-SUMIF({PR}!$R$5:$R$2000,"WON",{PR}!$I$5:$I$2000)-SUMIF({PR}!$R$5:$R$2000,"LOST",{PR}!$I$5:$I$2000)-SUMIF({PR}!$R$5:$R$2000,"Declined",{PR}!$I$5:$I$2000)')
+tile(ws, 4, 11, "DC-Bauprojekte offen",
+     f'=COUNTIF(\'11_DC_BAUPROJEKTE\'!$B$5:$B$300,"OFFEN")+COUNTIF(\'11_DC_BAUPROJEKTE\'!$B$5:$B$300,"IN KONTAKT")')
+
+# Block A: aktive Pipeline-Deals (nach Volumen)
+r0 = 7
+ws.merge_cells(start_row=r0, start_column=1, end_row=r0, end_column=8)
+put(ws, r0, 1, "AKTIVE PIPELINE-DEALS — nach Volumen (Top 30)", font=F_SECT, fill=C_TOOL)
+a_hdr = ["#", "Kunde / Unternehmen", "Kt.", "Status", "Volumen CHF", "Wahr. %",
+         "Nächster Schritt", "Follow-Up", "_v"]
+for i, h in enumerate(a_hdr, start=1):
+    put(ws, r0 + 1, i, h, font=F_HDR, fill=C_TOOL, border=B_ALL,
+        align=Alignment(horizontal="center", wrap_text=True))
+YR2 = f"{PR}!$AD$5:$AD$2000"   # _ACT-Rangspalte
+a_first = r0 + 2
+for k in range(1, 31):
+    r = a_first + k - 1
+    put(ws, r, 9, f'=IFERROR(LARGE({YR2},{k}),"")', border=B_ALL)
+    put(ws, r, 1, f'=IF($I{r}="","",{k})', border=B_ALL)
+    m = f'MATCH($I{r},{YR2},0)'
+    put(ws, r, 2, f'=IF($I{r}="","",IFERROR(INDEX({PR}!$B$5:$B$2000,{m}),""))', border=B_ALL)
+    put(ws, r, 3, f'=IF($I{r}="","",IFERROR(INDEX({PR}!$C$5:$C$2000,{m}),""))', border=B_ALL, align=A_CENTER)
+    put(ws, r, 4, f'=IF($I{r}="","",IFERROR(INDEX({PR}!$R$5:$R$2000,{m}),""))', border=B_ALL)
+    put(ws, r, 5, f'=IF($I{r}="","",IFERROR(INDEX({PR}!$I$5:$I$2000,{m}),""))', fmt=NF, border=B_ALL)
+    put(ws, r, 6, f'=IF($I{r}="","",IFERROR(INDEX({PR}!$S$5:$S$2000,{m}),""))', fmt=PCT, border=B_ALL)
+    put(ws, r, 7, f'=IF($I{r}="","",IFERROR(INDEX({PR}!$V$5:$V$2000,{m}),""))', border=B_ALL)
+    put(ws, r, 8, f'=IF($I{r}="","",IFERROR(INDEX({PR}!$W$5:$W$2000,{m}),""))', border=B_ALL)
+a_last = a_first + 29
+ws.conditional_formatting.add(f"E{a_first}:E{a_last}",
+    DataBarRule(start_type="min", end_type="max", color=BAR[C_TOOL]))
+ws.conditional_formatting.add(f"F{a_first}:F{a_last}",
+    IconSetRule("3TrafficLights1", "percent", [0, 34, 67], showValue=True))
+ws.conditional_formatting.add(f"D{a_first}:D{a_last}", FormulaRule(
+    formula=['EXACT($D'+str(a_first)+',"offered")'],
+    fill=PatternFill("solid", fgColor="FFEB9C"), font=Font(color="9C6500", bold=True)))
+
+# Block B: Akquise-Aufgaben (Mirror, nur nicht-erledigte)
+b0 = a_last + 2
+ws.merge_cells(start_row=b0, start_column=1, end_row=b0, end_column=8)
+put(ws, b0, 1, "AKQUISE-AUFGABEN — offen / heute / läuft (aus 25_AKQUISE_90T)", font=F_SECT, fill=C_TOOL)
+b_hdr = ["Woche", "Aktion", "Kanal", "MiT-Produkt", "Deadline", "Status", "CHF-Potential", "Ziel"]
+for i, h in enumerate(b_hdr, start=1):
+    put(ws, b0 + 1, i, h, font=F_HDR, fill=C_TOOL, border=B_ALL,
+        align=Alignment(horizontal="center", wrap_text=True))
+b_first = b0 + 2
+srcmap = [1, 2, 5, 6, 9, 8, 10, 7]  # Spalten in 25_AKQUISE_90T
+for idx in range(30):
+    src = 5 + idx
+    r = b_first + idx
+    cond = f'OR({AK}!$H{src}="ERLEDIGT",{AK}!$H{src}="",{AK}!$B{src}="")'
+    for ci, sc in enumerate(srcmap, start=1):
+        col = get_column_letter(sc)
+        fmt = NF if sc == 10 else "General"
+        put(ws, r, ci, f'=IF({cond},"",{AK}!${col}{src})', fmt=fmt, border=B_ALL,
+            align=A_CENTER if ci in (1, 5, 6) else None)
+b_last = b_first + 29
+ws.conditional_formatting.add(f"F{b_first}:F{b_last}", FormulaRule(
+    formula=['EXACT($F'+str(b_first)+',"HEUTE!")'],
+    fill=PatternFill("solid", fgColor="FFC7CE"), font=Font(color="9C0006", bold=True)))
+ws.conditional_formatting.add(f"G{b_first}:G{b_last}",
+    DataBarRule(start_type="min", end_type="max", color=BAR[C_TOOL]))
+
+ws.column_dimensions["I"].hidden = True
+for col, w in zip("ABCDEFGHI", [5, 32, 6, 14, 12, 9, 40, 13, 6]):
+    ws.column_dimensions[col].width = w
+ws.freeze_panes = "A5"
+ws.sheet_view.showGridLines = False
+setup_print(ws)
+
+# ============================================================================
 # Reihenfolge der Reiter korrigieren + definierte Namen
 # ============================================================================
 order = ["00_START", "01_DASHBOARD", "02_PIPELINE", "03_KUNDEN_CRM", "04_KUNDENKARTEI",
@@ -1689,9 +1885,20 @@ order = ["00_START", "01_DASHBOARD", "02_PIPELINE", "03_KUNDEN_CRM", "04_KUNDENK
          "15_GLOBAL_PROJEKTE", "16_GLOBAL_KONTAKTE", "17_GLOBAL_ANALYTICS", "18_KATALOG",
          "19_PREISLISTE_CHF", "20_PREISLISTE_INTL", "21_GEN_RECHNER", "22_ANGEBOT_KALK",
          "23_MARKTVOLUMEN", "24_NORMEN", "25_AKQUISE_90T", "26_SYSTEME_WISSEN",
+         "27_AKTIONEN",
          "90_IMPORT", "91_LISTEN", "99_INFO"]
 wb._sheets = [wb[n] for n in order]
 wb.active = 0
+
+# Globaler Feinschliff: Gridlines aus + druckfertig auf JEDER Seite
+for ws in wb.worksheets:
+    ws.sheet_view.showGridLines = False
+    ws.sheet_view.zoomScale = 100
+    if ws.page_setup.orientation is None:
+        ws.page_setup.orientation = "landscape"
+    ws.page_setup.fitToWidth = 1
+    ws.page_setup.fitToHeight = 0
+    ws.sheet_properties.pageSetUpPr = PageSetupProperties(fitToPage=True)
 
 wb.save(OUT_FILE)
 print(f"OK -> {OUT_FILE}")

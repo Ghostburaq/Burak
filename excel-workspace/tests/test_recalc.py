@@ -33,6 +33,12 @@ proben = [
     ("19_PREISLISTE_CHF", "G5", (int, float)),
     ("21_GEN_RECHNER", "B18", (int, float)),
     ("04_KUNDENKARTEI", "A5", (int, float)),  # Nr.-Formel
+    ("07_CEO_REPORT", "B11", str),            # WON-Detailzeile 1 (Kundenname)
+    ("07_CEO_REPORT", "G11", (int, float)),   # WON-Detail Volumen
+    ("27_AKTIONEN", "B9", str),               # Aktive-Deals-Detail 1
+    ("27_AKTIONEN", "E9", (int, float)),      # Aktive-Deals Volumen
+    ("06_MONATSREPORT", "B13", str),          # Top-5-WON Kunde 1
+    ("06_MONATSREPORT", "C13", (int, float)), # Top-5-WON Volumen 1
 ]
 proben_fail = []
 for s, co, typ in proben:

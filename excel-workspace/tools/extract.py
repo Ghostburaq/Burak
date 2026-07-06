@@ -289,8 +289,19 @@ LOG.append(f"Normen: {len(n)}")
 
 mv_h, mv = read_table(wb("suite")["10 MARKTVOLUMEN"], ["Produktkategorie", "Marktanteil %"])
 mv = [r for r in mv if r[0]]
+# Nur echte Produktkategorien: bei TOTAL-/Szenario-Zeile abschneiden
+# (darunter steht eine 2. Tabelle mit anderen Spalten -> würde D*E-Formel sprengen)
+_stop = ("TOTAL", "SZENARIO", "SZENARIO-ANALYSE", "MINIMAL", "REALISTISCH",
+         "OPTIMISTISCH", "GL-TARGET", "SZENARIEN")
+mv_clean = []
+for r in mv:
+    k = str(r[0] or "").strip().upper()
+    if any(k.startswith(w) or k == w for w in _stop):
+        break
+    mv_clean.append(r)
+mv = mv_clean
 OUT["marktvolumen"] = {"header": mv_h, "rows": mv}
-LOG.append(f"Marktvolumen: {len(mv)} Header: {mv_h}")
+LOG.append(f"Marktvolumen: {len(mv)} (Szenario-Zeilen entfernt) Header: {mv_h}")
 
 aq_s_h, aq_s = read_table(wb("suite")["06 CH AKQUISE 90T"], ["Woche", "Aktion", "Kanal"])
 aq_g_h, aq_g = read_table(wb("gesamt")["10 AKQUISE_90TAGE"], ["Woche", "Aktion", "Kanal"])

@@ -154,3 +154,67 @@ Private Function SicherDateiname(ByVal s As String) As String
     Next b
     SicherDateiname = s
 End Function
+
+Public Sub MIT_Suche()
+    Dim q As String, ws As Worksheet, f As Range
+    Dim treffer As Long
+    q = Trim$(InputBox("Suchbegriff (Firma, Kontakt, Ort, Projekt ...):", _
+                       "Suche über die ganze Gesamtmappe"))
+    If Len(q) = 0 Then Exit Sub
+    treffer = 0
+    For Each ws In ThisWorkbook.Worksheets
+        If ws.Visible = xlSheetVisible Then
+            Set f = Nothing
+            On Error Resume Next
+            Set f = ws.UsedRange.Find(What:=q, LookIn:=xlValues, _
+                                      LookAt:=xlPart, MatchCase:=False)
+            On Error GoTo 0
+            If Not f Is Nothing Then
+                treffer = treffer + 1
+                ws.Activate
+                f.Select
+                If MsgBox("Treffer in '" & ws.Name & "'  (Zelle " & _
+                          f.Address(False, False) & "):" & vbCrLf & vbCrLf & _
+                          Left$(CStr(f.Value), 120) & vbCrLf & vbCrLf & _
+                          "Weitersuchen?", vbYesNo + vbQuestion, "Suche") = vbNo Then Exit Sub
+            End If
+        End If
+    Next ws
+    If treffer = 0 Then
+        MsgBox "Kein Treffer für '" & q & "'.", vbInformation, "Suche"
+    Else
+        MsgBox "Keine weiteren Treffer für '" & q & "'.", vbInformation, "Suche"
+    End If
+End Sub
+
+Public Sub MIT_AllePDF()
+    Dim pfad As String, datei As String
+    Dim berichte As Variant
+
+    On Error GoTo Fehler
+    berichte = Array("01_DASHBOARD", "05_FORECAST", "06_MONATSREPORT", _
+                     "07_CEO_REPORT", "08_DIAGRAMME", "27_AKTIONEN")
+    datei = "MiT_Berichte_" & Year(Date) & "_" & Format(Month(Date), "00") & _
+            "_" & Format(Day(Date), "00") & ".pdf"
+    If Len(ThisWorkbook.Path) > 0 Then
+        pfad = ThisWorkbook.Path & Application.PathSeparator & datei
+    Else
+        pfad = datei
+    End If
+    Application.Calculate
+    ThisWorkbook.Worksheets(berichte).Select
+    ' 0 = xlTypePDF, 0 = xlQualityStandard (Literale statt Konstanten -> portabel)
+    ActiveSheet.ExportAsFixedFormat Type:=0, Filename:=pfad, Quality:=0, _
+        IncludeDocProperties:=True, IgnorePrintAreas:=False, OpenAfterPublish:=False
+    ThisWorkbook.Worksheets("00_START").Select
+    MsgBox "Alle Berichte als EIN PDF gespeichert:" & vbCrLf & pfad, _
+           vbInformation, "PDF-Export"
+    Exit Sub
+
+Fehler:
+    On Error Resume Next
+    ThisWorkbook.Worksheets("00_START").Select
+    MsgBox "PDF-Export fehlgeschlagen: " & Err.Description & vbCrLf & vbCrLf & _
+           "Tipp: In Excel notfalls über Datei > Exportieren > PDF.", _
+           vbExclamation, "PDF-Export"
+End Sub

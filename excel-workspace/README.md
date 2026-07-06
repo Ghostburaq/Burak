@@ -1,19 +1,33 @@
 # MiT × Aggreko — GESAMTMAPPE 2026
 
 **Eine einzige Excel-Arbeitsmappe als Workspace** — ersetzt 15 Einzeldateien.
-Deliverable: [`MiT_GESAMTMAPPE_2026.xlsm`](MiT_GESAMTMAPPE_2026.xlsm) (30 Reiter, 10'332 Formeln, 5 Live-Diagramme, VBA-Import-Automatik).
+Deliverable: [`MiT_GESAMTMAPPE_2026.xlsm`](MiT_GESAMTMAPPE_2026.xlsm) (31 Reiter, 10'850 Formeln, 8 Live-Diagramme, In-Zellen-Datenbalken/Ampeln, VBA-Import-Automatik).
 
-## Aufbau (28 Reiter, logisch getrennt & verknüpft)
+## Aufbau (31 Reiter, logisch getrennt & verknüpft)
 
 | Bereich | Reiter | Inhalt |
 |---|---|---|
 | Navigation | `00_START`, `01_DASHBOARD` | Navigation + Live-KPIs über alle Bereiche |
-| Vertrieb Strom CH | `02_PIPELINE` … `09_KUNDENANALYSE` | 47 Deals (neueste CEO/CFO-Version als Basis), 798 CRM-Firmen, 1'133 Kundenkontakte, Forecast, Monatsreport, **CEO-Report**, **Diagramme** |
+| Vertrieb Strom CH | `02_PIPELINE` … `09_KUNDENANALYSE` | 47 Deals, 798 CRM-Firmen, 1'133 Kontakte, Forecast (+Charts), Monatsreport, **CEO-Report** (befüllt), **Diagramme** |
 | Datacenter CH | `10_DC_BETREIBER` … `14_DC_DOSSIERS` | 30 Betreiber, 16 Bauprojekte (3 Quellen gemerged), 38 Standorte, Kontakte, Dossiers |
 | Global | `15_GLOBAL_PROJEKTE` … `17_GLOBAL_ANALYTICS` | 10'572 DC-Projekte, 8'502 Kontakte, Live-Analytics |
 | Produkte & Preise | `18_KATALOG` … `20_PREISLISTE_INTL` | 466 Produkte, Preislisten CHF + International |
-| Werkzeuge | `21_GEN_RECHNER` … `26_SYSTEME_WISSEN` | Generator-Rechner, Angebotskalkulator, Marktvolumen, Normen, Akquiseplan |
+| Werkzeuge | `21_GEN_RECHNER` … `27_AKTIONEN` | Generator-Rechner, Angebotskalkulator, Marktvolumen, Normen, Akquiseplan, **Aktions-Zentrale** |
 | System | `90_IMPORT`, `91_LISTEN`, `99_INFO` | Import-Zentrale, Dropdown-Quellen, Doku |
+
+## Design & Grafik (v1.2)
+
+- **In-Zellen-Datenbalken** auf allen Wertspalten (Volumen, CHF-Potential, IT-MW, Preise …)
+- **Ampel-Icons** auf Wahrscheinlichkeits-Spalten, **Farbskala** auf Marge %
+- **Karten-Dashboard** mit farbigem Akzent je Bereich; **8 Live-Diagramme** (Forecast + Diagramme-Reiter)
+- Gitternetz aus, druckfertiges Layout (Fit-to-Width, Titelzeilen-Wiederholung) auf **jeder** Seite
+- Neuer Reiter **27_AKTIONEN**: bündelt offene Deals, Akquise-Aufgaben und Prio-A-Kunden
+
+## Shortcuts / Makros
+
+`Ctrl+Shift+I` Import · `Ctrl+Shift+M` Monatsreport als neue Mappe · `Ctrl+Shift+B` neues Blatt ·
+`Ctrl+Shift+E` Blatt exportieren · `Ctrl+Shift+F` **Suche über die ganze Mappe** ·
+`Ctrl+Shift+D` **alle Berichte als ein PDF**
 
 ## Import-Automatik (VBA)
 
