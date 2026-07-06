@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://teal-manatee-698455.netlify.app/sitemap.xml

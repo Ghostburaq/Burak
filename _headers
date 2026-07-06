@@ -1,0 +1,11 @@
+# Netlify Security- & Caching-Header
+/*
+  X-Frame-Options: SAMEORIGIN
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(), camera=(), microphone=()
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+
+# Statische Assets lange cachen (Dateinamen sind stabil)
+/assets/*
+  Cache-Control: public, max-age=2592000

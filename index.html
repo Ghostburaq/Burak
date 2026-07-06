@@ -8,12 +8,29 @@
   <meta name="description" content="NEXA bringt Unternehmen von manueller Handarbeit zu automatisierten Systemen. KI-Automation, CRM und massgeschneiderte Web- und App-Entwicklung für KMU im DACH-Raum.">
   <meta name="theme-color" content="#0A0A0B">
 
+  <!-- Canonical: bei eigener Domain (z. B. https://nexa.ch/) hier anpassen -->
+  <link rel="canonical" href="https://teal-manatee-698455.netlify.app/">
+
   <!-- Open Graph -->
   <meta property="og:type" content="website">
+  <meta property="og:site_name" content="NEXA">
+  <meta property="og:locale" content="de_CH">
+  <meta property="og:url" content="https://teal-manatee-698455.netlify.app/">
   <meta property="og:title" content="NEXA — Dein Business. Automatisiert.">
   <meta property="og:description" content="KI-Automation, CRM und massgeschneiderte Web- und App-Entwicklung für KMU und technische Unternehmen im DACH-Raum.">
+  <meta property="og:image" content="https://teal-manatee-698455.netlify.app/assets/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="NEXA — Dein Business. Automatisiert.">
+  <meta name="twitter:description" content="KI-Automation, CRM und Entwicklung für den DACH-Raum.">
+  <meta name="twitter:image" content="https://teal-manatee-698455.netlify.app/assets/og-image.png">
 
+  <!-- Icons & Manifest -->
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
 
   <!-- Fonts: Space Grotesk (Display) + Inter (Body) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -24,6 +41,23 @@
 
   <!-- Markiert das Dokument als JS-fähig, bevor gerendert wird. -->
   <script>document.documentElement.className = 'js';</script>
+
+  <!-- Structured Data für Suchmaschinen (lokale Sichtbarkeit Schweiz/DACH) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ProfessionalService",
+    "name": "NEXA",
+    "description": "Agentur für KI-Automation, CRM-Systeme und Web-/App-Entwicklung für KMU und technische Unternehmen im DACH-Raum.",
+    "url": "https://teal-manatee-698455.netlify.app/",
+    "email": "kontakt@nexa.ch",
+    "image": "https://teal-manatee-698455.netlify.app/assets/og-image.png",
+    "founder": { "@type": "Person", "name": "Burak Ücöz" },
+    "areaServed": ["CH", "DE", "AT"],
+    "knowsAbout": ["KI-Automation", "Workflow-Automatisierung", "CRM", "Vertriebsprozesse", "Webentwicklung", "App-Entwicklung"],
+    "address": { "@type": "PostalAddress", "addressCountry": "CH" }
+  }
+  </script>
 </head>
 <body>
   <a class="skip-link" href="#main">Zum Inhalt springen</a>
@@ -48,6 +82,7 @@
         <ul class="nav__links">
           <li><a href="#leistungen">Leistungen</a></li>
           <li><a href="#ablauf">Ablauf</a></li>
+          <li><a href="#faq">FAQ</a></li>
           <li><a href="#kontakt">Kontakt</a></li>
         </ul>
         <a class="btn btn--sm" href="#kontakt">Erstgespräch</a>
@@ -170,18 +205,48 @@
             </ul>
           </article>
         </div>
+
+        <!-- Tool-Leiste: ehrliche Kompetenz-Signale, keine Fremd-Logos.
+             ANPASSEN: Tools ergänzen/entfernen, mit denen du wirklich arbeitest. -->
+        <div class="tools" data-reveal>
+          <span class="tools__label">Womit wir arbeiten</span>
+          <ul class="tools__list">
+            <li>n8n</li>
+            <li>Make</li>
+            <li>REST-APIs</li>
+            <li>Webhooks</li>
+            <li>OpenAI</li>
+            <li>HubSpot</li>
+            <li>Airtable</li>
+            <li>Notion</li>
+          </ul>
+        </div>
       </div>
     </section>
 
     <!-- ========================================================================
-         4. WARUM NEXA
+         4. WARUM NEXA + Über mich
          ========================================================================= -->
     <section class="why section--bordered" id="warum">
       <div class="container why__inner">
         <div class="section-head">
           <span class="eyebrow" data-reveal>Warum NEXA</span>
           <h2 data-reveal>Aus der Praxis, nicht aus dem Lehrbuch.</h2>
+
+          <!-- Person: schafft Vertrauen bei einer Ein-Personen-Agentur.
+               ANPASSEN: Foto (assets/portrait_clean.png) und LinkedIn-Link. -->
+          <div class="person" data-reveal style="--reveal-delay: 0.1s">
+            <img class="person__photo" src="assets/portrait_clean.png"
+                 alt="Burak Ücöz, Gründer von NEXA" width="72" height="72" loading="lazy">
+            <div>
+              <p class="person__name">Burak Ücöz</p>
+              <p class="person__role">Gründer · NEXA</p>
+              <!-- PLATZHALTER: durch deine echte LinkedIn-URL ersetzen -->
+              <a class="person__link" href="[dein-linkedin-profil]">LinkedIn</a>
+            </div>
+          </div>
         </div>
+
         <div class="why__story" data-reveal style="--reveal-delay: 0.1s">
           <p>
             Gebaut von jemandem, der <strong>Technik und Vertrieb aus der Praxis
@@ -228,7 +293,71 @@
     </section>
 
     <!-- ========================================================================
-         6. KONTAKT / CTA
+         6. FAQ — funktioniert ohne JavaScript (native <details>)
+         ========================================================================= -->
+    <section class="faq section--bordered" id="faq">
+      <div class="container">
+        <div class="section-head">
+          <span class="eyebrow" data-reveal>FAQ</span>
+          <h2 data-reveal>Häufige Fragen.</h2>
+        </div>
+
+        <div class="faq__list" data-reveal>
+          <details class="faq__item">
+            <summary>Was kostet ein erstes Projekt?</summary>
+            <div class="faq__answer">
+              <p>Kein Stunden-Ratespiel. Wir starten mit einem Erstgespräch und
+                 einer Analyse. Danach bekommst du ein fixes Angebot mit klarem
+                 Umfang und Preis – du weisst vorher, woran du bist.</p>
+            </div>
+          </details>
+          <details class="faq__item">
+            <summary>Wie lange dauert die Umsetzung?</summary>
+            <div class="faq__answer">
+              <p>Je nach Umfang. Erste automatisierte Abläufe stehen oft in
+                 wenigen Wochen, nicht Monaten. Nach der Analyse nennen wir dir
+                 einen konkreten Zeitrahmen.</p>
+            </div>
+          </details>
+          <details class="faq__item">
+            <summary>Muss ich mich mit Technik auskennen?</summary>
+            <div class="faq__answer">
+              <p>Nein. Du bringst dein Geschäft und deine Prozesse mit, den
+                 technischen Teil übernehmen wir – verständlich erklärt, ohne
+                 Fachjargon.</p>
+            </div>
+          </details>
+          <details class="faq__item">
+            <summary>Was passiert mit meinen Daten?</summary>
+            <div class="faq__answer">
+              <p>Wir arbeiten datensparsam und nach Schweizer Datenschutzrecht
+                 (revDSG). Details findest du in der
+                 <a href="datenschutz.html">Datenschutzerklärung</a>.</p>
+            </div>
+          </details>
+          <details class="faq__item">
+            <summary>Arbeitest du remote oder vor Ort?</summary>
+            <div class="faq__answer">
+              <p>Beides. NEXA arbeitet remote in der ganzen Schweiz und im
+                 DACH-Raum; für Workshops auch vor Ort nach Absprache.</p>
+            </div>
+          </details>
+          <details class="faq__item">
+            <summary>Mit welchen Tools arbeitest du?</summary>
+            <div class="faq__answer">
+              <p>Unter anderem n8n, Make, REST-APIs und gängige CRM-Systeme. Wir
+                 wählen die Tools nach deinem Bedarf – nicht umgekehrt.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================
+         7. KONTAKT / CTA — Netlify-Formular
+         Netlify erkennt das Formular am Attribut data-netlify="true" beim
+         Deploy automatisch. Eingänge erscheinen im Netlify-Dashboard unter
+         "Forms". Kein Backend nötig.
          ========================================================================= -->
     <section class="contact" id="kontakt">
       <div class="container">
@@ -239,11 +368,41 @@
             Ein unverbindliches Erstgespräch, eine ehrliche Einschätzung, ein
             klarer nächster Schritt. Mehr braucht es für den Anfang nicht.
           </p>
-          <!-- PLATZHALTER: mailto durch echte Adresse oder Buchungslink
-               (z. B. Cal.com / Calendly) ersetzen. -->
-          <a class="btn" href="mailto:kontakt@nexa.ch?subject=Erstgespräch%20NEXA">
-            Erstgespräch buchen
-          </a>
+
+          <form class="contact-form" name="kontakt" method="POST"
+                data-netlify="true" netlify-honeypot="bot-field" action="/danke.html">
+            <!-- Pflicht für Netlify: Formularname als Hidden-Feld -->
+            <input type="hidden" name="form-name" value="kontakt">
+            <!-- Spam-Honeypot (für Menschen unsichtbar) -->
+            <p class="hp" aria-hidden="true">
+              <label>Bitte leer lassen: <input name="bot-field" tabindex="-1" autocomplete="off"></label>
+            </p>
+
+            <div class="form-row">
+              <label class="field">
+                <span>Name</span>
+                <input type="text" name="name" required autocomplete="name">
+              </label>
+              <label class="field">
+                <span>E-Mail</span>
+                <input type="email" name="email" required autocomplete="email">
+              </label>
+            </div>
+            <label class="field">
+              <span>Unternehmen <em>(optional)</em></span>
+              <input type="text" name="unternehmen" autocomplete="organization">
+            </label>
+            <label class="field">
+              <span>Worum geht es?</span>
+              <textarea name="nachricht" rows="5" required></textarea>
+            </label>
+            <button class="btn" type="submit">Anfrage senden</button>
+          </form>
+
+          <!-- PLATZHALTER: echte E-Mail eintragen (direkter Draht als Alternative) -->
+          <p class="contact__alt">
+            Lieber direkt? <a href="mailto:kontakt@nexa.ch?subject=Erstgespräch%20NEXA">kontakt@nexa.ch</a>
+          </p>
         </div>
       </div>
     </section>

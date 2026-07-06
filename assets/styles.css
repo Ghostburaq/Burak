@@ -619,6 +619,171 @@ section { padding-block: var(--section-gap); }
 }
 
 /* =============================================================================
+   13b. TOOL-LEISTE ("Womit wir arbeiten")
+   ============================================================================= */
+.tools {
+  margin-top: 64px;
+  padding-top: 40px;
+  border-top: 1px solid var(--line);
+}
+.tools__label {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 22px;
+}
+.tools__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  list-style: none;
+}
+.tools__list li {
+  padding: 9px 18px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 500;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+.tools__list li:hover { border-color: var(--accent); color: var(--accent); }
+
+/* =============================================================================
+   13c. PERSON / ÜBER MICH
+   ============================================================================= */
+.person {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-top: 32px;
+  padding: 16px 20px 16px 16px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  width: fit-content;
+}
+.person__photo {
+  width: 72px;
+  height: 72px;
+  border-radius: 14px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.person__name { font-weight: 600; color: var(--text); }
+.person__role { color: var(--muted); font-size: 14px; margin-top: 2px; }
+.person__link {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* =============================================================================
+   13d. FAQ (native <details>, JS-frei)
+   ============================================================================= */
+.faq__list {
+  margin-top: 48px;
+  border-top: 1px solid var(--line);
+}
+.faq__item { border-bottom: 1px solid var(--line); }
+.faq__item summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 24px 4px;
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-size: clamp(17px, 2vw, 20px);
+  font-weight: 600;
+  color: var(--text);
+  list-style: none;             /* Standard-Dreieck entfernen */
+}
+.faq__item summary::-webkit-details-marker { display: none; }
+/* Eigenes +/– Zeichen rechts */
+.faq__item summary::after {
+  content: "+";
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 26px;
+  line-height: 1;
+  color: var(--accent);
+  transition: transform 0.25s ease;
+}
+.faq__item[open] summary::after { content: "–"; }
+.faq__item summary:hover { color: var(--accent); }
+.faq__answer { padding: 0 4px 24px; }
+.faq__answer p { color: var(--muted); max-width: 72ch; }
+
+/* =============================================================================
+   13e. KONTAKTFORMULAR
+   ============================================================================= */
+.contact-form {
+  max-width: 560px;
+  margin: 40px auto 0;
+  text-align: left;
+}
+.form-row {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 560px) {
+  .form-row { grid-template-columns: 1fr 1fr; }
+}
+.field { display: block; margin-bottom: 18px; }
+.field > span {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.field > span em { font-style: normal; opacity: 0.7; }
+.field input,
+.field textarea {
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: 16px;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 13px 16px;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+.field textarea { resize: vertical; min-height: 120px; }
+.field input:focus,
+.field textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: var(--panel-2);
+}
+.field input::placeholder,
+.field textarea::placeholder { color: var(--muted); }
+.contact-form .btn { width: 100%; margin-top: 6px; }
+
+/* Honeypot-Feld: für Menschen unsichtbar, für Bots eine Falle */
+.hp {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.contact__alt { margin-top: 22px; font-size: 15px; color: var(--muted); }
+
+/* Aktiver Nav-Link (Scroll-Spy, per JS gesetzt) */
+.nav__links a.is-active { color: var(--text); }
+
+/* =============================================================================
    14. RECHTSSEITEN (Impressum / Datenschutz)
    ============================================================================= */
 .legal {

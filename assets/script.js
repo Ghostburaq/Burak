@@ -96,4 +96,32 @@
     // Fallback: alles sofort sichtbar (kein IO oder reduzierte Bewegung gewünscht)
     revealables.forEach(function (el) { el.classList.add('is-visible'); });
   }
+
+  /* ---------------------------------------------------------------------------
+     4. SCROLL-SPY — hebt den Nav-Link der sichtbaren Sektion hervor
+     --------------------------------------------------------------------------- */
+  var navLinks = document.querySelectorAll('.nav__links a[href^="#"]');
+  if (navLinks.length && 'IntersectionObserver' in window) {
+    var linkFor = {};
+    navLinks.forEach(function (a) {
+      var id = a.getAttribute('href').slice(1);
+      if (id) { linkFor[id] = a; }
+    });
+
+    var spy = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        var a = linkFor[entry.target.id];
+        if (!a) { return; }
+        if (entry.isIntersecting) {
+          navLinks.forEach(function (l) { l.classList.remove('is-active'); });
+          a.classList.add('is-active');
+        }
+      });
+    }, { rootMargin: '-45% 0px -50% 0px' });
+
+    Object.keys(linkFor).forEach(function (id) {
+      var sec = document.getElementById(id);
+      if (sec) { spy.observe(sec); }
+    });
+  }
 })();
