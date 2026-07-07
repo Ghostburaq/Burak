@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de-CH" class="no-js">
+<html lang="de" class="no-js">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -32,17 +32,13 @@
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <link rel="manifest" href="site.webmanifest">
 
-  <!-- Fonts: Space Grotesk (Display) + Inter (Body) -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
-
+  <!-- Schriften: lokal via @font-face in styles.css (kein Google-Server, DSGVO) -->
   <link rel="stylesheet" href="assets/styles.css">
 
   <!-- Markiert das Dokument als JS-fähig, bevor gerendert wird. -->
   <script>document.documentElement.className = 'js';</script>
 
-  <!-- Structured Data für Suchmaschinen (lokale Sichtbarkeit Schweiz/DACH) -->
+  <!-- Structured Data für Suchmaschinen -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -50,11 +46,21 @@
     "name": "NEXA",
     "description": "Agentur für KI-Automation, CRM-Systeme und Web-/App-Entwicklung für KMU und technische Unternehmen im DACH-Raum.",
     "url": "https://teal-manatee-698455.netlify.app/",
+    "email": "engineering.kabuu@gmail.com",
     "image": "https://teal-manatee-698455.netlify.app/assets/og-image.png",
-    "founder": { "@type": "Person", "name": "Burak Ücöz" },
+    "founder": [
+      { "@type": "Person", "name": "Burak Ücöz" },
+      { "@type": "Person", "name": "Luca" }
+    ],
     "areaServed": ["CH", "DE", "AT"],
     "knowsAbout": ["KI-Automation", "Workflow-Automatisierung", "CRM", "Vertriebsprozesse", "Webentwicklung", "App-Entwicklung"],
-    "address": { "@type": "PostalAddress", "addressCountry": "CH" }
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Haldener Str. 150",
+      "postalCode": "58095",
+      "addressLocality": "Hagen",
+      "addressCountry": "DE"
+    }
   }
   </script>
 </head>
@@ -80,6 +86,7 @@
       <nav class="nav__menu" id="nav-menu" aria-label="Hauptnavigation">
         <ul class="nav__links">
           <li><a href="#leistungen">Leistungen</a></li>
+          <li><a href="#team">Team</a></li>
           <li><a href="#ablauf">Ablauf</a></li>
           <li><a href="#faq">FAQ</a></li>
           <li><a href="#kontakt">Kontakt</a></li>
@@ -206,7 +213,7 @@
         </div>
 
         <!-- Tool-Leiste: ehrliche Kompetenz-Signale, keine Fremd-Logos.
-             ANPASSEN: Tools ergänzen/entfernen, mit denen du wirklich arbeitest. -->
+             ANPASSEN: Tools ergänzen/entfernen, mit denen ihr wirklich arbeitet. -->
         <div class="tools" data-reveal>
           <span class="tools__label">Womit wir arbeiten</span>
           <ul class="tools__list">
@@ -224,47 +231,87 @@
     </section>
 
     <!-- ========================================================================
-         4. WARUM NEXA + Über mich
+         4. WARUM NEXA
          ========================================================================= -->
     <section class="why section--bordered" id="warum">
       <div class="container why__inner">
         <div class="section-head">
           <span class="eyebrow" data-reveal>Warum NEXA</span>
           <h2 data-reveal>Aus der Praxis, nicht aus dem Lehrbuch.</h2>
-
-          <!-- Person: schafft Vertrauen bei einer Ein-Personen-Agentur.
-               ANPASSEN: Foto (assets/portrait_clean.png) und LinkedIn-Link. -->
-          <div class="person" data-reveal style="--reveal-delay: 0.1s">
-            <img class="person__photo" src="assets/portrait_clean.png"
-                 alt="Burak Ücöz, Gründer von NEXA" width="72" height="72" loading="lazy">
-            <div>
-              <p class="person__name">Burak Ücöz</p>
-              <p class="person__role">Gründer · NEXA</p>
-              <!-- PLATZHALTER: durch deine echte LinkedIn-URL ersetzen -->
-              <a class="person__link" href="[dein-linkedin-profil]">LinkedIn</a>
-            </div>
-          </div>
         </div>
-
         <div class="why__story" data-reveal style="--reveal-delay: 0.1s">
           <p>
-            Gebaut von jemandem, der <strong>Technik und Vertrieb aus der Praxis
-            kennt</strong>, nicht aus dem Lehrbuch. Ingenieur-Hintergrund, Jahre
+            Gebaut von Leuten, die <strong>Technik und Vertrieb aus der Praxis
+            kennen</strong>, nicht aus dem Lehrbuch. Ingenieur-Hintergrund, Jahre
             im B2B-Vertrieb, Disziplin aus Kraftsport und Militär.
           </p>
           <p>
             NEXA verkauft keine Buzzwords, sondern <strong>Systeme, die
-            funktionieren</strong>. Klare Analyse, saubere Umsetzung, messbare
-            Resultate – ohne Agentur-Theater.
+            funktionieren</strong>.
           </p>
         </div>
       </div>
     </section>
 
     <!-- ========================================================================
-         5. ABLAUF — Timeline
+         5. TEAM — zwei Gründer, Initialen-Avatar statt Foto
          ========================================================================= -->
-    <section class="process" id="ablauf">
+    <section class="team" id="team">
+      <div class="container">
+        <div class="section-head">
+          <span class="eyebrow" data-reveal>Team</span>
+          <h2 data-reveal>Zwei Gründer. Ein Anspruch.</h2>
+        </div>
+
+        <div class="team__grid">
+          <!-- Gründer 1 -->
+          <article class="member" data-reveal>
+            <div class="member__head">
+              <div class="avatar" aria-hidden="true">BÜ</div>
+              <div>
+                <p class="member__name">Burak Ücöz</p>
+                <p class="member__role">CEO &amp; Technik</p>
+              </div>
+            </div>
+            <p class="member__text">
+              Verantwortlich für Technik und Umsetzung. Hintergrund in
+              Elektrotechnik, EMV und Netzqualität, dazu B2B-Vertrieb in der
+              mobilen Energietechnik.
+            </p>
+            <a class="icon-btn" href="https://www.linkedin.com/in/burak-s-u-8a1607265"
+               target="_blank" rel="noopener" aria-label="Burak Ücöz auf LinkedIn">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.13 1.45-2.13 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.63-1.85 3.36-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.8 0 0 .77 0 1.73v20.53C0 23.22.8 24 1.77 24h20.45c.98 0 1.78-.78 1.78-1.74V1.73C24 .77 23.2 0 22.22 0z"/></svg>
+              LinkedIn
+            </a>
+          </article>
+
+          <!-- Gründer 2 — ANPASSEN: Nachname & Kurztext von Burak einsetzen -->
+          <article class="member" data-reveal style="--reveal-delay: 0.1s">
+            <div class="member__head">
+              <div class="avatar" aria-hidden="true">L</div>
+              <div>
+                <p class="member__name">Luca <span class="muted">[Nachname]</span></p>
+                <p class="member__role">CEO &amp; Vertrieb</p>
+              </div>
+            </div>
+            <p class="member__text">
+              [ANPASSEN: ein bis zwei Sätze zu Lucas Hintergrund und Verantwortung
+              im Vertrieb. Nichts erfinden, echte Angaben einsetzen.]
+            </p>
+            <a class="icon-btn" href="https://www.linkedin.com/in/luca-s-a10920233/"
+               target="_blank" rel="noopener" aria-label="Luca auf LinkedIn">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.13 1.45-2.13 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.63-1.85 3.36-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.8 0 0 .77 0 1.73v20.53C0 23.22.8 24 1.77 24h20.45c.98 0 1.78-.78 1.78-1.74V1.73C24 .77 23.2 0 22.22 0z"/></svg>
+              LinkedIn
+            </a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================
+         6. ABLAUF — Timeline
+         ========================================================================= -->
+    <section class="process section--bordered" id="ablauf">
       <div class="container">
         <div class="section-head">
           <span class="eyebrow" data-reveal>Ablauf</span>
@@ -292,7 +339,7 @@
     </section>
 
     <!-- ========================================================================
-         6. FAQ — funktioniert ohne JavaScript (native <details>)
+         7. FAQ — funktioniert ohne JavaScript (native <details>)
          ========================================================================= -->
     <section class="faq section--bordered" id="faq">
       <div class="container">
@@ -329,20 +376,20 @@
           <details class="faq__item">
             <summary>Was passiert mit meinen Daten?</summary>
             <div class="faq__answer">
-              <p>Wir arbeiten datensparsam und nach Schweizer Datenschutzrecht
-                 (revDSG). Details findest du in der
+              <p>Wir arbeiten datensparsam und nach geltendem Datenschutzrecht
+                 (DSGVO, für Schweizer Kunden revDSG). Details findest du in der
                  <a href="datenschutz.html">Datenschutzerklärung</a>.</p>
             </div>
           </details>
           <details class="faq__item">
-            <summary>Arbeitest du remote oder vor Ort?</summary>
+            <summary>Arbeitet ihr remote oder vor Ort?</summary>
             <div class="faq__answer">
-              <p>Beides. NEXA arbeitet remote in der ganzen Schweiz und im
-                 DACH-Raum; für Workshops auch vor Ort nach Absprache.</p>
+              <p>Beides. NEXA arbeitet remote im gesamten DACH-Raum; für
+                 Workshops auch vor Ort nach Absprache.</p>
             </div>
           </details>
           <details class="faq__item">
-            <summary>Mit welchen Tools arbeitest du?</summary>
+            <summary>Mit welchen Tools arbeitet ihr?</summary>
             <div class="faq__answer">
               <p>Unter anderem n8n, Make, REST-APIs und gängige CRM-Systeme. Wir
                  wählen die Tools nach deinem Bedarf – nicht umgekehrt.</p>
@@ -353,10 +400,8 @@
     </section>
 
     <!-- ========================================================================
-         7. KONTAKT / CTA — Netlify-Formular
-         Netlify erkennt das Formular am Attribut data-netlify="true" beim
-         Deploy automatisch. Eingänge erscheinen im Netlify-Dashboard unter
-         "Forms". Kein Backend nötig.
+         8. KONTAKT / CTA
+         Formular via Netlify Forms (data-netlify) + direkte E-Mail als Alternative.
          ========================================================================= -->
     <section class="contact" id="kontakt">
       <div class="container">
@@ -370,9 +415,7 @@
 
           <form class="contact-form" name="kontakt" method="POST"
                 data-netlify="true" netlify-honeypot="bot-field" action="/danke.html">
-            <!-- Pflicht für Netlify: Formularname als Hidden-Feld -->
             <input type="hidden" name="form-name" value="kontakt">
-            <!-- Spam-Honeypot (für Menschen unsichtbar) -->
             <p class="hp" aria-hidden="true">
               <label>Bitte leer lassen: <input name="bot-field" tabindex="-1" autocomplete="off"></label>
             </p>
@@ -398,7 +441,11 @@
             <button class="btn" type="submit">Anfrage senden</button>
           </form>
 
-          <p class="contact__alt">Antwort innert 24&nbsp;Stunden – werktags.</p>
+          <!-- PLATZHALTER: E-Mail als direkter Draht. Bei eigener Domain später
+               z. B. kontakt@nexa.ch eintragen. -->
+          <p class="contact__alt">
+            Lieber direkt? <a href="mailto:engineering.kabuu@gmail.com?subject=Erstgespräch%20NEXA">engineering.kabuu@gmail.com</a>
+          </p>
         </div>
       </div>
     </section>
@@ -414,11 +461,29 @@
         <img class="footer__logo" src="assets/logo.svg" alt="" width="24" height="24">
         <span class="nav__word">NE<span class="accent">X</span>A</span>
       </a>
+
       <ul class="footer__links">
         <li><a href="impressum.html">Impressum</a></li>
         <li><a href="datenschutz.html">Datenschutz</a></li>
       </ul>
-      <p class="footer__copy">© 2026 NEXA — Burak Ücöz</p>
+
+      <!-- LinkedIn beider Gründer -->
+      <ul class="social" aria-label="Social-Media-Profile der Gründer">
+        <li>
+          <a href="https://www.linkedin.com/in/burak-s-u-8a1607265" target="_blank"
+             rel="noopener" aria-label="Burak Ücöz auf LinkedIn">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.13 1.45-2.13 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.63-1.85 3.36-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.8 0 0 .77 0 1.73v20.53C0 23.22.8 24 1.77 24h20.45c.98 0 1.78-.78 1.78-1.74V1.73C24 .77 23.2 0 22.22 0z"/></svg>
+          </a>
+        </li>
+        <li>
+          <a href="https://www.linkedin.com/in/luca-s-a10920233/" target="_blank"
+             rel="noopener" aria-label="Luca auf LinkedIn">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.13 1.45-2.13 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.63-1.85 3.36-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.8 0 0 .77 0 1.73v20.53C0 23.22.8 24 1.77 24h20.45c.98 0 1.78-.78 1.78-1.74V1.73C24 .77 23.2 0 22.22 0z"/></svg>
+          </a>
+        </li>
+      </ul>
+
+      <p class="footer__copy">© 2026 NEXA</p>
     </div>
   </footer>
 

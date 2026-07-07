@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="de-CH" class="no-js">
+<html lang="de" class="no-js">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <title>Impressum — NEXA</title>
-  <meta name="description" content="Impressum und Anbieterkennzeichnung von NEXA, Burak Ücöz.">
+  <meta name="description" content="Impressum und Anbieterkennzeichnung von NEXA gemäss § 5 DDG.">
   <meta name="theme-color" content="#0A0A0B">
   <meta name="robots" content="index, follow">
 
@@ -14,10 +14,7 @@
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <link rel="manifest" href="site.webmanifest">
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
-
+  <!-- Schriften: lokal via @font-face in styles.css (kein Google-Server, DSGVO) -->
   <link rel="stylesheet" href="assets/styles.css">
   <script>document.documentElement.className = 'js';</script>
 </head>
@@ -31,16 +28,16 @@
         <img class="nav__logo" src="assets/logo.svg" alt="" width="30" height="30">
         <span class="nav__word">NE<span class="accent">X</span>A</span>
       </a>
-
       <a class="nav__toggle" href="#nav-menu" role="button"
          aria-expanded="false" aria-controls="nav-menu" aria-label="Menü öffnen">
         <span></span><span></span><span></span>
       </a>
-
       <nav class="nav__menu" id="nav-menu" aria-label="Hauptnavigation">
         <ul class="nav__links">
           <li><a href="index.html#leistungen">Leistungen</a></li>
+          <li><a href="index.html#team">Team</a></li>
           <li><a href="index.html#ablauf">Ablauf</a></li>
+          <li><a href="index.html#faq">FAQ</a></li>
           <li><a href="index.html#kontakt">Kontakt</a></li>
         </ul>
         <a class="btn btn--sm" href="index.html#kontakt">Erstgespräch</a>
@@ -52,44 +49,70 @@
     <article class="legal">
       <div class="container legal__inner">
         <h1>Impressum</h1>
-        <p class="updated">Anbieterkennzeichnung gemäss geltendem Recht.</p>
+        <p class="updated">Angaben gemäss § 5 DDG (Digitale-Dienste-Gesetz).</p>
 
-        <h2>Verantwortlich für den Inhalt dieser Website</h2>
+        <!-- ANPASSEN: Rechtsform wählen. Zutreffende Variante behalten,
+             die andere löschen. -->
+
+        <h2>Anbieter</h2>
+
+        <!-- Variante A — GbR (zwei Gesellschafter, keine Kapitalgesellschaft) -->
         <address>
-          <strong>Burak Ücöz</strong><br>
-          NEXA <span class="muted">[ggf. Rechtsform ergänzen, z.&nbsp;B. Einzelunternehmen]</span><br>
-          [Strasse und Hausnummer]<br>
-          [PLZ Ort]<br>
-          Schweiz
+          <strong>NEXA GbR</strong><br>
+          Vertreten durch die Gesellschafter Burak Ücöz und Luca [Nachname]<br>
+          Haldener Str. 150<br>
+          58095 Hagen<br>
+          Deutschland
         </address>
+
+        <!-- Variante B — UG oder GmbH (falls im Handelsregister eingetragen).
+             Bei Bedarf die GbR-Variante oben löschen und diese verwenden:
+        <address>
+          <strong>NEXA [UG (haftungsbeschränkt) / GmbH]</strong><br>
+          Vertreten durch die Geschäftsführer Burak Ücöz und Luca [Nachname]<br>
+          Haldener Str. 150<br>
+          58095 Hagen<br>
+          Deutschland<br>
+          Registergericht: [Amtsgericht ...]<br>
+          Registernummer: [HRB ...]
+        </address>
+        -->
 
         <h2>Kontakt</h2>
         <address>
-          E-Mail: <a href="mailto:kontakt@nexa.ch">[kontakt@nexa.ch]</a><br>
+          E-Mail: <a href="mailto:engineering.kabuu@gmail.com">engineering.kabuu@gmail.com</a><br>
           Telefon: <span class="muted">[optional]</span>
         </address>
 
-        <!-- Optional, nur falls im Handelsregister eingetragen -->
-        <h2>Registereintrag <span class="muted">(optional)</span></h2>
+        <h2>Umsatzsteuer</h2>
+        <!-- ANPASSEN: eine Variante wählen. -->
+        <p><strong>Kleinunternehmer:</strong> Gemäss § 19 UStG wird keine Umsatzsteuer
+           berechnet und ausgewiesen.</p>
+        <p class="muted"><strong>Regelbesteuerung (Alternative):</strong>
+           Umsatzsteuer-Identifikationsnummer gemäss § 27a UStG: [DE…]</p>
+
+        <h2>Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV</h2>
+        <p>Burak Ücöz, Anschrift wie oben.</p>
+
+        <h2>Haftung für Inhalte</h2>
         <p>
-          Unternehmens-Identifikationsnummer (UID): [CHE-XXX.XXX.XXX]<br>
-          MWST-Nummer <span class="muted">(nur falls mehrwertsteuerpflichtig)</span>:
-          [CHE-XXX.XXX.XXX MWST]
+          Die Inhalte dieser Seiten wurden mit grösstmöglicher Sorgfalt erstellt.
+          Für die Richtigkeit, Vollständigkeit und Aktualität der Inhalte kann
+          jedoch keine Gewähr übernommen werden.
         </p>
 
-        <h2>Haftungsausschluss</h2>
+        <h2>Haftung für Links</h2>
         <p>
-          Die Inhalte dieser Website wurden mit grösstmöglicher Sorgfalt erstellt.
-          Für die Richtigkeit, Vollständigkeit und Aktualität der Inhalte wird
-          jedoch keine Gewähr übernommen. Für Inhalte externer Links sind
-          ausschliesslich deren Betreiber verantwortlich.
+          Diese Website enthält gegebenenfalls Links zu externen Websites Dritter,
+          auf deren Inhalte kein Einfluss besteht. Für diese fremden Inhalte ist
+          stets der jeweilige Anbieter verantwortlich.
         </p>
 
         <h2>Urheberrecht</h2>
         <p>
-          Alle Inhalte dieser Website sind urheberrechtlich geschützt. Jede
-          Verwendung ausserhalb der Grenzen des Urheberrechts bedarf der
-          schriftlichen Zustimmung des Inhabers.
+          Die durch die Betreiber erstellten Inhalte und Werke auf diesen Seiten
+          unterliegen dem deutschen Urheberrecht. Beiträge Dritter sind als solche
+          gekennzeichnet.
         </p>
 
         <a class="back-home" href="index.html">Zurück zur Startseite</a>
@@ -108,7 +131,21 @@
         <li><a href="impressum.html">Impressum</a></li>
         <li><a href="datenschutz.html">Datenschutz</a></li>
       </ul>
-      <p class="footer__copy">© 2026 NEXA — Burak Ücöz</p>
+      <ul class="social" aria-label="Social-Media-Profile der Gründer">
+        <li>
+          <a href="https://www.linkedin.com/in/burak-s-u-8a1607265" target="_blank"
+             rel="noopener" aria-label="Burak Ücöz auf LinkedIn">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.13 1.45-2.13 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.63-1.85 3.36-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.8 0 0 .77 0 1.73v20.53C0 23.22.8 24 1.77 24h20.45c.98 0 1.78-.78 1.78-1.74V1.73C24 .77 23.2 0 22.22 0z"/></svg>
+          </a>
+        </li>
+        <li>
+          <a href="https://www.linkedin.com/in/luca-s-a10920233/" target="_blank"
+             rel="noopener" aria-label="Luca auf LinkedIn">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.13 1.45-2.13 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.63-1.85 3.36-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.8 0 0 .77 0 1.73v20.53C0 23.22.8 24 1.77 24h20.45c.98 0 1.78-.78 1.78-1.74V1.73C24 .77 23.2 0 22.22 0z"/></svg>
+          </a>
+        </li>
+      </ul>
+      <p class="footer__copy">© 2026 NEXA</p>
     </div>
   </footer>
 

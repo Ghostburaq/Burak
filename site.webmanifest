@@ -2,7 +2,7 @@
   "name": "NEXA",
   "short_name": "NEXA",
   "description": "KI-Automation, CRM & Web-/App-Entwicklung für KMU im DACH-Raum.",
-  "lang": "de-CH",
+  "lang": "de",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0A0A0B",
