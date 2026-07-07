@@ -35,10 +35,15 @@ python3 -m http.server 8000
 
 Alle Inhalte stehen direkt im HTML – keine Datenbank, kein CMS.
 
-- **Startseite:** `index.html` – Headlines, Leistungen, Ablauf, Kontakt.
-- **Kontakt-Button:** In `index.html` die Zeile mit
-  `mailto:kontakt@nexa.ch` auf deine echte Adresse oder einen Buchungslink
-  (z. B. Cal.com / Calendly) ändern. Ist im Code als Platzhalter kommentiert.
+- **Startseite:** `index.html` – Headlines, Leistungen, Ablauf, FAQ, Kontakt.
+- **Kontaktformular (Netlify Forms):** Das Formular in `index.html` wird von
+  Netlify beim Deploy automatisch erkannt (`data-netlify="true"`). Anfragen
+  erscheinen im Netlify-Dashboard unter *Forms*. Damit du sie sofort per Mail
+  bekommst: Netlify → *Forms → Notifications → Add notification → Email* und
+  deine Wunschadresse eintragen. Es muss **keine** eigene E-Mail-Adresse
+  existieren und **nichts** gehostet werden.
+- **Über-mich-Block:** LinkedIn-Platzhalter `[dein-linkedin-profil]` in
+  `index.html` durch deine echte URL ersetzen (oder den Link entfernen).
 - **Impressum:** `impressum.html` – alle Platzhalter in eckigen Klammern
   `[…]` mit deinen echten Angaben ersetzen (Adresse, E-Mail, ggf. UID/MWST).
 - **Datenschutz:** `datenschutz.html` – Platzhalter ersetzen, besonders
