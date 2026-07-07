@@ -1,9 +1,9 @@
 # MiT × Aggreko — GESAMTMAPPE 2026
 
 **Eine einzige Excel-Arbeitsmappe als Workspace** — ersetzt 15 Einzeldateien.
-Deliverable: [`MiT_GESAMTMAPPE_2026.xlsm`](MiT_GESAMTMAPPE_2026.xlsm) (31 Reiter, 10'850 Formeln, 8 Live-Diagramme, In-Zellen-Datenbalken/Ampeln, VBA-Import-Automatik).
+Deliverable: [`MiT_GESAMTMAPPE_2026.xlsm`](MiT_GESAMTMAPPE_2026.xlsm) (33 Reiter, 12'200+ Formeln, 13 Live-Diagramme, Dark-Executive-Cockpit, 13 Makros).
 
-## Aufbau (31 Reiter, logisch getrennt & verknüpft)
+## Aufbau (33 Reiter, logisch getrennt & verknüpft)
 
 | Bereich | Reiter | Inhalt |
 |---|---|---|
@@ -15,6 +15,13 @@ Deliverable: [`MiT_GESAMTMAPPE_2026.xlsm`](MiT_GESAMTMAPPE_2026.xlsm) (31 Reiter
 | Werkzeuge | `21_GEN_RECHNER` … `27_AKTIONEN` | Generator-Rechner, Angebotskalkulator, Marktvolumen, Normen, Akquiseplan, **Aktions-Zentrale** |
 | System | `90_IMPORT`, `91_LISTEN`, `99_INFO` | Import-Zentrale, Dropdown-Quellen, Doku |
 
+## Design — Dark Executive Cockpit (v1.3)
+
+- **Dunkle Kopfbänder** mit Bereichs-Akzent, moderne Schrift (Segoe UI)
+- **Gefüllte KPI-Karten** in Bereichsfarbe mit weißen Zahlen (Dashboard-Cockpit)
+- **Cockpit-Charts** auf dem Dashboard: Doughnut (Pipeline-Status), Top-Segmente, Region-Volumen
+- **13 Live-Diagramme** gesamt, In-Zellen-Datenbalken, Ampel-Icons, Farbskalen — auf allen Reitern
+
 ## Design & Grafik (v1.2)
 
 - **In-Zellen-Datenbalken** auf allen Wertspalten (Volumen, CHF-Potential, IT-MW, Preise …)
@@ -23,11 +30,18 @@ Deliverable: [`MiT_GESAMTMAPPE_2026.xlsm`](MiT_GESAMTMAPPE_2026.xlsm) (31 Reiter
 - Gitternetz aus, druckfertiges Layout (Fit-to-Width, Titelzeilen-Wiederholung) auf **jeder** Seite
 - Neuer Reiter **27_AKTIONEN**: bündelt offene Deals, Akquise-Aufgaben und Prio-A-Kunden
 
-## Shortcuts / Makros
+## Neue Funktionen (v1.3)
 
-`Ctrl+Shift+I` Import · `Ctrl+Shift+M` Monatsreport als neue Mappe · `Ctrl+Shift+B` neues Blatt ·
-`Ctrl+Shift+E` Blatt exportieren · `Ctrl+Shift+F` **Suche über die ganze Mappe** ·
-`Ctrl+Shift+D` **alle Berichte als ein PDF**
+- **28_ZIELE** — Ziel-Tracker: Jahres-/Segmentziele, Ist-WON live, Zielerreichung als **Doughnut-Gauge** + Ziel-vs-Ist-Chart
+- **29_KALENDER** — Termin-/Wiedervorlage-Planer mit **Fälligkeits-Ampel** (überfällig/diese Woche), Startzeilen aus aktiver Pipeline
+- **Offerten-Generator** — Offerte-Kopf auf 22_ANGEBOT_KALK, Export als PDF, Zähler-Reset für neue Offerte
+- **Schnell-Erfassung** — neue Deals/Kunden per Eingabemaske (Makro) statt direkt in die Liste tippen
+
+## Shortcuts / Makros (13 Stück)
+
+`Ctrl+Shift+I` Import · `Ctrl+Shift+M` Monatsreport · `Ctrl+Shift+B` neues Blatt · `Ctrl+Shift+E` Blatt-Export ·
+`Ctrl+Shift+F` Suche · `Ctrl+Shift+D` alle Berichte als PDF · `Ctrl+Shift+G` neuer Deal · `Ctrl+Shift+K` neuer Kunde ·
+`Ctrl+Shift+W` Wiedervorlage +14 · `Ctrl+Shift+O` Offerte als PDF · `Ctrl+Shift+N` neue Offerte
 
 ## Import-Automatik (VBA)
 

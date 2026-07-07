@@ -39,6 +39,8 @@ proben = [
     ("27_AKTIONEN", "E9", (int, float)),      # Aktive-Deals Volumen
     ("06_MONATSREPORT", "B13", str),          # Top-5-WON Kunde 1
     ("06_MONATSREPORT", "C13", (int, float)), # Top-5-WON Volumen 1
+    ("28_ZIELE", "C7", (int, float)),          # Ist WON CHF (Kartenwert)
+    ("28_ZIELE", "E7", (int, float)),          # Erreicht % (Kartenwert)
 ]
 proben_fail = []
 for s, co, typ in proben:
