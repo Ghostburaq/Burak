@@ -1,19 +1,32 @@
 # MiT × Aggreko — GESAMTMAPPE 2026
 
 **Eine einzige Excel-Arbeitsmappe als Workspace** — ersetzt 15 Einzeldateien.
-Deliverable: [`MiT_GESAMTMAPPE_2026.xlsm`](MiT_GESAMTMAPPE_2026.xlsm) (33 Reiter, 12'200+ Formeln, 13 Live-Diagramme, Dark-Executive-Cockpit, 13 Makros).
+Deliverable: [`MiT_GESAMTMAPPE_2026.xlsm`](MiT_GESAMTMAPPE_2026.xlsm) (38 Reiter, 12'850+ Formeln, 15 Live-Diagramme, Dark-Executive-Cockpit, 13 Makros).
 
-## Aufbau (33 Reiter, logisch getrennt & verknüpft)
+## Aufbau (38 Reiter, logisch getrennt & verknüpft)
 
 | Bereich | Reiter | Inhalt |
 |---|---|---|
 | Navigation | `00_START`, `01_DASHBOARD` | Navigation + Live-KPIs über alle Bereiche |
 | Vertrieb Strom CH | `02_PIPELINE` … `09_KUNDENANALYSE` | 47 Deals, 798 CRM-Firmen, 1'133 Kontakte, Forecast (+Charts), Monatsreport, **CEO-Report** (befüllt), **Diagramme** |
-| Datacenter CH | `10_DC_BETREIBER` … `14_DC_DOSSIERS` | 30 Betreiber, 16 Bauprojekte (3 Quellen gemerged), 38 Standorte, Kontakte, Dossiers |
+| Datacenter CH | `10_DC_BETREIBER` … `14_DC_DOSSIERS` | 30 Betreiber, 16 Bauprojekte, 38 Standorte, Kontakte, Dossiers |
+| DC-Marktanalyse | `30_DC_MARKTANALYSE` … `34_DC_KONTAKTE_MA` | 14 DC-Projekte mit Prio-Score, Bauphasen-Matrix, Playbook, Wettbewerb/Regulatorik, Kontakte-Tracker |
 | Global | `15_GLOBAL_PROJEKTE` … `17_GLOBAL_ANALYTICS` | 10'572 DC-Projekte, 8'502 Kontakte, Live-Analytics |
 | Produkte & Preise | `18_KATALOG` … `20_PREISLISTE_INTL` | 466 Produkte, Preislisten CHF + International |
 | Werkzeuge | `21_GEN_RECHNER` … `27_AKTIONEN` | Generator-Rechner, Angebotskalkulator, Marktvolumen, Normen, Akquiseplan, **Aktions-Zentrale** |
 | System | `90_IMPORT`, `91_LISTEN`, `99_INFO` | Import-Zentrale, Dropdown-Quellen, Doku |
+
+## DC-Marktanalyse (v1.4)
+
+Neue Datei `MiT_Datacenter_Marktanalyse_CH_2026.xlsx` als 5 Reiter eingearbeitet:
+- **30_DC_MARKTANALYSE** — 14 CH-DC-Projekte mit Prio-Score, Nähe-Klasse, MiT-Opportunität + Status-Doughnut
+- **31_DC_BAUPHASEN** — Matrix: welche MiT-Leistung greift in welcher Bauphase (P1–P6)
+- **32_DC_PLAYBOOK** — Lieferspektrum + Networking-Playbook + Ausschreibungs-Kanäle
+- **33_DC_WETTBEWERB** — OEM-Festverträge (Marktumfeld) + Regulatorik (Stage V/LRV/PQ)
+- **34_DC_KONTAKTE_MA** — Kontakte-Tracker je Projekt mit Fälligkeits-Ampel
+
+Getestet in **Loop-Schleife** (`tests/run_loop.sh`): Struktur + Recalc (beide Varianten) + E2E,
+mehrfach wiederholt bis **0 Fehler** (15 Diagramme, 38 Reiter, 12'850+ Formeln).
 
 ## Design — Dark Executive Cockpit (v1.3)
 

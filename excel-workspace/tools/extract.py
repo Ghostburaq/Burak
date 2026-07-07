@@ -25,6 +25,7 @@ F = {
     "gesamt":       f"{U}/b977007b-MiT_DC_GESAMTMAPPE_2026_FIXED.xlsx",
     "bau_zsf":      f"{U}/d5c64a29-Zusammenfassung_Bauprojekte.xlsx",
     "strom_cust":   f"{U}/f38e29e4-CH_MiT_Strom_Customer.xlsx",
+    "marktanalyse": f"{U}/2b079c95-MiT_Datacenter_Marktanalyse_CH_2026.xlsx",
 }
 
 _wb_cache = {}
@@ -352,6 +353,29 @@ OUT["implenia"] = copy_block("gesamt", "03 IMPLENIA_PARTNER")
 OUT["flexbase"] = copy_block("gesamt", "04 FLEXBASE_TZL_LAUFENBURG")
 OUT["systeme"] = copy_block("suite", "07 SYSTEME")
 LOG.append(f"Blöcke: rsrg={len(OUT['rsrg_profil'])}+{len(OUT['rsrg_matrix'])} implenia={len(OUT['implenia'])} flexbase={len(OUT['flexbase'])} systeme={len(OUT['systeme'])}")
+
+# ============ 15) DC-MARKTANALYSE (neue Datei, 9 Blätter) ============
+ma_p_h, ma_p = read_table(wb("marktanalyse")["01_Projekte_Pipeline"],
+                          ["Projekt / Betreiber", "Status-Kategorie"])
+ma_p = [r for r in ma_p if r[ma_p_h.index("Projekt / Betreiber")]]
+OUT["ma_projekte"] = {"header": ma_p_h, "rows": ma_p}
+LOG.append(f"MA Projekte: {len(ma_p)} Header: {ma_p_h}")
+
+ma_k_h, ma_k = read_table(wb("marktanalyse")["08_Kontakte_Tracker"],
+                          ["Firma", "Rolle", "Name"])
+ma_k = [r for r in ma_k if any(r)]
+OUT["ma_kontakte"] = {"header": ma_k_h, "rows": ma_k}
+LOG.append(f"MA Kontakte: {len(ma_k)} Header: {ma_k_h}")
+
+OUT["ma_bauphasen"] = copy_block("marktanalyse", "02_Bauphasen_Matrix")
+OUT["ma_portfolio"] = copy_block("marktanalyse", "03_Leistungsportfolio")
+OUT["ma_oem"] = copy_block("marktanalyse", "04_Festvertraege_OEM")
+OUT["ma_regulatorik"] = copy_block("marktanalyse", "05_Regulatorik")
+OUT["ma_ausschreibung"] = copy_block("marktanalyse", "06_Ausschreibungen")
+OUT["ma_networking"] = copy_block("marktanalyse", "07_Networking_Playbook")
+LOG.append(f"MA Blöcke: bauphasen={len(OUT['ma_bauphasen'])} portfolio={len(OUT['ma_portfolio'])} "
+           f"oem={len(OUT['ma_oem'])} reg={len(OUT['ma_regulatorik'])} "
+           f"aussch={len(OUT['ma_ausschreibung'])} netw={len(OUT['ma_networking'])}")
 
 # ============ 14) Distinct-Listen für Validierung ============
 def distinct(dicts, key):

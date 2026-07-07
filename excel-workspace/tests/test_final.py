@@ -91,10 +91,18 @@ wahr = crm.getCellByPosition(19, 802).getValue()
 check("Prozent-Normalisierung (25 -> 0.25)", abs(wahr - 0.25) < 1e-9, f"-> {wahr}")
 gewfc = crm.getCellByPosition(22, 802).getValue()
 check("CRM Gew.Forecast rechnet (37500)", abs(gewfc - 37500) < 0.01, f"-> {gewfc}")
-log1 = cell(imp, 6, 32)  # G33 Aktion
-check("Protokoll Zeile 33 'angehängt'", log1 == "angehängt", f"-> {log1!r}")
-check("Protokoll Neu=2", cell(imp, 4, 32) == "2")
-check("Protokoll Duplikate=1", cell(imp, 5, 32) == "1")
+# Protokoll dynamisch finden: Zeile mit "Zeitpunkt" in Spalte A, erste Datenzeile danach
+log_hdr = None
+for rr in range(19, 80):
+    if cell(imp, 0, rr) == "Zeitpunkt":
+        log_hdr = rr
+        break
+check("Protokoll-Kopf gefunden", log_hdr is not None, f"-> Zeile {None if log_hdr is None else log_hdr+1}")
+lr = (log_hdr + 1) if log_hdr is not None else 32   # erste Datenzeile (0-basiert)
+log1 = cell(imp, 6, lr)  # Aktion
+check("Protokoll erste Zeile 'angehängt'", log1 == "angehängt", f"-> {log1!r}")
+check("Protokoll Neu=2", cell(imp, 4, lr) == "2")
+check("Protokoll Duplikate=1", cell(imp, 5, lr) == "1")
 
 print("== B) Unbekanntes Blatt -> neues Blatt")
 n_before = sheets.getCount()

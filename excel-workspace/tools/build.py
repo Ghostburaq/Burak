@@ -44,7 +44,7 @@ BAR = {C_VERT: "9DC3E6", C_DC: "8FD0C2", C_GLOB: "CBA6DE", C_PROD: "F4B183",
 VALUE_KEYS = ("Volumen CHF", "Wert CHF", "CHF-Potential", "IT-MW", "Total-MW",
               "Marktvolumen", "MiT-Zielumsatz", "Gew.Wert", "Gew. Forecast",
               "Report Value", "Projektwert", "Tagespreis", "Wochenpreis",
-              "Monatspreis", "Weekly Median", "Invest. CHF")
+              "Monatspreis", "Weekly Median", "Invest. CHF", "Leistung MW", "Score")
 
 def deko_liste(ws, spalten, maxrow, farbe):
     """Datenbalken auf Wertspalten, Ampel-Icons auf Wahrscheinlichkeit, Farbskala auf Marge."""
@@ -224,22 +224,37 @@ def liste_bauen(wb, name, farbe, titel, untertitel, spalten, zeilen, maxrow,
     ws.sheet_view.zoomScale = 100
     return ws
 
-def block_sheet(wb, name, farbe, titel, untertitel, bloecke, widths=None):
-    """Statischer Wissens-Tab aus Roh-Blöcken (Liste von (Überschrift, block-rows))."""
+def block_sheet(wb, name, farbe, titel, untertitel, bloecke, widths=None, header_rows=True):
+    """Statischer Wissens-Tab aus Roh-Blöcken (Liste von (Überschrift, block-rows)).
+    Erste Zeile je Block wird als Spaltenkopf gestylt; Rest mit Rahmen + Zebra."""
     ws = wb.create_sheet(name)
     ws.sheet_properties.tabColor = farbe
-    breite = max((len(b[1][0]) if b[1] else 1) for b in bloecke)
+    breite = max((max((len(z) for z in b[1]), default=1) if b[1] else 1) for b in bloecke)
     breite = max(breite, 6)
+    zf = ZEBRA.get(farbe, "F2F2F2")
     titel_zeilen(ws, farbe, titel, untertitel, breite)
     r = 4
     for ueber, block in bloecke:
         ws.merge_cells(start_row=r, start_column=1, end_row=r, end_column=breite)
-        put(ws, r, 1, ueber, font=F_SECT, fill=farbe)
+        put(ws, r, 1, "  " + ueber, font=F_SECT, fill=farbe)
+        ws.row_dimensions[r].height = 20
         r += 1
-        for zeile in block:
-            for c_i, v in enumerate(zeile, start=1):
-                if v is not None:
-                    put_text(ws, r, c_i, v, align=A_WRAP)
+        body_i = 0
+        for bi, zeile in enumerate(block):
+            n_nonempty = sum(1 for v in zeile if v not in (None, ""))
+            is_header = header_rows and bi == 0 and n_nonempty >= 3
+            if is_header:
+                for c_i in range(1, breite + 1):
+                    v = zeile[c_i - 1] if c_i - 1 < len(zeile) else None
+                    put(ws, r, c_i, v if v is not None else "", font=F_HDR, fill=shade(farbe, 0.8),
+                        border=B_ALL, align=Alignment(horizontal="left", vertical="center", wrap_text=True))
+                ws.row_dimensions[r].height = 26
+            else:
+                fillc = zf if body_i % 2 == 1 else "FFFFFF"
+                for c_i in range(1, breite + 1):
+                    v = zeile[c_i - 1] if c_i - 1 < len(zeile) else None
+                    cc = put_text(ws, r, c_i, v, align=A_WRAP, border=B_ALL, fill=fillc)
+                body_i += 1
             r += 1
         r += 1
     if widths:
@@ -247,7 +262,9 @@ def block_sheet(wb, name, farbe, titel, untertitel, bloecke, widths=None):
             ws.column_dimensions[get_column_letter(i)].width = w
     else:
         for i in range(1, breite + 1):
-            ws.column_dimensions[get_column_letter(i)].width = 22
+            ws.column_dimensions[get_column_letter(i)].width = 24
+    ws.sheet_view.showGridLines = False
+    setup_print(ws, titles=None)
     return ws
 
 def canon(rows, alias):
@@ -1265,6 +1282,14 @@ for col in "BCDEF":
     ci = openpyxl.utils.column_index_from_string(col)
     put(ws, r_tot, ci, f"=SUM({col}6:{col}{r_tot-1})", font=Font(bold=True),
         fmt="#,##0.00" if col != "F" else NF, border=B_ALL)
+# Doughnut: Anteil Report-Volumen je Region (TOTAL-Spalte E)
+from openpyxl.chart import DoughnutChart as _DN2
+dng = _DN2(); dng.title = "Report-Volumen-Anteil je Region"; dng.holeSize = 55; dng.height = 7.5; dng.width = 9
+dgref = Reference(ws, min_col=5, min_row=5, max_row=r_tot - 1)   # E5 Header 'TOTAL' + Daten
+dgcat = Reference(ws, min_col=1, min_row=6, max_row=r_tot - 1)
+dng.add_data(dgref, titles_from_data=True); dng.set_categories(dgcat)
+dng.dataLabels = DataLabelList(); dng.dataLabels.showPercent = True
+ws.add_chart(dng, "H22")
 
 put(ws, r_tot + 2, 1, "PROJEKTE NACH BAUSTART-JAHR", font=F_SECT, fill=C_GLOB)
 ws.merge_cells(start_row=r_tot + 2, start_column=1, end_row=r_tot + 2, end_column=6)
@@ -1666,6 +1691,11 @@ nav = [
         ("12_DC_STANDORTE", "Adressbuch aller DC-Standorte"),
         ("13_DC_KONTAKTE", "Entscheider-CRM Datacenter"),
         ("14_DC_DOSSIERS", "Dossiers Implenia & FlexBase TZL"),
+        ("30_DC_MARKTANALYSE", "Projekt-Pipeline mit Prio-Score & Nähe-Klasse (14 Projekte)"),
+        ("31_DC_BAUPHASEN", "Matrix: welche MiT-Leistung in welcher Bauphase (P1–P6)"),
+        ("32_DC_PLAYBOOK", "Portfolio + Networking-Playbook + Ausschreibungs-Kanäle"),
+        ("33_DC_WETTBEWERB", "OEM-Festverträge (Marktumfeld) + Regulatorik (Stage V/LRV/PQ)"),
+        ("34_DC_KONTAKTE_MA", "Kontakte-Tracker je DC-Projekt mit Fälligkeits-Ampel"),
     ]),
     ("GLOBAL", C_GLOB, [
         ("15_GLOBAL_PROJEKTE", "10'572 DC-Projekte weltweit"),
@@ -1796,6 +1826,8 @@ regeln = [
     ("JA", "Generic_Code__c", "Weekly Floor", "20_PREISLISTE_INTL", "Generic_Code__c;Division Name", "", "Anhängen", "Preisliste International"),
     ("JA", "Woche", "Kanal", "25_AKQUISE_90T", "Woche;Aktion", "", "Anhängen", "Akquise-Plan"),
     ("JA", "Norm", "DC-Relevanz", "24_NORMEN", "Norm / Standard", "", "Anhängen", "Normen-Matrix"),
+    ("JA", "Projekt / Betreiber", "Status-Kategorie", "30_DC_MARKTANALYSE", "Projekt / Betreiber", "A", "Anhängen", "DC-Marktanalyse Projekte"),
+    ("JA", "Firma", "Rolle", "34_DC_KONTAKTE_MA", "Firma;Name", "I;J", "Anhängen", "DC-Kontakte-Tracker (Marktanalyse)"),
 ]
 for i, regel in enumerate(regeln):
     r = 13 + i
@@ -1839,6 +1871,21 @@ aliase = [
     ("Ziel", "Ziel-Unternehmen"), ("Produkt", "MiT-Produkt"), ("CHF-Pot.", "CHF-Potential"),
     ("Naechste Aktion", "Nächste Aktion"), ("Pruef-Frequenz", "Prüf-Frequenz"),
     ("Pflicht?", "Pflicht/Optional"),
+    # DC-Marktanalyse
+    ("Km ab Thayngen (ca., Eingabe)", "Km ab Thayngen"),
+    ("Leistung MW (publiziert)", "Leistung MW"),
+    ("Status-Detail / Meilenstein", "Status-Detail"),
+    ("Naehe-Klasse (Formel)", "Naehe-Klasse"),
+    ("GU / Bau-Partner (soweit bekannt)", "GU / Bau-Partner"),
+    ("MiT-Opportunitaet konkret", "MiT-Opportunität"),
+    ("Score (Formel)", "Score"),
+    ("Prio (Formel)", "Prio"),
+    ("Quelle (Klick-Link)", "Quelle"),
+    ("Projekt (aus Blatt 01)", "Projekt"),
+    ("Kanal (Tel/Mail/LinkedIn/vor Ort)", "Kanal"),
+    ("Letzter Kontakt (Datum)", "Letzter Kontakt"),
+    ("Vereinbarter naechster Schritt", "Nächster Schritt"),
+    ("Faellig am (Datum)", "Fällig am"),
 ]
 for i, (a, b) in enumerate(aliase):
     put_text(ws, 13 + i, 10, a, border=B_ALL)
@@ -2148,6 +2195,148 @@ ws.sheet_view.showGridLines = False
 setup_print(ws)
 
 # ============================================================================
+# 30_DC_MARKTANALYSE  (Projekt-Scoring aus neuer Marktanalyse-Datei)
+# ============================================================================
+alias_ma = {
+    "Km ab Thayngen (ca., Eingabe)": "Km ab Thayngen",
+    "Leistung MW (publiziert)": "Leistung MW",
+    "Status-Detail / Meilenstein": "Status-Detail",
+    "Naehe-Klasse (Formel)": "Naehe-Klasse",
+    "GU / Bau-Partner (soweit bekannt)": "GU / Bau-Partner",
+    "MiT-Opportunitaet konkret": "MiT-Opportunität",
+    "Score (Formel)": "Score",
+    "Prio (Formel)": "Prio",
+    "Naechster Schritt": "Nächster Schritt",
+    "Quelle (Klick-Link)": "Quelle",
+}
+ma_rows = canon([dict(zip(D["ma_projekte"]["header"], r)) for r in D["ma_projekte"]["rows"]], alias_ma)
+MA = 300
+sp_ma = [
+    {"h": "Nr.", "w": 5, "f": '=IF($B{r}="","",ROW()-4)'},
+    {"h": "Projekt / Betreiber", "w": 34},
+    {"h": "Standort / Kanton", "w": 18},
+    {"h": "Km ab Thayngen", "w": 11, "fmt": NF},
+    {"h": "Leistung MW", "w": 11, "fmt": NF},
+    {"h": "Status-Kategorie", "w": 18},
+    {"h": "Status-Detail", "w": 38},
+    {"h": "Naehe-Klasse", "w": 11},
+    {"h": "GU / Bau-Partner", "w": 28},
+    {"h": "MiT-Opportunität", "w": 38},
+    {"h": "Score", "w": 8, "fmt": "0.0"},
+    {"h": "Prio", "w": 6},
+    {"h": "Nächster Schritt", "w": 36},
+    {"h": "Quelle", "w": 16},
+    {"h": "Notizen", "w": 28},
+]
+ws = liste_bauen(wb, "30_DC_MARKTANALYSE", C_DC, "DC-MARKTANALYSE — Schweizer Projekt-Pipeline (Scoring)",
+                 "14 DC-Projekte mit Prio-Score, Nähe zu Thayngen und konkreter MiT-Opportunität. Quelle: Marktanalyse 2026.",
+                 sp_ma, ma_rows, MA, freeze="C5")
+ws.conditional_formatting.add(f"L5:L{MA}", FormulaRule(
+    formula=['EXACT($L5,"A")'], fill=PatternFill("solid", fgColor="C6EFCE"),
+    font=Font(color="006100", bold=True)))
+ws.conditional_formatting.add(f"F5:F{MA}", FormulaRule(
+    formula=['SEARCH("Bau",$F5)'], fill=PatternFill("solid", fgColor="FFEB9C"),
+    font=Font(color="9C6500", bold=True)))
+ws.conditional_formatting.add(f"F5:F{MA}", FormulaRule(
+    formula=['SEARCH("IBS",$F5)'], fill=PatternFill("solid", fgColor="C6EFCE"),
+    font=Font(color="006100", bold=True)))
+# Status-Doughnut (Helfer weit rechts, Druckbereich begrenzt)
+ma_cats = sorted({str(d.get("Status-Kategorie")).strip() for d in ma_rows if d.get("Status-Kategorie")})
+HBma = 30
+put(ws, 4, HBma, "Status", font=F_KPI_L); put(ws, 4, HBma + 1, "Anzahl", font=F_KPI_L)
+for i, ct in enumerate(ma_cats):
+    put_text(ws, 5 + i, HBma, ct)
+    put(ws, 5 + i, HBma + 1, f'=COUNTIF($F$5:$F${MA},{get_column_letter(HBma)}{5+i})', fmt=NF)
+ma_cat_end = 5 + len(ma_cats) - 1
+for cc in (HBma, HBma + 1):
+    ws.column_dimensions[get_column_letter(cc)].width = 12
+dnm = DoughnutChart(); dnm.title = "DC-Projekte nach Status"; dnm.holeSize = 55; dnm.height = 6.5; dnm.width = 8.5
+dmref = Reference(ws, min_col=HBma + 1, min_row=4, max_row=ma_cat_end)
+dmcat = Reference(ws, min_col=HBma, min_row=5, max_row=ma_cat_end)
+dnm.add_data(dmref, titles_from_data=True); dnm.set_categories(dmcat)
+for idx, col in enumerate(["70AD47", "FFC000", "4472C4", "C00000", "7F6000", "206A5D"][:len(ma_cats)]):
+    pt = DataPoint(idx=idx); pt.graphicalProperties.solidFill = col
+    dnm.series[0].data_points.append(pt)
+ws.add_chart(dnm, "Q6")
+ws.print_area = f"A1:O{MA}"
+
+# ============================================================================
+# 31_DC_BAUPHASEN  (Leistung × Bauphase Matrix)
+# ============================================================================
+def trim_block(rows, keep_from=3):
+    out = rows[keep_from:] if len(rows) > keep_from else rows
+    while out and all(v in (None, "") for v in out[0]):
+        out = out[1:]
+    while out and all(v in (None, "") for v in out[-1]):
+        out = out[:-1]
+    return out
+
+block_sheet(wb, "31_DC_BAUPHASEN", C_DC,
+            "DC-BAUPHASEN × MiT-LEISTUNGEN — Verkaufs-Matrix",
+            "X = Kernleistung · (x) = situativ. Zeigt je Bauphase (P1–P6), welche MiT-Leistung greift.",
+            [("MATRIX: LEISTUNG × BAUPHASE", trim_block(D["ma_bauphasen"]))],
+            widths=[34, 15, 14, 12, 20, 20, 14, 40])
+
+# ============================================================================
+# 32_DC_PLAYBOOK  (Portfolio + Networking + Ausschreibungen)
+# ============================================================================
+block_sheet(wb, "32_DC_PLAYBOOK", C_DC,
+            "DC-PLAYBOOK — Portfolio, Networking & Ausschreibungen",
+            "Go-to-Market für DC: was wir liefern, wen wann ansprechen, wo Ausschreibungen finden.",
+            [("A) MiT/AGGREKO-LIEFERSPEKTRUM FÜR DC", trim_block(D["ma_portfolio"])),
+             ("B) NETWORKING — WEN WANN ANSPRECHEN", trim_block(D["ma_networking"])),
+             ("C) AUSSCHREIBUNGEN FINDEN — KANÄLE", trim_block(D["ma_ausschreibung"]))],
+            widths=[30, 40, 34, 34, 30, 24])
+
+# ============================================================================
+# 33_DC_WETTBEWERB  (Festverträge/OEM + Regulatorik)
+# ============================================================================
+block_sheet(wb, "33_DC_WETTBEWERB", C_DC,
+            "DC-WETTBEWERB & REGULATORIK",
+            "Festinstallierte OEM-Notstromanbieter (kein direkter Wettbewerb) + regulatorische Pflichten.",
+            [("A) FESTVERTRÄGE / OEM — MARKTUMFELD", trim_block(D["ma_oem"])),
+             ("B) REGULATORIK — WAS GILT (Stage V, LRV, PQ)", trim_block(D["ma_regulatorik"]))],
+            widths=[30, 34, 30, 30, 30, 24])
+
+# ============================================================================
+# 34_DC_KONTAKTE_MA  (Kontakte-Tracker aus Marktanalyse)
+# ============================================================================
+alias_mak = {
+    "Projekt (aus Blatt 01)": "Projekt",
+    "Kanal (Tel/Mail/LinkedIn/vor Ort)": "Kanal",
+    "Letzter Kontakt (Datum)": "Letzter Kontakt",
+    "Vereinbarter naechster Schritt": "Nächster Schritt",
+    "Faellig am (Datum)": "Fällig am",
+    "Tage bis faellig (Formel)": "Tage bis fällig",
+    "Status (Formel)": "Status",
+}
+mak_rows = canon([dict(zip(D["ma_kontakte"]["header"], r)) for r in D["ma_kontakte"]["rows"]], alias_mak)
+MAK = 300
+sp_mak = [
+    {"h": "Projekt", "w": 28},
+    {"h": "Firma", "w": 22},
+    {"h": "Rolle", "w": 22},
+    {"h": "Name", "w": 18},
+    {"h": "Kanal", "w": 20},
+    {"h": "Letzter Kontakt", "w": 13, "fmt": "DD.MM.YYYY"},
+    {"h": "Nächster Schritt", "w": 40},
+    {"h": "Fällig am", "w": 12, "fmt": "DD.MM.YYYY"},
+    {"h": "Tage bis fällig", "w": 12,
+     "f": '=IF($H{r}="","",$H{r}-TODAY())'},
+    {"h": "Status", "w": 14,
+     "f": '=IF($A{r}="","",IF($H{r}="","offen",IF($H{r}<TODAY(),"überfällig",IF($H{r}<=TODAY()+7,"diese Woche","geplant"))))'},
+]
+ws = liste_bauen(wb, "34_DC_KONTAKTE_MA", C_DC, "DC-KONTAKTE-TRACKER — Marktanalyse",
+                 "Ansprechpartner je DC-Projekt. 'Fällig am' eingeben → Tage & Status-Ampel rechnen automatisch.",
+                 sp_mak, mak_rows, MAK, freeze="C5")
+ws.conditional_formatting.add(f"J5:J{MAK}", FormulaRule(
+    formula=['EXACT($J5,"überfällig")'], fill=PatternFill("solid", fgColor="FFC7CE"),
+    font=Font(color="9C0006", bold=True)))
+ws.conditional_formatting.add(f"J5:J{MAK}", FormulaRule(
+    formula=['EXACT($J5,"diese Woche")'], fill=PatternFill("solid", fgColor="FFEB9C"),
+    font=Font(color="9C6500", bold=True)))
+
+# ============================================================================
 # Reihenfolge der Reiter korrigieren + definierte Namen
 # ============================================================================
 order = ["00_START", "01_DASHBOARD", "02_PIPELINE", "03_KUNDEN_CRM", "04_KUNDENKARTEI",
@@ -2158,6 +2347,8 @@ order = ["00_START", "01_DASHBOARD", "02_PIPELINE", "03_KUNDEN_CRM", "04_KUNDENK
          "19_PREISLISTE_CHF", "20_PREISLISTE_INTL", "21_GEN_RECHNER", "22_ANGEBOT_KALK",
          "23_MARKTVOLUMEN", "24_NORMEN", "25_AKQUISE_90T", "26_SYSTEME_WISSEN",
          "27_AKTIONEN", "28_ZIELE", "29_KALENDER",
+         "30_DC_MARKTANALYSE", "31_DC_BAUPHASEN", "32_DC_PLAYBOOK",
+         "33_DC_WETTBEWERB", "34_DC_KONTAKTE_MA",
          "90_IMPORT", "91_LISTEN", "99_INFO"]
 wb._sheets = [wb[n] for n in order]
 wb.active = 0
