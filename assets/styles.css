@@ -357,8 +357,10 @@ section { padding-block: var(--section-gap); }
 .nav.is-open .nav__toggle span:nth-child(2) { opacity: 0; }
 .nav.is-open .nav__toggle span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
-/* --- Mobile Navigation --- */
-@media (max-width: 760px) {
+/* --- Mobile Navigation ---
+   Breakpoint 900px: mit sechs Nav-Punkten (inkl. Demo) klappt die Leiste schon
+   auf Tablets sauber ins Hamburger-Menü, statt gedrängt zu wirken. */
+@media (max-width: 900px) {
   .nav__toggle { display: flex; }
 
   .nav__menu {
@@ -895,6 +897,215 @@ section { padding-block: var(--section-gap); }
 
 /* Aktiver Nav-Link (Scroll-Spy, per JS gesetzt) */
 .nav__links a.is-active { color: var(--text); }
+
+/* =============================================================================
+   13f. CRM-DEMO (Seite demo.html — illustratives Vertriebs-Dashboard)
+   ============================================================================= */
+.demopage {
+  padding-top: calc(var(--nav-h) + 64px);
+  padding-bottom: var(--section-gap);
+}
+.demopage .section-head { max-width: 760px; }
+.demopage h1 { font-size: clamp(34px, 5.5vw, 60px); margin-bottom: 4px; }
+
+/* Rahmen des „Fensters" */
+.crm {
+  margin-top: 52px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+}
+
+/* Topbar mit Ampel + Tabs + Live-Punkt */
+.crm__bar {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 14px 20px;
+  background: var(--panel-2);
+  border-bottom: 1px solid var(--line);
+}
+.crm__dots { display: flex; gap: 7px; }
+.crm__dots span {
+  width: 11px; height: 11px; border-radius: 50%;
+  background: var(--line);
+}
+.crm__title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+  color: var(--text);
+}
+.crm__live {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.crm__live::before {
+  content: "";
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #35C759;               /* funktionaler Statuspunkt, kein Blinken */
+  box-shadow: 0 0 0 3px rgba(53, 199, 89, 0.18);
+}
+
+/* Fake-Tabs */
+.crm__tabs {
+  display: flex;
+  gap: 4px;
+  padding: 10px 16px 0;
+  border-bottom: 1px solid var(--line);
+  overflow-x: auto;
+}
+.crm__tab {
+  flex-shrink: 0;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--muted);
+  border-bottom: 2px solid transparent;
+}
+.crm__tab.is-active { color: var(--text); border-bottom-color: var(--accent); }
+
+.crm__body { padding: clamp(18px, 3vw, 28px); }
+
+/* KPI-Kacheln */
+.crm__kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 14px;
+}
+.kpi {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 18px 20px;
+}
+.kpi__label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+.kpi__value {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(24px, 3vw, 30px);
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+.kpi__trend { font-size: 12px; font-weight: 600; color: #35C759; margin-top: 6px; display: block; }
+
+/* Pipeline (Kanban) */
+.crm__section-label {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 30px 0 14px;
+}
+.crm__pipeline {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(210px, 1fr);
+  gap: 14px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+}
+.pipe-col {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 14px;
+}
+.pipe-col__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+.pipe-col__count {
+  min-width: 22px;
+  text-align: center;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--panel-2);
+  color: var(--muted);
+  font-size: 12px;
+}
+.deal {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 13px 14px;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+.deal + .deal { margin-top: 10px; }
+.deal:hover { transform: translateY(-2px); border-color: rgba(46, 111, 242, 0.5); }
+.deal__name { font-weight: 600; font-size: 14px; color: var(--text); }
+.deal__meta { font-size: 12px; color: var(--muted); margin-top: 3px; }
+.deal__val {
+  display: inline-block;
+  margin-top: 10px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--accent);
+}
+/* Farbmarker je Spalte oben */
+.pipe-col--won .pipe-col__head { color: #35C759; }
+
+/* Automationen */
+.crm__auto { display: grid; gap: 10px; }
+.auto-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+}
+.auto-row__icon {
+  flex-shrink: 0;
+  width: 34px; height: 34px;
+  display: grid; place-items: center;
+  border-radius: 9px;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.auto-row__icon svg { width: 17px; height: 17px; }
+.auto-row__text { flex: 1; font-size: 14px; color: var(--text); }
+.auto-row__text span { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; }
+.auto-row__state {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #35C759;
+  padding: 5px 12px;
+  border: 1px solid rgba(53, 199, 89, 0.35);
+  border-radius: 999px;
+}
+
+/* Hinweis: fiktive Daten */
+.crm-note {
+  margin-top: 18px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* CTA unter der Demo */
+.crm-cta {
+  margin-top: 56px;
+  text-align: center;
+}
+.crm-cta h2 { font-size: clamp(26px, 3.5vw, 40px); margin-bottom: 22px; }
 
 /* =============================================================================
    14. RECHTSSEITEN (Impressum / Datenschutz)

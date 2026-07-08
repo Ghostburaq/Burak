@@ -69,7 +69,7 @@
     });
 
     // Beim Wechsel auf Desktop-Breite immer zurücksetzen
-    var mq = window.matchMedia('(min-width: 761px)');
+    var mq = window.matchMedia('(min-width: 901px)');
     var syncMq = function () { if (mq.matches) { setMenu(false); } };
     if (mq.addEventListener) { mq.addEventListener('change', syncMq); }
     else if (mq.addListener) { mq.addListener(syncMq); } // ältere Browser
@@ -123,5 +123,47 @@
       var sec = document.getElementById(id);
       if (sec) { spy.observe(sec); }
     });
+  }
+
+  /* ---------------------------------------------------------------------------
+     5. COUNT-UP — animiert KPI-Zahlen der CRM-Demo einmalig beim Erscheinen.
+        Markup: <span data-countup="128400" data-prefix="CHF " data-group="1">
+        Ohne JS oder bei reduzierter Bewegung steht sofort der Zielwert.
+     --------------------------------------------------------------------------- */
+  var counters = document.querySelectorAll('[data-countup]');
+  if (counters.length) {
+    var group = function (n, sep) {
+      return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, sep || '');
+    };
+    var format = function (el, n) {
+      var out = group(n, el.getAttribute('data-group') ? '’' : '');
+      return (el.getAttribute('data-prefix') || '') + out + (el.getAttribute('data-suffix') || '');
+    };
+    var run = function (el) {
+      var target = parseInt(el.getAttribute('data-countup'), 10) || 0;
+      if (reduceMotion.matches || !('requestAnimationFrame' in window)) {
+        el.textContent = format(el, target); return;
+      }
+      var dur = 1100, start = null;
+      var tick = function (ts) {
+        if (start === null) { start = ts; }
+        var p = Math.min((ts - start) / dur, 1);
+        var eased = 1 - Math.pow(1 - p, 3);           // easeOutCubic
+        el.textContent = format(el, Math.round(target * eased));
+        if (p < 1) { requestAnimationFrame(tick); }
+      };
+      requestAnimationFrame(tick);
+    };
+
+    if ('IntersectionObserver' in window) {
+      var countObs = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) { run(entry.target); countObs.unobserve(entry.target); }
+        });
+      }, { threshold: 0.4 });
+      counters.forEach(function (el) { countObs.observe(el); });
+    } else {
+      counters.forEach(function (el) { run(el); });
+    }
   }
 })();
