@@ -233,6 +233,38 @@
     </section>
 
     <!-- ========================================================================
+         3b. EINBLICK — Video der CRM-Demo (stummer Loop, Poster-Fallback)
+         ========================================================================= -->
+    <section class="showcase section--bordered" id="einblick">
+      <div class="container">
+        <div class="section-head">
+          <span class="eyebrow" data-reveal>Einblick</span>
+          <h2 data-reveal>So sieht dein System in Aktion aus.</h2>
+          <p class="lead" data-reveal style="--reveal-delay: 0.1s">
+            Ein automatisiertes Vertriebs-Dashboard: Kennzahlen, Pipeline und
+            Automationen – live und übersichtlich statt Excel-Chaos.
+          </p>
+        </div>
+
+        <figure class="showcase__media" data-reveal>
+          <!-- Stummer, loopender Kurzclip; Poster zeigt das Standbild, solange das
+               Video lädt bzw. bei prefers-reduced-motion (Script pausiert dann). -->
+          <video class="showcase__video" autoplay muted loop playsinline
+                 preload="none" poster="assets/crm-demo-poster.png"
+                 aria-label="Vorschau des NEXA CRM-Dashboards, animiert">
+            <source src="assets/crm-demo.mp4" type="video/mp4">
+            <!-- Fallback ohne Video-Unterstützung: das Standbild -->
+            <img src="assets/crm-demo-poster.png" alt="NEXA CRM-Dashboard: Kennzahlen, Pipeline und Automationen">
+          </video>
+        </figure>
+
+        <p class="showcase__cta" data-reveal>
+          <a class="link-arrow" href="demo.html">Interaktive CRM-Demo öffnen</a>
+        </p>
+      </div>
+    </section>
+
+    <!-- ========================================================================
          4. WARUM NEXA
          ========================================================================= -->
     <section class="why section--bordered" id="warum">

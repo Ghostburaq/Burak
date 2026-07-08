@@ -166,4 +166,14 @@
       counters.forEach(function (el) { run(el); });
     }
   }
+
+  /* ---------------------------------------------------------------------------
+     6. REDUCED MOTION — Autoplay-Videos anhalten; das Poster-Standbild bleibt.
+     --------------------------------------------------------------------------- */
+  if (reduceMotion.matches) {
+    document.querySelectorAll('video[autoplay]').forEach(function (v) {
+      v.removeAttribute('autoplay');
+      try { v.pause(); } catch (e) {}
+    });
+  }
 })();

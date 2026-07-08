@@ -1110,6 +1110,26 @@ section { padding-block: var(--section-gap); }
 .crm-cta h2 { font-size: clamp(26px, 3.5vw, 40px); margin-bottom: 22px; }
 
 /* =============================================================================
+   13g. EINBLICK-VIDEO (Startseite)
+   ============================================================================= */
+.showcase__media {
+  margin-top: 52px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--panel);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+  line-height: 0;                    /* kein Spalt unter dem Video */
+}
+.showcase__video,
+.showcase__media img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.showcase__cta { margin-top: 26px; }
+
+/* =============================================================================
    14. RECHTSSEITEN (Impressum / Datenschutz)
    ============================================================================= */
 .legal {
