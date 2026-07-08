@@ -163,6 +163,62 @@ def titel_zeilen(ws, farbe, titel, untertitel, breite):
         ws.cell(row=3, column=col).fill = PatternFill("solid", fgColor=farbe)
     ws.row_dimensions[3].height = 5
 
+A_WRAPL = Alignment(horizontal="left", vertical="top", wrap_text=True)
+A_RIGHT = Alignment(horizontal="right", vertical="center")
+HARDCAP = 48          # max. Spaltenbreite; darüber Textumbruch
+FLOORW = 6
+
+def eff_money_fmt(header, base):
+    """Hebt reine Zahlenformate auf CHF-/USD-Währung an (je nach Kopfzeile).
+    Achtung: Erkennung MUSS case-insensitiv sein — deutsche Komposita wie
+    'Tagespreis'/'Wochenpreis' schreiben 'preis' klein."""
+    if base not in ("#,##0", "#,##0.00"):
+        return base
+    dec = base == "#,##0.00"
+    h = header or ""
+    hl = h.lower()
+    if "$" in h or "usd" in hl:
+        return '#,##0.00" $"' if dec else '#,##0" $"'
+    money = ("chf" in hl) or any(t in hl for t in
+             ("preis", "potential", "volumen", "marktvolumen", "zielumsatz",
+              "umsatz", "invest", "forecast", "kosten", "betrag")) or \
+            ("wert" in hl and "mw" not in hl)
+    if money:
+        return '#,##0.00" CHF"' if dec else '#,##0" CHF"'
+    return base
+
+def _disp_len(v, ef):
+    if v is None or isinstance(v, bool):
+        return 0
+    if isinstance(v, (int, float)):
+        try:
+            s = f"{abs(v):,.0f}"
+        except Exception:
+            s = str(v)
+        if ef and ".00" in ef:
+            s += ".00"
+        if ef and "CHF" in ef:
+            s += " CHF"
+        elif ef and "$" in ef:
+            s += " $"
+        return len(s) + (1 if v < 0 else 0)
+    return len(str(v))
+
+def col_breite(header, values, ef, floor_w, is_formula):
+    cmax = 0
+    for v in values:
+        dl = _disp_len(v, ef)
+        if dl > cmax:
+            cmax = dl
+    # Kopf darf umbrechen -> nicht die volle Kopfbreite verlangen
+    kopf = min(len(str(header or "")), 16)
+    ziel = max(cmax, kopf, FLOORW)
+    if is_formula:
+        ziel = max(ziel, min(int(floor_w or 0), HARDCAP))
+    width = min(max(ziel + 2, int(floor_w or 0)), HARDCAP)
+    text_wrap = (ef in (None, "General")) and (cmax + 1 > width)
+    return width, text_wrap
+
 def liste_bauen(wb, name, farbe, titel, untertitel, spalten, zeilen, maxrow,
                 freeze="A5", filter_on=True):
     """Generischer Listen-Tab.
@@ -174,14 +230,31 @@ def liste_bauen(wb, name, farbe, titel, untertitel, spalten, zeilen, maxrow,
     ws.sheet_properties.tabColor = farbe
     n = len(spalten)
     titel_zeilen(ws, farbe, titel, untertitel, n)
+    # Werte je Spalte sammeln -> Breite & Format ableiten
+    col_vals = {i: [] for i in range(1, n + 1)}
+    for zeile in zeilen:
+        for i, sp in enumerate(spalten, start=1):
+            if "f" in sp:
+                continue
+            col_vals[i].append(zeile.get(sp["h"]))
+    col_fmt, col_wrap = {}, {}
+    for i, sp in enumerate(spalten, start=1):
+        L = get_column_letter(i)
+        ef = eff_money_fmt(sp["h"], sp.get("fmt", "General"))
+        col_fmt[i] = ef
+        if sp.get("hidden"):
+            ws.column_dimensions[L].width = sp.get("w", 6)
+            ws.column_dimensions[L].hidden = True
+            col_wrap[i] = False
+        else:
+            w, wrap = col_breite(sp["h"], col_vals[i], ef, sp.get("w", 0), "f" in sp)
+            ws.column_dimensions[L].width = w
+            col_wrap[i] = wrap
     # Header (Zeile 4)
     for i, sp in enumerate(spalten, start=1):
-        c = put(ws, 4, i, sp["h"], font=F_HDR, fill=farbe, border=B_ALL,
-                align=Alignment(horizontal="center", vertical="center", wrap_text=True))
-        ws.column_dimensions[get_column_letter(i)].width = sp.get("w", 14)
-        if sp.get("hidden"):
-            ws.column_dimensions[get_column_letter(i)].hidden = True
-    ws.row_dimensions[4].height = 28
+        put(ws, 4, i, sp["h"], font=F_HDR, fill=farbe, border=B_ALL,
+            align=Alignment(horizontal="center", vertical="center", wrap_text=True))
+    ws.row_dimensions[4].height = 30
     # Daten
     data_end = 4 + max(len(zeilen), 1)
     for r_i, zeile in enumerate(zeilen, start=5):
@@ -189,14 +262,15 @@ def liste_bauen(wb, name, farbe, titel, untertitel, spalten, zeilen, maxrow,
             if "f" in sp:
                 continue
             v = zeile.get(sp["h"])
-            put_text(ws, r_i, c_i, v, fmt=sp.get("fmt", "General"), border=B_ALL)
+            al = A_WRAPL if col_wrap[c_i] else None
+            put_text(ws, r_i, c_i, v, fmt=col_fmt[c_i], border=B_ALL, align=al)
     # Formel-Spalten: bis data_end + 200 vorbefüllen
     fill_end = data_end + 200
     for c_i, sp in enumerate(spalten, start=1):
         if "f" not in sp:
             continue
         for r in range(5, fill_end + 1):
-            put(ws, r, c_i, sp["f"].format(r=r), fmt=sp.get("fmt", "General"), border=B_ALL)
+            put(ws, r, c_i, sp["f"].format(r=r), fmt=col_fmt[c_i], border=B_ALL)
     # Rahmen/Format für Puffer-Zeilen (ohne Formeln)
     for r in range(5 + len(zeilen), fill_end + 1):
         for c_i, sp in enumerate(spalten, start=1):
@@ -204,8 +278,8 @@ def liste_bauen(wb, name, farbe, titel, untertitel, spalten, zeilen, maxrow,
                 continue
             cc = ws.cell(row=r, column=c_i)
             cc.border = B_ALL
-            if sp.get("fmt"):
-                cc.number_format = sp["fmt"]
+            if col_fmt[c_i] and col_fmt[c_i] != "General":
+                cc.number_format = col_fmt[c_i]
     ws.freeze_panes = freeze
     if filter_on:
         ws.auto_filter.ref = f"A4:{get_column_letter(n)}{maxrow}"
@@ -1519,6 +1593,8 @@ TILE_IDX = [0]
 WHITE_SIDE = Side(style="medium", color="FFFFFF")
 def tile(ws, row, col, label, formula, fmt=NF, span=2, fill=None):
     """Gefüllte Executive-KPI-Karte: Bereichsfarbe, weiße Schrift, weiße Trenner."""
+    # Geld-Kennzahlen bekommen sichtbare Währung (CHF/$), Zähler bleiben reine Zahl
+    fmt = eff_money_fmt(label, fmt)
     acc = TILE_ACCENT[0]
     # abwechselnd etwas heller/dunkler für Kartentrennung
     body = shade(acc, 1.0 if TILE_IDX[0] % 2 == 0 else 0.82)
@@ -2359,6 +2435,93 @@ order = ["00_START", "01_DASHBOARD", "02_PIPELINE", "03_KUNDEN_CRM", "04_KUNDENK
          "90_IMPORT", "91_LISTEN", "99_INFO"]
 wb._sheets = [wb[n] for n in order]
 wb.active = 0
+
+# ---------------------------------------------------------------------------
+# Globaler Auto-Fit: verhindert abgeschnittenen Text bei ECHTER Truncation
+# (Nachbarzelle rechts belegt -> Text kann NICHT überlaufen). Spalten werden
+# nur verbreitert (nie verschmälert); sehr lange Texte -> Umbruch + Zeilenhöhe.
+# Deckt die manuell gestalteten Blätter ab (Listen-Tabs sind bereits gefittet).
+# ---------------------------------------------------------------------------
+WIDEN_CAP = 58   # breiter -> stattdessen Textumbruch
+
+def _dlen(v):
+    if v is None or isinstance(v, bool):
+        return 0
+    if isinstance(v, (int, float)):
+        return len(f"{abs(v):,.0f}") + (1 if v < 0 else 0)
+    s = str(v)
+    if s.startswith("="):
+        return 0
+    return max((len(line) for line in s.split("\n")), default=0)
+
+for ws in wb.worksheets:
+    covered = set()
+    anchor_maxcol = {}
+    for mr in ws.merged_cells.ranges:
+        anchor_maxcol[(mr.min_row, mr.min_col)] = mr.max_col
+        for rr in range(mr.min_row, mr.max_row + 1):
+            for cc in range(mr.min_col, mr.max_col + 1):
+                covered.add((rr, cc))
+
+    def cur_w(ci):
+        d = ws.column_dimensions.get(get_column_letter(ci))
+        return d.width if (d and d.width) else 8.43
+
+    need = {}        # Spaltenindex -> benötigte Breite (nur Ein-Spalten-Fälle)
+    wrapcells = []   # (Zelle, effektive Breite) -> Umbruch setzen
+    for row in ws.iter_rows():
+        nonempty = {c.column: c for c in row if c.value not in (None, "")}
+        if not nonempty:
+            continue
+        maxc = max(nonempty)
+        for ci, c in nonempty.items():
+            v = c.value
+            if not isinstance(v, str) or v.startswith("="):
+                continue
+            if c.alignment and c.alignment.wrap_text:
+                continue
+            r = c.row
+            if (r, ci) in covered and (r, ci) not in anchor_maxcol:
+                continue
+            end_col = anchor_maxcol.get((r, ci), ci)
+            eff = sum(cur_w(x) for x in range(ci, end_col + 1))
+            nc = end_col + 1
+            while nc <= maxc:
+                if nc in nonempty and (r, nc) not in covered:
+                    break
+                eff += cur_w(nc)
+                nc += 1
+            L = _dlen(v)                 # längste Einzelzeile
+            multiline = "\n" in v        # Mehrzeiler MUSS umbrechen, sonst unlesbar
+            if multiline or (L > eff + 1.5 and L > 10):
+                if end_col == ci:
+                    if multiline:
+                        need[ci] = max(need.get(ci, 0), min(L + 1, WIDEN_CAP))
+                        wrapcells.append((c, min(max(L + 1, cur_w(ci)), WIDEN_CAP)))
+                    elif L <= WIDEN_CAP:
+                        need[ci] = max(need.get(ci, 0), L + 1)
+                    else:
+                        need[ci] = max(need.get(ci, 0), WIDEN_CAP)
+                        wrapcells.append((c, WIDEN_CAP))
+                else:
+                    wrapcells.append((c, eff))
+    for ci, wneed in need.items():
+        letter = get_column_letter(ci)
+        d = ws.column_dimensions[letter]
+        w0 = d.width if d.width else 8.43
+        if wneed > w0:
+            d.width = min(wneed, WIDEN_CAP)
+    for c, eff in wrapcells:
+        a = c.alignment
+        c.alignment = Alignment(horizontal=(a.horizontal if a and a.horizontal else "left"),
+                                vertical="top", wrap_text=True)
+        s = str(c.value)
+        per = max(int(eff) - 1, 8)
+        lines = sum(max(1, -(-len(seg) // per)) for seg in s.split("\n"))
+        h = min(max(lines * 15, 15), 135)
+        rd = ws.row_dimensions[c.row]
+        if not rd.height or rd.height < h:
+            rd.height = h
 
 # Globaler Feinschliff: Gridlines aus + druckfertig auf JEDER Seite
 for ws in wb.worksheets:

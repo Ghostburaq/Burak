@@ -3,6 +3,18 @@
 **Eine einzige Excel-Arbeitsmappe als Workspace** — ersetzt 15 Einzeldateien.
 Deliverable: [`MiT_GESAMTMAPPE_2026.xlsm`](MiT_GESAMTMAPPE_2026.xlsm) (38 Reiter, 12'850+ Formeln, 15 Live-Diagramme, Dark-Executive-Cockpit, 13 Makros).
 
+## Lesbarkeit & Währung korrigiert (v1.5)
+
+- **Kein abgeschnittener Text mehr:** Jede Spalte wird an ihren tatsächlichen Inhalt
+  angepasst; sehr lange Texte (z.B. Notizen im Kalender) brechen sauber um statt
+  „nur ein paar Buchstaben" zu zeigen. Automatisch geprüft: **0 abgeschnittene Zellen**
+  auf allen 38 Reitern (beide Varianten).
+- **Sichtbare Währung überall:** Geld-Spalten und KPI-Karten zeigen jetzt explizit
+  `1'234'567 CHF` bzw. `… $` (deutsche Komposita wie *Tagespreis / Wochenpreis /
+  Monatspreis* wurden zuvor nicht als Geld erkannt — jetzt behoben). Reine Zähler
+  (Anzahl Deals, Kontakte …) bleiben bewusst ohne Währung; lokale Fremdwährung
+  (Preisliste International, „LC") bleibt neutral.
+
 ## Aufbau (38 Reiter, logisch getrennt & verknüpft)
 
 | Bereich | Reiter | Inhalt |

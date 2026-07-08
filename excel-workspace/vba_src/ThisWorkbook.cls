@@ -14,6 +14,13 @@ Private Sub Workbook_Open()
     Application.OnKey "^+m", "MIT_NeuerMonatsreport"
     Application.OnKey "^+b", "MIT_NeuesBlatt"
     Application.OnKey "^+e", "MIT_ExportBlatt"
+    Application.OnKey "^+f", "MIT_Suche"
+    Application.OnKey "^+d", "MIT_AllePDF"
+    Application.OnKey "^+g", "MIT_NeuerDeal"
+    Application.OnKey "^+k", "MIT_NeuerKunde"
+    Application.OnKey "^+w", "MIT_FollowUp14"
+    Application.OnKey "^+o", "MIT_OffertePDF"
+    Application.OnKey "^+n", "MIT_NeueOfferte"
 End Sub
 
 Private Sub Workbook_BeforeClose(Cancel As Boolean)
@@ -22,4 +29,6 @@ Private Sub Workbook_BeforeClose(Cancel As Boolean)
     Application.OnKey "^+m"
     Application.OnKey "^+b"
     Application.OnKey "^+e"
+    Application.OnKey "^+f"
+    Application.OnKey "^+d"
 End Sub
