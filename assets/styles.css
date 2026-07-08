@@ -535,6 +535,8 @@ section { padding-block: var(--section-gap); }
   left: 0;
   color: var(--accent);
 }
+/* Direktlink unter einer Leistungskarte (z. B. „CRM-Demo ansehen") */
+.card__link { margin-top: 24px; font-size: 15px; }
 
 /* =============================================================================
    10. WARUM NEXA
