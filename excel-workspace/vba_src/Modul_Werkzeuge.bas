@@ -9,6 +9,19 @@ Option Explicit
 '  - MIT_ExportBlatt: exportiert das aktive Blatt als eigene Datei.
 ' =====================================================================
 
+' Werte spaltenweise einfrieren -> baut nie ein riesiges 2D-Array auf
+' (verhindert "Nicht genügend Speicher" bei großen Blättern)
+Private Sub FreezeValues(ws As Worksheet)
+    Dim ur As Range, c As Long
+    On Error Resume Next
+    Set ur = ws.UsedRange
+    If ur Is Nothing Then Exit Sub
+    For c = 1 To ur.Columns.Count
+        ur.Columns(c).Value = ur.Columns(c).Value
+    Next c
+    On Error GoTo 0
+End Sub
+
 Public Sub MIT_NeuerMonatsreport()
     Dim nb As Workbook, ws As Worksheet
     Dim pfad As String, datei As String
@@ -29,12 +42,9 @@ Public Sub MIT_NeuerMonatsreport()
         End If
     Next k
     Application.DisplayAlerts = True
-    ' Werte einfrieren (Schutz: nur wenn lesbar)
-    Dim a As Variant
-    On Error Resume Next
+    ' Werte einfrieren (spaltenweise, speicherschonend)
     For Each ws In nb.Worksheets
-        a = ws.UsedRange.Value
-        If Not IsEmpty(a) Then ws.UsedRange.Value = a
+        FreezeValues ws
     Next ws
     On Error GoTo Fehler
 
@@ -119,10 +129,7 @@ Public Sub MIT_ExportBlatt()
         If nb.Sheets(k2).Name <> quelle.Name Then nb.Sheets(k2).Delete
     Next k2
     Application.DisplayAlerts = True
-    Dim a2 As Variant
-    On Error Resume Next
-    a2 = nb.Worksheets(1).UsedRange.Value
-    If Not IsEmpty(a2) Then nb.Worksheets(1).UsedRange.Value = a2
+    FreezeValues nb.Worksheets(1)
     On Error GoTo Fehler
 
     datei = "MiT_" & SicherDateiname(nb.Worksheets(1).Name) & "_" & _

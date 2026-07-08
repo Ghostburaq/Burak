@@ -82,11 +82,9 @@ End Sub
 ' ---------------------------------------------------------------------
 Private Sub VerarbeiteBlatt(wsSrc As Worksheet, ByVal pfad As String)
     Dim hdrRow As Long, ziel As String, keySpec As String, fSpalten As String, modus As String
-    mBlaetter = mBlaetter + 1
-    ThisWorkbook.Worksheets(WS_IMP).Cells(5 + mBlaetter, 13).Value = "VB" & mBlaetter & ": " & wsSrc.Name
     Dim erkannt As Boolean
+    mBlaetter = mBlaetter + 1
     erkannt = ErkenneTyp(wsSrc, hdrRow, ziel, keySpec, fSpalten, modus)
-    ThisWorkbook.Worksheets(WS_IMP).Cells(5 + mBlaetter, 14).Value = "erkannt=" & erkannt & " ziel=" & ziel & " hdr=" & hdrRow
     If erkannt Then
         If UCase$(modus) = "IGNORIEREN" Then
             LogEintrag pfad, wsSrc.Name, ziel, 0, 0, "ignoriert (Regel)"

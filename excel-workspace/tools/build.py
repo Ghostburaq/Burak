@@ -46,15 +46,19 @@ VALUE_KEYS = ("Volumen CHF", "Wert CHF", "CHF-Potential", "IT-MW", "Total-MW",
               "Report Value", "Projektwert", "Tagespreis", "Wochenpreis",
               "Monatspreis", "Weekly Median", "Invest. CHF", "Leistung MW", "Score")
 
-def deko_liste(ws, spalten, maxrow, farbe):
-    """Datenbalken auf Wertspalten, Ampel-Icons auf Wahrscheinlichkeit, Farbskala auf Marge."""
+# Ab so vielen Datenzeilen KEINE zellintensive bedingte Formatierung mehr
+# (Datenbalken/Icons/Zebra über zehntausende Zeilen fressen sonst RAM -> "Nicht genügend Speicher")
+CF_LIMIT = 1500
+
+def deko_liste(ws, spalten, cf_end, farbe):
+    """Datenbalken/Icons/Farbskala NUR über die echten Datenzeilen (cf_end)."""
     bar = BAR.get(farbe, "BFBFBF")
     for i, sp in enumerate(spalten, start=1):
         h = sp["h"]
         if h is None or h.startswith("_"):
             continue
         col = get_column_letter(i)
-        rng = f"{col}5:{col}{maxrow}"
+        rng = f"{col}5:{col}{cf_end}"
         try:
             if h in ("Wahr. %", "Wahrsch. %"):
                 ws.conditional_formatting.add(rng, IconSetRule(
@@ -205,20 +209,23 @@ def liste_bauen(wb, name, farbe, titel, untertitel, spalten, zeilen, maxrow,
     ws.freeze_panes = freeze
     if filter_on:
         ws.auto_filter.ref = f"A4:{get_column_letter(n)}{maxrow}"
-    # Zebra
-    zf = ZEBRA.get(farbe, "F2F2F2")
-    anker_col = "$B" if n > 1 else "$A"
-    ws.conditional_formatting.add(
-        f"A5:{get_column_letter(n)}{maxrow}",
-        FormulaRule(formula=[f"AND({anker_col}5<>\"\",MOD(ROW(),2)=0)"],
-                    fill=PatternFill("solid", fgColor=zf), stopIfTrue=False))
     # kräftige Trennlinie unter der Kopfzeile
     for i in range(1, n + 1):
         cc = ws.cell(row=4, column=i)
         cc.border = Border(left=THIN, right=THIN, top=THIN,
                            bottom=Side(style="medium", color="FFFFFF"))
-    # In-Zellen-Grafik + Druck-Layout + saubere Optik
-    deko_liste(ws, spalten, maxrow, farbe)
+    # Bedingte Formatierung NUR auf Blättern mit überschaubar vielen Datenzeilen.
+    # Auf Riesen-Blättern (z.B. 10'000+ Zeilen) würde sie zehntausende Zellen im RAM
+    # materialisieren -> "Nicht genügend Speicher". Dort bewusst weglassen.
+    if len(zeilen) <= CF_LIMIT:
+        cf_end = min(maxrow, 5 + len(zeilen) + 60)
+        zf = ZEBRA.get(farbe, "F2F2F2")
+        anker_col = "$B" if n > 1 else "$A"
+        ws.conditional_formatting.add(
+            f"A5:{get_column_letter(n)}{cf_end}",
+            FormulaRule(formula=[f"AND({anker_col}5<>\"\",MOD(ROW(),2)=0)"],
+                        fill=PatternFill("solid", fgColor=zf), stopIfTrue=False))
+        deko_liste(ws, spalten, cf_end, farbe)
     ws.sheet_view.showGridLines = False
     setup_print(ws)
     ws.sheet_view.zoomScale = 100

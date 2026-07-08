@@ -13,6 +13,7 @@ echo "=================================================================="
 python3 extract.py >/dev/null 2>&1 || { echo "extract FAILED"; exit 1; }
 python3 build.py            >/dev/null 2>&1 || { echo "build xlsm-Basis FAILED"; exit 1; }
 OHNE_MAKROS=1 python3 build.py >/dev/null 2>&1 || { echo "build xlsx FAILED"; exit 1; }
+python3 vba_bin.py         >/dev/null 2>&1 || { echo "vba_bin FAILED"; exit 1; }
 python3 package_xlsm.py    >/dev/null 2>&1 || { echo "package FAILED"; exit 1; }
 echo "Build OK"
 
