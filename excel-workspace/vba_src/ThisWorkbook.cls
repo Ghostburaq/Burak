@@ -21,6 +21,7 @@ Private Sub Workbook_Open()
     Application.OnKey "^+w", "MIT_FollowUp14"
     Application.OnKey "^+o", "MIT_OffertePDF"
     Application.OnKey "^+n", "MIT_NeueOfferte"
+    Application.OnKey "^+v", "MIT_OffertenVerteilen"
 End Sub
 
 Private Sub Workbook_BeforeClose(Cancel As Boolean)
@@ -31,4 +32,5 @@ Private Sub Workbook_BeforeClose(Cancel As Boolean)
     Application.OnKey "^+e"
     Application.OnKey "^+f"
     Application.OnKey "^+d"
+    Application.OnKey "^+v"
 End Sub

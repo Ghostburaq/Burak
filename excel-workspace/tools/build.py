@@ -385,11 +385,119 @@ except Exception:
 
 MAXR = {"pipe": 2000, "crm": 3000, "kartei": 5000, "betr": 300, "bau": 300,
         "stand": 300, "dck": 500, "gp": 20000, "gk": 15000, "kat": 2000,
-        "pchf": 300, "pintl": 500, "norm": 100, "akq": 500}
+        "pchf": 300, "pintl": 500, "norm": 100, "akq": 500,
+        "off": 500, "offp": 4000}
 
 NF = "#,##0"          # Zahl
 NFD = "#,##0.00"
 PCT = "0%"
+
+# ============================================================================
+# OFFERTEN (aus 3 PDF-Angeboten transkribiert) — Kopf + Positionen
+# Werden auf 35_OFFERTEN / 36_OFFERTEN_POSITIONEN abgelegt UND automatisch
+# als Deal in 02_PIPELINE + als Kunde in 03_KUNDEN_CRM verteilt.
+# ============================================================================
+OFFERTEN = [
+    dict(beleg="OF20260703-0052-01", vorgang="VK-ANF-20260703-034", datum="03.07.2026",
+         kunde="Eidg. Departement WBF – Agroscope", kontakt="Oliver Andres",
+         funktion="Support & Infrastruktur Ost",
+         einsatzort="Müller-Thurgauer-Strasse 29, 8820 Wädenswil", ort="Wädenswil",
+         segment="Bildung / Forschung", vertrieb="Curreli Mauro", pl="Curreli Mauro",
+         mietbeginn="17.08.2026", mietende="23.08.2026", tage=7,
+         netto=4535.90, mwst=367.40, total=4903.30, tagespreis=285.30,
+         kundennr="19348", ihrbeleg="Mail vom 03.07.2026", bemerkung="Richtpreis-Offerte",
+         fleet="Generator 300 kVA Stage V (Miete)", status="offered", quelle="OF20260703005201.pdf"),
+    dict(beleg="OF20260420-0034-02", vorgang="VK-ANF-20260420-040", datum="20.04.2026",
+         kunde="Coolworld Rentals AG", kontakt="Christoph Beceric", funktion="",
+         einsatzort="8157 Dielsdorf", ort="Dielsdorf",
+         segment="Vermietung / Handel", vertrieb="Eymann Jörg", pl="Ücöz Burak",
+         mietbeginn="01.07.2026", mietende="21.07.2026", tage=21,
+         netto=11630.55, mwst=942.08, total=12572.63, tagespreis=369.55,
+         kundennr="18979", ihrbeleg="Mail vom 20.04.2026", bemerkung="",
+         fleet="Generator 600 kVA Stage V (Miete)", status="offered", quelle="OF20260420003402.pdf"),
+    dict(beleg="OF-GAMPEL-OA-2026", vorgang="", datum="",
+         kunde="Rock Hock Verein (Gampel OpenAir)", kontakt="Daniel Mutter", funktion="Ansprechperson",
+         einsatzort="Gampel OpenAir 2026, 9340 Steg", ort="Steg / Gampel",
+         segment="Events & Kultur", vertrieb="Ücöz Burak", pl="Ücöz Burak",
+         mietbeginn="14.08.2026", mietende="24.08.2026", tage=10,
+         netto=74063.10, mwst=5999.11, total=80062.21, tagespreis=None,
+         kundennr="", ihrbeleg="", bemerkung="Event-Offerte · Summe brutto 85'130 · Sponsoring-Rabatt 13%",
+         fleet="Festival-Stromversorgung (300/200 kVA Stage V, BESS)", status="offered",
+         quelle="Finale_OF_Gampel.pdf"),
+]
+
+# Positionen: (beleg, bereich, pos, art, bez, anzahl, einheit, dauer, einzel, rabatt, gesamt, bem)
+_OP = [
+    # --- Offerte 1: Agroscope ---
+    ("OF20260703-0052-01", "", 1, "M-GEN-000012", "Mobiler Generator - 300 kVA Stage V, All-In-Preis bis 24h Laufzeit pro Tag", 1, "St", "7 KT", 279.00, 0.10, 1757.70, ""),
+    ("OF20260703-0052-01", "", 2, "M-ZUB-000307", "Mobiler Dieseltank - 3000 l & 380 l AdBlue Tank", 1, "St", "7 KT", 32.00, 0.10, 201.60, ""),
+    ("OF20260703-0052-01", "", 3, "M-ZUB-000044", "Elektrokabel CEE 400V / 63A / 30m (CEE 63A 3P/N/PE, Mantel PUR-PUR)", 1, "St", "7 KT", 6.00, 0.10, 37.80, ""),
+    ("OF20260703-0052-01", "", 4, "V-ABA-000079", "Stundensatz Servicetechniker (07-17 Uhr)", 6, "h", "", 145.00, None, 870.00, "nach Aufwand"),
+    ("OF20260703-0052-01", "", 5, "V-TRP-000002", "Fahrtkosten Servicefahrzeug ohne Anhänger", 112, "km", "", 2.40, None, 268.80, "nach Aufwand"),
+    ("OF20260703-0052-01", "", 6, "V-TRP-000009", "Transport Pauschale LKW mit Kran (Lieferung + Abholung)", 1, "", "", 1400.00, None, 1400.00, ""),
+    ("OF20260703-0052-01", "", 7, "V-EGK-000015", "HVO Management", 1, "", "", None, None, None, "nach effektivem Verbrauch"),
+    # --- Offerte 2: Coolworld Rentals AG ---
+    ("OF20260420-0034-02", "", 1, "M-GEN-000016", "Mobiler Generator - 600 kVA Stage V, All-In-Preis bis 24h/Tag (Tagespreis bei 90 T: 339.00 -10%)", 1, "St", "21 KT", 339.00, 0.05, 6763.05, ""),
+    ("OF20260420-0034-02", "", 2, "M-ZUB-000307", "Mobiler Dieseltank - 3000 l & 380 l AdBlue Tank", 1, "St", "21 KT", 32.00, None, 672.00, ""),
+    ("OF20260420-0034-02", "", 3, "M-ZUB-000319", "Elektrokabel CEE 400V / 240 mm² / 10m", 4, "St", "21 KT", 2.00, None, 168.00, ""),
+    ("OF20260420-0034-02", "", 4, "V-ABA-000079", "Stundensatz Servicetechniker (07-17 Uhr)", 6, "h", "", 145.00, None, 870.00, "nach Aufwand"),
+    ("OF20260420-0034-02", "", 5, "V-TRP-000063", "Transport Pauschale LKW mit Kran und Anhänger", 1, "", "", 3000.00, None, 3000.00, ""),
+    ("OF20260420-0034-02", "", 6, "V-EGK-000015", "HVO Management", 1, "", "", None, None, None, "nach Verbrauch"),
+    ("OF20260420-0034-02", "", 7, "M-ZUB-000325", "Digital-Control-System-E (Fernüberwachung inkl. Füllstand)", 1, "St", "21 KT", 7.50, None, 157.50, ""),
+    # --- Offerte 3: Gampel OpenAir 2026 (Positionen je Montagebereich) ---
+    ("OF-GAMPEL-OA-2026", "Bühne 1 & 2 + Artist", 1, "", "300 kVA Stage V", 3, "St", "10 T", None, None, 5580.00, "3x sync – verzögt Bühne 1, 2 + Artist"),
+    ("OF-GAMPEL-OA-2026", "Bühne 1 & 2 + Artist", 2, "", "3000 l Tank HVO", 3, "St", "10 T", None, None, 960.00, ""),
+    ("OF-GAMPEL-OA-2026", "Bühne 1 & 2 + Artist", 3, "", "NH-VT 6 Nh-Leisten – 6x 400A OUT (Powerlock)", 1, "St", "10 T", None, None, 820.00, "5 benötigt + 1 Reserve"),
+    ("OF-GAMPEL-OA-2026", "Logistik", 4, "", "300 kVA Stage V", 1, "St", "10 T", None, None, 1860.00, "neu, von Staff getauscht"),
+    ("OF-GAMPEL-OA-2026", "Logistik", 5, "", "3000 l Tank HVO", 1, "St", "10 T", None, None, 320.00, ""),
+    ("OF-GAMPEL-OA-2026", "Camping", 6, "", "200 kVA Stage V", 1, "St", "10 T", None, None, 1890.00, ""),
+    ("OF-GAMPEL-OA-2026", "Camping", 7, "", "3000 l Tank HVO", 1, "St", "10 T", None, None, 320.00, ""),
+    ("OF-GAMPEL-OA-2026", "Insel / Dusch-Podest", 8, "", "200 kVA Stage V", 1, "St", "10 T", None, None, 1890.00, ""),
+    ("OF-GAMPEL-OA-2026", "Insel / Dusch-Podest", 9, "", "3000 l Tank HVO", 1, "St", "10 T", None, None, 320.00, ""),
+    ("OF-GAMPEL-OA-2026", "Eingang", 10, "", "200 kVA Stage V", 1, "St", "10 T", None, None, 1890.00, "bleibt 200 kVA"),
+    ("OF-GAMPEL-OA-2026", "Eingang", 11, "", "3000 l Tank HVO", 1, "St", "10 T", None, None, 320.00, ""),
+    ("OF-GAMPEL-OA-2026", "Staff / Backstage", 12, "", "200 kVA Stage V", 1, "St", "10 T", None, None, 1890.00, "neu, von Logistik getauscht"),
+    ("OF-GAMPEL-OA-2026", "Staff / Backstage", 13, "", "3000 l Tank HVO", 1, "St", "10 T", None, None, 320.00, ""),
+    ("OF-GAMPEL-OA-2026", "Kreuzung", 14, "", "200 kVA Stage V", 1, "St", "10 T", None, None, 1890.00, ""),
+    ("OF-GAMPEL-OA-2026", "Kreuzung", 15, "", "3000 l Tank HVO", 1, "St", "10 T", None, None, 320.00, ""),
+    ("OF-GAMPEL-OA-2026", "Rottenboard OST", 16, "", "200 kVA Stage V", 2, "St", "10 T", None, None, 3780.00, "neu 2x sync (war 1x)"),
+    ("OF-GAMPEL-OA-2026", "Rottenboard OST", 17, "", "3000 l Tank HVO", 2, "St", "10 T", None, None, 640.00, ""),
+    ("OF-GAMPEL-OA-2026", "Rottenboard OST", 18, "", "NH-VT 3 Nh-Leisten – 2x 300 IN + 1x 400 Out", 1, "St", "10 T", None, None, 550.00, ""),
+    ("OF-GAMPEL-OA-2026", "Rottenboard WEST", 19, "", "200 kVA Stage V", 2, "St", "10 T", None, None, 3780.00, "2x sync"),
+    ("OF-GAMPEL-OA-2026", "Rottenboard WEST", 20, "", "3000 l Tank HVO", 2, "St", "10 T", None, None, 640.00, ""),
+    ("OF-GAMPEL-OA-2026", "Rottenboard WEST", 21, "", "NH-VT 3 Nh-Leisten – 2x 300 IN + 1x 400 Out", 1, "St", "10 T", None, None, 550.00, ""),
+    ("OF-GAMPEL-OA-2026", "Reserve / Sonstiges", 22, "", "300 kVA Stage V", 2, "St", "10 T", None, None, 3720.00, "Reserve"),
+    ("OF-GAMPEL-OA-2026", "Infracamp", 23, "", "150 kWh BESS (Batteriespeicher)", 1, "St", "10 T", None, None, 4500.00, ""),
+    ("OF-GAMPEL-OA-2026", "Servicekosten", 24, "", "Service-Techniker Hin- und Rückfahrt", None, "", "", None, None, 1450.00, ""),
+    ("OF-GAMPEL-OA-2026", "Servicekosten", 25, "", "Pikett 24/7 + Remote-Monitoring (Aggreko Connect) + HVO-Erstbetankung", None, "", "", None, None, 4930.00, ""),
+    ("OF-GAMPEL-OA-2026", "Servicekosten", 26, "", "Transportkosten LKW (reduziert) – LKW-Ladekran 95mt Solo", None, "", "", None, None, 40000.00, ""),
+]
+OFF_POS = [dict(beleg=b, kunde=next(o["kunde"] for o in OFFERTEN if o["beleg"] == b),
+                bereich=ber, pos=p, art=a, bez=bz, anzahl=an, einheit=ei, dauer=du,
+                einzel=ez, rabatt=ra, gesamt=ge, bem=bm)
+           for (b, ber, p, a, bz, an, ei, du, ez, ra, ge, bm) in _OP]
+
+def offer_to_pipe(o):
+    """Offerte -> Deal-Zeile für 02_PIPELINE."""
+    return {
+        "Kunde / Unternehmen": o["kunde"], "Segment": o.get("segment", ""),
+        "Leistung / Fleet": o.get("fleet", "Aggregat-Miete (Offerte)"),
+        "Dauer (Tage)": o["tage"], "Start": o["mietbeginn"],
+        "Volumen CHF": o["netto"], "Status": "offered", "Wahr. %": 0.5,
+        "Akquise Typ": "Offerte", "Nächster Schritt": "Offerte nachfassen",
+        "Notiz intern": f"Offerte {o['beleg']} · Einsatz: {o['einsatzort']}",
+    }
+
+def offer_to_crm(o):
+    """Offerte -> Kundenzeile für 03_KUNDEN_CRM."""
+    return {
+        "Prio": "B", "Segment": o.get("segment", ""), "Firmenname": o["kunde"],
+        "Ort": o.get("ort", ""), "Ansprechpartner": o["kontakt"],
+        "Funktion / Titel": o.get("funktion", ""), "Status": "Offeriert",
+        "Nächster Schritt": f"Offerte {o['beleg']} nachfassen",
+        "Wert CHF": o["netto"], "Wahrsch. %": 0.5,
+        "Notizen": f"aus Offerte {o['beleg']} ({o['einsatzort']})",
+    }
 
 # ============================================================================
 # 02_PIPELINE
@@ -402,6 +510,9 @@ alias_pipe = {"Kanton": "Kt.", "Equipment CHF": "Equip. CHF", "Treibstoff CHF": 
 pipe_rows = canon(D["pipeline"]["rows"], alias_pipe)
 for d in pipe_rows:
     d["Wahr. %"] = pct_fraction(d.get("Wahr. %"))
+# Offerten als Deals anhängen (Verteilung in vorhandene Pipeline)
+for _o in OFFERTEN:
+    pipe_rows.append(offer_to_pipe(_o))
 
 P = MAXR["pipe"]
 sp_pipe = [
@@ -480,6 +591,12 @@ alias_crm = {"Firmenname *": "Firmenname"}
 crm_rows = canon(D["crm"]["rows"], alias_crm)
 for d in crm_rows:
     d["Wahrsch. %"] = pct_fraction(d.get("Wahrsch. %"))
+# Offerten-Kunden anhängen (dedup gegen bestehende Firmennamen)
+_crm_namen = {str(d.get("Firmenname", "")).strip().lower() for d in crm_rows}
+for _o in OFFERTEN:
+    if _o["kunde"].strip().lower() not in _crm_namen:
+        crm_rows.append(offer_to_crm(_o))
+        _crm_namen.add(_o["kunde"].strip().lower())
 
 K = MAXR["crm"]
 sp_crm = [
@@ -1724,7 +1841,7 @@ links = [("02_PIPELINE", "Pipeline"), ("03_KUNDEN_CRM", "CRM / Zielkunden"),
          ("05_FORECAST", "Forecast"), ("06_MONATSREPORT", "Monatsreport"),
          ("07_CEO_REPORT", "CEO-Report"), ("27_AKTIONEN", "Aktions-Zentrale"),
          ("28_ZIELE", "Ziel-Tracker"), ("29_KALENDER", "Kalender / Wiedervorlage"),
-         ("22_ANGEBOT_KALK", "Angebot / Offerte"), ("11_DC_BAUPROJEKTE", "DC-Bauprojekte"),
+         ("35_OFFERTEN", "Offerten-Register"), ("11_DC_BAUPROJEKTE", "DC-Bauprojekte"),
          ("15_GLOBAL_PROJEKTE", "Globale Projekte"), ("90_IMPORT", "Daten importieren")]
 for i, (tab, label) in enumerate(links):
     r, c = 37 + i // 3, 1 + (i % 3) * 4
@@ -1800,6 +1917,8 @@ nav = [
         ("27_AKTIONEN", "Aktions-Zentrale — offene To-Dos & Follow-ups gebündelt"),
         ("28_ZIELE", "Ziel-Tracker — Soll/Ist, Zielerreichung als Gauge"),
         ("29_KALENDER", "Kalender & Wiedervorlagen — Fälligkeits-Ampel, +14-Tage-Makro"),
+        ("35_OFFERTEN", "Offerten-Register — jede Offerte, auto-verteilt in Pipeline & CRM"),
+        ("36_OFFERTEN_POSITIONEN", "Alle Positionen je Offerte (Equipment, Service, Transport)"),
     ]),
     ("SYSTEM", C_SYS, [
         ("90_IMPORT", "IMPORT-ZENTRALE — neue Dateien automatisch verteilen"),
@@ -1911,6 +2030,8 @@ regeln = [
     ("JA", "Norm", "DC-Relevanz", "24_NORMEN", "Norm / Standard", "", "Anhängen", "Normen-Matrix"),
     ("JA", "Projekt / Betreiber", "Status-Kategorie", "30_DC_MARKTANALYSE", "Projekt / Betreiber", "A", "Anhängen", "DC-Marktanalyse Projekte"),
     ("JA", "Firma", "Rolle", "34_DC_KONTAKTE_MA", "Firma;Name", "I;J", "Anhängen", "DC-Kontakte-Tracker (Marktanalyse)"),
+    ("JA", "Belegnummer", "Einsatzort", "35_OFFERTEN", "Belegnummer", "A;W;X", "Anhängen", "Offerten-Kopf → auto-verteilt in Pipeline + CRM"),
+    ("JA", "Artikelnr.", "Gesamtpreis", "36_OFFERTEN_POSITIONEN", "Belegnummer;Pos.;Bezeichnung", "A", "Anhängen", "Offerten-Positionen"),
 ]
 for i, regel in enumerate(regeln):
     r = 13 + i
@@ -1969,6 +2090,22 @@ aliase = [
     ("Letzter Kontakt (Datum)", "Letzter Kontakt"),
     ("Vereinbarter naechster Schritt", "Nächster Schritt"),
     ("Faellig am (Datum)", "Fällig am"),
+    # Offerten-Import (fremde Kopfzeilen → Offerten-Register/Positionen)
+    ("Beleg-Nr.", "Belegnummer"), ("Beleg", "Belegnummer"), ("Belegnr", "Belegnummer"),
+    ("Angebotsnummer", "Belegnummer"), ("Angebot-Nr.", "Belegnummer"), ("Offerten-Nr.", "Belegnummer"),
+    ("Kunde", "Kunde / Firma"), ("Firma", "Kunde / Firma"), ("Kunde / Unternehmen", "Kunde / Firma"),
+    ("Kundenname", "Kunde / Firma"),
+    ("Objekt", "Einsatzort"), ("Einsatz", "Einsatzort"), ("Einsatzadresse", "Einsatzort"),
+    ("Total exkl. MwSt", "Netto CHF"), ("Zwischensumme", "Netto CHF"), ("Netto", "Netto CHF"),
+    ("Endsumme", "Total CHF"), ("Endsumme inkl. vRG", "Total CHF"), ("Total inkl. MwSt", "Total CHF"),
+    ("MwSt", "MwSt CHF"), ("Mehrwertsteuer", "MwSt CHF"),
+    ("Mietpreis pro Tag", "Tagespreis CHF"), ("Tagespreis", "Tagespreis CHF"),
+    ("Vorgangsnummer", "Vorgangsnr"), ("Kundennummer", "Kundennr"),
+    ("Bearbeiter", "Vertrieb"), ("Sachbearbeiter", "Vertrieb"),
+    ("Artikelnr", "Artikelnr."), ("Artikel-Nr.", "Artikelnr."), ("Art.-Nr.", "Artikelnr."),
+    ("Gesamtpreis", "Gesamtpreis CHF"), ("Gesamtpreis CHF", "Gesamtpreis CHF"),
+    ("Einzelpreis", "Einzelpreis CHF"), ("Rabatt", "Rabatt %"),
+    ("Menge", "Anzahl"), ("Montagebereich / Bereich", "Montagebereich"),
 ]
 for i, (a, b) in enumerate(aliase):
     put_text(ws, 13 + i, 10, a, border=B_ALL)
@@ -2420,6 +2557,90 @@ ws.conditional_formatting.add(f"J5:J{MAK}", FormulaRule(
     font=Font(color="9C6500", bold=True)))
 
 # ============================================================================
+# 35_OFFERTEN  (Offerten-Register — Kopfdaten je Angebot)
+# ============================================================================
+OFF = MAXR["off"]
+sp_off = [
+    {"h": "Nr.", "w": 5, "f": '=IF($B{r}="","",ROW()-4)'},
+    {"h": "Belegnummer", "w": 20},
+    {"h": "Datum", "w": 11},
+    {"h": "Kunde / Firma", "w": 32},
+    {"h": "Ansprechpartner", "w": 20},
+    {"h": "Einsatzort", "w": 34},
+    {"h": "Segment", "w": 20},
+    {"h": "Vertrieb", "w": 16},
+    {"h": "Projektleiter", "w": 16},
+    {"h": "Mietbeginn", "w": 12},
+    {"h": "Mietende", "w": 12},
+    {"h": "Tage", "w": 7, "fmt": NF},
+    {"h": "Netto CHF", "w": 13, "fmt": NFD},
+    {"h": "MwSt CHF", "w": 12, "fmt": NFD},
+    {"h": "Total CHF", "w": 13, "fmt": NFD},
+    {"h": "Tagespreis CHF", "w": 13, "fmt": NFD},
+    {"h": "Status", "w": 12},
+    {"h": "Vorgangsnr", "w": 20},
+    {"h": "Kundennr", "w": 10},
+    {"h": "Ihr Beleg", "w": 18},
+    {"h": "Bemerkung", "w": 40},
+    {"h": "Quelle-Datei", "w": 24},
+    {"h": "In Pipeline?", "w": 12,
+     "f": '=IF($B{r}="","",IF(COUNTIF(\'02_PIPELINE\'!$X$5:$X$2000,"*"&$B{r}&"*")>0,"✓","—"))'},
+    {"h": "Positionen", "w": 11, "fmt": NF,
+     "f": '=IF($B{r}="","",COUNTIF(\'36_OFFERTEN_POSITIONEN\'!$B$5:$B$4000,$B{r}))'},
+]
+off_rows = [{
+    "Belegnummer": o["beleg"], "Datum": o["datum"], "Kunde / Firma": o["kunde"],
+    "Ansprechpartner": o["kontakt"], "Einsatzort": o["einsatzort"], "Segment": o.get("segment", ""),
+    "Vertrieb": o["vertrieb"], "Projektleiter": o["pl"], "Mietbeginn": o["mietbeginn"],
+    "Mietende": o["mietende"], "Tage": o["tage"], "Netto CHF": o["netto"], "MwSt CHF": o["mwst"],
+    "Total CHF": o["total"], "Tagespreis CHF": o["tagespreis"], "Status": o["status"],
+    "Vorgangsnr": o["vorgang"], "Kundennr": o["kundennr"], "Ihr Beleg": o["ihrbeleg"],
+    "Bemerkung": o["bemerkung"], "Quelle-Datei": o["quelle"],
+} for o in OFFERTEN]
+ws = liste_bauen(wb, "35_OFFERTEN", C_TOOL, "OFFERTEN-REGISTER — alle Angebote zentral",
+                 "Jede Offerte hier erfassen oder per Import (Ctrl+Shift+I). Wird automatisch als Deal in 02_PIPELINE und als Kunde in 03_KUNDEN_CRM verteilt.",
+                 sp_off, off_rows, OFF, freeze="D5")
+for status, fill, fontc in [("offered", "FFEB9C", "9C6500"), ("gewonnen", "C6EFCE", "006100"),
+                            ("WON", "C6EFCE", "006100"), ("verloren", "FFC7CE", "9C0006"),
+                            ("LOST", "FFC7CE", "9C0006")]:
+    ws.conditional_formatting.add(f"Q5:Q{OFF}", FormulaRule(
+        formula=[f'EXACT($Q5,"{status}")'], fill=PatternFill("solid", fgColor=fill),
+        font=Font(color=fontc, bold=True)))
+dv_offs = DataValidation(type="list", formula1='"offered,gewonnen,verloren,on hold"',
+                         allow_blank=True, showErrorMessage=False)
+ws.add_data_validation(dv_offs); dv_offs.add(f"Q5:Q{OFF}")
+
+# ============================================================================
+# 36_OFFERTEN_POSITIONEN  (Positionen je Angebot)
+# ============================================================================
+OFP = MAXR["offp"]
+sp_ofp = [
+    {"h": "Nr.", "w": 5, "f": '=IF($B{r}="","",ROW()-4)'},
+    {"h": "Belegnummer", "w": 20},
+    {"h": "Kunde / Firma", "w": 30},
+    {"h": "Montagebereich", "w": 22},
+    {"h": "Pos.", "w": 6, "fmt": NF},
+    {"h": "Artikelnr.", "w": 15},
+    {"h": "Bezeichnung", "w": 46},
+    {"h": "Anzahl", "w": 8, "fmt": NF},
+    {"h": "Einheit", "w": 8},
+    {"h": "Dauer", "w": 8},
+    {"h": "Einzelpreis CHF", "w": 14, "fmt": NFD},
+    {"h": "Rabatt %", "w": 9, "fmt": PCT},
+    {"h": "Gesamtpreis CHF", "w": 15, "fmt": NFD},
+    {"h": "Bemerkung", "w": 34},
+]
+ofp_rows = [{
+    "Belegnummer": p["beleg"], "Kunde / Firma": p["kunde"], "Montagebereich": p["bereich"],
+    "Pos.": p["pos"], "Artikelnr.": p["art"], "Bezeichnung": p["bez"], "Anzahl": p["anzahl"],
+    "Einheit": p["einheit"], "Dauer": p["dauer"], "Einzelpreis CHF": p["einzel"],
+    "Rabatt %": p["rabatt"], "Gesamtpreis CHF": p["gesamt"], "Bemerkung": p["bem"],
+} for p in OFF_POS]
+ws = liste_bauen(wb, "36_OFFERTEN_POSITIONEN", C_TOOL, "OFFERTEN-POSITIONEN — jede Zeile je Angebot",
+                 "Alle Positionen der Offerten (Miet-Equipment, Service, Transport). Verknüpft über Belegnummer mit 35_OFFERTEN.",
+                 sp_ofp, ofp_rows, OFP, freeze="C5")
+
+# ============================================================================
 # Reihenfolge der Reiter korrigieren + definierte Namen
 # ============================================================================
 order = ["00_START", "01_DASHBOARD", "02_PIPELINE", "03_KUNDEN_CRM", "04_KUNDENKARTEI",
@@ -2432,6 +2653,7 @@ order = ["00_START", "01_DASHBOARD", "02_PIPELINE", "03_KUNDEN_CRM", "04_KUNDENK
          "27_AKTIONEN", "28_ZIELE", "29_KALENDER",
          "30_DC_MARKTANALYSE", "31_DC_BAUPHASEN", "32_DC_PLAYBOOK",
          "33_DC_WETTBEWERB", "34_DC_KONTAKTE_MA",
+         "35_OFFERTEN", "36_OFFERTEN_POSITIONEN",
          "90_IMPORT", "91_LISTEN", "99_INFO"]
 wb._sheets = [wb[n] for n in order]
 wb.active = 0

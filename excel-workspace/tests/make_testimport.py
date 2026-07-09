@@ -46,5 +46,27 @@ for r_i, row in enumerate(rows2, start=2):
     for c_i, v in enumerate(row, start=1):
         ws2.cell(row=r_i, column=c_i, value=v)
 
+# Blatt 'Offerte Test': Offerten-Kopf -> 35_OFFERTEN + Auto-Verteilung Pipeline/CRM
+ws3 = wb.create_sheet("Offerte Test")
+hdr3 = ["Belegnummer", "Datum", "Kunde / Firma", "Ansprechpartner", "Einsatzort",
+        "Vertrieb", "Mietbeginn", "Mietende", "Tage", "Netto CHF", "MwSt CHF",
+        "Total CHF", "Status"]
+for i, h in enumerate(hdr3, start=1):
+    ws3.cell(row=1, column=i, value=h)
+ws3.append(["OF-TEST-9001", "09.07.2026", "TEST Offerten Kunde AG", "Max Muster",
+            "Teststrasse 1, 8000 Zürich", "Burak", "01.09.2026", "10.09.2026", 9,
+            12345, 1000, 13345, "offered"])
+
+# Blatt 'Offerte Positionen': -> 36_OFFERTEN_POSITIONEN
+ws4 = wb.create_sheet("Offerte Positionen")
+hdr4 = ["Belegnummer", "Kunde / Firma", "Pos.", "Artikelnr.", "Bezeichnung",
+        "Anzahl", "Einheit", "Dauer", "Einzelpreis CHF", "Rabatt %", "Gesamtpreis CHF"]
+for i, h in enumerate(hdr4, start=1):
+    ws4.cell(row=1, column=i, value=h)
+ws4.append(["OF-TEST-9001", "TEST Offerten Kunde AG", 1, "M-GEN-000012",
+            "Generator 300 kVA", 1, "St", "9 KT", 279, 0, 2511])
+ws4.append(["OF-TEST-9001", "TEST Offerten Kunde AG", 2, "M-ZUB-000307",
+            "Dieseltank 3000 l", 1, "St", "9 KT", 32, 0, 288])
+
 wb.save("testimport.xlsx")
 print("OK -> testimport.xlsx")

@@ -76,21 +76,58 @@ def cell(sh, col, row):   # 0-basiert
     s = c.getString()
     return s
 
-check("Alpha in Pipeline Zeile 52", cell(pipe, 1, 51) == "TEST Kunde Alpha AG", f"-> {cell(pipe,1,51)!r}")
-check("Beta in Pipeline Zeile 53", cell(pipe, 1, 52) == "TEST Kunde Beta GmbH")
-check("Kanton-Alias (Kt.=BE)", cell(pipe, 2, 51) == "BE")
-check("kein Ice-Hockey-Duplikat", cell(pipe, 1, 53) == "")
-marge = pipe.getCellByPosition(14, 51).getValue()   # O52: 42000-24800
-check("Marge-Formel Zeile 52 rechnet", abs(marge - 16200) < 0.01, f"-> {marge}")
-gew = pipe.getCellByPosition(16, 51).getValue()     # Q52: 42000*0.6
-check("Gew.Wert-Formel Zeile 52", abs(gew - 25200) < 0.01, f"-> {gew}")
-nr = pipe.getCellByPosition(0, 51).getValue()       # A52 = 48
-check("Nr.-Formel Zeile 52", nr == 48, f"-> {nr}")
-check("Gamma im CRM Zeile 803", cell(crm, 3, 802) == "TEST Datacenter Gamma AG")
-wahr = crm.getCellByPosition(19, 802).getValue()
-check("Prozent-Normalisierung (25 -> 0.25)", abs(wahr - 0.25) < 1e-9, f"-> {wahr}")
-gewfc = crm.getCellByPosition(22, 802).getValue()
-check("CRM Gew.Forecast rechnet (37500)", abs(gewfc - 37500) < 0.01, f"-> {gewfc}")
+def find_row(sh, col, value, r0=4, r1=1300):
+    for r in range(r0, r1):
+        if cell(sh, col, r) == value:
+            return r
+    return -1
+
+def find_contains(sh, col, needle, r0=4, r1=1300):
+    for r in range(r0, r1):
+        if needle in cell(sh, col, r):
+            return r
+    return -1
+
+# Zeilen dynamisch suchen (Offerten verschieben feste Indizes)
+a = find_row(pipe, 1, "TEST Kunde Alpha AG")
+check("Alpha in Pipeline", a >= 0, f"-> Zeile {a+1}")
+b = find_row(pipe, 1, "TEST Kunde Beta GmbH")
+check("Beta in Pipeline", b >= 0, f"-> Zeile {b+1}")
+check("Kanton-Alias (Kt.=BE)", a >= 0 and cell(pipe, 2, a) == "BE")
+# Duplikat: Ice Hockey darf nur EINMAL vorkommen (kein zweiter Eintrag)
+ice = sum(1 for r in range(4, 120) if cell(pipe, 1, r) == "Ice Hockey Championship")
+check("kein Ice-Hockey-Duplikat", ice == 1, f"-> {ice}x")
+if a >= 0:
+    marge = pipe.getCellByPosition(14, a).getValue()   # O: 42000-25800
+    check("Marge-Formel (Alpha) rechnet", abs(marge - 16200) < 0.01, f"-> {marge}")
+    gew = pipe.getCellByPosition(16, a).getValue()     # Q: 42000*0.6
+    check("Gew.Wert-Formel (Alpha)", abs(gew - 25200) < 0.01, f"-> {gew}")
+    nr = pipe.getCellByPosition(0, a).getValue()       # A = ROW()-4
+    check("Nr.-Formel (Alpha) rechnet", nr == (a + 1 - 4), f"-> {nr}")
+g = find_row(crm, 3, "TEST Datacenter Gamma AG")
+check("Gamma im CRM", g >= 0, f"-> Zeile {g+1}")
+if g >= 0:
+    wahr = crm.getCellByPosition(19, g).getValue()
+    check("Prozent-Normalisierung (25 -> 0.25)", abs(wahr - 0.25) < 1e-9, f"-> {wahr}")
+    gewfc = crm.getCellByPosition(22, g).getValue()
+    check("CRM Gew.Forecast rechnet (37500)", abs(gewfc - 37500) < 0.01, f"-> {gewfc}")
+
+print("== D) Offerten-Import -> Register + Auto-Verteilung Pipeline/CRM")
+off = sheets.getByName("35_OFFERTEN")
+opos = sheets.getByName("36_OFFERTEN_POSITIONEN")
+check("Offerte OF-TEST-9001 im Register 35", find_row(off, 1, "OF-TEST-9001") >= 0)
+op = find_contains(pipe, 23, "OF-TEST-9001")   # Notiz intern (Spalte X = idx 23)
+check("Offerte als Deal in 02_PIPELINE", op >= 0, f"-> Zeile {op+1}")
+if op >= 0:
+    volp = pipe.getCellByPosition(8, op).getValue()   # Volumen CHF = Netto
+    check("Offerten-Deal Volumen = Netto (12345)", abs(volp - 12345) < 0.01, f"-> {volp}")
+    check("Offerten-Deal Status offered", cell(pipe, 17, op) == "offered", f"-> {cell(pipe,17,op)!r}")
+check("Offerten-Kunde im 03_KUNDEN_CRM", find_row(crm, 3, "TEST Offerten Kunde AG") >= 0)
+check("Offerten-Positionen in 36 (>=2)",
+      sum(1 for r in range(4, 200) if cell(opos, 1, r) == "OF-TEST-9001") >= 2)
+# gebaute 3 Offerten wurden am Ende nicht dupliziert (Dedup)
+agro = sum(1 for r in range(4, 120) if cell(pipe, 1, r) == "Eidg. Departement WBF – Agroscope")
+check("keine Doppel-Verteilung gebauter Offerten", agro == 1, f"-> {agro}x")
 # Protokoll dynamisch finden: Zeile mit "Zeitpunkt" in Spalte A, erste Datenzeile danach
 log_hdr = None
 for rr in range(19, 80):

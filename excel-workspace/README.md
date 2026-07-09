@@ -1,7 +1,24 @@
 # MiT × Aggreko — GESAMTMAPPE 2026
 
 **Eine einzige Excel-Arbeitsmappe als Workspace** — ersetzt 15 Einzeldateien.
-Deliverable: [`MiT_GESAMTMAPPE_2026.xlsm`](MiT_GESAMTMAPPE_2026.xlsm) (38 Reiter, 12'850+ Formeln, 15 Live-Diagramme, Dark-Executive-Cockpit, 13 Makros).
+Deliverable: [`MiT_GESAMTMAPPE_2026.xlsm`](MiT_GESAMTMAPPE_2026.xlsm) (40 Reiter, 13'700+ Formeln, 15 Live-Diagramme, Dark-Executive-Cockpit, 14 Makros).
+
+## Offerten-Verteilung (v1.6)
+
+Drei reale Angebote (Agroscope · Coolworld Rentals · Gampel OpenAir) sind eingearbeitet und
+**automatisch auf die vorhandenen Listen verteilt**:
+
+- **35_OFFERTEN** — Offerten-Register: eine Zeile je Angebot (Belegnr, Kunde, Einsatzort, Vertrieb,
+  Mietdauer, Netto/MwSt/Total CHF, Status, „In Pipeline?"-Ampel, Positions-Zähler).
+- **36_OFFERTEN_POSITIONEN** — jede Position je Angebot (Equipment, Service, Transport) mit
+  Anzahl, Dauer, Einzel-/Gesamtpreis, Montagebereich (Event) — verknüpft über die Belegnummer.
+- Jede Offerte landet zusätzlich **als Deal in `02_PIPELINE`** (Status *offered*, Volumen = Netto)
+  **und als Kunde in `03_KUNDEN_CRM`** — so fliesst der Wert direkt in Dashboard, Forecast & Cockpit ein.
+
+**Import-Automatik erweitert:** `Ctrl+Shift+I` erkennt eine Offerten-Excel an den Kopfzeilen
+(`Belegnummer` + `Einsatzort` bzw. `Artikelnr.` + `Gesamtpreis`) und verteilt sie automatisch —
+Kopf → Register + Pipeline + CRM, Positionen → Positionsliste. Duplikate (gleiche Belegnummer)
+werden übersprungen. Manuell auslösbar mit **`Ctrl+Shift+V`** (`MIT_OffertenVerteilen`, idempotent).
 
 ## Lesbarkeit & Währung korrigiert (v1.5)
 
@@ -25,7 +42,8 @@ Deliverable: [`MiT_GESAMTMAPPE_2026.xlsm`](MiT_GESAMTMAPPE_2026.xlsm) (38 Reiter
 | DC-Marktanalyse | `30_DC_MARKTANALYSE` … `34_DC_KONTAKTE_MA` | 14 DC-Projekte mit Prio-Score, Bauphasen-Matrix, Playbook, Wettbewerb/Regulatorik, Kontakte-Tracker |
 | Global | `15_GLOBAL_PROJEKTE` … `17_GLOBAL_ANALYTICS` | 10'572 DC-Projekte, 8'502 Kontakte, Live-Analytics |
 | Produkte & Preise | `18_KATALOG` … `20_PREISLISTE_INTL` | 466 Produkte, Preislisten CHF + International |
-| Werkzeuge | `21_GEN_RECHNER` … `27_AKTIONEN` | Generator-Rechner, Angebotskalkulator, Marktvolumen, Normen, Akquiseplan, **Aktions-Zentrale** |
+| Werkzeuge | `21_GEN_RECHNER` … `29_KALENDER` | Generator-Rechner, Angebotskalkulator, Marktvolumen, Normen, Akquiseplan, **Aktions-Zentrale**, Ziele, Kalender |
+| Offerten | `35_OFFERTEN`, `36_OFFERTEN_POSITIONEN` | Offerten-Register + Positionen, auto-verteilt in Pipeline & CRM |
 | System | `90_IMPORT`, `91_LISTEN`, `99_INFO` | Import-Zentrale, Dropdown-Quellen, Doku |
 
 ## DC-Marktanalyse (v1.4)
@@ -66,7 +84,8 @@ mehrfach wiederholt bis **0 Fehler** (15 Diagramme, 38 Reiter, 12'850+ Formeln).
 
 `Ctrl+Shift+I` Import · `Ctrl+Shift+M` Monatsreport · `Ctrl+Shift+B` neues Blatt · `Ctrl+Shift+E` Blatt-Export ·
 `Ctrl+Shift+F` Suche · `Ctrl+Shift+D` alle Berichte als PDF · `Ctrl+Shift+G` neuer Deal · `Ctrl+Shift+K` neuer Kunde ·
-`Ctrl+Shift+W` Wiedervorlage +14 · `Ctrl+Shift+O` Offerte als PDF · `Ctrl+Shift+N` neue Offerte
+`Ctrl+Shift+W` Wiedervorlage +14 · `Ctrl+Shift+O` Offerte als PDF · `Ctrl+Shift+N` neue Offerte ·
+`Ctrl+Shift+V` Offerten in Pipeline/CRM verteilen
 
 ## Import-Automatik (VBA)
 

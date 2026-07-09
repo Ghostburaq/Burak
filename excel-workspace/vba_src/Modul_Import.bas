@@ -54,6 +54,12 @@ Public Sub MIT_ImportDatei(ByVal pfad As String, ByVal still As Boolean)
     Next ws
     src.Close SaveChanges:=False
 
+    ' Offerten aus 35_OFFERTEN in Pipeline + CRM verteilen (idempotent, robust)
+    Dim vAdd As Long
+    On Error Resume Next
+    vAdd = VerteileOfferten(pfad)
+    On Error GoTo Fehler
+
     Application.Calculation = calcAlt
     Application.Calculate
     Application.ScreenUpdating = True
@@ -62,7 +68,8 @@ Public Sub MIT_ImportDatei(ByVal pfad As String, ByVal still As Boolean)
            mBlaetter & " Blätter verarbeitet" & vbCrLf & _
            mNeuZeilen & " neue Zeilen übernommen" & vbCrLf & _
            mDuplikate & " Duplikate übersprungen" & vbCrLf & _
-           mNeueBlaetter & " unbekannte Blätter als neue Reiter angelegt" & vbCrLf & vbCrLf & _
+           mNeueBlaetter & " unbekannte Blätter als neue Reiter angelegt" & vbCrLf & _
+           vAdd & " Offerten in Pipeline/CRM verteilt" & vbCrLf & vbCrLf & _
            "Details: Reiter 90_IMPORT (Protokoll).", vbInformation, "MiT Import"
     Exit Sub
 
@@ -390,6 +397,169 @@ Private Function FormelSpalten(ByVal fSpalten As String) As Collection
         Next sp
     End If
     Set FormelSpalten = d
+End Function
+
+' =====================================================================
+'  OFFERTEN-VERTEILUNG  (35_OFFERTEN -> 02_PIPELINE + 03_KUNDEN_CRM)
+'  Idempotent: legt fehlende Deals/Kunden an, überspringt vorhandene.
+'  Kann per Ctrl+Shift+V von Hand ausgelöst werden (MIT_OffertenVerteilen)
+'  und läuft automatisch am Ende jedes Imports.
+' =====================================================================
+Public Sub MIT_OffertenVerteilen()
+    Dim added As Long
+    On Error Resume Next
+    Application.ScreenUpdating = False
+    added = VerteileOfferten("(manuell)")
+    Application.Calculate
+    Application.ScreenUpdating = True
+    On Error GoTo 0
+    MsgBox "Offerten verteilt:" & vbCrLf & vbCrLf & _
+           added & " neue Einträge in 02_PIPELINE / 03_KUNDEN_CRM angelegt." & vbCrLf & _
+           "(Bereits vorhandene Offerten wurden übersprungen.)", _
+           vbInformation, "Offerten verteilen"
+End Sub
+
+Private Function VerteileOfferten(ByVal pfad As String) As Long
+    Dim wsO As Worksheet, wsP As Worksheet, wsC As Worksheet
+    Dim ko As Collection, kp As Collection, kc As Collection
+    Dim r As Long, lastO As Long, lastP As Long, lastC As Long, added As Long
+    Dim beleg As String, kunde As String
+
+    On Error GoTo Fertig
+    Set wsO = ThisWorkbook.Worksheets("35_OFFERTEN")
+    Set wsP = ThisWorkbook.Worksheets("02_PIPELINE")
+    Set wsC = ThisWorkbook.Worksheets("03_KUNDEN_CRM")
+    Set ko = KopfMap(wsO): Set kp = KopfMap(wsP): Set kc = KopfMap(wsC)
+
+    ' Quellspalten (35_OFFERTEN)
+    Dim cBeleg&, cKunde&, cEinsatz&, cKontakt&, cSeg&, cTage&, cStart&, cNetto&
+    cBeleg = ColOf(ko, "belegnummer"): cKunde = ColOf(ko, "kunde / firma")
+    cEinsatz = ColOf(ko, "einsatzort"): cKontakt = ColOf(ko, "ansprechpartner")
+    cSeg = ColOf(ko, "segment"): cTage = ColOf(ko, "tage")
+    cStart = ColOf(ko, "mietbeginn"): cNetto = ColOf(ko, "netto chf")
+    If cBeleg = 0 Or cKunde = 0 Then GoTo Fertig
+
+    ' Zielspalten Pipeline
+    Dim pKunde&, pFleet&, pDauer&, pStart&, pVol&, pStatus&, pWahr&, pAkq&, pSchritt&, pNotiz&, pSeg&
+    pKunde = ColOf(kp, "kunde / unternehmen"): pFleet = ColOf(kp, "leistung / fleet")
+    pDauer = ColOf(kp, "dauer (tage)"): pStart = ColOf(kp, "start")
+    pVol = ColOf(kp, "volumen chf"): pStatus = ColOf(kp, "status")
+    pWahr = ColOf(kp, "wahr. %"): pAkq = ColOf(kp, "akquise typ")
+    pSchritt = ColOf(kp, "nächster schritt"): pNotiz = ColOf(kp, "notiz intern")
+    pSeg = ColOf(kp, "segment")
+
+    ' Zielspalten CRM
+    Dim mPrio&, mSeg&, mFirma&, mOrt&, mKontakt&, mStatus&, mSchritt&, mWert&, mWahr&, mNotiz&
+    mPrio = ColOf(kc, "prio"): mSeg = ColOf(kc, "segment"): mFirma = ColOf(kc, "firmenname")
+    mOrt = ColOf(kc, "ort"): mKontakt = ColOf(kc, "ansprechpartner"): mStatus = ColOf(kc, "status")
+    mSchritt = ColOf(kc, "nächster schritt"): mWert = ColOf(kc, "wert chf")
+    mWahr = ColOf(kc, "wahrsch. %"): mNotiz = ColOf(kc, "notizen")
+    If pKunde = 0 Or pStatus = 0 Or mFirma = 0 Then GoTo Fertig
+
+    lastO = LetzteZeile(wsO, cBeleg)
+    lastP = LetzteZeile(wsP, pKunde)
+    lastC = LetzteZeile(wsC, mFirma)
+
+    ' Set vorhandener CRM-Firmen
+    Dim firmen As Collection: Set firmen = New Collection
+    For r = DATA_ROW1 To lastC
+        KAdd firmen, Norm(wsC.Cells(r, mFirma).Value)
+    Next r
+
+    For r = DATA_ROW1 To lastO
+        beleg = Trim$(CStr(wsO.Cells(r, cBeleg).Value))
+        If Len(beleg) > 0 Then
+            kunde = Trim$(CStr(wsO.Cells(r, cKunde).Value))
+            ' --- Pipeline (Dedup: Belegnummer steht in 'Notiz intern') ---
+            If pNotiz > 0 Then
+                If Not PipelineHatBeleg(wsP, pNotiz, lastP, beleg) Then
+                    lastP = lastP + 1
+                    NeueVorlagenzeile wsP, lastP, "A;O;P;Q;Y;Z;AA;AB;AC;AD"
+                    wsP.Cells(lastP, pKunde).Value = kunde
+                    If pSeg > 0 And cSeg > 0 Then wsP.Cells(lastP, pSeg).Value = wsO.Cells(r, cSeg).Value
+                    If pFleet > 0 Then wsP.Cells(lastP, pFleet).Value = "Aggregat-Miete (Offerte)"
+                    If pDauer > 0 And cTage > 0 Then wsP.Cells(lastP, pDauer).Value = wsO.Cells(r, cTage).Value
+                    If pStart > 0 And cStart > 0 Then wsP.Cells(lastP, pStart).Value = wsO.Cells(r, cStart).Value
+                    If pVol > 0 And cNetto > 0 Then wsP.Cells(lastP, pVol).Value = wsO.Cells(r, cNetto).Value
+                    wsP.Cells(lastP, pStatus).Value = "offered"
+                    If pWahr > 0 Then wsP.Cells(lastP, pWahr).Value = 0.5
+                    If pAkq > 0 Then wsP.Cells(lastP, pAkq).Value = "Offerte"
+                    If pSchritt > 0 Then wsP.Cells(lastP, pSchritt).Value = "Offerte nachfassen"
+                    Dim einsatz As String: einsatz = ""
+                    If cEinsatz > 0 Then einsatz = CStr(wsO.Cells(r, cEinsatz).Value)
+                    wsP.Cells(lastP, pNotiz).Value = "Offerte " & beleg & " · Einsatz: " & einsatz
+                    added = added + 1
+                End If
+            End If
+            ' --- CRM (Dedup: Firmenname) ---
+            If Not KExists(firmen, Norm(kunde)) And Len(kunde) > 0 Then
+                lastC = lastC + 1
+                NeueVorlagenzeile wsC, lastC, "A;W"
+                If mPrio > 0 Then wsC.Cells(lastC, mPrio).Value = "B"
+                If mSeg > 0 And cSeg > 0 Then wsC.Cells(lastC, mSeg).Value = wsO.Cells(r, cSeg).Value
+                wsC.Cells(lastC, mFirma).Value = kunde
+                If mOrt > 0 And cEinsatz > 0 Then wsC.Cells(lastC, mOrt).Value = wsO.Cells(r, cEinsatz).Value
+                If mKontakt > 0 And cKontakt > 0 Then wsC.Cells(lastC, mKontakt).Value = wsO.Cells(r, cKontakt).Value
+                If mStatus > 0 Then wsC.Cells(lastC, mStatus).Value = "Offeriert"
+                If mSchritt > 0 Then wsC.Cells(lastC, mSchritt).Value = "Offerte " & beleg & " nachfassen"
+                If mWert > 0 And cNetto > 0 Then wsC.Cells(lastC, mWert).Value = wsO.Cells(r, cNetto).Value
+                If mWahr > 0 Then wsC.Cells(lastC, mWahr).Value = 0.5
+                If mNotiz > 0 Then wsC.Cells(lastC, mNotiz).Value = "aus Offerte " & beleg
+                KAdd firmen, Norm(kunde)
+                added = added + 1
+            End If
+        End If
+    Next r
+
+    If added > 0 Then LogEintrag pfad, "35_OFFERTEN", "02_PIPELINE / 03_KUNDEN_CRM", added, 0, "Offerten verteilt"
+Fertig:
+    VerteileOfferten = added
+End Function
+
+Private Function LetzteZeile(ws As Worksheet, ByVal ankerCol As Long) As Long
+    Dim leerz As Long, rr As Long, last As Long
+    last = DATA_ROW1 - 1: leerz = 0: rr = DATA_ROW1
+    Do While leerz < 60 And rr < 200000
+        If Len(Trim$(CStr(ws.Cells(rr, ankerCol).Value))) > 0 Then
+            last = rr: leerz = 0
+        Else
+            leerz = leerz + 1
+        End If
+        rr = rr + 1
+    Loop
+    LetzteZeile = last
+End Function
+
+Private Function PipelineHatBeleg(ws As Worksheet, ByVal notizCol As Long, _
+                                  ByVal lastRow As Long, ByVal beleg As String) As Boolean
+    Dim r As Long, b As String
+    b = LCase$(beleg)
+    For r = DATA_ROW1 To lastRow
+        If InStr(LCase$(CStr(ws.Cells(r, notizCol).Value)), b) > 0 Then
+            PipelineHatBeleg = True: Exit Function
+        End If
+    Next r
+    PipelineHatBeleg = False
+End Function
+
+Private Sub NeueVorlagenzeile(ws As Worksheet, ByVal zielRow As Long, ByVal fSpalten As String)
+    ws.Rows(DATA_ROW1).Copy
+    ws.Rows(zielRow).PasteSpecial xlPasteFormats
+    Application.CutCopyMode = False
+    Dim teil As Variant, sp As Variant
+    If Len(fSpalten) > 0 Then
+        teil = Split(fSpalten, ";")
+        For Each sp In teil
+            sp = Trim$(CStr(sp))
+            If Len(sp) > 0 Then ws.Range(sp & DATA_ROW1).Copy ws.Range(sp & zielRow)
+        Next sp
+    End If
+End Sub
+
+Private Function ColOf(col As Collection, ByVal key As String) As Long
+    On Error Resume Next
+    ColOf = col.Item(key)
+    On Error GoTo 0
 End Function
 
 ' --- Collection-Helfer (portabel: Windows, Mac, LibreOffice) ---
