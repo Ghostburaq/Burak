@@ -11,6 +11,8 @@ echo "=================================================================="
 echo " BUILD: beide Varianten + xlsm packen"
 echo "=================================================================="
 python3 extract.py >/dev/null 2>&1 || { echo "extract FAILED"; exit 1; }
+python3 make_testimport.py >/dev/null 2>&1 || { echo "make_testimport FAILED"; exit 1; }
+python3 make_rawoffer.py   >/dev/null 2>&1 || { echo "make_rawoffer FAILED"; exit 1; }
 python3 build.py            >/dev/null 2>&1 || { echo "build xlsm-Basis FAILED"; exit 1; }
 OHNE_MAKROS=1 python3 build.py >/dev/null 2>&1 || { echo "build xlsx FAILED"; exit 1; }
 python3 vba_bin.py         >/dev/null 2>&1 || { echo "vba_bin FAILED"; exit 1; }

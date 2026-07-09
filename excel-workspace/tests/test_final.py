@@ -141,6 +141,24 @@ check("Protokoll erste Zeile 'angehängt'", log1 == "angehängt", f"-> {log1!r}"
 check("Protokoll Neu=2", cell(imp, 4, lr) == "2")
 check("Protokoll Duplikate=1", cell(imp, 5, lr) == "1")
 
+print("== E) ROHE Offerte (Angebots-Layout, Label:Wert) -> erkannt + verteilt")
+vba("MIT_ImportDatei", (os.path.join(S, "demo_rawoffer.xlsx"), True))
+doc.calculateAll()
+ro = find_row(off, 1, "OF-ROH-TEST-777")
+check("Rohe Offerte im Register 35", ro >= 0, f"-> Zeile {ro+1}")
+if ro >= 0:
+    check("Kunde aus Kopfblock erkannt", cell(off, 3, ro) == "Muster Bau & Energie AG", f"-> {cell(off,3,ro)!r}")
+    nettoro = off.getCellByPosition(12, ro).getValue()   # Netto CHF
+    check("Netto aus Summenblock (3359.30)", abs(nettoro - 3359.30) < 0.01, f"-> {nettoro}")
+oprow = find_contains(pipe, 23, "OF-ROH-TEST-777")
+check("Rohe Offerte als Deal in 02_PIPELINE", oprow >= 0, f"-> Zeile {oprow+1}")
+if oprow >= 0:
+    volro = pipe.getCellByPosition(8, oprow).getValue()
+    check("Rohe-Offerte-Deal Volumen = Netto (3359.30)", abs(volro - 3359.30) < 0.01, f"-> {volro}")
+check("Rohe-Offerte-Kunde im 03_KUNDEN_CRM", find_row(crm, 3, "Muster Bau & Energie AG") >= 0)
+check("Rohe-Offerte-Positionen in 36 (>=3)",
+      sum(1 for r in range(4, 400) if cell(opos, 1, r) == "OF-ROH-TEST-777") >= 3)
+
 print("== B) Unbekanntes Blatt -> neues Blatt")
 n_before = sheets.getCount()
 vba("MIT_ImportDatei", (os.path.join(S, "testunknown.xlsx"), True))

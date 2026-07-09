@@ -91,6 +91,15 @@ Private Sub VerarbeiteBlatt(wsSrc As Worksheet, ByVal pfad As String)
     Dim hdrRow As Long, ziel As String, keySpec As String, fSpalten As String, modus As String
     Dim erkannt As Boolean
     mBlaetter = mBlaetter + 1
+    ' Roh eingefügtes Offerten-Dokument (Label:Wert-Kopf) VOR der Tabellen-Erkennung
+    Dim istOff As Boolean
+    On Error Resume Next
+    istOff = IstOffertenDokument(wsSrc)
+    On Error GoTo 0
+    If istOff Then
+        VerarbeiteOffertenDokument wsSrc, pfad
+        Exit Sub
+    End If
     erkannt = ErkenneTyp(wsSrc, hdrRow, ziel, keySpec, fSpalten, modus)
     If erkannt Then
         If UCase$(modus) = "IGNORIEREN" Then
@@ -560,6 +569,312 @@ Private Function ColOf(col As Collection, ByVal key As String) As Long
     On Error Resume Next
     ColOf = col.Item(key)
     On Error GoTo 0
+End Function
+
+' =====================================================================
+'  OFFERTEN-DOKUMENT  (echtes Angebots-Layout: Label:Wert-Kopf + Positionen)
+'  Erkennt eine roh eingefügte Offerte (nicht nur die Tabellen-Vorlage) und
+'  übernimmt sie in 35_OFFERTEN + 36_OFFERTEN_POSITIONEN. Die Verteilung in
+'  02_PIPELINE + 03_KUNDEN_CRM erledigt danach VerteileOfferten (Import-Ende).
+' =====================================================================
+Private Function IstOffertenDokument(ws As Worksheet) As Boolean
+    Dim r As Long, c As Long, t As String, rowtext As String
+    On Error GoTo Fertig
+    For r = 1 To 45
+        rowtext = ZeilenText(ws, r)
+        For c = 1 To 30
+            t = Norm(ws.Cells(r, c).Value)
+            If Right$(t, 1) = ":" Then t = Trim$(Left$(t, Len(t) - 1))
+            If t = "belegnummer" Or t = "angebotsnummer" Or t = "offerten-nr" Then
+                If Len(WertRechtsOderUnten(ws, r, c)) > 0 Then
+                    ' NICHT die Tabellen-Vorlage (deren Kopfzeile hat weitere Offerten-Spalten)
+                    If InStr(rowtext, "kunde / firma") = 0 And InStr(rowtext, "einsatzort") = 0 Then
+                        IstOffertenDokument = True
+                        Exit Function
+                    End If
+                End If
+            End If
+        Next c
+    Next r
+Fertig:
+    IstOffertenDokument = False
+End Function
+
+Private Sub VerarbeiteOffertenDokument(ws As Worksheet, ByVal pfad As String)
+    Dim wsO As Worksheet, wsP As Worksheet
+    Dim beleg As String, kunde As String, ko As Collection
+    Dim cBeleg As Long, lastO As Long, r As Long, exists As Boolean, rowNew As Long
+    On Error GoTo Fehler
+    Set wsO = ThisWorkbook.Worksheets("35_OFFERTEN")
+    Set wsP = ThisWorkbook.Worksheets("36_OFFERTEN_POSITIONEN")
+    beleg = WertNebenLabel(ws, Array("belegnummer", "beleg-nr", "beleg nr", "angebotsnummer", "offerten-nr"))
+    If Len(beleg) = 0 Then Exit Sub
+    kunde = KundeAusKopf(ws)
+
+    Set ko = KopfMap(wsO)
+    cBeleg = ColOf(ko, "belegnummer")
+    lastO = LetzteZeile(wsO, cBeleg)
+    For r = DATA_ROW1 To lastO
+        If Norm(wsO.Cells(r, cBeleg).Value) = Norm(beleg) Then exists = True: Exit For
+    Next r
+
+    If exists Then
+        mDuplikate = mDuplikate + 1
+        LogEintrag pfad, ws.Name, "35_OFFERTEN", 0, 1, "Offerte bereits vorhanden"
+        Exit Sub
+    End If
+
+    rowNew = lastO + 1
+    NeueVorlagenzeile wsO, rowNew, "A;W;X"
+    SetzeWennDa wsO, ko, "belegnummer", rowNew, beleg
+    SetzeWennDa wsO, ko, "kunde / firma", rowNew, kunde
+    SetzeWennDa wsO, ko, "ansprechpartner", rowNew, KontaktAusKopf(ws)
+    SetzeWennDa wsO, ko, "einsatzort", rowNew, WertNebenLabel(ws, Array("einsatzort", "objekt"))
+    SetzeWennDa wsO, ko, "vertrieb", rowNew, WertNebenLabel(ws, Array("vertrieb", "bearbeiter"))
+    SetzeWennDa wsO, ko, "projektleiter", rowNew, WertNebenLabel(ws, Array("projektleiter"))
+    SetzeWennDa wsO, ko, "datum", rowNew, WertNebenLabel(ws, Array("datum"))
+    SetzeWennDa wsO, ko, "mietbeginn", rowNew, WertNebenLabel(ws, Array("mietbeginn", "mietbeginn:", "beginn"))
+    SetzeWennDa wsO, ko, "mietende", rowNew, WertNebenLabel(ws, Array("mietende", "mietende:"))
+    SetzeWennDa wsO, ko, "vorgangsnr", rowNew, WertNebenLabel(ws, Array("vorgangsnummer"))
+    SetzeWennDa wsO, ko, "kundennr", rowNew, WertNebenLabel(ws, Array("kundennummer"))
+    SetzeWennDa wsO, ko, "ihr beleg", rowNew, WertNebenLabel(ws, Array("ihr beleg"))
+    SetzeZahlWennDa wsO, ko, "netto chf", rowNew, ZahlNebenLabel(ws, Array("zwischensumme", "total exkl", "summe exkl"))
+    SetzeZahlWennDa wsO, ko, "mwst chf", rowNew, ZahlNebenLabel(ws, Array("zzgl. mwst", "mwst", "mehrwertsteuer"))
+    SetzeZahlWennDa wsO, ko, "total chf", rowNew, ZahlNebenLabel(ws, Array("endsumme", "total inkl"))
+    SetzeZahlWennDa wsO, ko, "tagespreis chf", rowNew, ZahlNebenLabel(ws, Array("mietpreis pro tag", "tagespreis"))
+    SetzeWennDa wsO, ko, "status", rowNew, "offered"
+    SetzeWennDa wsO, ko, "quelle-datei", rowNew, DateiName(pfad)
+
+    OffertenPositionenLesen ws, wsP, beleg, kunde
+    mNeuZeilen = mNeuZeilen + 1
+    LogEintrag pfad, ws.Name, "35_OFFERTEN", 1, 0, "Offerten-Dokument erkannt + übernommen"
+    Exit Sub
+Fehler:
+    LogEintrag pfad, ws.Name, "35_OFFERTEN", 0, 0, "Offerten-Doc Fehler: " & Err.Description
+End Sub
+
+Private Sub OffertenPositionenLesen(ws As Worksheet, wsPos As Worksheet, _
+                                    ByVal beleg As String, ByVal kunde As String)
+    Dim hr As Long, c As Long, t As String, found As Boolean, rowtext As String
+    On Error GoTo Fertig
+    For hr = 1 To 60
+        rowtext = ZeilenText(ws, hr)
+        If InStr(rowtext, "bezeichnung") > 0 And _
+           (InStr(rowtext, "gesamtpreis") > 0 Or InStr(rowtext, "einzelpreis") > 0 Or InStr(rowtext, "artikelnr") > 0) Then
+            found = True: Exit For
+        End If
+    Next hr
+    If Not found Then Exit Sub
+
+    Dim cPos&, cArt&, cBez&, cAnz&, cDauer&, cEinzel&, cRabatt&, cGesamt&
+    For c = 1 To 40
+        t = Norm(ws.Cells(hr, c).Value)
+        If t = "pos." Or t = "pos" Then cPos = c
+        If InStr(t, "artikelnr") > 0 Then cArt = c
+        If InStr(t, "bezeichnung") > 0 Then cBez = c
+        If InStr(t, "anzahl") > 0 Or t = "menge" Then cAnz = c
+        If InStr(t, "dauer") > 0 Then cDauer = c
+        If InStr(t, "einzelpreis") > 0 Then cEinzel = c
+        If InStr(t, "rabatt") > 0 Then cRabatt = c
+        If InStr(t, "gesamtpreis") > 0 Then cGesamt = c
+    Next c
+    If cBez = 0 Then Exit Sub
+
+    Dim kp As Collection: Set kp = KopfMap(wsPos)
+    Dim tBeleg&, tKunde&, tPos&, tArt&, tBez&, tAnz&, tDauer&, tEinzel&, tRabatt&, tGesamt&
+    tBeleg = ColOf(kp, "belegnummer"): tKunde = ColOf(kp, "kunde / firma")
+    tPos = ColOf(kp, "pos."): tArt = ColOf(kp, "artikelnr."): tBez = ColOf(kp, "bezeichnung")
+    tAnz = ColOf(kp, "anzahl"): tDauer = ColOf(kp, "dauer"): tEinzel = ColOf(kp, "einzelpreis chf")
+    tRabatt = ColOf(kp, "rabatt %"): tGesamt = ColOf(kp, "gesamtpreis chf")
+    Dim lastT As Long: lastT = LetzteZeile(wsPos, tBeleg)
+
+    Dim r As Long, leer As Long, bez As String, hasNum As Boolean
+    leer = 0
+    For r = hr + 1 To hr + 400
+        bez = Trim$(CStr(ws.Cells(r, cBez).Value))
+        hasNum = (cGesamt > 0 And IsNumeric(ws.Cells(r, cGesamt).Value)) Or _
+                 (cArt > 0 And Len(Trim$(CStr(ws.Cells(r, cArt).Value))) > 0)
+        If Len(bez) = 0 And Not hasNum Then
+            leer = leer + 1
+            If leer >= 4 Then Exit For
+        Else
+            leer = 0
+            lastT = lastT + 1
+            NeueVorlagenzeile wsPos, lastT, "A"
+            If tBeleg > 0 Then wsPos.Cells(lastT, tBeleg).Value = beleg
+            If tKunde > 0 Then wsPos.Cells(lastT, tKunde).Value = kunde
+            If tPos > 0 And cPos > 0 Then wsPos.Cells(lastT, tPos).Value = ws.Cells(r, cPos).Value
+            If tArt > 0 And cArt > 0 Then wsPos.Cells(lastT, tArt).Value = ws.Cells(r, cArt).Value
+            If tBez > 0 Then wsPos.Cells(lastT, tBez).Value = bez
+            If tAnz > 0 And cAnz > 0 Then wsPos.Cells(lastT, tAnz).Value = ws.Cells(r, cAnz).Value
+            If tDauer > 0 And cDauer > 0 Then wsPos.Cells(lastT, tDauer).Value = ws.Cells(r, cDauer).Value
+            If tEinzel > 0 And cEinzel > 0 And IsNumeric(ws.Cells(r, cEinzel).Value) Then wsPos.Cells(lastT, tEinzel).Value = ws.Cells(r, cEinzel).Value
+            If tRabatt > 0 And cRabatt > 0 Then wsPos.Cells(lastT, tRabatt).Value = ProzentWert(ws.Cells(r, cRabatt).Value)
+            If tGesamt > 0 And cGesamt > 0 And IsNumeric(ws.Cells(r, cGesamt).Value) Then wsPos.Cells(lastT, tGesamt).Value = ws.Cells(r, cGesamt).Value
+        End If
+    Next r
+Fertig:
+End Sub
+
+Private Function WertNebenLabel(ws As Worksheet, labels As Variant) As String
+    Dim r As Long, c As Long, t As String, i As Long
+    For r = 1 To 45
+        For c = 1 To 30
+            t = Norm(ws.Cells(r, c).Value)
+            If Right$(t, 1) = ":" Then t = Trim$(Left$(t, Len(t) - 1))
+            If Len(t) > 0 Then
+                For i = LBound(labels) To UBound(labels)
+                    If t = CStr(labels(i)) Then
+                        WertNebenLabel = WertRechtsOderUnten(ws, r, c)
+                        If Len(WertNebenLabel) > 0 Then Exit Function
+                    End If
+                Next i
+            End If
+        Next c
+    Next r
+    WertNebenLabel = ""
+End Function
+
+Private Function WertRechtsOderUnten(ws As Worksheet, ByVal r As Long, ByVal c As Long) As String
+    Dim k As Long, v As String
+    For k = 1 To 6
+        v = Trim$(CStr(ws.Cells(r, c + k).Value))
+        If Len(v) > 0 Then WertRechtsOderUnten = v: Exit Function
+    Next k
+    WertRechtsOderUnten = Trim$(CStr(ws.Cells(r + 1, c).Value))
+End Function
+
+Private Function ZahlNebenLabel(ws As Worksheet, labels As Variant) As Variant
+    Dim r As Long, c As Long, t As String, i As Long, k As Long, vv As Variant
+    For r = 1 To 60
+        For c = 1 To 30
+            t = Norm(ws.Cells(r, c).Value)
+            If Len(t) > 0 Then
+                For i = LBound(labels) To UBound(labels)
+                    If InStr(t, CStr(labels(i))) > 0 Then
+                        ' zuerst Wertzellen rechts (getrennte Betragsspalte), dann Label-Zelle selbst
+                        For k = 1 To 6
+                            vv = ParseCHF(CStr(ws.Cells(r, c + k).Value))
+                            If IsNumeric(vv) Then ZahlNebenLabel = vv: Exit Function
+                        Next k
+                        vv = ParseCHF(CStr(ws.Cells(r, c).Value))
+                        If IsNumeric(vv) Then ZahlNebenLabel = vv: Exit Function
+                        vv = ParseCHF(CStr(ws.Cells(r + 1, c).Value))
+                        If IsNumeric(vv) Then ZahlNebenLabel = vv: Exit Function
+                    End If
+                Next i
+            End If
+        Next c
+    Next r
+    ZahlNebenLabel = ""
+End Function
+
+Private Function ParseCHF(ByVal s As String) As Variant
+    Dim i As Long, ch As String, keep As String, parts() As String, p As String
+    s = LCase$(s)
+    keep = ""
+    For i = 1 To Len(s)
+        ch = Mid$(s, i, 1)
+        If (ch >= "0" And ch <= "9") Or ch = "." Or ch = "," Or ch = "'" Or ch = " " Then keep = keep & ch
+    Next i
+    keep = Replace(keep, "'", "")
+    Do While InStr(keep, "  ") > 0: keep = Replace(keep, "  ", " "): Loop
+    keep = Trim$(keep)
+    If Len(keep) = 0 Then ParseCHF = "": Exit Function
+    parts = Split(keep, " ")
+    p = ""
+    For i = UBound(parts) To LBound(parts) Step -1
+        If Len(Trim$(parts(i))) > 0 Then p = Trim$(parts(i)): Exit For
+    Next i
+    p = Replace(p, ",", ".")
+    If IsNumeric(p) Then ParseCHF = CDbl(p) Else ParseCHF = ""
+End Function
+
+Private Function ProzentWert(v As Variant) As Variant
+    Dim s As String, d As Double
+    s = Trim$(CStr(v))
+    If Len(s) = 0 Then ProzentWert = "": Exit Function
+    s = Replace(s, "%", ""): s = Replace(s, ",", ".")
+    If IsNumeric(s) Then
+        d = CDbl(s)
+        If d > 1 Then d = d / 100
+        ProzentWert = d
+    Else
+        ProzentWert = ""
+    End If
+End Function
+
+Private Function KundeAusKopf(ws As Worksheet) As String
+    Dim r As Long, c As Long, raw As String, t As String
+    For r = 1 To 14
+        For c = 1 To 4
+            raw = Trim$(CStr(ws.Cells(r, c).Value))
+            t = Norm(raw)
+            If Len(raw) >= 4 Then
+                If InStr(t, "mobil in time") = 0 And InStr(t, "angebot") = 0 _
+                   And Not IstLabel(t) And EnthaeltBuchstaben(t) _
+                   And LCase$(Left$(raw, 5)) <> "herr " And LCase$(Left$(raw, 5)) <> "frau " Then
+                    KundeAusKopf = raw
+                    Exit Function
+                End If
+            End If
+        Next c
+    Next r
+    KundeAusKopf = ""
+End Function
+
+Private Function KontaktAusKopf(ws As Worksheet) As String
+    Dim r As Long, c As Long, raw As String
+    For r = 1 To 16
+        For c = 1 To 4
+            raw = Trim$(CStr(ws.Cells(r, c).Value))
+            If LCase$(Left$(raw, 5)) = "herr " Or LCase$(Left$(raw, 5)) = "frau " Then
+                KontaktAusKopf = Trim$(Mid$(raw, 6)): Exit Function
+            End If
+        Next c
+    Next r
+    KontaktAusKopf = ""
+End Function
+
+Private Function IstLabel(ByVal t As String) As Boolean
+    Dim labs As Variant, i As Long
+    labs = Array("vorgangsnummer", "belegnummer", "datum", "kundennummer", "bearbeiter", _
+                 "vertrieb", "projektleiter", "einsatzort", "ihr beleg", "bemerkung", _
+                 "angebot", "pos.", "artikelnr", "bezeichnung", "anzahl", "dauer", _
+                 "einzelpreis", "rabatt", "gesamtpreis", "zwischensumme", "endsumme", _
+                 "mwst", "mietbeginn", "mietende", "mietzeitraum", "einheit")
+    For i = LBound(labs) To UBound(labs)
+        If InStr(t, CStr(labs(i))) > 0 Then IstLabel = True: Exit Function
+    Next i
+End Function
+
+Private Function EnthaeltBuchstaben(ByVal s As String) As Boolean
+    Dim i As Long, ch As String
+    For i = 1 To Len(s)
+        ch = LCase$(Mid$(s, i, 1))
+        If ch >= "a" And ch <= "z" Then EnthaeltBuchstaben = True: Exit Function
+    Next i
+End Function
+
+Private Sub SetzeWennDa(ws As Worksheet, kopf As Collection, ByVal key As String, _
+                        ByVal row As Long, ByVal v As Variant)
+    Dim c As Long: c = ColOf(kopf, key)
+    If c > 0 And Len(Trim$(CStr(v))) > 0 Then ws.Cells(row, c).Value = v
+End Sub
+
+Private Sub SetzeZahlWennDa(ws As Worksheet, kopf As Collection, ByVal key As String, _
+                            ByVal row As Long, ByVal v As Variant)
+    Dim c As Long: c = ColOf(kopf, key)
+    If c > 0 Then
+        If IsNumeric(v) Then ws.Cells(row, c).Value = CDbl(v)
+    End If
+End Sub
+
+Private Function DateiName(ByVal pfad As String) As String
+    Dim p As Long
+    p = InStrRev(pfad, "\")
+    If InStrRev(pfad, "/") > p Then p = InStrRev(pfad, "/")
+    DateiName = Mid$(pfad, p + 1)
 End Function
 
 ' --- Collection-Helfer (portabel: Windows, Mac, LibreOffice) ---

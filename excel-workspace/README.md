@@ -3,7 +3,7 @@
 **Eine einzige Excel-Arbeitsmappe als Workspace** — ersetzt 15 Einzeldateien.
 Deliverable: [`MiT_GESAMTMAPPE_2026.xlsm`](MiT_GESAMTMAPPE_2026.xlsm) (40 Reiter, 13'700+ Formeln, 15 Live-Diagramme, Dark-Executive-Cockpit, 14 Makros).
 
-## Offerten-Verteilung (v1.6)
+## Offerten-Verteilung (v1.6 / v1.7)
 
 Drei reale Angebote (Agroscope · Coolworld Rentals · Gampel OpenAir) sind eingearbeitet und
 **automatisch auf die vorhandenen Listen verteilt**:
@@ -15,10 +15,16 @@ Drei reale Angebote (Agroscope · Coolworld Rentals · Gampel OpenAir) sind eing
 - Jede Offerte landet zusätzlich **als Deal in `02_PIPELINE`** (Status *offered*, Volumen = Netto)
   **und als Kunde in `03_KUNDEN_CRM`** — so fliesst der Wert direkt in Dashboard, Forecast & Cockpit ein.
 
-**Import-Automatik erweitert:** `Ctrl+Shift+I` erkennt eine Offerten-Excel an den Kopfzeilen
-(`Belegnummer` + `Einsatzort` bzw. `Artikelnr.` + `Gesamtpreis`) und verteilt sie automatisch —
+**Import-Automatik erweitert:** `Ctrl+Shift+I` verteilt eine Offerte automatisch —
 Kopf → Register + Pipeline + CRM, Positionen → Positionsliste. Duplikate (gleiche Belegnummer)
 werden übersprungen. Manuell auslösbar mit **`Ctrl+Shift+V`** (`MIT_OffertenVerteilen`, idempotent).
+Erkannt werden **beide Formen**:
+1. **Tabellen-Vorlage** (`MiT_Offerten_Import_Vorlage.xlsx`) mit Kopf-Kopfzeilen `Belegnummer`,
+   `Einsatzort`, `Netto CHF` … und einem Positionsblatt.
+2. **Rohe Offerte im Angebots-Layout** — genau so, wie das Angebot aus dem System als Excel
+   herausfällt: `Belegnummer | OF…`-Label:Wert-Kopfblock + Positionstabelle + Summenblock
+   (`Zwischensumme`, `Endsumme`). Belegnummer, Kunde (aus Empfängerblock), Ansprechpartner,
+   Einsatzort, Vertrieb, Netto/MwSt/Total und alle Positionen werden ausgelesen und verteilt.
 
 ## Lesbarkeit & Währung korrigiert (v1.5)
 
