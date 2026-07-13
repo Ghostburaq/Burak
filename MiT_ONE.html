@@ -244,6 +244,65 @@ input.inline-edit:focus{border-color:var(--blue)}
   #searchTrigger{min-width:0}
   #drawer{width:100vw;max-width:100vw}
 }
+/* ═══════════ PROJEKT-MODUL ═══════════ */
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.pcard{background:var(--bg1);border:1px solid var(--line);border-radius:var(--r-lg);padding:18px;box-shadow:var(--card-sh);
+  cursor:pointer;transition:transform .25s var(--spring),box-shadow .25s var(--ease);position:relative;overflow:hidden}
+.pcard:hover{transform:translateY(-4px) scale(1.01);box-shadow:var(--card-sh-h)}
+.pcard .pname{font-weight:800;font-size:15.5px;letter-spacing:-.02em;margin-bottom:2px}
+.pcard .psub{font-size:12px;color:var(--tx2)}
+.pcard .prow{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:12px;color:var(--tx2)}
+.pbar{height:7px;background:var(--bg2);border-radius:99px;overflow:hidden;flex:1}
+.pbar>div{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--blue),var(--green));transition:width .6s var(--ease)}
+.stepper{display:flex;gap:5px;flex-wrap:wrap;margin:6px 0 4px}
+.step{padding:6px 13px;border-radius:99px;font-size:11.5px;font-weight:600;background:var(--bg2);color:var(--tx2);
+  cursor:pointer;border:1px solid var(--line);transition:all .22s var(--ease);user-select:none}
+.step:hover{background:var(--bg3);transform:translateY(-1px)}
+.step.done{background:rgba(0,113,227,.10);color:var(--blue);border-color:rgba(0,113,227,.25)}
+.step.cur{background:var(--blue);color:#fff;border-color:var(--blue);box-shadow:0 3px 12px rgba(0,113,227,.35)}
+.step.cancel{background:rgba(255,59,48,.1);color:var(--red);border-color:rgba(255,59,48,.25)}
+.ms-row{display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid var(--line);animation:riseIn .3s var(--ease) backwards}
+.ms-chk{width:22px;height:22px;border-radius:50%;border:2px solid var(--line2);display:grid;place-items:center;cursor:pointer;
+  font-size:11px;color:#fff;flex-shrink:0;transition:all .25s var(--spring)}
+.ms-chk.on{background:var(--green);border-color:var(--green);transform:scale(1.08)}
+.ms-row .mt2{flex:1;font-size:13px;font-weight:600}
+.ms-row.done .mt2{text-decoration:line-through;color:var(--tx3);font-weight:500}
+.ms-row input[type=date]{background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:4px 8px;font-family:inherit;font-size:12px;color:var(--tx);outline:none}
+.ms-row .del,.ge-del{background:none;border:none;color:var(--tx3);cursor:pointer;font-size:14px;padding:4px;border-radius:6px;transition:all .15s}
+.ms-row .del:hover,.ge-del:hover{color:var(--red);background:rgba(255,59,48,.1)}
+.ms-row.overdue .mt2{color:var(--red)}
+table.getab{width:100%;border-collapse:collapse;font-size:13px}
+table.getab th{text-align:left;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--tx2);padding:8px 10px;border-bottom:1px solid var(--line2)}
+table.getab td{padding:8px 10px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+table.getab input{width:74px;background:var(--bg2);border:1px solid var(--line);border-radius:7px;padding:4px 8px;font-family:inherit;font-size:12.5px;color:var(--tx);outline:none;text-align:right}
+table.getab input:focus{border-color:var(--blue)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fld label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--tx2);margin-bottom:5px}
+.fld input,.fld select,.fld textarea{width:100%;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:9px 12px;
+  font-family:inherit;font-size:13.5px;color:var(--tx);outline:none;transition:all .2s}
+.fld input:focus,.fld select:focus,.fld textarea:focus{background:var(--bg1);border-color:var(--blue);box-shadow:0 0 0 3.5px rgba(0,113,227,.14)}
+.fld{margin-bottom:12px}
+.fld textarea{resize:vertical;min-height:64px}
+.back-btn{display:inline-flex;align-items:center;gap:7px;background:var(--bg2);border:1px solid var(--line);border-radius:99px;
+  padding:7px 16px;font-size:13px;font-weight:600;color:var(--tx);cursor:pointer;transition:all .2s;margin-bottom:16px}
+.back-btn:hover{background:var(--bg3);transform:translateX(-2px)}
+.picker-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:11px;cursor:pointer;transition:background .13s}
+.picker-item:hover{background:var(--bg2)}
+.picker-item .add{margin-left:auto;background:var(--blue);color:#fff;border:none;border-radius:99px;width:26px;height:26px;
+  font-size:15px;cursor:pointer;display:grid;place-items:center;transition:transform .18s var(--spring)}
+.picker-item .add:hover{transform:scale(1.15)}
+.task-row{display:flex;align-items:center;gap:10px;padding:7px 4px;border-bottom:1px solid var(--line)}
+.log-row{padding:8px 0;border-bottom:1px solid var(--line);font-size:12.5px}
+.log-row .ts{font-size:10.5px;color:var(--tx3)}
+.cal-day{margin-bottom:20px}
+.cal-day h4{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--tx2);margin-bottom:8px}
+.cal-item{display:flex;align-items:center;gap:12px;background:var(--bg1);border:1px solid var(--line);border-radius:var(--r-md);
+  padding:12px 16px;margin-bottom:8px;cursor:pointer;transition:all .2s var(--ease);box-shadow:var(--card-sh)}
+.cal-item:hover{transform:translateX(4px);box-shadow:var(--card-sh-h)}
+.cal-item .dot2{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.cal-item .ct2{flex:1;font-size:13px;font-weight:600}
+.cal-item .cs2{font-size:11.5px;color:var(--tx2)}
+
 </style>
 </head>
 <body>
@@ -461,11 +520,15 @@ window.openDeal=i=>{ const d=P[Math.max(0,P.findIndex(x=>x._i===i))]||P[i]; if(!
     ${kv('Treibstoff',fmtCHF(d.fuel))}${kv('Technik',fmtCHF(d.tech))}${kv('Übrige',fmtCHF(d.rest))}
     ${kv('Marge',`<b>${fmtCHF(d.marge)}</b> · ${fmtP(d.margeP)}`)}${kv('Gew. Wert',fmtCHF(d.gew))}${kv('Wahrscheinlichkeit',fmtP(d.wahr))}
     <div class="dr-sec">Vertrieb</div>
-    ${kv('Akquise-Typ',esc(d.akq))}${kv('USP',esc(d.usp))}${kv('Nächster Schritt',esc(d.next))}
-    ${kv('Follow-Up',esc(fmtD(d.fup)))}${kv('Notiz',esc(d.notiz))}
+    ${kv('Akquise-Typ',esc(d.akq))}${kv('USP',esc(d.usp))}${kv('Nächster Schritt',esc(ovGet('P',d._i).next??d.next))}
+    ${kv('Follow-Up',esc(fmtD(ovGet('P',d._i).fup??d.fup)))}${kv('Notiz',esc(ovGet('P',d._i).notiz??d.notiz))}
     <div class="dr-sec">Status ändern</div>
     <div style="display:flex;gap:6px;flex-wrap:wrap">${['OPPORTUNITY','TO OFFER','OFFERTE','FOLLOW-UP','WON','LOST'].map(x=>
       `<button class="chip ${x===s?'on':''}" onclick="setDealStatus(${d._i},'${x}')">${x}</button>`).join('')}</div>
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button class="tbtn primary" style="flex:1;justify-content:center" onclick="projFromDeal(${d._i})">📁 → Projekt anlegen</button>
+      <button class="tbtn" style="flex:1;justify-content:center" onclick="dealEdit(${d._i})">✎ Bearbeiten</button>
+    </div>
     ${relatedHTML(d.co,'deal')}
   `);
 };
@@ -599,6 +662,22 @@ function buildDashboard(el){
         ${ktArr.map(([k,v],i)=>`<div class="bar-row"><div class="bar-lbl">${esc(k)}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.max(6,v/ktMax*100)}%;background:${COLORS[(i+2)%7]};animation-delay:${i*70}ms">${fmtN(v/1000)}k</div></div></div>`).join('')}
       </div></div>
     </div>
+    <div class="grid2">
+      <div class="card"><div class="card-h"><h3>📁 Aktive Projekte</h3><div style="flex:1"></div><button class="tbtn" onclick="Views.show('projekte')">Alle →</button></div>
+        <div class="card-b" style="padding:8px 12px">
+        ${PROJECTS.filter(p=>p.status!=='Abgeschlossen'&&p.status!=='Storniert').slice(0,4).map(p=>{const m=msProgress(p);
+          return `<div class="linkcard" onclick="projOpen('${p.id}')" style="display:flex;align-items:center;gap:12px">
+          <div style="flex:1"><div class="t">${esc(p.name)}</div><div class="s">${esc(p.status)} · ${m.d}/${m.t} Milestones · ${fmtCHF(projTotal(p))}</div></div>
+          <div class="pbar" style="width:70px"><div style="width:${m.pct}%"></div></div></div>`;}).join('')||'<div class="empty" style="padding:16px;font-size:12.5px">Noch keine Projekte — im Deal auf «→ Projekt anlegen» klicken</div>'}
+        </div></div>
+      <div class="card"><div class="card-h"><h3>🏁 Nächste Milestones</h3><div style="flex:1"></div><button class="tbtn" onclick="Views.show('kalender')">Kalender →</button></div>
+        <div class="card-b" style="padding:8px 12px">
+        ${PROJECTS.flatMap(p=>(p.milestones||[]).filter(m=>!m.done&&m.datum).map(m=>({p,m}))).sort((a,b)=>a.m.datum.localeCompare(b.m.datum)).slice(0,4).map(({p,m})=>
+          `<div class="linkcard" onclick="projOpen('${p.id}')" style="display:flex;align-items:center;gap:12px">
+          <div style="flex:1"><div class="t">${esc(m.titel)}</div><div class="s">${esc(p.name)}</div></div>
+          <span style="font-size:12px;font-weight:700;color:${m.datum<today()?'var(--red)':'var(--tx2)'}">${fmtD(m.datum)}</span></div>`).join('')||'<div class="empty" style="padding:16px;font-size:12.5px">Keine terminierten Milestones</div>'}
+        </div></div>
+    </div>
     <div class="card"><div class="card-h"><h3>🔥 Top-Deals</h3><span class="sub">nach Volumen</span>
       <div style="flex:1"></div><button class="tbtn" onclick="Views.show('pipeline')">Alle ansehen →</button></div>
       <div class="card-b" style="padding:8px 12px">
@@ -622,6 +701,7 @@ function buildPipeline(el){
   wrap.innerHTML=`<div class="hero" style="display:flex;align-items:flex-end;gap:18px;flex-wrap:wrap">
     <div style="flex:1"><h1>Pipeline</h1><p>${P.length} Deals · komplette Kostenstruktur aus der Gesamtmappe</p></div>
     <div class="seg-ctl"><button data-m="kanban" class="${pipeMode==='kanban'?'on':''}">Board</button><button data-m="table" class="${pipeMode==='table'?'on':''}">Tabelle</button></div>
+    <button class="tbtn" onclick="dealNewDialog()">＋ Neuer Deal</button>
     <button class="tbtn primary" id="pipeExport">↓ Komplett-Export</button></div>
     <div id="pipeBody"></div>`;
   el.appendChild(wrap);
@@ -662,7 +742,7 @@ function buildPipeline(el){
 }
 
 /* ═══════════════ GENERIC TABLE VIEWS ═══════════════ */
-function tableView(hero, sub, dtCfg){ return el=>{ el.innerHTML=`<div class="hero"><h1>${hero}</h1><p>${sub}</p></div>`; el.appendChild(DataTable(dtCfg)); }; }
+function tableView(hero, sub, dtCfg, actions){ return el=>{ el.innerHTML=`<div class="hero" style="display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap"><div style="flex:1"><h1>${hero}</h1><p>${sub}</p></div>${actions||''}</div>`; el.appendChild(DataTable(dtCfg)); }; }
 
 /* ═══════════════ FORECAST ═══════════════ */
 function buildForecast(el){
@@ -784,7 +864,7 @@ Views.add('kunden','Kunden-CRM','Vertrieb','◎',K.length,tableView('Kunden-CRM'
     {k:'co',label:'Firma'},{k:'seg',label:'Segment'},{k:'ort',label:'Ort'},{k:'kt',label:'Kt'},
     {k:'ap',label:'Ansprechpartner'},{k:'status',label:'Status'},{k:'kva',label:'Bedarf'},
     {k:'wert',label:'Wert',fmt:v=>v?fmtCHF(v):'—'},{k:'fup',label:'Follow-up',fmt:v=>fmtD(v)}],
-  onRow:d=>openKunde(d._i)}));
+  onRow:d=>openKunde(d._i)},'<button class="tbtn primary" onclick="kundeNewDialog()">＋ Neuer Kunde</button>'));
 Views.add('kartei','Kundenkartei','Vertrieb','▤',KA.length,tableView('Kundenkartei',`${KA.length} CH-Kunden & Kontakte`,{
   id:'karteiT',data:KA,exportName:'Kundenkartei',search:['co','ap','seg','kt','verantw'],
   cols:[{k:'co',label:'Kunde'},{k:'seg',label:'Segment'},{k:'kt',label:'Kt'},{k:'verantw',label:'Verantwortlich'},
@@ -816,6 +896,296 @@ Views.add('normen','Normen','Produkte','§',NRM.length,tableView('Normen & Stand
 Views.add('dc','DC-Cockpit','Data Center','▣',DCB.length+DCP.length,buildDC);
 Views.add('global','Global-Projekte','Global','◍',GP.rows.length,buildGlobal);
 Views.add('globalk','Global-Kontakte','Global','◌',GK.rows.length,buildGlobalK);
+
+/* ═══════════════ PROJEKT-MODUL — Status · Milestones · Geräte · Kalkulation ═══════════════ */
+const PROJ_KEY='one_projects_v1';
+let PROJECTS=[]; try{PROJECTS=JSON.parse(localStorage.getItem(PROJ_KEY)||'[]')}catch(e){}
+const projSave=()=>localStorage.setItem(PROJ_KEY,JSON.stringify(PROJECTS));
+const PHASEN=['Anfrage','Planung','Offeriert','Beauftragt','Lieferung','In Betrieb','Demontage','Abgeschlossen'];
+const MS_TPL={
+ 'Event':['Anfrage erhalten','Standort-Besichtigung','Lastberechnung erstellt','Offerte versendet','Auftrag erhalten','Disposition Geräte','Lieferung & Aufbau','Inbetriebnahme & Test','Event-Begleitung','Demontage','Rücktransport','Abrechnung & Feedback'],
+ 'Notstrom':['Anfrage erhalten','NIV-Anforderungen geprüft','Notstrom-Konzept erstellt','Offerte versendet','Auftrag erhalten','ATS/Umschaltung installiert','Generator geliefert','Testlauf unter Last','Übergabe & Doku','Wartungsplan aktiv','Demontage'],
+ 'Bau':['Anfrage erhalten','Baustellen-Besichtigung','BSV-Planung','Offerte versendet','Auftrag erhalten','Lieferung','Inbetriebnahme','Umsetzungen während Bau','Abbau & Rückgabe'],
+ 'Data Center':['Erstkontakt','NDA unterzeichnet','Anforderungsanalyse','PQ-Konzept präsentiert','Pilot-Angebot','Verhandlung','Rahmenvertrag','Rollout Phase 1','Betrieb & Review'],
+ 'Industrie':['Anfrage erhalten','Bedarfsanalyse vor Ort','Lastprofil erstellt','Offerte versendet','Auftrag erhalten','Lieferung & Installation','Inbetriebnahme','Betriebsbegleitung','Demontage & Abrechnung'],
+ 'Leer':[]
+};
+const uid8=()=>Math.random().toString(36).slice(2,10);
+const today=()=>new Date().toISOString().slice(0,10);
+function projLog(p,text){ p.log=p.log||[]; p.log.unshift({ts:new Date().toISOString(),text}); }
+function msProgress(p){ const t=(p.milestones||[]).length; const d=(p.milestones||[]).filter(m=>m.done).length; return {d,t,pct:t?Math.round(d/t*100):0}; }
+function projTotal(p){ return (p.geraete||[]).reduce((s,g)=>s+(+g.menge||1)*(+g.tagespreis||0)*(+g.tage||1),0); }
+function priceMatch(bez){ const n=norm(bez);
+  let hit=PR.find(x=>norm(x.name)===n)||PR.find(x=>n&&norm(x.name).includes(n.slice(0,14)))||PR.find(x=>n.includes(norm(x.name).slice(0,14)));
+  return hit?+hit.tag||0:0; }
+function projNew(pre){
+  const p={id:uid8(),name:pre?.name||'',kunde:pre?.kunde||'',ort:pre?.ort||'',kt:pre?.kt||'',segment:pre?.segment||'',
+    typ:pre?.typ||'Event',status:'Anfrage',start:pre?.start||today(),ende:pre?.ende||'',beschreibung:pre?.beschreibung||'',
+    dealRef:pre?.dealRef??null,milestones:[],geraete:[],tasks:[],log:[],createdAt:new Date().toISOString()};
+  (MS_TPL[p.typ]||[]).forEach(t=>p.milestones.push({id:uid8(),titel:t,datum:'',done:false}));
+  projLog(p,'Projekt angelegt');
+  PROJECTS.unshift(p); projSave(); return p;
+}
+window.projFromDeal=i=>{ const d=P.find(x=>x._i===i); if(!d)return;
+  const st=toDate(d.start), en=st&&+d.dauer?new Date(st.getTime()+(+d.dauer)*864e5):null;
+  const p=projNew({name:(d.co||'Projekt')+' — '+(d.fleet||d.seg||''),kunde:d.co,kt:d.kt,segment:d.seg,
+    typ:/event/i.test(d.seg)?'Event':/data|dc|rechen/i.test(d.seg)?'Data Center':/bau/i.test(d.seg)?'Bau':/not/i.test(String(d.fleet)+String(d.seg))?'Notstrom':'Industrie',
+    start:st?st.toISOString().slice(0,10):today(),ende:en?en.toISOString().slice(0,10):'',dealRef:i,
+    beschreibung:'Übernommen aus Pipeline-Deal · Volumen '+fmtCHF(pVal(d))+(d.usp?' · '+d.usp:'')});
+  Drawer.close(); toast('📁 Projekt angelegt'); Views.rerender('projekte'); Views.show('projekte'); projOpen(p.id);
+};
+/* ── Projekt-Detail (Vollansicht) ── */
+let projCur=null;
+window.projOpen=id=>{ projCur=id; Views.rerender('projekte'); Views.show('projekte'); };
+window.projBack=()=>{ projCur=null; Views.rerender('projekte'); };
+window.projSet=(id,k,v)=>{ const p=PROJECTS.find(x=>x.id===id); if(!p)return; p[k]=v; projSave(); };
+window.projStatus=(id,s)=>{ const p=PROJECTS.find(x=>x.id===id); if(!p)return;
+  p.status=s; projLog(p,'Status → '+s); projSave(); toast('Status: '+s); Views.rerender('projekte'); Views.rerender('dashboard'); };
+window.projDelete=id=>{ if(!confirm('Projekt wirklich löschen?'))return;
+  PROJECTS=PROJECTS.filter(x=>x.id!==id); projSave(); projCur=null; toast('Projekt gelöscht'); Views.rerender('projekte'); };
+window.msToggle=(id,mid)=>{ const p=PROJECTS.find(x=>x.id===id); const m=p&&p.milestones.find(x=>x.id===mid); if(!m)return;
+  m.done=!m.done; if(m.done&&!m.datum)m.datum=today(); projLog(p,(m.done?'✓ ':'↺ ')+m.titel); projSave(); Views.rerender('projekte'); };
+window.msDate=(id,mid,v)=>{ const p=PROJECTS.find(x=>x.id===id); const m=p&&p.milestones.find(x=>x.id===mid); if(m){m.datum=v;projSave();} };
+window.msDel=(id,mid)=>{ const p=PROJECTS.find(x=>x.id===id); if(!p)return; p.milestones=p.milestones.filter(x=>x.id!==mid); projSave(); Views.rerender('projekte'); };
+window.msAdd=id=>{ const p=PROJECTS.find(x=>x.id===id); if(!p)return;
+  const t=prompt('Milestone-Titel:'); if(!t)return; p.milestones.push({id:uid8(),titel:t,datum:'',done:false}); projSave(); Views.rerender('projekte'); };
+window.taskToggle=(id,tid)=>{ const p=PROJECTS.find(x=>x.id===id); const t=p&&p.tasks.find(x=>x.id===tid); if(t){t.done=!t.done;projSave();Views.rerender('projekte');} };
+window.taskAdd=id=>{ const p=PROJECTS.find(x=>x.id===id); if(!p)return;
+  const inp=document.getElementById('newTask-'+id); const v=(inp&&inp.value||'').trim(); if(!v)return;
+  p.tasks.push({id:uid8(),text:v,done:false}); projSave(); Views.rerender('projekte'); };
+window.taskDel=(id,tid)=>{ const p=PROJECTS.find(x=>x.id===id); if(!p)return; p.tasks=p.tasks.filter(x=>x.id!==tid); projSave(); Views.rerender('projekte'); };
+window.geUpd=(id,gid,k,v)=>{ const p=PROJECTS.find(x=>x.id===id); const g=p&&p.geraete.find(x=>x.id===gid); if(!g)return;
+  g[k]=+v||0; projSave(); const tot=document.getElementById('geTotal-'+id); if(tot)tot.textContent=fmtCHF(projTotal(p));
+  const row=document.getElementById('geSum-'+gid); if(row)row.textContent=fmtCHF((+g.menge||1)*(+g.tagespreis||0)*(+g.tage||1)); };
+window.geDel=(id,gid)=>{ const p=PROJECTS.find(x=>x.id===id); if(!p)return; p.geraete=p.geraete.filter(x=>x.id!==gid); projSave(); Views.rerender('projekte'); };
+window.gePick=id=>{ const p=PROJECTS.find(x=>x.id===id); if(!p)return;
+  const dTage=(toDate(p.ende)&&toDate(p.start))?Math.max(1,Math.round((toDate(p.ende)-toDate(p.start))/864e5)):7;
+  Drawer.open('Gerät hinzufügen',`
+    <div class="fld"><label>Katalog durchsuchen (${KAT.length} Produkte)</label>
+    <input id="gePickQ" placeholder="z.B. 200 kVA, Kabel, Verteiler, Trafo…" autocomplete="off"></div>
+    <div id="gePickRes"></div>`);
+  const q=document.getElementById('gePickQ'),res=document.getElementById('gePickRes');
+  function rr(){ const v=q.value.trim().toLowerCase();
+    const hits=v?KAT.filter(x=>[x.bez,x.code,x.kat,x.ukat].some(f=>String(f||'').toLowerCase().includes(v))).slice(0,30):KAT.slice(0,20);
+    res.innerHTML=hits.map(x=>{const pr=priceMatch(x.bez);
+      return `<div class="picker-item"><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(x.bez)}</div>
+      <div style="font-size:11px;color:var(--tx2)">${esc(x.code||'')} · ${esc(x.kat||'')}${pr?' · '+fmtCHF(pr)+'/Tag':''}</div></div>
+      <button class="add" data-i="${x._i}">+</button></div>`;}).join('')||'<div class="empty" style="padding:18px">Keine Treffer</div>';
+    res.querySelectorAll('.add').forEach(b=>b.onclick=()=>{ const item=KAT.find(k2=>k2._i===+b.dataset.i);
+      p.geraete.push({id:uid8(),katIdx:item._i,code:item.code,bez:item.bez,menge:1,tage:dTage,tagespreis:priceMatch(item.bez)});
+      projLog(p,'+ Gerät: '+item.bez); projSave(); toast('✓ '+String(item.bez).slice(0,40)); Views.rerender('projekte'); gePick(id); });
+  }
+  q.addEventListener('input',rr); rr(); q.focus();
+};
+window.projExport=id=>{ const p=PROJECTS.find(x=>x.id===id); if(!p)return;
+  const ms=msProgress(p);
+  const rows=[
+    ['PROJEKT',p.name],['Kunde',p.kunde],['Ort',p.ort],['Kanton',p.kt],['Segment',p.segment],['Typ',p.typ],
+    ['Status',p.status],['Start',p.start],['Ende',p.ende],['Beschreibung',p.beschreibung],
+    ['Fortschritt',ms.d+'/'+ms.t+' Milestones'],['Kalkulation Total',projTotal(p)],[''],
+    ['MILESTONES'],['Titel','Datum','Erledigt'],
+    ...(p.milestones||[]).map(m=>[m.titel,m.datum,m.done?'JA':'']),[''],
+    ['GERÄTE / KALKULATION'],['Code','Bezeichnung','Menge','Tage','CHF/Tag','Summe'],
+    ...(p.geraete||[]).map(g=>[g.code,g.bez,g.menge,g.tage,g.tagespreis,(+g.menge||1)*(+g.tagespreis||0)*(+g.tage||1)]),
+    ['','','','','TOTAL',projTotal(p)],[''],
+    ['AUFGABEN'],...(p.tasks||[]).map(t=>[(t.done?'[x] ':'[ ] ')+t.text])
+  ];
+  exportRows('Projekt_'+String(p.name).replace(/[^\wäöü]+/gi,'_').slice(0,26),['MiT ONE Projekt-Export',new Date().toLocaleString('de-CH')],rows);
+};
+window.projNewDialog=()=>{
+  Drawer.open('Neues Projekt',`
+    <div class="fld"><label>Projektname *</label><input id="np-name" placeholder="z.B. OpenAir Frauenfeld 2026"></div>
+    <div class="form-grid">
+      <div class="fld"><label>Kunde</label><input id="np-kunde" list="np-kunden"><datalist id="np-kunden">${KA.slice(0,400).map(k=>`<option value="${esc(k.co)}">`).join('')}</datalist></div>
+      <div class="fld"><label>Typ</label><select id="np-typ">${Object.keys(MS_TPL).map(t=>`<option>${t}</option>`).join('')}</select></div>
+      <div class="fld"><label>Ort</label><input id="np-ort"></div>
+      <div class="fld"><label>Kanton</label><input id="np-kt" maxlength="2" placeholder="ZH"></div>
+      <div class="fld"><label>Start</label><input id="np-start" type="date" value="${today()}"></div>
+      <div class="fld"><label>Ende</label><input id="np-ende" type="date"></div>
+    </div>
+    <div class="fld"><label>Beschreibung</label><textarea id="np-desc"></textarea></div>
+    <button class="tbtn primary" style="width:100%;justify-content:center;padding:10px" onclick="projCreateFromDialog()">✓ Projekt anlegen (Milestones automatisch)</button>`);
+};
+window.projCreateFromDialog=()=>{
+  const g=x=>document.getElementById(x).value.trim();
+  if(!g('np-name')){toast('⚠ Name fehlt');return;}
+  const p=projNew({name:g('np-name'),kunde:g('np-kunde'),ort:g('np-ort'),kt:g('np-kt').toUpperCase(),
+    typ:document.getElementById('np-typ').value,start:g('np-start'),ende:g('np-ende'),beschreibung:g('np-desc')});
+  Drawer.close(); toast('📁 Projekt mit '+p.milestones.length+' Milestones angelegt'); Views.rerender('projekte'); projOpen(p.id);
+};
+function buildProjekte(el){
+  if(projCur){ const p=PROJECTS.find(x=>x.id===projCur); if(p) return buildProjDetail(el,p); projCur=null; }
+  const act=PROJECTS.filter(p=>p.status!=='Abgeschlossen'&&p.status!=='Storniert');
+  const sum=PROJECTS.reduce((s,p)=>s+projTotal(p),0);
+  el.innerHTML=`<div class="hero" style="display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap">
+    <div style="flex:1"><h1>Projekte</h1><p>${PROJECTS.length} Projekte · ${act.length} aktiv · Kalkulationsvolumen ${fmtCHF(sum)}</p></div>
+    <button class="tbtn primary" onclick="projNewDialog()">＋ Neues Projekt</button></div>
+    ${PROJECTS.length?'':'<div class="card"><div class="empty"><div class="big">📁</div><b>Noch keine Projekte</b><p style="margin-top:6px">Lege ein Projekt an — oder öffne einen Pipeline-Deal und klicke «→ Projekt anlegen».<br>Milestones werden je nach Projekttyp automatisch vorbefüllt.</p><button class="tbtn primary" style="margin-top:14px" onclick="projNewDialog()">＋ Erstes Projekt anlegen</button></div></div>'}
+    <div class="pgrid stagger">${PROJECTS.map(p=>{ const ms=msProgress(p); const nx=(p.milestones||[]).find(m=>!m.done);
+      return `<div class="pcard" onclick="projOpen('${p.id}')">
+        <div style="display:flex;gap:8px;align-items:flex-start"><div style="flex:1"><div class="pname">${esc(p.name)}</div>
+        <div class="psub">${esc(p.kunde||'—')} · ${esc(p.ort||p.kt||'')}</div></div>
+        <span class="badge ${p.status==='Abgeschlossen'?'b-green':p.status==='Storniert'?'b-gray':p.status==='In Betrieb'?'b-purple':'b-blue'}">${esc(p.status)}</span></div>
+        <div class="prow"><div class="pbar"><div style="width:${ms.pct}%"></div></div><span>${ms.d}/${ms.t}</span></div>
+        <div class="prow"><span>📅 ${esc(p.start||'—')}${p.ende?' → '+esc(p.ende):''}</span><span style="margin-left:auto">⚙ ${(p.geraete||[]).length} Geräte</span></div>
+        <div class="prow"><b style="font-size:14px;color:var(--tx)">${fmtCHF(projTotal(p))}</b>${nx?`<span style="margin-left:auto;font-size:11px">→ ${esc(String(nx.titel).slice(0,26))}</span>`:''}</div>
+      </div>`;}).join('')}</div>`;
+}
+function buildProjDetail(el,p){
+  const ms=msProgress(p); const tot=projTotal(p);
+  const overdue=m=>!m.done&&m.datum&&m.datum<today();
+  el.innerHTML=`
+    <button class="back-btn" onclick="projBack()">‹ Alle Projekte</button>
+    <div class="hero" style="display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap">
+      <div style="flex:1;min-width:240px"><h1 style="font-size:26px">${esc(p.name)}</h1>
+      <p>${esc(p.kunde||'—')} · ${esc(p.ort||'')} ${esc(p.kt||'')} · ${esc(p.typ)} ${p.dealRef!=null?`· <a href="javascript:openDeal(${p.dealRef})" style="color:var(--blue)">Pipeline-Deal öffnen</a>`:''}</p></div>
+      <button class="tbtn" onclick="projExport('${p.id}')">↓ Projekt-Export</button>
+      <button class="tbtn" style="color:var(--red)" onclick="projDelete('${p.id}')">🗑</button></div>
+    <div class="card"><div class="card-h"><h3>🚦 Projektstatus</h3><span class="sub">Klicken zum Setzen</span></div><div class="card-b">
+      <div class="stepper">${PHASEN.map((ph,i)=>{ const ci=PHASEN.indexOf(p.status);
+        return `<span class="step ${i<ci?'done':''} ${ph===p.status?'cur':''}" onclick="projStatus('${p.id}','${ph}')">${i<ci?'✓ ':''}${ph}</span>`;}).join('')}
+        <span class="step ${p.status==='Storniert'?'cancel':''}" onclick="projStatus('${p.id}','Storniert')">✕ Storniert</span></div>
+    </div></div>
+    <div class="grid2">
+      <div class="card"><div class="card-h"><h3>🏁 Milestones</h3><span class="sub">${ms.d}/${ms.t} erledigt</span>
+        <div style="flex:1"></div><button class="tbtn" onclick="msAdd('${p.id}')">＋</button></div>
+        <div class="card-b" style="padding-top:8px">
+        <div class="prow" style="margin:2px 0 12px"><div class="pbar" style="height:9px"><div style="width:${ms.pct}%"></div></div><b>${ms.pct}%</b></div>
+        ${(p.milestones||[]).map((m,i)=>`<div class="ms-row ${m.done?'done':''} ${overdue(m)?'overdue':''}" style="animation-delay:${Math.min(i*35,350)}ms">
+          <div class="ms-chk ${m.done?'on':''}" onclick="msToggle('${p.id}','${m.id}')">${m.done?'✓':''}</div>
+          <div class="mt2">${esc(m.titel)}${overdue(m)?' ⚠':''}</div>
+          <input type="date" value="${esc(m.datum||'')}" onchange="msDate('${p.id}','${m.id}',this.value)">
+          <button class="del" onclick="msDel('${p.id}','${m.id}')">✕</button></div>`).join('')||'<div class="empty" style="padding:14px">Keine Milestones — mit ＋ hinzufügen</div>'}
+      </div></div>
+      <div>
+      <div class="card"><div class="card-h"><h3>✓ Aufgaben</h3><span class="sub">${(p.tasks||[]).filter(t=>t.done).length}/${(p.tasks||[]).length}</span></div>
+        <div class="card-b" style="padding-top:10px">
+        ${(p.tasks||[]).map(t=>`<div class="task-row"><div class="ms-chk ${t.done?'on':''}" style="width:19px;height:19px;font-size:10px" onclick="taskToggle('${p.id}','${t.id}')">${t.done?'✓':''}</div>
+          <span style="flex:1;font-size:13px;${t.done?'text-decoration:line-through;color:var(--tx3)':''}">${esc(t.text)}</span>
+          <button class="del ms-row" style="border:none;background:none;padding:2px" onclick="taskDel('${p.id}','${t.id}')">✕</button></div>`).join('')}
+        <div style="display:flex;gap:8px;margin-top:10px"><input id="newTask-${p.id}" class="inline-edit" placeholder="Neue Aufgabe…" onkeydown="if(event.key==='Enter')taskAdd('${p.id}')">
+        <button class="tbtn" onclick="taskAdd('${p.id}')">＋</button></div>
+      </div></div>
+      <div class="card"><div class="card-h"><h3>📋 Stammdaten</h3></div><div class="card-b">
+        <div class="form-grid">
+        <div class="fld"><label>Start</label><input type="date" value="${esc(p.start||'')}" onchange="projSet('${p.id}','start',this.value)"></div>
+        <div class="fld"><label>Ende</label><input type="date" value="${esc(p.ende||'')}" onchange="projSet('${p.id}','ende',this.value)"></div>
+        <div class="fld"><label>Ort</label><input value="${esc(p.ort||'')}" onchange="projSet('${p.id}','ort',this.value)"></div>
+        <div class="fld"><label>Kanton</label><input value="${esc(p.kt||'')}" maxlength="2" onchange="projSet('${p.id}','kt',this.value.toUpperCase())"></div></div>
+        <div class="fld"><label>Beschreibung</label><textarea onchange="projSet('${p.id}','beschreibung',this.value)">${esc(p.beschreibung||'')}</textarea></div>
+      </div></div>
+      </div>
+    </div>
+    <div class="card"><div class="card-h"><h3>⚙ Geräte & Kalkulation</h3><span class="sub">${(p.geraete||[]).length} Positionen aus dem Katalog</span>
+      <div style="flex:1"></div><button class="tbtn primary" onclick="gePick('${p.id}')">＋ Gerät aus Katalog</button></div>
+      <div class="card-b" style="padding-top:6px">
+      ${(p.geraete||[]).length?`<div class="twrap"><table class="getab"><thead><tr><th>Code</th><th>Bezeichnung</th><th>Menge</th><th>Tage</th><th>CHF/Tag</th><th style="text-align:right">Summe</th><th></th></tr></thead><tbody>
+        ${p.geraete.map(g=>`<tr><td style="color:var(--tx2)">${esc(g.code||'—')}</td><td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(g.bez)}</td>
+        <td><input type="number" min="1" value="${g.menge}" onchange="geUpd('${p.id}','${g.id}','menge',this.value)"></td>
+        <td><input type="number" min="1" value="${g.tage}" onchange="geUpd('${p.id}','${g.id}','tage',this.value)"></td>
+        <td><input type="number" min="0" step="10" value="${g.tagespreis}" onchange="geUpd('${p.id}','${g.id}','tagespreis',this.value)"></td>
+        <td style="text-align:right;font-weight:700" id="geSum-${g.id}">${fmtCHF((+g.menge||1)*(+g.tagespreis||0)*(+g.tage||1))}</td>
+        <td><button class="ge-del" onclick="geDel('${p.id}','${g.id}')">✕</button></td></tr>`).join('')}
+      </tbody></table></div>
+      <div style="display:flex;justify-content:flex-end;gap:14px;align-items:center;padding:14px 10px 2px;font-size:14px">
+        <span style="color:var(--tx2)">Kalkulation Total</span><b style="font-size:20px;letter-spacing:-.02em" id="geTotal-${p.id}">${fmtCHF(tot)}</b></div>`
+      :'<div class="empty" style="padding:22px"><div class="big">⚙</div>Noch keine Geräte — «＋ Gerät aus Katalog» öffnet den Picker mit automatischem Preis-Matching aus der Preisliste</div>'}
+    </div></div>
+    <div class="card"><div class="card-h"><h3>🕑 Verlauf</h3></div><div class="card-b" style="max-height:200px;overflow-y:auto;padding-top:8px">
+      ${(p.log||[]).slice(0,30).map(l=>`<div class="log-row"><span class="ts">${new Date(l.ts).toLocaleString('de-CH')}</span><br>${esc(l.text)}</div>`).join('')||'—'}
+    </div></div>`;
+}
+/* ═══════════════ KALENDER (Milestones + Follow-ups + Deadlines) ═══════════════ */
+function buildKalender(el){
+  const items=[];
+  PROJECTS.forEach(p=>(p.milestones||[]).forEach(m=>{ if(!m.done&&m.datum) items.push({d:m.datum,t:m.titel,s:'Projekt · '+p.name,c:'var(--blue)',fn:()=>projOpen(p.id)}); }));
+  P.forEach(dl=>{ const f=ovGet('P',dl._i).fup??dl.fup; const dd=toDate(f);
+    if(dd&&!['WON','LOST'].includes(pStatus(dl))) items.push({d:dd.toISOString().slice(0,10),t:'Follow-up: '+dl.co,s:'Pipeline · '+fmtCHF(pVal(dl)),c:'var(--purple)',fn:()=>openDeal(dl._i)}); });
+  AKQ.forEach(a=>{ const dd=toDate(a.deadline); if(dd&&!/erledigt|done/i.test(String(a.status)))
+    items.push({d:dd.toISOString().slice(0,10),t:a.aktion||a.co,s:'Akquise · '+(a.co||''),c:'var(--orange)',fn:()=>Views.show('akquise')}); });
+  K.forEach(k=>{ const dd=toDate(k.fup); if(dd) items.push({d:dd.toISOString().slice(0,10),t:'Follow-up: '+k.co,s:'CRM · '+(k.status||''),c:'var(--teal)',fn:()=>openKunde(k._i)}); });
+  items.sort((a,b)=>a.d.localeCompare(b.d));
+  const td=today(); const in7=new Date(Date.now()+7*864e5).toISOString().slice(0,10);
+  const grp={'⚠ Überfällig':items.filter(x=>x.d<td),'📌 Heute':items.filter(x=>x.d===td),
+    '📅 Diese Woche':items.filter(x=>x.d>td&&x.d<=in7),'🗓 Später':items.filter(x=>x.d>in7).slice(0,40)};
+  el.innerHTML=`<div class="hero"><h1>Kalender</h1><p>${items.length} Termine aus Projekten, Pipeline, CRM & Akquise</p></div>
+    ${Object.entries(grp).map(([g,its])=>its.length?`<div class="cal-day"><h4>${g} · ${its.length}</h4>
+      ${its.map((x,i)=>`<div class="cal-item" style="animation:riseIn .4s var(--ease) ${Math.min(i*40,320)}ms backwards" data-i="${items.indexOf(x)}">
+        <span class="dot2" style="background:${x.c}"></span><div style="flex:1"><div class="ct2">${esc(x.t)}</div><div class="cs2">${esc(x.s)}</div></div>
+        <span style="font-size:12px;font-weight:700;color:${x.d<td?'var(--red)':'var(--tx2)'}">${fmtD(x.d)}</span></div>`).join('')}</div>`:'').join('')||'<div class="card"><div class="empty"><div class="big">🗓</div>Keine anstehenden Termine</div></div>'}`;
+  el.querySelectorAll('.cal-item').forEach(n=>n.onclick=()=>items[+n.dataset.i].fn());
+}
+/* ═══════════════ NEUE DEALS + KUNDEN (CRUD) ═══════════════ */
+const EXTRA_KEY='one_extra_v1';
+let EXTRA={deals:[],kunden:[]}; try{EXTRA={deals:[],kunden:[],...JSON.parse(localStorage.getItem(EXTRA_KEY)||'{}')}}catch(e){}
+EXTRA.deals.forEach(x=>{ P.push({...x,_i:P.length,_new:true}); });
+EXTRA.kunden.forEach(x=>{ K.push({...x,_i:K.length,_new:true}); });
+const extraSave=()=>localStorage.setItem(EXTRA_KEY,JSON.stringify(EXTRA));
+window.dealNewDialog=()=>{
+  Drawer.open('Neuer Deal',`
+    <div class="fld"><label>Kunde / Unternehmen *</label><input id="nd-co" list="nd-l"><datalist id="nd-l">${KA.slice(0,400).map(k=>`<option value="${esc(k.co)}">`).join('')}</datalist></div>
+    <div class="form-grid">
+      <div class="fld"><label>Segment</label><input id="nd-seg" placeholder="Events, Bau, Industrie…"></div>
+      <div class="fld"><label>Kanton</label><input id="nd-kt" maxlength="2" placeholder="ZH"></div>
+      <div class="fld"><label>Leistung / Fleet</label><input id="nd-fleet" placeholder="2× 200 kVA"></div>
+      <div class="fld"><label>Volumen CHF</label><input id="nd-vol" type="number" min="0"></div>
+      <div class="fld"><label>Start</label><input id="nd-start" type="date"></div>
+      <div class="fld"><label>Dauer (Tage)</label><input id="nd-dauer" type="number" min="1"></div>
+    </div>
+    <div class="fld"><label>Nächster Schritt</label><input id="nd-next"></div>
+    <button class="tbtn primary" style="width:100%;justify-content:center;padding:10px" onclick="dealCreate()">✓ Deal anlegen</button>`);
+};
+window.dealCreate=()=>{
+  const g=x=>document.getElementById(x).value.trim();
+  if(!g('nd-co')){toast('⚠ Kunde fehlt');return;}
+  const d={nr:'NEU',co:g('nd-co'),kt:g('nd-kt').toUpperCase(),seg:g('nd-seg'),fleet:g('nd-fleet'),kw:'',dauer:g('nd-dauer'),
+    start:g('nd-start'),vol:+g('nd-vol')||0,equip:'',transp:'',fuel:'',tech:'',rest:'',marge:'',margeP:'',gew:'',
+    status:'OPPORTUNITY',wahr:0.5,akq:'Manuell',usp:'',next:g('nd-next'),fup:'',notiz:'Angelegt in MiT ONE '+today()};
+  EXTRA.deals.push(d); extraSave(); P.push({...d,_i:P.length,_new:true});
+  Drawer.close(); toast('✓ Deal angelegt'); Views.rerender('pipeline'); Views.rerender('dashboard'); Views.show('pipeline');
+};
+window.kundeNewDialog=()=>{
+  Drawer.open('Neuer Kunde (CRM)',`
+    <div class="fld"><label>Firmenname *</label><input id="nk-co"></div>
+    <div class="form-grid">
+      <div class="fld"><label>Priorität</label><select id="nk-prio"><option>A</option><option selected>B</option><option>C</option></select></div>
+      <div class="fld"><label>Segment</label><input id="nk-seg"></div>
+      <div class="fld"><label>Ort</label><input id="nk-ort"></div>
+      <div class="fld"><label>Kanton</label><input id="nk-kt" maxlength="2"></div>
+      <div class="fld"><label>Ansprechpartner</label><input id="nk-ap"></div>
+      <div class="fld"><label>Telefon</label><input id="nk-tel"></div>
+      <div class="fld"><label>E-Mail</label><input id="nk-mail" type="email"></div>
+      <div class="fld"><label>Bedarf / kVA</label><input id="nk-kva"></div>
+    </div>
+    <div class="fld"><label>Nächster Schritt</label><input id="nk-next"></div>
+    <button class="tbtn primary" style="width:100%;justify-content:center;padding:10px" onclick="kundeCreate()">✓ Kunde anlegen</button>`);
+};
+window.kundeCreate=()=>{
+  const g=x=>document.getElementById(x).value.trim();
+  if(!g('nk-co')){toast('⚠ Firmenname fehlt');return;}
+  const k={nr:'NEU',prio:document.getElementById('nk-prio').value,seg:g('nk-seg'),co:g('nk-co'),ort:g('nk-ort'),plz:'',
+    kt:g('nk-kt').toUpperCase(),ap:g('nk-ap'),funk:'',mail:g('nk-mail'),tel:g('nk-tel'),web:'',status:'Neu',
+    next:g('nk-next'),kva:g('nk-kva'),prod:'',fup:'',notiz:'Angelegt in MiT ONE '+today(),intern:'',wahr:'',wert:'',letzt:today(),fc:''};
+  EXTRA.kunden.push(k); extraSave(); K.push({...k,_i:K.length,_new:true});
+  Drawer.close(); toast('✓ Kunde angelegt'); Views.rerender('kunden'); Views.show('kunden');
+};
+/* Deal quick-edit */
+window.dealEdit=i=>{ const d=P.find(x=>x._i===i); if(!d)return; const o=ovGet('P',i);
+  Drawer.open('Deal bearbeiten — '+(d.co||''),`
+    <div class="form-grid">
+    <div class="fld"><label>Volumen CHF</label><input id="de-vol" type="number" value="${pVal(d)}"></div>
+    <div class="fld"><label>Follow-up</label><input id="de-fup" type="date" value="${(()=>{const x=toDate(o.fup??d.fup);return x?x.toISOString().slice(0,10):''})()}"></div></div>
+    <div class="fld"><label>Nächster Schritt</label><input id="de-next" value="${esc(o.next??d.next??'')}"></div>
+    <div class="fld"><label>Notiz</label><textarea id="de-notiz">${esc(o.notiz??d.notiz??'')}</textarea></div>
+    <button class="tbtn primary" style="width:100%;justify-content:center;padding:10px" onclick="dealEditSave(${i})">✓ Speichern</button>`);
+};
+window.dealEditSave=i=>{
+  ovSet('P',i,{vol:+document.getElementById('de-vol').value||0,fup:document.getElementById('de-fup').value,
+    next:document.getElementById('de-next').value,notiz:document.getElementById('de-notiz').value});
+  toast('✓ Gespeichert'); openDeal(i); Views.rerender('pipeline'); Views.rerender('dashboard');
+};
+Views.add('projekte','Projekte','Übersicht','▨',null,buildProjekte);
+Views.add('kalender','Kalender','Vertrieb','▦',null,buildKalender);
 
 /* ═══════════════ SIDEBAR BUILD ═══════════════ */
 (function(){
