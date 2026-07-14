@@ -1118,8 +1118,8 @@ function buildKalender(el){
 /* ═══════════════ NEUE DEALS + KUNDEN (CRUD) ═══════════════ */
 const EXTRA_KEY='one_extra_v1';
 let EXTRA={deals:[],kunden:[]}; try{EXTRA={deals:[],kunden:[],...JSON.parse(localStorage.getItem(EXTRA_KEY)||'{}')}}catch(e){}
-EXTRA.deals.forEach(x=>{ P.push({...x,_i:P.length,_new:true}); });
-EXTRA.kunden.forEach(x=>{ K.push({...x,_i:K.length,_new:true}); });
+EXTRA.deals.forEach((x,xi)=>{ P.push({...x,_i:P.length,_new:true,_xi:xi}); });
+EXTRA.kunden.forEach((x,xi)=>{ K.push({...x,_i:K.length,_new:true,_xi:xi}); });
 const extraSave=()=>localStorage.setItem(EXTRA_KEY,JSON.stringify(EXTRA));
 window.dealNewDialog=()=>{
   Drawer.open('Neuer Deal',`
@@ -1141,7 +1141,7 @@ window.dealCreate=()=>{
   const d={nr:'NEU',co:g('nd-co'),kt:g('nd-kt').toUpperCase(),seg:g('nd-seg'),fleet:g('nd-fleet'),kw:'',dauer:g('nd-dauer'),
     start:g('nd-start'),vol:+g('nd-vol')||0,equip:'',transp:'',fuel:'',tech:'',rest:'',marge:'',margeP:'',gew:'',
     status:'OPPORTUNITY',wahr:0.5,akq:'Manuell',usp:'',next:g('nd-next'),fup:'',notiz:'Angelegt in MiT ONE '+today()};
-  EXTRA.deals.push(d); extraSave(); P.push({...d,_i:P.length,_new:true});
+  EXTRA.deals.push(d); extraSave(); P.push({...d,_i:P.length,_new:true,_xi:EXTRA.deals.length-1});
   Drawer.close(); toast('✓ Deal angelegt'); Views.rerender('pipeline'); Views.rerender('dashboard'); Views.show('pipeline');
 };
 window.kundeNewDialog=()=>{
@@ -1166,7 +1166,7 @@ window.kundeCreate=()=>{
   const k={nr:'NEU',prio:document.getElementById('nk-prio').value,seg:g('nk-seg'),co:g('nk-co'),ort:g('nk-ort'),plz:'',
     kt:g('nk-kt').toUpperCase(),ap:g('nk-ap'),funk:'',mail:g('nk-mail'),tel:g('nk-tel'),web:'',status:'Neu',
     next:g('nk-next'),kva:g('nk-kva'),prod:'',fup:'',notiz:'Angelegt in MiT ONE '+today(),intern:'',wahr:'',wert:'',letzt:today(),fc:''};
-  EXTRA.kunden.push(k); extraSave(); K.push({...k,_i:K.length,_new:true});
+  EXTRA.kunden.push(k); extraSave(); K.push({...k,_i:K.length,_new:true,_xi:EXTRA.kunden.length-1});
   Drawer.close(); toast('✓ Kunde angelegt'); Views.rerender('kunden'); Views.show('kunden');
 };
 /* Deal quick-edit */
@@ -1186,6 +1186,248 @@ window.dealEditSave=i=>{
 };
 Views.add('projekte','Projekte','Übersicht','▨',null,buildProjekte);
 Views.add('kalender','Kalender','Vertrieb','▦',null,buildKalender);
+
+/* ═══════════════ UNIVERSAL-IMPORT — Excel rein, automatisch auf alle Reiter verteilt ═══════════════ */
+if(!EXTRA.kartei)EXTRA.kartei=[];
+EXTRA.kartei.forEach(x=>{ KA.push({...x,_i:KA.length,_new:true}); });
+/* Overlay-Patches beim Boot in die Objekte mergen (Import-Updates überleben Reload) */
+(function applyOverlays(){
+  for(const [i,patch] of Object.entries(OV.P||{})){ const d=P[+i]; if(d) Object.assign(d,patch); }
+  for(const [i,patch] of Object.entries(OV.K||{})){ const k=K[+i]; if(k) Object.assign(k,patch); }
+})();
+const _low=a=>a.map(h=>String(h==null?'':h).toLowerCase().replace(/\n/g,' ').trim());
+function findHeader(rows,sig){ // sig: array of substrings that must all appear in one row
+  for(let i=0;i<Math.min(12,rows.length);i++){
+    const h=_low(rows[i]);
+    if(sig.every(s=>h.some(c=>c.includes(s)))) return i;
+  } return -1;
+}
+const colIdx=(hdr,...names)=>{ const h=_low(hdr);
+  for(const n of names){ let i=h.indexOf(n); if(i>=0)return i; }
+  for(const n of names){ let i=h.findIndex(c=>c.includes(n)); if(i>=0)return i; }
+  return -1; };
+const cell=(r,i)=>i>=0&&r[i]!=null?(typeof r[i]==='object'&&r[i] instanceof Date?r[i].toISOString().slice(0,10):String(r[i]).trim()):'';
+const ncell=(r,i)=>{ const v=cell(r,i).replace(/['’\s]/g,''); const n=parseFloat(v); return isNaN(n)?0:n; };
+/* ── Format-Detektoren: jedes Sheet wird klassifiziert und gemappt ── */
+function detectSheet(name,rows){
+  let hi;
+  if((hi=findHeader(rows,['kunde / unternehmen','status','volumen']))>=0) return {kind:'pipeline',hi};
+  if((hi=findHeader(rows,['firmenname','prio']))>=0) return {kind:'kunden',hi};
+  if((hi=findHeader(rows,['kunde / unternehmen','mit strom']))>=0) return {kind:'kartei',hi};
+  if((hi=findHeader(rows,['name 1','ap:vorname']))>=0) return {kind:'kundenliste',hi};
+  if((hi=findHeader(rows,['item code','kategorie']))>=0) return {kind:'katalog',hi};
+  if((hi=findHeader(rows,['belegnummer','netto']))>=0) return {kind:'offerten',hi};
+  if((hi=findHeader(rows,['firma','telefon']))>=0) return {kind:'kontakte',hi};
+  if((hi=findHeader(rows,['firmenname','telefon']))>=0) return {kind:'kontakte',hi};
+  return {kind:null,hi:-1};
+}
+function parsePipelineSheet(rows,hi){
+  const h=rows[hi];
+  const C={co:colIdx(h,'kunde / unternehmen','kunde'),kt:colIdx(h,'kt.','kanton'),seg:colIdx(h,'segment'),
+    fleet:colIdx(h,'leistung / fleet','leistung'),kw:colIdx(h,'kw'),dauer:colIdx(h,'dauer'),start:colIdx(h,'start'),
+    vol:colIdx(h,'volumen'),equip:colIdx(h,'equip'),transp:colIdx(h,'transport'),fuel:colIdx(h,'treibst'),
+    tech:colIdx(h,'technik'),rest:colIdx(h,'übrige'),marge:colIdx(h,'marge chf','marge'),margeP:colIdx(h,'marge %'),
+    gew:colIdx(h,'gew.wert','gew'),status:colIdx(h,'status'),wahr:colIdx(h,'wahr'),akq:colIdx(h,'akquise'),
+    usp:colIdx(h,'usp'),next:colIdx(h,'nächster schritt','next'),fup:colIdx(h,'follow'),notiz:colIdx(h,'notiz')};
+  const out=[];
+  for(let i=hi+1;i<rows.length;i++){ const r=rows[i]; const co=cell(r,C.co);
+    if(!co||co.length<2||/^total|^summe/i.test(co)) continue;
+    out.push({co,kt:cell(r,C.kt).toUpperCase(),seg:cell(r,C.seg),fleet:cell(r,C.fleet),kw:cell(r,C.kw),
+      dauer:cell(r,C.dauer),start:cell(r,C.start),vol:ncell(r,C.vol),equip:ncell(r,C.equip),transp:ncell(r,C.transp),
+      fuel:ncell(r,C.fuel),tech:ncell(r,C.tech),rest:ncell(r,C.rest),marge:ncell(r,C.marge),margeP:cell(r,C.margeP),
+      gew:ncell(r,C.gew),status:cell(r,C.status),wahr:cell(r,C.wahr),akq:cell(r,C.akq),usp:cell(r,C.usp),
+      next:cell(r,C.next),fup:cell(r,C.fup),notiz:cell(r,C.notiz)});
+  } return out;
+}
+function parseKundenSheet(rows,hi){
+  const h=rows[hi];
+  const C={prio:colIdx(h,'prio'),seg:colIdx(h,'segment'),co:colIdx(h,'firmenname','firma'),ort:colIdx(h,'ort'),
+    plz:colIdx(h,'plz'),kt:colIdx(h,'kanton'),ap:colIdx(h,'ansprechpartner'),funk:colIdx(h,'funktion'),
+    mail:colIdx(h,'e-mail','mail'),tel:colIdx(h,'telefon'),web:colIdx(h,'website'),status:colIdx(h,'status'),
+    next:colIdx(h,'nächster schritt'),kva:colIdx(h,'bedarf'),prod:colIdx(h,'hauptprodukt','produkt'),
+    fup:colIdx(h,'follow'),notiz:colIdx(h,'notizen','notiz'),wahr:colIdx(h,'wahrsch'),wert:colIdx(h,'wert chf','wert'),fc:colIdx(h,'forecast')};
+  const out=[];
+  for(let i=hi+1;i<rows.length;i++){ const r=rows[i]; const co=cell(r,C.co);
+    if(!co||co.length<2) continue;
+    out.push({prio:cell(r,C.prio),seg:cell(r,C.seg),co,ort:cell(r,C.ort),plz:cell(r,C.plz),kt:cell(r,C.kt).toUpperCase(),
+      ap:cell(r,C.ap),funk:cell(r,C.funk),mail:cell(r,C.mail),tel:cell(r,C.tel),web:cell(r,C.web),status:cell(r,C.status),
+      next:cell(r,C.next),kva:cell(r,C.kva),prod:cell(r,C.prod),fup:cell(r,C.fup),notiz:cell(r,C.notiz),
+      wahr:cell(r,C.wahr),wert:ncell(r,C.wert),fc:ncell(r,C.fc)});
+  } return out;
+}
+function parseKarteiSheet(rows,hi){
+  const h=rows[hi];
+  const C={co:colIdx(h,'kunde / unternehmen','kunde'),seg:colIdx(h,'segment'),kt:colIdx(h,'kanton'),
+    verantw:colIdx(h,'verantwortlicher'),ap:colIdx(h,'ansprechperson'),tel:colIdx(h,'tel'),mit:colIdx(h,'mit strom'),
+    pstatus:colIdx(h,'pipeline status','pipeline'),mail:colIdx(h,'e-mail','mail')};
+  const out=[];
+  for(let i=hi+1;i<rows.length;i++){ const r=rows[i]; const co=cell(r,C.co);
+    if(!co||co.length<2) continue;
+    out.push({co,seg:cell(r,C.seg),kt:cell(r,C.kt).toUpperCase(),verantw:cell(r,C.verantw),ap:cell(r,C.ap),
+      tel:cell(r,C.tel),mit:cell(r,C.mit),pstatus:cell(r,C.pstatus),mail:cell(r,C.mail)});
+  } return out;
+}
+function parseKundenlisteSheet(rows,hi){
+  const h=rows[hi];
+  const C={co:colIdx(h,'name 1'),str:colIdx(h,'straße','strasse'),ort:colIdx(h,'ort'),plz:colIdx(h,'plz'),
+    tel0:colIdx(h,'telefon-1','telefon'),mail0:colIdx(h,'email','e-mail'),vn:colIdx(h,'ap:vorname'),
+    nn:colIdx(h,'ap:nachname'),apt:colIdx(h,'ap:telefon-1','ap:telefon'),apm:colIdx(h,'ap:mobil'),ape:colIdx(h,'ap:email')};
+  const out=[];
+  for(let i=hi+1;i<rows.length;i++){ const r=rows[i]; const co=cell(r,C.co);
+    if(!co||co.length<2) continue;
+    out.push({prio:'C',seg:'',co,ort:cell(r,C.ort),plz:cell(r,C.plz),kt:'',
+      ap:[cell(r,C.vn),cell(r,C.nn)].filter(Boolean).join(' '),funk:'',
+      mail:cell(r,C.ape)||cell(r,C.mail0),tel:cell(r,C.apt)||cell(r,C.apm)||cell(r,C.tel0),web:'',
+      status:'Neu',next:'',kva:'',prod:'',fup:'',notiz:cell(r,C.str),wahr:'',wert:0,fc:0});
+  } return out;
+}
+/* ── Merge-Engine: idempotent, verteilt auf die richtigen Reiter ── */
+const dealKey=d=>norm(d.co)+'|'+norm(d.fleet||'');
+function mergeImport(parsed){
+  const res={dealsNew:0,dealsUpd:0,kundenNew:0,kundenUpd:0,karteiNew:0,karteiSkip:0,details:[]};
+  for(const sh of parsed){
+    if(sh.kind==='pipeline'){
+      const idx=new Map(); P.forEach(d=>idx.set(dealKey(d),d));
+      for(const nd of sh.rows){
+        const cur=idx.get(dealKey(nd));
+        if(cur){
+          const patch={};
+          ['vol','equip','transp','fuel','tech','rest','marge','margeP','gew','status','wahr','next','fup','notiz','start','dauer','kw','seg','kt','akq','usp'].forEach(f=>{
+            if(nd[f]!==''&&nd[f]!=null&&String(nd[f])!==String(cur[f]??'')) patch[f]=nd[f]; });
+          if(Object.keys(patch).length){ Object.assign(cur,patch);
+            if(cur._new){ const ex=EXTRA.deals[cur._xi]; if(ex)Object.assign(ex,patch); }
+            else ovSet('P',cur._i,patch);
+            res.dealsUpd++; }
+        } else {
+          const d={nr:'IMP',...nd};
+          EXTRA.deals.push(d); const o={...d,_i:P.length,_new:true,_xi:EXTRA.deals.length-1};
+          P.push(o); idx.set(dealKey(o),o); res.dealsNew++;
+        }
+      }
+    }
+    if(sh.kind==='kunden'||sh.kind==='kundenliste'){
+      const idx=new Map(); K.forEach(k=>idx.set(norm(k.co),k));
+      for(const nk of sh.rows){
+        const cur=idx.get(norm(nk.co));
+        if(cur){
+          const patch={};
+          ['ap','funk','mail','tel','web','status','next','kva','prod','fup','wahr','wert','fc','ort','plz','kt','seg','prio'].forEach(f=>{
+            if(nk[f]!==''&&nk[f]!=null&&String(nk[f])!==String(cur[f]??'')) patch[f]=nk[f]; });
+          if(Object.keys(patch).length){ Object.assign(cur,patch);
+            if(cur._new){ const ex=EXTRA.kunden[cur._xi]; if(ex)Object.assign(ex,patch); }
+            else ovSet('K',cur._i,patch);
+            res.kundenUpd++; }
+        } else {
+          const k={nr:'IMP',...nk,notiz:(nk.notiz||'')};
+          EXTRA.kunden.push(k); K.push({...k,_i:K.length,_new:true,_xi:EXTRA.kunden.length-1});
+          idx.set(norm(k.co),K[K.length-1]); res.kundenNew++;
+        }
+      }
+    }
+    if(sh.kind==='kartei'||sh.kind==='kontakte'){
+      const idx=new Set(KA.map(k=>norm(k.co)));
+      for(const nk of sh.rows){
+        if(idx.has(norm(nk.co))){ res.karteiSkip++; continue; }
+        EXTRA.kartei.push(nk); KA.push({...nk,_i:KA.length,_new:true});
+        idx.add(norm(nk.co)); res.karteiNew++;
+      }
+    }
+  }
+  extraSave(); localStorage.setItem(OV_KEY,JSON.stringify(OV));
+  return res;
+}
+/* ── Import-UI: Datei lesen → Vorschau → Anwenden → alle Reiter aktualisieren ── */
+let IMP_PENDING=null;
+window.importFile=async function(file){
+  if(!file) return;
+  if(!window.XLSX){ toast('⚠ Excel-Bibliothek lädt noch — kurz warten'); return; }
+  toast('📥 '+file.name+' wird gelesen…');
+  try{
+    const buf=await file.arrayBuffer();
+    const wb=XLSX.read(new Uint8Array(buf),{type:'array',cellDates:true});
+    const parsed=[];
+    for(const sn of wb.SheetNames){
+      const rows=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,defval:null,raw:true});
+      if(rows.length<2) continue;
+      const det=detectSheet(sn,rows);
+      if(!det.kind) continue;
+      let data=[];
+      if(det.kind==='pipeline') data=parsePipelineSheet(rows,det.hi);
+      else if(det.kind==='kunden') data=parseKundenSheet(rows,det.hi);
+      else if(det.kind==='kartei'||det.kind==='kontakte') data=parseKarteiSheet(rows,det.hi);
+      else if(det.kind==='kundenliste') data=parseKundenlisteSheet(rows,det.hi);
+      else if(det.kind==='katalog'||det.kind==='offerten'){ parsed.push({kind:det.kind,sheet:sn,rows:[],info:'erkannt — bereits in der App eingebaut, übersprungen'}); continue; }
+      if(data.length) parsed.push({kind:det.kind,sheet:sn,rows:data});
+    }
+    if(!parsed.filter(p=>p.rows.length).length){ toast('⚠ Kein bekanntes Format — Sheets: '+wb.SheetNames.slice(0,4).join(', ')); return; }
+    /* Pro Format nur das beste Sheet behalten (Master-Tabelle = meiste Zeilen; Report-/Dashboard-Spiegel verwerfen) */
+    const best={};
+    for(const sh of parsed){ if(!sh.rows.length) continue;
+      if(!best[sh.kind]||sh.rows.length>best[sh.kind].rows.length) best[sh.kind]=sh; }
+    const dropped=parsed.filter(sh=>sh.rows.length&&best[sh.kind]!==sh).map(sh=>sh.sheet);
+    const parsedBest=Object.values(best);
+    if(!parsedBest.length){ toast('⚠ Keine Daten gefunden'); return; }
+    IMP_PENDING=parsedBest;
+    const parsedForUI=dropped.length?[...parsedBest,{kind:'info',sheet:dropped.join(', '),rows:[],info:'Spiegel-/Report-Sheets übersprungen (Duplikat der Master-Tabelle)'}]:parsedBest;
+    /* Vorschau: was passiert — OHNE zu schreiben (Simulation über Keys) */
+    const KLBL={info:'ℹ️ Hinweis',pipeline:'📊 Pipeline-Deals',kunden:'👥 Kunden-CRM',kartei:'🗂 Kundenkartei',kundenliste:'👥 Kundenliste → CRM',kontakte:'🗂 Kontakte → Kartei',katalog:'📦 Katalog',offerten:'📄 Offerten'};
+    const dealIdx=new Set(P.map(dealKey)), kIdx=new Set(K.map(k=>norm(k.co))), kaIdx=new Set(KA.map(k=>norm(k.co)));
+    const html=parsedForUI.map(sh=>{
+      if(!sh.rows.length) return `<div class="dr-sec">${KLBL[sh.kind]||sh.kind} — «${esc(sh.sheet)}»</div><div style="font-size:12.5px;color:var(--tx2)">${esc(sh.info||'leer')}</div>`;
+      let neu=0,upd=0;
+      if(sh.kind==='pipeline') sh.rows.forEach(r=>dealIdx.has(dealKey(r))?upd++:neu++);
+      else if(sh.kind==='kunden'||sh.kind==='kundenliste') sh.rows.forEach(r=>kIdx.has(norm(r.co))?upd++:neu++);
+      else sh.rows.forEach(r=>kaIdx.has(norm(r.co))?upd++:neu++);
+      return `<div class="dr-sec">${KLBL[sh.kind]||sh.kind} — «${esc(sh.sheet)}»</div>
+        ${kv('Zeilen erkannt',sh.rows.length)}${kv('Neu',`<b style="color:var(--green)">＋ ${neu}</b>`)}
+        ${kv(sh.kind==='kartei'||sh.kind==='kontakte'?'Bereits vorhanden (übersprungen)':'Aktualisiert',`<b style="color:var(--blue)">${upd}</b>`)}`;
+    }).join('');
+    Drawer.open('Import — '+file.name,html+`
+      <div style="display:flex;gap:8px;margin-top:20px">
+        <button class="tbtn primary" style="flex:1;justify-content:center;padding:11px" onclick="importApply()">✓ Importieren & auf alle Reiter verteilen</button>
+        <button class="tbtn" onclick="Drawer.close();IMP_PENDING=null">Abbrechen</button></div>`);
+  }catch(e){ console.warn(e); toast('❌ Import-Fehler: '+e.message); }
+};
+window.importApply=function(){
+  if(!IMP_PENDING) return;
+  const r=mergeImport(IMP_PENDING); IMP_PENDING=null;
+  Drawer.close();
+  refreshAll();
+  const parts=[];
+  if(r.dealsNew||r.dealsUpd)parts.push(`Pipeline: +${r.dealsNew} / ↻${r.dealsUpd}`);
+  if(r.kundenNew||r.kundenUpd)parts.push(`CRM: +${r.kundenNew} / ↻${r.kundenUpd}`);
+  if(r.karteiNew)parts.push(`Kartei: +${r.karteiNew}`);
+  toast('✅ Importiert — '+(parts.join(' · ')||'keine Änderungen'));
+};
+/* Alle Reiter neu aufbauen + Suchindex + Sidebar-Zähler */
+window.refreshAll=function(){
+  Object.keys(Views.reg).forEach(id=>Views.rerender(id));
+  Spot.idx=null;
+  const counts={pipeline:P.length,kunden:K.length,kartei:KA.length};
+  document.querySelectorAll('.nitem').forEach(n=>{
+    const c=counts[n.dataset.v]; if(c!=null){ const b=n.querySelector('.cnt'); if(b)b.textContent=c>999?(c/1000).toFixed(1).replace('.0','')+'k':c; }
+  });
+  if(Views.cur) Views.show(Views.cur);
+};
+/* Topbar-Button + globales Drag&Drop */
+(function(){
+  const inp=document.createElement('input'); inp.type='file'; inp.accept='.xlsx,.xls,.csv'; inp.style.display='none';
+  inp.onchange=()=>{ if(inp.files[0]) importFile(inp.files[0]); inp.value=''; };
+  document.body.appendChild(inp);
+  const btn=document.createElement('button'); btn.className='tbtn'; btn.textContent='⬆ Import';
+  btn.onclick=()=>inp.click();
+  const exp=$('exportBtn'); exp.parentNode.insertBefore(btn,exp);
+  let dragDepth=0;
+  const hint=document.createElement('div');
+  hint.style.cssText='position:fixed;inset:0;z-index:400;display:none;align-items:center;justify-content:center;background:rgba(0,113,227,.14);backdrop-filter:blur(4px);border:3px dashed var(--blue);pointer-events:none';
+  hint.innerHTML='<div style="background:var(--bg1);border-radius:20px;padding:26px 44px;font-size:17px;font-weight:700;box-shadow:var(--card-sh-h)">📥 Excel hier loslassen — wird automatisch verteilt</div>';
+  document.body.appendChild(hint);
+  window.addEventListener('dragenter',e=>{ if(e.dataTransfer&&[...e.dataTransfer.types].includes('Files')){ dragDepth++; hint.style.display='flex'; } });
+  window.addEventListener('dragleave',()=>{ if(--dragDepth<=0){dragDepth=0;hint.style.display='none';} });
+  window.addEventListener('dragover',e=>e.preventDefault());
+  window.addEventListener('drop',e=>{ e.preventDefault(); dragDepth=0; hint.style.display='none';
+    const f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0]; if(f)importFile(f); });
+})();
 
 /* ═══════════════ SIDEBAR BUILD ═══════════════ */
 (function(){
