@@ -326,6 +326,7 @@ table.getab input:focus{border-color:var(--blue)}
   text-overflow:ellipsis;color:#fff;cursor:pointer;transition:transform .12s;display:block}
 .cal-ev:hover{transform:translateX(2px)}
 .cal-more{font-size:10px;font-weight:700;color:var(--blue);padding:1px 7px;cursor:pointer}
+.cal-cell.wk{min-height:340px}
 .cal-cell.overdue-dot::after{content:'';position:absolute;top:8px;right:8px;width:7px;height:7px;border-radius:50%;background:var(--red)}
 @media(max-width:900px){.cal-cell{min-height:64px}.cal-ev{display:none}.cal-cell .cal-dots{display:flex;gap:2px;flex-wrap:wrap}
 .cal-dots i{width:6px;height:6px;border-radius:50%;display:block}}
@@ -941,7 +942,7 @@ Views.add('globalk','Global-Kontakte','Global','◌',GK.rows.length,buildGlobalK
 /* ═══════════════ PROJEKT-MODUL — Status · Milestones · Geräte · Kalkulation ═══════════════ */
 const PROJ_KEY='one_projects_v1';
 let PROJECTS=[]; try{PROJECTS=JSON.parse(localStorage.getItem(PROJ_KEY)||'[]')}catch(e){}
-const projSave=()=>localStorage.setItem(PROJ_KEY,JSON.stringify(PROJECTS));
+const projSave=()=>{ localStorage.setItem(PROJ_KEY,JSON.stringify(PROJECTS)); try{if(window.Spot)Spot.idx=null;}catch(e){} };
 const PHASEN=['Anfrage','Planung','Offeriert','Beauftragt','Lieferung','In Betrieb','Demontage','Abgeschlossen'];
 const MS_TPL={
  'Event':['Anfrage erhalten','Standort-Besichtigung','Lastberechnung erstellt','Offerte versendet','Auftrag erhalten','Disposition Geräte','Lieferung & Aufbau','Inbetriebnahme & Test','Event-Begleitung','Demontage','Rücktransport','Abrechnung & Feedback'],
@@ -1143,22 +1144,56 @@ function buildProjDetail(el,p){
 /* ═══════════════ OUTLOOK-KALENDER (Monat · Woche · Agenda) ═══════════════ */
 let calYM=(()=>{const n=new Date();return [n.getFullYear(),n.getMonth()];})();
 let calMode='monat';
+let calWeekStart=(()=>{const n=new Date();const d=new Date(n.getFullYear(),n.getMonth(),n.getDate());d.setDate(d.getDate()-((d.getDay()+6)%7));return d;})();
 function collectEvents(){
   const items=[];
   PROJECTS.forEach(p=>{
-    (p.milestones||[]).forEach(m=>{ if(m.datum) items.push({d:m.datum,t:(m.done?'✓ ':'')+m.titel,s:'Projekt · '+p.name,c:m.done?'#8e8e93':'#0071e3',done:m.done,fn:()=>projOpen(p.id)}); });
-    if(p.start) items.push({d:p.start,t:'▶ Start: '+p.name,s:'Projekt · '+(p.kunde||''),c:'#34c759',fn:()=>projOpen(p.id)});
-    if(p.ende) items.push({d:p.ende,t:'■ Ende: '+p.name,s:'Projekt · '+(p.kunde||''),c:'#af52de',fn:()=>projOpen(p.id)});
+    (p.milestones||[]).forEach(m=>{ if(m.datum) items.push({d:m.datum,t:(m.done?'✓ ':'')+m.titel,s:'Projekt · '+p.name,c:m.done?'#8e8e93':'#0071e3',done:m.done,ref:{type:'ms',pid:p.id,mid:m.id},fn:()=>projOpen(p.id)}); });
+    if(p.start) items.push({d:p.start,t:'▶ Start: '+p.name,s:'Projekt · '+(p.kunde||''),c:'#34c759',ref:{type:'pstart',pid:p.id},fn:()=>projOpen(p.id)});
+    if(p.ende) items.push({d:p.ende,t:'■ Ende: '+p.name,s:'Projekt · '+(p.kunde||''),c:'#af52de',ref:{type:'pende',pid:p.id},fn:()=>projOpen(p.id)});
   });
   P.forEach(dl=>{ const f=ovGet('P',dl._i).fup??dl.fup; const dd=toDate(f);
-    if(dd&&!['WON','LOST'].includes(pStatus(dl))) items.push({d:dd.toISOString().slice(0,10),t:'Follow-up: '+dl.co,s:'Pipeline · '+fmtCHF(pVal(dl)),c:'#af52de',fn:()=>openDeal(dl._i)}); });
+    if(dd&&!['WON','LOST'].includes(pStatus(dl))) items.push({d:dd.toISOString().slice(0,10),t:'Follow-up: '+dl.co,s:'Pipeline · '+fmtCHF(pVal(dl)),c:'#af52de',ref:{type:'dealfup',i:dl._i},fn:()=>openDeal(dl._i)}); });
   AKQ.forEach(a=>{ const dd=toDate(a.deadline); if(dd&&!/erledigt|done/i.test(String(a.status)))
     items.push({d:dd.toISOString().slice(0,10),t:a.aktion||a.co,s:'Akquise · '+(a.co||''),c:'#ff9500',fn:()=>Views.show('akquise')}); });
-  K.forEach(k=>{ const dd=toDate(k.fup); if(dd) items.push({d:dd.toISOString().slice(0,10),t:'Follow-up: '+k.co,s:'CRM · '+(k.status||''),c:'#5ac8fa',fn:()=>openKunde(k._i)}); });
+  K.forEach(k=>{ const f=ovGet('K',k._i).fup??k.fup; const dd=toDate(f);
+    if(dd) items.push({d:dd.toISOString().slice(0,10),t:'Follow-up: '+k.co,s:'CRM · '+(k.status||''),c:'#5ac8fa',ref:{type:'kfup',i:k._i},fn:()=>openKunde(k._i)}); });
   return items.sort((a,b)=>a.d.localeCompare(b.d));
 }
-window.calShift=n=>{ let [y,m]=calYM; m+=n; while(m<0){m+=12;y--;} while(m>11){m-=12;y++;} calYM=[y,m]; Views.rerender('kalender'); };
-window.calToday=()=>{ const n=new Date(); calYM=[n.getFullYear(),n.getMonth()]; Views.rerender('kalender'); };
+/* Drag&Drop: Termin auf neuen Tag ziehen */
+window.calMove=function(refJson,iso){
+  let ref; try{ref=JSON.parse(refJson)}catch(e){return;}
+  if(ref.type==='ms'){ const p=PROJECTS.find(x=>x.id===ref.pid); const m=p&&p.milestones.find(x=>x.id===ref.mid);
+    if(m){ m.datum=iso; projLog(p,'📅 «'+m.titel+'» verschoben auf '+iso); projSave(); } }
+  else if(ref.type==='pstart'){ const p=PROJECTS.find(x=>x.id===ref.pid); if(p){ p.start=iso; projLog(p,'📅 Start verschoben auf '+iso); projSave(); } }
+  else if(ref.type==='pende'){ const p=PROJECTS.find(x=>x.id===ref.pid); if(p){ p.ende=iso; projLog(p,'📅 Ende verschoben auf '+iso); projSave(); } }
+  else if(ref.type==='dealfup'){ const d=P.find(x=>x._i===ref.i); if(d){ d.fup=iso; if(d._new){const ex=EXTRA.deals[d._xi];if(ex)ex.fup=iso;extraSave();} else ovSet('P',ref.i,{fup:iso}); } }
+  else if(ref.type==='kfup'){ const k=K.find(x=>x._i===ref.i); if(k){ k.fup=iso; if(k._new){const ex=EXTRA.kunden[k._xi];if(ex)ex.fup=iso;extraSave();} else ovSet('K',ref.i,{fup:iso}); } }
+  else return;
+  toast('📅 Verschoben auf '+fmtD(iso));
+  Views.rerender('kalender'); Views.rerender('projekte'); Views.rerender('dashboard');
+};
+/* ICS-Export — Termine in echtes Outlook übernehmen */
+window.calICS=function(){
+  const items=collectEvents().filter(x=>!x.done);
+  const dt=s=>s.replace(/-/g,'');
+  const now=new Date().toISOString().replace(/[-:.]/g,'').slice(0,15)+'Z';
+  const lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//MiT ONE//Kalender//DE','CALSCALE:GREGORIAN'];
+  items.forEach((e,i)=>{ lines.push('BEGIN:VEVENT','UID:mitone-'+i+'-'+dt(e.d)+'@mitone',
+    'DTSTAMP:'+now,'DTSTART;VALUE=DATE:'+dt(e.d),
+    'SUMMARY:'+String(e.t).replace(/[\n,;]/g,' '),
+    'DESCRIPTION:'+String(e.s).replace(/[\n,;]/g,' '),'END:VEVENT'); });
+  lines.push('END:VCALENDAR');
+  const b=new Blob([lines.join('\r\n')],{type:'text/calendar;charset=utf-8'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(b);
+  a.download='MiT_ONE_Kalender.ics'; a.click(); URL.revokeObjectURL(a.href);
+  toast('📆 '+items.length+' Termine als .ics — in Outlook öffnen');
+};
+window.calShift=n=>{ if(calMode==='woche'){ calWeekStart=new Date(calWeekStart.getTime()+n*7*864e5); Views.rerender('kalender'); return; }
+  let [y,m]=calYM; m+=n; while(m<0){m+=12;y--;} while(m>11){m-=12;y++;} calYM=[y,m]; Views.rerender('kalender'); };
+window.calToday=()=>{ const n=new Date(); calYM=[n.getFullYear(),n.getMonth()];
+  const d=new Date(n.getFullYear(),n.getMonth(),n.getDate()); d.setDate(d.getDate()-((d.getDay()+6)%7)); calWeekStart=d;
+  Views.rerender('kalender'); };
 window.calSetMode=m=>{ calMode=m; Views.rerender('kalender'); };
 window.calDay=d=>{ const evs=collectEvents().filter(x=>x.d===d); window._calEvs=evs;
   Drawer.open(new Date(d+'T12:00').toLocaleDateString('de-CH',{weekday:'long',day:'numeric',month:'long',year:'numeric'}),
@@ -1171,15 +1206,21 @@ function buildKalender(el){
   const [y,m]=calYM;
   const MON=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
   const td=today();
-  el.innerHTML=`<div class="hero" style="margin-bottom:14px"><h1>Kalender</h1><p>${items.length} Termine aus Projekten, Pipeline, CRM & Akquise</p></div>
+  const wkEnd=new Date(calWeekStart.getTime()+6*864e5);
+  const isoW=(()=>{const d=new Date(calWeekStart);d.setDate(d.getDate()+3);const j=new Date(d.getFullYear(),0,4);return 1+Math.round(((d-j)/864e5-3+((j.getDay()+6)%7))/7);})();
+  const title=calMode==='woche'
+    ?`KW ${isoW} · ${calWeekStart.getDate()}.${calWeekStart.getMonth()+1}. – ${wkEnd.getDate()}.${wkEnd.getMonth()+1}.${wkEnd.getFullYear()}`
+    :`${MON[m]} ${y}`;
+  el.innerHTML=`<div class="hero" style="margin-bottom:14px"><h1>Kalender</h1><p>${items.length} Termine · Chips per Drag&Drop verschieben</p></div>
     <div class="cal-head">
       <div class="cal-nav"><button onclick="calShift(-1)">‹</button><button onclick="calShift(1)">›</button></div>
-      <div class="cal-title">${MON[m]} ${y}</div>
+      <div class="cal-title">${title}</div>
       <button class="tbtn" onclick="calToday()">Heute</button>
       <div style="flex:1"></div>
-      <div class="seg-ctl"><button class="${calMode==='monat'?'on':''}" onclick="calSetMode('monat')">Monat</button><button class="${calMode==='agenda'?'on':''}" onclick="calSetMode('agenda')">Agenda</button></div>
+      <div class="seg-ctl"><button class="${calMode==='monat'?'on':''}" onclick="calSetMode('monat')">Monat</button><button class="${calMode==='woche'?'on':''}" onclick="calSetMode('woche')">Woche</button><button class="${calMode==='agenda'?'on':''}" onclick="calSetMode('agenda')">Agenda</button></div>
+      <button class="tbtn" onclick="calICS()" title="Für Outlook/Apple/Google Kalender">📆 .ics</button>
       <div style="display:flex;gap:10px;font-size:11px;color:var(--tx2);flex-wrap:wrap">
-        <span>🔵 Milestones</span><span>🟢 Projekt-Start</span><span>🟣 Follow-ups</span><span>🟠 Akquise</span></div>
+        <span>🔵 Milestones</span><span>🟢 Start</span><span>🟣 Follow-ups</span><span>🟠 Akquise</span></div>
     </div><div id="calBody"></div>`;
   const body=el.querySelector('#calBody');
   if(calMode==='agenda'){
@@ -1194,25 +1235,32 @@ function buildKalender(el){
     body.querySelectorAll('.cal-item').forEach(n=>n.onclick=()=>items[+n.dataset.i].fn());
     return;
   }
-  /* Monats-Grid (Outlook-Stil, Wochenstart Montag) */
-  const first=new Date(y,m,1);
-  let startDow=(first.getDay()+6)%7; // Mo=0
-  const gridStart=new Date(y,m,1-startDow);
+  /* Grid (Outlook-Stil, Wochenstart Montag) — Monat: 6 Wochen · Woche: 1 Zeile mit hohen Zellen */
+  const weeksN=calMode==='woche'?1:6;
+  const maxChips=calMode==='woche'?12:3;
+  let gridStart;
+  if(calMode==='woche'){ gridStart=new Date(calWeekStart); }
+  else { const first=new Date(y,m,1); const startDow=(first.getDay()+6)%7; gridStart=new Date(y,m,1-startDow); }
   const byDay={}; items.forEach(e=>{(byDay[e.d]=byDay[e.d]||[]).push(e);});
   let html='<div class="cal-grid"><div class="cal-dow">'+['Mo','Di','Mi','Do','Fr','Sa','So'].map(d=>`<div>${d}</div>`).join('')+'</div>';
   window._calAll=items;
-  for(let w=0;w<6;w++){
+  for(let w=0;w<weeksN;w++){
     html+='<div class="cal-week">';
     for(let d2=0;d2<7;d2++){
       const dt=new Date(gridStart.getTime()+(w*7+d2)*864e5);
       const iso=dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
       const evs=byDay[iso]||[];
-      const other=dt.getMonth()!==m;
+      const other=calMode!=='woche'&&dt.getMonth()!==m;
       const hasOverdue=evs.some(e=>iso<td&&!e.done&&e.c==='#0071e3');
-      html+=`<div class="cal-cell ${other?'other':''} ${iso===td?'today':''} ${hasOverdue?'overdue-dot':''}" onclick="calDay('${iso}')">
+      html+=`<div class="cal-cell ${other?'other':''} ${iso===td?'today':''} ${hasOverdue?'overdue-dot':''} ${calMode==='woche'?'wk':''}"
+        data-iso="${iso}" onclick="calDay('${iso}')"
+        ondragover="event.preventDefault();this.style.background='rgba(0,113,227,.10)'"
+        ondragleave="this.style.background=''"
+        ondrop="event.preventDefault();this.style.background='';var r=event.dataTransfer.getData('text/plain');if(r)calMove(r,this.dataset.iso)">
         <div class="cal-num">${dt.getDate()}</div>
-        ${evs.slice(0,3).map(e=>`<span class="cal-ev" style="background:${e.c}" title="${esc(e.t)}" onclick="event.stopPropagation();window._calAll[${items.indexOf(e)}].fn()">${esc(e.t)}</span>`).join('')}
-        ${evs.length>3?`<span class="cal-more">+${evs.length-3} weitere</span>`:''}
+        ${evs.slice(0,maxChips).map(e=>{ const drag=e.ref?`draggable="true" ondragstart="event.stopPropagation();event.dataTransfer.setData('text/plain',JSON.stringify(window._calAll[${items.indexOf(e)}].ref))"`:'';
+          return `<span class="cal-ev" style="background:${e.c}" ${drag} title="${esc(e.t)}${e.ref?' — ziehen zum Verschieben':''}" onclick="event.stopPropagation();window._calAll[${items.indexOf(e)}].fn()">${esc(e.t)}</span>`;}).join('')}
+        ${evs.length>maxChips?`<span class="cal-more">+${evs.length-maxChips} weitere</span>`:''}
         <div class="cal-dots">${evs.slice(0,6).map(e=>`<i style="background:${e.c}"></i>`).join('')}</div>
       </div>`;
     }
@@ -1616,6 +1664,7 @@ const Spot={
       ...OFF.map(d=>({g:'Offerten',t:String(d.beleg||''),s:(d.co||'')+' · '+fmtCHF(d.total),fn:()=>openOfferte(d._i)})),
       ...DCB.map(d=>({g:'Data Center',t:d.co,s:'Betreiber · '+(d.kt||''),fn:()=>{Views.show('dc');}})),
       ...DCK.map(d=>({g:'DC-Kontakte',t:d.name,s:(d.co||''),fn:()=>openDCK(d._i)})),
+      ...PROJECTS.map(p=>({g:'Projekte',t:p.name,s:(p.status||'')+' · '+(p.kunde||''),fn:()=>projOpen(p.id)})),
     ];
   },
   render(q){ this.buildIdx(); this.sel=0;
