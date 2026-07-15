@@ -1,128 +1,117 @@
 # -*- coding: utf-8 -*-
 """
-Projektsteuerungs-Tool MiT-PWR-WIN-2026-001
-Erstellt eine SharePoint-taugliche .xlsx (ohne Makros) mit 6 Registerblaettern.
-Schweizer Schreibweise (ss statt scharfes S). Farben: Navy #1F3A5F, Orange #E8740C.
+Projektsteuerungs-Tool MiT-PWR-WIN-2026-001  (erweiterte Version)
+SharePoint-taugliche .xlsx ohne Makros. Schweizer Schreibweise (ss statt scharfes S).
+Farben: Navy #1F3A5F, Orange #E8740C, Schrift Arial.
+
+9 Registerblaetter:
+  Dashboard | Terminplan (Gantt) | Meilensteine | Aufgaben | Personal & Zutritt |
+  Offene Punkte & Risiken | Dokumente | Kontakte | Aenderungslog
+
+Alle Formeln sind intern englisch/komma-getrennt gespeichert (Excel-Standard) und
+werden in deutschem Excel automatisch lokalisiert angezeigt.
 """
+import datetime
 from openpyxl import Workbook
-from openpyxl.styles import Font, PatternFill, Alignment, Border, Side, NamedStyle
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.worksheet.table import Table, TableStyleInfo
 from openpyxl.worksheet.datavalidation import DataValidation
-from openpyxl.formatting.rule import CellIsRule, FormulaRule
+from openpyxl.formatting.rule import CellIsRule, FormulaRule, DataBarRule
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.properties import PageSetupProperties
-from openpyxl.worksheet.formula import ArrayFormula
 
 # ---------------------------------------------------------------- Farben / Stile
-NAVY = "1F3A5F"
-ORANGE = "E8740C"
-WHITE = "FFFFFF"
-LIGHT = "F2F5F9"       # helle Zeilenfuellung
-GREEN = "C6EFCE"       # erledigt
-GREEN_TXT = "006100"
-RED = "FFC7CE"         # kritisch / ueberfaellig
-RED_TXT = "9C0006"
-ORANGE_FILL = "FFE4C4" # ueberfaellig hell
-ORANGE_TXT = "9C4A00"
-YELLOW = "FFEB9C"      # in Arbeit
-YELLOW_TXT = "9C6500"
-GREY = "D9D9D9"
+NAVY = "1F3A5F"; ORANGE = "E8740C"; WHITE = "FFFFFF"
+LIGHT = "F2F5F9"
+GREEN = "C6EFCE"; GREEN_TXT = "006100"
+RED = "FFC7CE"; RED_TXT = "9C0006"
+ORANGE_FILL = "FCE3C8"; ORANGE_TXT = "9C4A00"
+YELLOW = "FFEB9C"; YELLOW_TXT = "9C6500"
+GREY = "D9D9D9"; BAR_BLUE = "4F81BD"
+GANTT = "E8740C"
 
 FONT_NAME = "Arial"
-
-hdr_font = Font(name=FONT_NAME, size=10, bold=True, color=WHITE)
-hdr_fill = PatternFill("solid", fgColor=NAVY)
+hdr_font   = Font(name=FONT_NAME, size=10, bold=True, color=WHITE)
+hdr_fill   = PatternFill("solid", fgColor=NAVY)
 title_font = Font(name=FONT_NAME, size=16, bold=True, color=NAVY)
-sub_font = Font(name=FONT_NAME, size=11, bold=True, color=ORANGE)
+sub_font   = Font(name=FONT_NAME, size=11, bold=True, color=ORANGE)
 label_font = Font(name=FONT_NAME, size=10, bold=True, color=NAVY)
-base_font = Font(name=FONT_NAME, size=10, color="000000")
-kpi_num_font = Font(name=FONT_NAME, size=20, bold=True, color=NAVY)
-kpi_lbl_font = Font(name=FONT_NAME, size=9, bold=True, color="404040")
+base_font  = Font(name=FONT_NAME, size=10, color="000000")
+kpi_num    = Font(name=FONT_NAME, size=18, bold=True, color=NAVY)
+kpi_lbl    = Font(name=FONT_NAME, size=9, bold=True, color="404040")
+small_it   = Font(name=FONT_NAME, size=8, italic=True, color="808080")
 
 thin = Side(style="thin", color="BFBFBF")
 border = Border(left=thin, right=thin, top=thin, bottom=thin)
 center = Alignment(horizontal="center", vertical="center", wrap_text=True)
-left = Alignment(horizontal="left", vertical="center", wrap_text=True)
+left   = Alignment(horizontal="left", vertical="center", wrap_text=True)
 left_top = Alignment(horizontal="left", vertical="top", wrap_text=True)
 
 STATUS_LIST = "offen,in Arbeit,erledigt,verschoben,kritisch"
-STATUS_DOK = "Entwurf,final,signiert,ueberholt"
+STATUS_DOK  = "Entwurf,final,signiert,ueberholt"
 
+D = lambda m, d, hh=0, mm=0: datetime.datetime(2026, m, d, hh, mm)
 wb = Workbook()
 
 # ---------------------------------------------------------------- Hilfsfunktionen
-def style_header(ws, row, ncols, start_col=1):
-    for c in range(start_col, start_col + ncols):
-        cell = ws.cell(row=row, column=c)
-        cell.font = hdr_font
-        cell.fill = hdr_fill
-        cell.alignment = center
-        cell.border = border
+def widths(ws, ws_widths, start=1):
+    for i, w in enumerate(ws_widths):
+        ws.column_dimensions[get_column_letter(start + i)].width = w
 
-def style_body(ws, first_row, last_row, ncols, start_col=1, align=left_top):
-    for r in range(first_row, last_row + 1):
-        for c in range(start_col, start_col + ncols):
+def header_row(ws, row, cols, start=1):
+    for i, h in enumerate(cols):
+        c = ws.cell(row=row, column=start + i, value=h)
+        c.font = hdr_font; c.fill = hdr_fill; c.alignment = center; c.border = border
+
+def body(ws, r0, r1, ncols, start=1, align=left_top):
+    for r in range(r0, r1 + 1):
+        for c in range(start, start + ncols):
             cell = ws.cell(row=r, column=c)
-            cell.font = base_font
-            cell.alignment = align
-            cell.border = border
+            cell.font = base_font; cell.alignment = align; cell.border = border
 
-def set_widths(ws, widths, start_col=1):
-    for i, w in enumerate(widths):
-        ws.column_dimensions[get_column_letter(start_col + i)].width = w
+def make_table(ws, name, r0, r1, ncols, start=1):
+    ref = f"{get_column_letter(start)}{r0}:{get_column_letter(start+ncols-1)}{r1}"
+    t = Table(displayName=name, ref=ref)
+    t.tableStyleInfo = TableStyleInfo(name="TableStyleMedium2", showRowStripes=True)
+    ws.add_table(t)
 
-def make_table(ws, name, first_row, last_row, ncols, start_col=1):
-    ref = f"{get_column_letter(start_col)}{first_row}:{get_column_letter(start_col+ncols-1)}{last_row}"
-    tbl = Table(displayName=name, ref=ref)
-    tbl.tableStyleInfo = TableStyleInfo(
-        name="TableStyleMedium2", showFirstColumn=False, showLastColumn=False,
-        showRowStripes=True, showColumnStripes=False)
-    ws.add_table(tbl)
-
-def page_setup(ws, freeze="A1"):
+def page_setup(ws, freeze="A2", title_rows="1:1"):
     ws.page_setup.orientation = "landscape"
     ws.page_setup.paperSize = ws.PAPERSIZE_A4
-    ws.page_setup.fitToWidth = 1
-    ws.page_setup.fitToHeight = 0
+    ws.page_setup.fitToWidth = 1; ws.page_setup.fitToHeight = 0
     ws.sheet_properties.pageSetUpPr = PageSetupProperties(fitToPage=True)
     ws.print_options.horizontalCentered = True
     ws.page_margins.left = ws.page_margins.right = 0.4
     ws.page_margins.top = ws.page_margins.bottom = 0.5
     ws.freeze_panes = freeze
+    if title_rows:
+        ws.print_title_rows = title_rows
 
-def status_cond_fmt(ws, col_letter, first, last):
-    """Bedingte Formatierung fuer eine Status-Spalte."""
-    rng = f"{col_letter}{first}:{col_letter}{last}"
-    ws.conditional_formatting.add(rng, CellIsRule(operator="equal", formula=['"erledigt"'],
-        fill=PatternFill("solid", fgColor=GREEN), font=Font(name=FONT_NAME, color=GREEN_TXT)))
-    ws.conditional_formatting.add(rng, CellIsRule(operator="equal", formula=['"kritisch"'],
-        fill=PatternFill("solid", fgColor=RED), font=Font(name=FONT_NAME, color=RED_TXT)))
-    ws.conditional_formatting.add(rng, CellIsRule(operator="equal", formula=['"in Arbeit"'],
-        fill=PatternFill("solid", fgColor=YELLOW), font=Font(name=FONT_NAME, color=YELLOW_TXT)))
-    ws.conditional_formatting.add(rng, CellIsRule(operator="equal", formula=['"verschoben"'],
-        fill=PatternFill("solid", fgColor=ORANGE_FILL), font=Font(name=FONT_NAME, color=ORANGE_TXT)))
+def status_cf(ws, col, r0, r1):
+    rng = f"{col}{r0}:{col}{r1}"
+    for val, fill, txt in [("erledigt", GREEN, GREEN_TXT), ("kritisch", RED, RED_TXT),
+                           ("in Arbeit", YELLOW, YELLOW_TXT), ("verschoben", ORANGE_FILL, ORANGE_TXT)]:
+        ws.conditional_formatting.add(rng, CellIsRule(operator="equal", formula=[f'"{val}"'],
+            fill=PatternFill("solid", fgColor=fill), font=Font(name=FONT_NAME, color=txt)))
 
-def add_dv(ws, formula, cell_range):
-    dv = DataValidation(type="list", formula1=f'"{formula}"', allow_blank=True)
-    dv.error = "Bitte einen Wert aus der Liste waehlen."
-    dv.errorTitle = "Ungueltige Eingabe"
+def add_dv(ws, items, rng):
+    dv = DataValidation(type="list", formula1=f'"{items}"', allow_blank=True)
+    dv.error = "Bitte einen Wert aus der Liste waehlen."; dv.errorTitle = "Ungueltige Eingabe"
     dv.prompt = "Wert aus Dropdown waehlen"
-    ws.add_data_validation(dv)
-    dv.add(cell_range)
-    return dv
+    ws.add_data_validation(dv); dv.add(rng)
 
 # ================================================================ 1) DASHBOARD
 ws = wb.active
 ws.title = "Dashboard"
 ws.sheet_view.showGridLines = False
-set_widths(ws, [3, 26, 30, 6, 24, 22, 22, 18])
+widths(ws, [3, 34, 30, 8, 30, 12, 16, 12])  # A..H
 
-ws["B2"] = "PROJEKTSTEUERUNG"
-ws["B2"].font = title_font
+ws["B2"] = "PROJEKTSTEUERUNG"; ws["B2"].font = title_font
+ws.merge_cells("B2:D2")
 ws["B3"] = "MiT-PWR-WIN-2026-001  |  DPR Construction / Vantage Datacenter ZRH12"
-ws["B3"].font = sub_font
+ws["B3"].font = sub_font; ws.merge_cells("B3:H3")
 
-# Projektstammdaten
+# ---- Stammdaten (links, Zeilen 5-14)
 stamm = [
     ("Projekt-Nr.", "MiT-PWR-WIN-2026-001"),
     ("Kunde / Auftraggeber", "DPR Construction"),
@@ -139,105 +128,179 @@ r = 5
 for lbl, val in stamm:
     ws.cell(row=r, column=2, value=lbl).font = label_font
     ws.cell(row=r, column=2).alignment = left
-    c = ws.cell(row=r, column=3, value=val)
-    c.font = base_font
-    c.alignment = left
-    ws.merge_cells(start_row=r, start_column=3, end_row=r, end_column=5)
-    for cc in range(2, 6):
+    c = ws.cell(row=r, column=3, value=val); c.font = base_font; c.alignment = left
+    ws.merge_cells(start_row=r, start_column=3, end_row=r, end_column=4)
+    for cc in range(2, 5):
         ws.cell(row=r, column=cc).border = border
     r += 1
 
-# KPI-Zusammenfassung (ZAEHLENWENN auf Aufgaben)
-kpi_row = 5
-ws.cell(row=kpi_row - 1, column=6, value="AUFGABEN-STATUS").font = sub_font
-kpis = [
+# ---- KPI Aufgaben (rechts, Spalten E/F, Zeilen 4-11)
+ws.cell(row=4, column=5, value="AUFGABEN-STATUS").font = sub_font
+kpi_a = [
     ("Offen", '=COUNTIF(Aufgaben[Status],"offen")', LIGHT),
     ("In Arbeit", '=COUNTIF(Aufgaben[Status],"in Arbeit")', YELLOW),
     ("Erledigt", '=COUNTIF(Aufgaben[Status],"erledigt")', GREEN),
     ("Kritisch / blockiert", '=COUNTIF(Aufgaben[Status],"kritisch")', RED),
-    ("Ueberfaellig (offen & Termin < heute)",
+    ("Ueberfaellig (offen, Termin < heute)",
      '=SUMPRODUCT((Aufgaben[Status]<>"erledigt")*(Aufgaben[Termin]<>"")*(Aufgaben[Termin]<TODAY()))', RED),
 ]
-rr = kpi_row
-for lbl, formula, fill in kpis:
-    lc = ws.cell(row=rr, column=6, value=lbl)
-    lc.font = kpi_lbl_font
-    lc.alignment = left
-    lc.border = border
-    lc.fill = PatternFill("solid", fgColor=fill)
-    vc = ws.cell(row=rr, column=7, value=formula)
-    vc.font = kpi_num_font
-    vc.alignment = center
-    vc.border = border
-    vc.fill = PatternFill("solid", fgColor=fill)
+rr = 5
+for lbl, f, fill in kpi_a:
+    lc = ws.cell(row=rr, column=5, value=lbl); lc.font = kpi_lbl; lc.alignment = left
+    lc.border = border; lc.fill = PatternFill("solid", fgColor=fill)
+    vc = ws.cell(row=rr, column=6, value=f); vc.font = kpi_num; vc.alignment = center
+    vc.border = border; vc.fill = PatternFill("solid", fgColor=fill)
     rr += 1
+# Fortschritt Aufgaben (Datenbalken)
+ws.cell(row=10, column=5, value="Fortschritt Aufgaben").font = kpi_lbl
+ws.cell(row=10, column=5).alignment = left; ws.cell(row=10, column=5).border = border
+pc = ws.cell(row=10, column=6,
+    value='=IFERROR(COUNTIF(Aufgaben[Status],"erledigt")/COUNTA(Aufgaben[Nr.]),0)')
+pc.number_format = "0%"; pc.font = Font(name=FONT_NAME, bold=True, color=NAVY)
+pc.alignment = center; pc.border = border
 
-# Meilenstein-Ampel
-ws.cell(row=rr, column=6, value="MEILENSTEINE").font = sub_font
-rr += 1
-ms_kpis = [
+# ---- KPI Meilensteine (Zeilen 12-16)
+ws.cell(row=11, column=5, value="MEILENSTEINE").font = sub_font
+kpi_m = [
     ("Meilensteine gesamt", '=COUNTA(Meilensteine[Nr.])'),
     ("davon erledigt", '=COUNTIF(Meilensteine[Status],"erledigt")'),
     ("davon kritisch", '=COUNTIF(Meilensteine[Status],"kritisch")'),
 ]
-for lbl, formula in ms_kpis:
-    lc = ws.cell(row=rr, column=6, value=lbl)
-    lc.font = kpi_lbl_font; lc.alignment = left; lc.border = border
-    vc = ws.cell(row=rr, column=7, value=formula)
-    vc.font = Font(name=FONT_NAME, size=12, bold=True, color=NAVY)
+rr = 12
+for lbl, f in kpi_m:
+    lc = ws.cell(row=rr, column=5, value=lbl); lc.font = kpi_lbl; lc.alignment = left; lc.border = border
+    vc = ws.cell(row=rr, column=6, value=f); vc.font = Font(name=FONT_NAME, size=12, bold=True, color=NAVY)
     vc.alignment = center; vc.border = border
     rr += 1
+ws.cell(row=15, column=5, value="Fortschritt Meilensteine").font = kpi_lbl
+ws.cell(row=15, column=5).alignment = left; ws.cell(row=15, column=5).border = border
+pm = ws.cell(row=15, column=6,
+    value='=IFERROR(COUNTIF(Meilensteine[Status],"erledigt")/COUNTA(Meilensteine[Nr.]),0)')
+pm.number_format = "0%"; pm.font = Font(name=FONT_NAME, bold=True, color=NAVY)
+pm.alignment = center; pm.border = border
+# Datenbalken
+bar = DataBarRule(start_type='num', start_value=0, end_type='num', end_value=1, color=GANTT)
+ws.conditional_formatting.add("F10", bar)
+ws.conditional_formatting.add("F15", DataBarRule(start_type='num', start_value=0,
+    end_type='num', end_value=1, color=BAR_BLUE))
 
-# Naechste 3 Meilensteine
-next_row = 16
-ws.cell(row=next_row, column=2, value="NAECHSTE MEILENSTEINE").font = sub_font
-hdrs = ["Plantermin", "Meilenstein", "Status"]
-for i, h in enumerate(hdrs):
-    c = ws.cell(row=next_row + 1, column=2 + i, value=h)
+# ---- Projektstatus-Ampel + Diese Woche (Zeilen 17-19 rechts)
+ws.cell(row=17, column=5, value="PROJEKTSTATUS").font = sub_font
+st = ws.cell(row=18, column=5,
+    value=('=IF(SUMPRODUCT((Aufgaben[Status]<>"erledigt")*(Aufgaben[Termin]<>"")*'
+           '(Aufgaben[Termin]<TODAY()))>0,"KRITISCH - ueberfaellige Aufgaben",'
+           'IF(COUNTIF(Meilensteine[Status],"kritisch")+COUNTIF(Aufgaben[Status],"kritisch")>0,'
+           '"ACHTUNG - kritische Punkte offen","AUF KURS - keine Ueberfaelligkeiten"))'))
+st.font = Font(name=FONT_NAME, size=11, bold=True, color=WHITE); st.alignment = center
+ws.merge_cells("E18:F18"); ws.cell(row=18, column=6).border = border; st.border = border
+for kw, fill in [("KRITISCH", RED_TXT), ("ACHTUNG", ORANGE), ("AUF KURS", GREEN_TXT)]:
+    ws.conditional_formatting.add("E18",
+        FormulaRule(formula=[f'ISNUMBER(SEARCH("{kw}",$E$18))'],
+                    fill=PatternFill("solid", fgColor=fill)))
+ws.cell(row=19, column=5, value="Diese Woche faellig (Aufgaben)").font = kpi_lbl
+ws.cell(row=19, column=5).alignment = left; ws.cell(row=19, column=5).border = border
+wc = ws.cell(row=19, column=6,
+    value='=SUMPRODUCT((Aufgaben[Status]<>"erledigt")*(Aufgaben[Termin]>=TODAY())*(Aufgaben[Termin]<TODAY()+7))')
+wc.font = Font(name=FONT_NAME, bold=True, color=ORANGE); wc.alignment = center; wc.border = border
+
+# ---- Countdown (links, Zeilen 16-21)
+ws.cell(row=16, column=2, value="COUNTDOWN").font = sub_font
+cd_fmt = '0" Tage";"ueberfaellig";"heute"'
+counts = [
+    ("Tage bis naechster Meilenstein", '=IFERROR(B25-TODAY(),"")'),
+    ("Tage bis Entsendefrist Aggreko (24.07.)", '=DATE(2026,7,24)-TODAY()'),
+    ("Tage bis Lieferung Headloads (03.08.)", '=DATE(2026,8,3)-TODAY()'),
+    ("Tage bis Mietende Loadbank (02.11.)", '=DATE(2026,11,2)-TODAY()'),
+    ("Tage bis Closeout (15.12.)", '=DATE(2026,12,15)-TODAY()'),
+]
+r = 17
+for lbl, f in counts:
+    lc = ws.cell(row=r, column=2, value=lbl); lc.font = kpi_lbl; lc.alignment = left; lc.border = border
+    vc = ws.cell(row=r, column=3, value=f); vc.number_format = cd_fmt
+    vc.font = Font(name=FONT_NAME, bold=True, color=NAVY); vc.alignment = center; vc.border = border
+    ws.merge_cells(start_row=r, start_column=3, end_row=r, end_column=4)
+    ws.cell(row=r, column=4).border = border
+    r += 1
+
+# ---- Naechste Meilensteine (links, Zeilen 24-27)
+ws.cell(row=23, column=2, value="NAECHSTE MEILENSTEINE").font = sub_font
+for i, h in enumerate(["Plantermin", "Meilenstein", "Status"]):
+    col = [2, 3, 5][i]
+    c = ws.cell(row=24, column=col, value=h)
     c.font = hdr_font; c.fill = hdr_fill; c.alignment = center; c.border = border
-ws.merge_cells(start_row=next_row + 1, start_column=3, end_row=next_row + 1, end_column=4)
-# Drei kleinste Plantermine >= heute (KKLEINSTE ueber Plantermine), Status noch nicht erledigt
+ws.merge_cells("C24:D24")
 for k in range(1, 4):
-    rowi = next_row + 1 + k
-    # Plantermin: k-t-kleinster Plantermin, offen und >= heute.
-    # AGGREGATE(15=KKLEINSTE, 6=Fehler ignorieren) verarbeitet das Array ohne CSE-Eingabe.
+    ri = 24 + k
     f_term = ('=IFERROR(AGGREGATE(15,6,Meilensteine!$C$2:$C$17/'
               '((Meilensteine!$E$2:$E$17<>"erledigt")*(Meilensteine!$C$2:$C$17>=TODAY())),%d),"")' % k)
-    tc = ws.cell(row=rowi, column=2, value=f_term)
-    tc.number_format = "DD.MM.YYYY"; tc.font = base_font; tc.alignment = center; tc.border = border
-    # Meilenstein-Bezeichnung via INDEX/VERGLEICH auf diesen Termin
-    f_name = ('=IFERROR(INDEX(Meilensteine!$B$2:$B$17,MATCH(B%d,Meilensteine!$C$2:$C$17,0)),"")' % rowi)
-    nc = ws.cell(row=rowi, column=3, value=f_name)
+    tc = ws.cell(row=ri, column=2, value=f_term); tc.number_format = "DD.MM.YYYY"
+    tc.font = base_font; tc.alignment = center; tc.border = border
+    nc = ws.cell(row=ri, column=3,
+        value='=IFERROR(INDEX(Meilensteine!$B$2:$B$17,MATCH(B%d,Meilensteine!$C$2:$C$17,0)),"")' % ri)
     nc.font = base_font; nc.alignment = left; nc.border = border
-    ws.merge_cells(start_row=rowi, start_column=3, end_row=rowi, end_column=4)
-    ws.cell(row=rowi, column=4).border = border
-    f_stat = ('=IFERROR(INDEX(Meilensteine!$E$2:$E$17,MATCH(B%d,Meilensteine!$C$2:$C$17,0)),"")' % rowi)
-    sc = ws.cell(row=rowi, column=5, value=f_stat)
+    ws.merge_cells(start_row=ri, start_column=3, end_row=ri, end_column=4)
+    ws.cell(row=ri, column=4).border = border
+    sc = ws.cell(row=ri, column=5,
+        value='=IFERROR(INDEX(Meilensteine!$E$2:$E$17,MATCH(B%d,Meilensteine!$C$2:$C$17,0)),"")' % ri)
     sc.font = base_font; sc.alignment = center; sc.border = border
 
-ws.cell(row=next_row + 6, column=2,
-        value="Hinweis: Werte aktualisieren sich automatisch aus den Registerblaettern. "
-              "Keine Pivot-Tabellen - reine Formeln (ZAEHLENWENN / INDEX / VERGLEICH).").font = \
-    Font(name=FONT_NAME, size=8, italic=True, color="808080")
-ws.merge_cells(start_row=next_row + 6, start_column=2, end_row=next_row + 6, end_column=8)
+ws.cell(row=29, column=2,
+    value="Alle Werte aktualisieren sich automatisch aus den Registerblaettern (Formeln, keine Pivots). "
+          "Farben: gruen = erledigt/ok, gelb = in Arbeit, orange = Achtung/verschoben, rot = kritisch/ueberfaellig.").font = small_it
+ws.merge_cells("B29:H29")
+page_setup(ws, freeze="A1", title_rows=None)
+ws.print_area = "A1:H30"
 
-# Array-Formeln in aelteren Engines: als Matrixformel markieren (Plantermin-Suche)
-page_setup(ws, freeze="A1")
-ws.print_area = "A1:H24"
+# ================================================================ 2) TERMINPLAN (GANTT)
+ws = wb.create_sheet("Terminplan")
+ws.sheet_view.showGridLines = False
+widths(ws, [5, 40, 12, 12, 9, 9, 9, 9, 9, 9])
+# Kopf: A1..D1 Text, E1..J1 Monats-Daten
+for i, h in enumerate(["Nr.", "Phase / Meilenstein", "Start", "Ende"]):
+    c = ws.cell(row=1, column=1 + i, value=h)
+    c.font = hdr_font; c.fill = hdr_fill; c.alignment = center; c.border = border
+for i, mth in enumerate(range(7, 13)):
+    c = ws.cell(row=1, column=5 + i, value=D(mth, 1))
+    c.number_format = "MMM"; c.font = hdr_font; c.fill = hdr_fill; c.alignment = center; c.border = border
+gantt = [
+    ("Projektvorbereitung & Mobilisierung", D(7,16), D(8,3)),
+    ("Loadbank 6 MVA - Miete", D(8,17), D(11,2)),
+    ("Heat-Load (Headloads) - Miete", D(8,3), D(12,11)),
+    ("5-MW-Block (Abruf)", D(9,1), D(9,30)),
+    ("Testphase / Inbetriebnahme", D(8,3), D(11,2)),
+    ("Demontage", D(12,14), D(12,14)),
+    ("Closeout & Dokumentation", D(12,15), D(12,31)),
+]
+r = 2
+for i, (name, s, e) in enumerate(gantt, 1):
+    ws.cell(row=r, column=1, value=i)
+    ws.cell(row=r, column=2, value=name)
+    cs = ws.cell(row=r, column=3, value=s); cs.number_format = "DD.MM.YYYY"
+    ce = ws.cell(row=r, column=4, value=e); ce.number_format = "DD.MM.YYYY"
+    r += 1
+last = r - 1
+body(ws, 2, last, 10)
+for rr in range(2, last + 1):
+    ws.cell(row=rr, column=1).alignment = center
+    ws.cell(row=rr, column=3).alignment = center
+    ws.cell(row=rr, column=4).alignment = center
+    ws.cell(row=rr, column=2).alignment = left
+# Gantt-Balken via bedingter Formatierung: Monat ueberlappt [Start,Ende]?
+ws.conditional_formatting.add(f"E2:J{last}",
+    FormulaRule(formula=['AND(E$1<=$D2,EOMONTH(E$1,0)>=$C2,$C2<>"")'],
+                fill=PatternFill("solid", fgColor=GANTT)))
+ws.auto_filter.ref = f"A1:D{last}"
+ws.cell(row=last + 2, column=2,
+    value="Orange = Phase/Miete aktiv im jeweiligen Monat. Balken berechnen sich aus Start/Ende.").font = small_it
+ws.merge_cells(start_row=last + 2, start_column=2, end_row=last + 2, end_column=10)
+page_setup(ws, freeze="E2", title_rows="1:1")
 
-# ================================================================ 2) MEILENSTEINE
+# ================================================================ 3) MEILENSTEINE
 ws = wb.create_sheet("Meilensteine")
 cols = ["Nr.", "Meilenstein", "Plantermin", "Ist-Termin", "Status", "Verantwortlich", "Bemerkung"]
-widths = [6, 46, 14, 14, 14, 18, 40]
-set_widths(ws, widths)
-for i, h in enumerate(cols, 1):
-    ws.cell(row=1, column=i, value=h)
-style_header(ws, 1, len(cols))
-
-# (Plantermin, Ist-Termin sind Datumsobjekte; Jahr 2026)
-import datetime
-D = lambda m, d, hh=0, mm=0: datetime.datetime(2026, m, d, hh, mm)
-ms_data = [
+widths(ws, [6, 46, 15, 14, 14, 18, 40])
+header_row(ws, 1, cols)
+ms = [
     ("bSuite-Aufnahme", D(7,16,8,0), "Sarah", "Aufnahme 08:00"),
     ("Unterlagenpaket an DPR (Versicherung, HR-Auszug, Zeichnungsberechtigte, Zollprozess)", D(7,16,12,0), "Ann-Kathrin", "Abgabe 12:00"),
     ("Unterschriften Stefan", D(7,16), "Stefan", "Nachmittags"),
@@ -256,44 +319,33 @@ ms_data = [
     ("Closeout-Paket EN+DE an DPR", D(12,15), "Burak", "Dezember"),
 ]
 r = 2
-for i, (name, term, verant, bem) in enumerate(ms_data, 1):
-    ws.cell(row=r, column=1, value=i)
-    ws.cell(row=r, column=2, value=name)
+for i, (name, term, verant, bem) in enumerate(ms, 1):
+    ws.cell(row=r, column=1, value=i); ws.cell(row=r, column=2, value=name)
     tc = ws.cell(row=r, column=3, value=term)
     tc.number_format = "DD.MM.YYYY" if term.hour == 0 else "DD.MM.YYYY hh:mm"
-    ws.cell(row=r, column=4, value=None)  # Ist-Termin
     ws.cell(row=r, column=4).number_format = "DD.MM.YYYY"
     ws.cell(row=r, column=5, value="offen")
-    ws.cell(row=r, column=6, value=verant)
-    ws.cell(row=r, column=7, value=bem)
+    ws.cell(row=r, column=6, value=verant); ws.cell(row=r, column=7, value=bem)
     r += 1
 last = r - 1
-style_body(ws, 2, last, len(cols))
+body(ws, 2, last, len(cols))
 for rr in range(2, last + 1):
-    ws.cell(row=rr, column=1).alignment = center
-    ws.cell(row=rr, column=3).alignment = center
-    ws.cell(row=rr, column=4).alignment = center
-    ws.cell(row=rr, column=5).alignment = center
+    for cc in (1, 3, 4, 5):
+        ws.cell(row=rr, column=cc).alignment = center
 make_table(ws, "Meilensteine", 1, last, len(cols))
 add_dv(ws, STATUS_LIST, f"E2:E{last}")
-status_cond_fmt(ws, "E", 2, last)
-# Ueberfaellig: Plantermin < heute und Status <> erledigt -> orange (Spalte Plantermin)
+status_cf(ws, "E", 2, last)
 ws.conditional_formatting.add(f"C2:C{last}",
     FormulaRule(formula=['AND($C2<TODAY(),$E2<>"erledigt",$C2<>"")'],
                 fill=PatternFill("solid", fgColor=ORANGE_FILL), font=Font(name=FONT_NAME, color=ORANGE_TXT)))
 page_setup(ws, freeze="A2")
 
-# ================================================================ 3) AUFGABEN
+# ================================================================ 4) AUFGABEN
 ws = wb.create_sheet("Aufgaben")
 cols = ["Nr.", "Aufgabe", "Paket", "Owner", "Termin", "Status", "Prioritaet", "Bemerkung", "Erledigt am"]
-widths = [6, 50, 12, 14, 14, 13, 12, 34, 14]
-set_widths(ws, widths)
-for i, h in enumerate(cols, 1):
-    ws.cell(row=1, column=i, value=h)
-style_header(ws, 1, len(cols))
-
-# (Aufgabe, Paket, Owner, Termin, Prioritaet, Bemerkung)
-auf_data = [
+widths(ws, [6, 50, 12, 14, 14, 13, 12, 34, 14])
+header_row(ws, 1, cols)
+au = [
     ("Versicherungsnachweis via Finance beschaffen", "Admin", "Markus", D(7,16), "hoch", ""),
     ("Zollprozess DE-CH schriftlich klaeren (Kostentraeger, Equipment vs. Kraftstoff)", "Admin", "Markus", D(7,17), "hoch", ""),
     ("Deckungssummen bei DPR erfragen", "Admin", "Markus", D(7,17), "mittel", ""),
@@ -317,20 +369,15 @@ auf_data = [
     ("Tank-Standort mit 110%-Containment festlegen", "Headload", "Burak", D(7,30), "hoch", ""),
 ]
 r = 2
-for i, (name, paket, owner, term, prio, bem) in enumerate(auf_data, 1):
-    ws.cell(row=r, column=1, value=i)
-    ws.cell(row=r, column=2, value=name)
-    ws.cell(row=r, column=3, value=paket)
-    ws.cell(row=r, column=4, value=owner)
-    tc = ws.cell(row=r, column=5, value=term)
-    tc.number_format = "DD.MM.YYYY"
-    ws.cell(row=r, column=6, value="offen")
-    ws.cell(row=r, column=7, value=prio)
-    ws.cell(row=r, column=8, value=bem)
-    ws.cell(row=r, column=9, value=None).number_format = "DD.MM.YYYY"
+for i, (name, pk, ow, term, prio, bem) in enumerate(au, 1):
+    ws.cell(row=r, column=1, value=i); ws.cell(row=r, column=2, value=name)
+    ws.cell(row=r, column=3, value=pk); ws.cell(row=r, column=4, value=ow)
+    ws.cell(row=r, column=5, value=term).number_format = "DD.MM.YYYY"
+    ws.cell(row=r, column=6, value="offen"); ws.cell(row=r, column=7, value=prio)
+    ws.cell(row=r, column=8, value=bem); ws.cell(row=r, column=9).number_format = "DD.MM.YYYY"
     r += 1
 last = r - 1
-style_body(ws, 2, last, len(cols))
+body(ws, 2, last, len(cols))
 for rr in range(2, last + 1):
     for cc in (1, 3, 5, 6, 7, 9):
         ws.cell(row=rr, column=cc).alignment = center
@@ -339,26 +386,65 @@ add_dv(ws, "Loadbank,Headload,beide,Admin", f"C2:C{last}")
 add_dv(ws, "Burak,Stefan,Markus,Ann-Kathrin,Sarah,Samuel,Stephan Marty,Aggreko,DPR", f"D2:D{last}")
 add_dv(ws, STATUS_LIST, f"F2:F{last}")
 add_dv(ws, "hoch,mittel,niedrig", f"G2:G{last}")
-status_cond_fmt(ws, "F", 2, last)
-# Prioritaet hoch -> orange Text
+status_cf(ws, "F", 2, last)
 ws.conditional_formatting.add(f"G2:G{last}", CellIsRule(operator="equal", formula=['"hoch"'],
     font=Font(name=FONT_NAME, bold=True, color=ORANGE)))
-# Ueberfaellige Aufgaben: Termin < heute & nicht erledigt -> ganze Termin-Zelle rot
 ws.conditional_formatting.add(f"E2:E{last}",
     FormulaRule(formula=['AND($E2<TODAY(),$F2<>"erledigt",$E2<>"")'],
                 fill=PatternFill("solid", fgColor=RED), font=Font(name=FONT_NAME, color=RED_TXT)))
 page_setup(ws, freeze="A2")
 
-# ================================================================ 4) OFFENE PUNKTE & RISIKEN
+# ================================================================ 5) PERSONAL & ZUTRITT
+ws = wb.create_sheet("Personal & Zutritt")
+cols = ["Nr.", "Name", "Firma", "Rolle", "Entsendemeldung", "WORKcontrol-Badge",
+        "Site Induction", "Status", "Bemerkung"]
+widths(ws, [6, 26, 12, 22, 16, 18, 15, 13, 30])
+header_row(ws, 1, cols)
+pers = [
+    ("Uecoez, Burak", "MiT", "Projektleiter", "n.a.", "n.a.", None, "in Arbeit", "Gesamtkoordination"),
+    ("N.N. (PL Aggreko DE)", "Aggreko", "Projektleiter", "offen", "offen", None, "offen", "Benennung ausstehend"),
+    ("N.N. Servicetechniker 1", "Aggreko", "Techniker", "offen", "offen", None, "offen", "Entsendefrist 24.07."),
+    ("N.N. Servicetechniker 2", "Aggreko", "Techniker", "offen", "offen", None, "offen", "Entsendefrist 24.07."),
+    ("N.N. Servicetechniker 3", "Aggreko", "Techniker", "offen", "offen", None, "offen", "Entsendefrist 24.07."),
+    ("N.N. Servicetechniker 4", "Aggreko", "Techniker", "offen", "offen", None, "offen", "Entsendefrist 24.07."),
+    ("N.N. DPR Site Contact", "DPR", "Bauleitung", "n.a.", "n.a.", None, "offen", "Ansprechpartner vor Ort"),
+]
+r = 2
+for i, (name, firma, rolle, ents, badge, indu, stat, bem) in enumerate(pers, 1):
+    ws.cell(row=r, column=1, value=i); ws.cell(row=r, column=2, value=name)
+    ws.cell(row=r, column=3, value=firma); ws.cell(row=r, column=4, value=rolle)
+    ws.cell(row=r, column=5, value=ents); ws.cell(row=r, column=6, value=badge)
+    ws.cell(row=r, column=7, value=indu).number_format = "DD.MM.YYYY"
+    ws.cell(row=r, column=8, value=stat); ws.cell(row=r, column=9, value=bem)
+    r += 1
+last = r - 1
+body(ws, 2, last, len(cols))
+for rr in range(2, last + 1):
+    for cc in (1, 3, 5, 6, 7, 8):
+        ws.cell(row=rr, column=cc).alignment = center
+make_table(ws, "Personal", 1, last, len(cols))
+add_dv(ws, "Aggreko,MiT,DPR", f"C2:C{last}")
+add_dv(ws, "offen,eingereicht,bestaetigt,n.a.", f"E2:E{last}")
+add_dv(ws, "offen,beantragt,erhalten,n.a.", f"F2:F{last}")
+add_dv(ws, "offen,in Arbeit,bereit", f"H2:H{last}")
+# Ampel: offene Pflichtschritte rot, erledigt gruen
+for col in ("E", "F"):
+    ws.conditional_formatting.add(f"{col}2:{col}{last}", CellIsRule(operator="equal", formula=['"offen"'],
+        fill=PatternFill("solid", fgColor=RED), font=Font(name=FONT_NAME, color=RED_TXT)))
+    ws.conditional_formatting.add(f"{col}2:{col}{last}", CellIsRule(operator="equal", formula=['"bestaetigt"'],
+        fill=PatternFill("solid", fgColor=GREEN), font=Font(name=FONT_NAME, color=GREEN_TXT)))
+    ws.conditional_formatting.add(f"{col}2:{col}{last}", CellIsRule(operator="equal", formula=['"erhalten"'],
+        fill=PatternFill("solid", fgColor=GREEN), font=Font(name=FONT_NAME, color=GREEN_TXT)))
+ws.conditional_formatting.add(f"H2:H{last}", CellIsRule(operator="equal", formula=['"bereit"'],
+    fill=PatternFill("solid", fgColor=GREEN), font=Font(name=FONT_NAME, color=GREEN_TXT)))
+page_setup(ws, freeze="A2")
+
+# ================================================================ 6) OFFENE PUNKTE & RISIKEN
 ws = wb.create_sheet("Offene Punkte & Risiken")
 cols = ["Nr.", "Typ", "Beschreibung", "Auswirkung", "Owner", "Termin", "Status", "Massnahme"]
-widths = [6, 16, 52, 13, 14, 14, 13, 44]
-set_widths(ws, widths)
-for i, h in enumerate(cols, 1):
-    ws.cell(row=1, column=i, value=h)
-style_header(ws, 1, len(cols))
-
-risk_data = [
+widths(ws, [6, 16, 52, 13, 14, 14, 13, 44])
+header_row(ws, 1, cols)
+rk = [
     ("Risiko", "PO-Rechenfehler: 78 vs. 110 Tage (ca. EUR 87'700 Differenz)", "hoch", "Burak", D(7,17), "Redline an DPR mit korrigierter Tagesberechnung"),
     ("Risiko", "PO-Rechenfehler: 131 vs. 110 Tage, Enddatum 02.11. falsch abgeleitet", "hoch", "Burak", D(7,17), "Enddatum und Tageszahl in PO korrigieren"),
     ("Offener Punkt", "Parteien auf Mobil in Time AG umschreiben + eigene NDA", "hoch", "Burak", D(7,18), "PO-Parteien anpassen, NDA MiT-DPR anstossen"),
@@ -370,19 +456,15 @@ risk_data = [
     ("Risiko", "NDA-Sperre: kein Vantage-Kontakt, keine Aussenkommunikation", "hoch", "Burak", D(7,16), "Kommunikation ausschliesslich ueber DPR"),
 ]
 r = 2
-for i, (typ, besch, ausw, owner, term, mass) in enumerate(risk_data, 1):
-    ws.cell(row=r, column=1, value=i)
-    ws.cell(row=r, column=2, value=typ)
-    ws.cell(row=r, column=3, value=besch)
-    ws.cell(row=r, column=4, value=ausw)
-    ws.cell(row=r, column=5, value=owner)
-    tc = ws.cell(row=r, column=6, value=term)
-    tc.number_format = "DD.MM.YYYY"
-    ws.cell(row=r, column=7, value="offen")
-    ws.cell(row=r, column=8, value=mass)
+for i, (typ, besch, ausw, ow, term, mass) in enumerate(rk, 1):
+    ws.cell(row=r, column=1, value=i); ws.cell(row=r, column=2, value=typ)
+    ws.cell(row=r, column=3, value=besch); ws.cell(row=r, column=4, value=ausw)
+    ws.cell(row=r, column=5, value=ow)
+    ws.cell(row=r, column=6, value=term).number_format = "DD.MM.YYYY"
+    ws.cell(row=r, column=7, value="offen"); ws.cell(row=r, column=8, value=mass)
     r += 1
 last = r - 1
-style_body(ws, 2, last, len(cols))
+body(ws, 2, last, len(cols))
 for rr in range(2, last + 1):
     for cc in (1, 2, 4, 6, 7):
         ws.cell(row=rr, column=cc).alignment = center
@@ -390,22 +472,18 @@ make_table(ws, "Risiken", 1, last, len(cols))
 add_dv(ws, "Risiko,Offener Punkt,Entscheid", f"B2:B{last}")
 add_dv(ws, "hoch,mittel,niedrig", f"D2:D{last}")
 add_dv(ws, STATUS_LIST, f"G2:G{last}")
-status_cond_fmt(ws, "G", 2, last)
+status_cf(ws, "G", 2, last)
 ws.conditional_formatting.add(f"D2:D{last}", CellIsRule(operator="equal", formula=['"hoch"'],
     fill=PatternFill("solid", fgColor=RED), font=Font(name=FONT_NAME, bold=True, color=RED_TXT)))
 page_setup(ws, freeze="A2")
 
-# ================================================================ 5) DOKUMENTE
+# ================================================================ 7) DOKUMENTE
 ws = wb.create_sheet("Dokumente")
 cols = ["Nr.", "Dokument", "Version/Datum", "Quelle", "Ablageort SharePoint", "Status"]
-widths = [6, 50, 16, 12, 40, 14]
-set_widths(ws, widths)
-for i, h in enumerate(cols, 1):
-    ws.cell(row=1, column=i, value=h)
-style_header(ws, 1, len(cols))
-
+widths(ws, [6, 50, 16, 12, 40, 14])
+header_row(ws, 1, cols)
 SP = "[SharePoint-Projektordner]"
-dok_data = [
+dok = [
     ("Angebot Aggreko P-640380-3 (Loadbank 6 MVA)", "", "Aggreko"),
     ("Angebot Aggreko P-650395-2 (Headload 8 MW)", "", "Aggreko"),
     ("Purchase Order 49A (Loadbank)", "", "DPR"),
@@ -416,38 +494,24 @@ dok_data = [
     ("Supplemental Conditions", "", "DPR"),
     ("Compliance-Unterlagen", "", "DPR"),
     ("EHS-Plan Rev. 4", "Rev. 4", "DPR"),
-    ("Einzelanalyse 01", "", "MiT"),
-    ("Einzelanalyse 02", "", "MiT"),
-    ("Einzelanalyse 03", "", "MiT"),
-    ("Einzelanalyse 04", "", "MiT"),
-    ("Einzelanalyse 05", "", "MiT"),
-    ("Einzelanalyse 06", "", "MiT"),
-    ("Einzelanalyse 07", "", "MiT"),
-    ("Einzelanalyse 08", "", "MiT"),
-    ("Einzelanalyse 09", "", "MiT"),
-    ("Einzelanalyse 10", "", "MiT"),
-    ("Einzelanalyse 11", "", "MiT"),
-    ("Projektdossier (Gesamtuebersicht)", "", "MiT"),
 ]
+dok += [("Einzelanalyse %02d" % k, "", "MiT") for k in range(1, 12)]
+dok += [("Projektdossier (Gesamtuebersicht)", "", "MiT")]
 r = 2
-for i, (name, ver, quelle) in enumerate(dok_data, 1):
-    ws.cell(row=r, column=1, value=i)
-    ws.cell(row=r, column=2, value=name)
-    ws.cell(row=r, column=3, value=ver)
-    ws.cell(row=r, column=4, value=quelle)
-    ws.cell(row=r, column=5, value=SP)
-    ws.cell(row=r, column=6, value="Entwurf")
+for i, (name, ver, q) in enumerate(dok, 1):
+    ws.cell(row=r, column=1, value=i); ws.cell(row=r, column=2, value=name)
+    ws.cell(row=r, column=3, value=ver); ws.cell(row=r, column=4, value=q)
+    ws.cell(row=r, column=5, value=SP); ws.cell(row=r, column=6, value="Entwurf")
     r += 1
 last = r - 1
-style_body(ws, 2, last, len(cols))
+body(ws, 2, last, len(cols))
 for rr in range(2, last + 1):
     for cc in (1, 3, 4, 6):
         ws.cell(row=rr, column=cc).alignment = center
-    ws.cell(row=rr, column=5).font = Font(name=FONT_NAME, size=10, color="808080", italic=True)
+    ws.cell(row=rr, column=5).font = small_it
 make_table(ws, "Dokumente", 1, last, len(cols))
 add_dv(ws, "DPR,Aggreko,MiT", f"D2:D{last}")
 add_dv(ws, STATUS_DOK, f"F2:F{last}")
-# Status-Formatierung Dokumente
 ws.conditional_formatting.add(f"F2:F{last}", CellIsRule(operator="equal", formula=['"signiert"'],
     fill=PatternFill("solid", fgColor=GREEN), font=Font(name=FONT_NAME, color=GREEN_TXT)))
 ws.conditional_formatting.add(f"F2:F{last}", CellIsRule(operator="equal", formula=['"final"'],
@@ -456,29 +520,57 @@ ws.conditional_formatting.add(f"F2:F{last}", CellIsRule(operator="equal", formul
     fill=PatternFill("solid", fgColor=GREY), font=Font(name=FONT_NAME, color="808080")))
 page_setup(ws, freeze="A2")
 
-# ================================================================ 6) AENDERUNGSLOG
-ws = wb.create_sheet("Aenderungslog")
-cols = ["Datum", "Wer", "Was geaendert"]
-widths = [16, 20, 80]
-set_widths(ws, widths)
-for i, h in enumerate(cols, 1):
-    ws.cell(row=1, column=i, value=h)
-style_header(ws, 1, len(cols))
-log_seed = [
-    (D(7,16), "Burak Uecoez", "Projektsteuerungs-Tool erstellt und mit Projektdaten vorbefuellt."),
+# ================================================================ 8) KONTAKTE
+ws = wb.create_sheet("Kontakte")
+cols = ["Nr.", "Funktion", "Name", "Firma", "Telefon", "E-Mail", "Verfuegbarkeit", "Bemerkung"]
+widths(ws, [6, 30, 24, 12, 20, 28, 16, 30])
+header_row(ws, 1, cols)
+kon = [
+    ("Projektleiter MiT", "Burak Uecoez", "MiT", "[eintragen]", "[eintragen]", "Buerozeiten", "Gesamtverantwortung"),
+    ("DPR Bauleitung / Site Contact", "N.N.", "DPR", "[eintragen]", "[eintragen]", "Buerozeiten", "Hauptauftraggeber"),
+    ("Projektleiter Aggreko DE", "N.N.", "Aggreko", "[eintragen]", "[eintragen]", "Buerozeiten", "Benennung ausstehend"),
+    ("Aggreko Service-Hotline", "-", "Aggreko", "[eintragen]", "-", "24/7", "Technische Stoerungen"),
+    ("MiT Notfall / Bereitschaft", "N.N.", "MiT", "[eintragen]", "-", "Bereitschaft", "24/7-Kontaktkette"),
+    ("EHS / Sicherheit DPR", "N.N.", "DPR", "[eintragen]", "[eintragen]", "Buerozeiten", "EHS-Plan Rev. 4"),
 ]
 r = 2
-for datum, wer, was in log_seed:
-    dc = ws.cell(row=r, column=1, value=datum); dc.number_format = "DD.MM.YYYY"
-    ws.cell(row=r, column=2, value=wer)
-    ws.cell(row=r, column=3, value=was)
+for i, (funk, name, firma, tel, mail, verf, bem) in enumerate(kon, 1):
+    ws.cell(row=r, column=1, value=i); ws.cell(row=r, column=2, value=funk)
+    ws.cell(row=r, column=3, value=name); ws.cell(row=r, column=4, value=firma)
+    ws.cell(row=r, column=5, value=tel); ws.cell(row=r, column=6, value=mail)
+    ws.cell(row=r, column=7, value=verf); ws.cell(row=r, column=8, value=bem)
     r += 1
-# leere Zeilen fuer kuenftige Eintraege
+last = r - 1
+body(ws, 2, last, len(cols))
+for rr in range(2, last + 1):
+    for cc in (1, 4, 7):
+        ws.cell(row=rr, column=cc).alignment = center
+make_table(ws, "Kontakte", 1, last, len(cols))
+add_dv(ws, "Aggreko,MiT,DPR", f"D2:D{last}")
+add_dv(ws, "24/7,Buerozeiten,Bereitschaft", f"G2:G{last}")
+ws.conditional_formatting.add(f"G2:G{last}", CellIsRule(operator="equal", formula=['"24/7"'],
+    fill=PatternFill("solid", fgColor=GREEN), font=Font(name=FONT_NAME, bold=True, color=GREEN_TXT)))
+page_setup(ws, freeze="A2")
+
+# ================================================================ 9) AENDERUNGSLOG
+ws = wb.create_sheet("Aenderungslog")
+cols = ["Datum", "Wer", "Was geaendert"]
+widths(ws, [16, 20, 80])
+header_row(ws, 1, cols)
+log = [
+    (D(7,15), "Burak Uecoez", "Projektsteuerungs-Tool erstellt und mit Projektdaten vorbefuellt."),
+    (D(7,15), "Burak Uecoez", "Erweiterung: Terminplan (Gantt), Personal & Zutritt, Kontakte, Dashboard-Kennzahlen (Fortschritt, Countdowns, Ampel)."),
+]
+r = 2
+for datum, wer, was in log:
+    ws.cell(row=r, column=1, value=datum).number_format = "DD.MM.YYYY"
+    ws.cell(row=r, column=2, value=wer); ws.cell(row=r, column=3, value=was)
+    r += 1
 for _ in range(20):
     ws.cell(row=r, column=1).number_format = "DD.MM.YYYY"
     r += 1
 last = r - 1
-style_body(ws, 2, last, len(cols))
+body(ws, 2, last, len(cols))
 for rr in range(2, last + 1):
     ws.cell(row=rr, column=1).alignment = center
 make_table(ws, "Aenderungslog", 1, last, len(cols))
