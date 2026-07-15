@@ -199,19 +199,19 @@ ws.merge_cells(start_row=next_row + 1, start_column=3, end_row=next_row + 1, end
 # Drei kleinste Plantermine >= heute (KKLEINSTE ueber Plantermine), Status noch nicht erledigt
 for k in range(1, 4):
     rowi = next_row + 1 + k
-    # Plantermin
-    f_term = ('=IFERROR(SMALL(IF((Meilensteine[Status]<>"erledigt")*'
-              '(Meilensteine[Plantermin]>=TODAY()),Meilensteine[Plantermin]),%d),"")' % k)
-    tc = ws.cell(row=rowi, column=2)
-    tc.value = ArrayFormula(f"B{rowi}", f_term)   # Matrixformel (CSE) fuer alle Excel-Versionen
+    # Plantermin: k-t-kleinster Plantermin, offen und >= heute.
+    # AGGREGATE(15=KKLEINSTE, 6=Fehler ignorieren) verarbeitet das Array ohne CSE-Eingabe.
+    f_term = ('=IFERROR(AGGREGATE(15,6,Meilensteine!$C$2:$C$17/'
+              '((Meilensteine!$E$2:$E$17<>"erledigt")*(Meilensteine!$C$2:$C$17>=TODAY())),%d),"")' % k)
+    tc = ws.cell(row=rowi, column=2, value=f_term)
     tc.number_format = "DD.MM.YYYY"; tc.font = base_font; tc.alignment = center; tc.border = border
     # Meilenstein-Bezeichnung via INDEX/VERGLEICH auf diesen Termin
-    f_name = ('=IFERROR(INDEX(Meilensteine[Meilenstein],MATCH(B%d,Meilensteine[Plantermin],0)),"")' % rowi)
+    f_name = ('=IFERROR(INDEX(Meilensteine!$B$2:$B$17,MATCH(B%d,Meilensteine!$C$2:$C$17,0)),"")' % rowi)
     nc = ws.cell(row=rowi, column=3, value=f_name)
     nc.font = base_font; nc.alignment = left; nc.border = border
     ws.merge_cells(start_row=rowi, start_column=3, end_row=rowi, end_column=4)
     ws.cell(row=rowi, column=4).border = border
-    f_stat = ('=IFERROR(INDEX(Meilensteine[Status],MATCH(B%d,Meilensteine[Plantermin],0)),"")' % rowi)
+    f_stat = ('=IFERROR(INDEX(Meilensteine!$E$2:$E$17,MATCH(B%d,Meilensteine!$C$2:$C$17,0)),"")' % rowi)
     sc = ws.cell(row=rowi, column=5, value=f_stat)
     sc.font = base_font; sc.alignment = center; sc.border = border
 
@@ -279,7 +279,7 @@ add_dv(ws, STATUS_LIST, f"E2:E{last}")
 status_cond_fmt(ws, "E", 2, last)
 # Ueberfaellig: Plantermin < heute und Status <> erledigt -> orange (Spalte Plantermin)
 ws.conditional_formatting.add(f"C2:C{last}",
-    FormulaRule(formula=[f'AND($C2<HEUTE();$E2<>"erledigt";$C2<>"")'],
+    FormulaRule(formula=['AND($C2<TODAY(),$E2<>"erledigt",$C2<>"")'],
                 fill=PatternFill("solid", fgColor=ORANGE_FILL), font=Font(name=FONT_NAME, color=ORANGE_TXT)))
 page_setup(ws, freeze="A2")
 
@@ -345,7 +345,7 @@ ws.conditional_formatting.add(f"G2:G{last}", CellIsRule(operator="equal", formul
     font=Font(name=FONT_NAME, bold=True, color=ORANGE)))
 # Ueberfaellige Aufgaben: Termin < heute & nicht erledigt -> ganze Termin-Zelle rot
 ws.conditional_formatting.add(f"E2:E{last}",
-    FormulaRule(formula=[f'AND($E2<HEUTE();$F2<>"erledigt";$E2<>"")'],
+    FormulaRule(formula=['AND($E2<TODAY(),$F2<>"erledigt",$E2<>"")'],
                 fill=PatternFill("solid", fgColor=RED), font=Font(name=FONT_NAME, color=RED_TXT)))
 page_setup(ws, freeze="A2")
 
