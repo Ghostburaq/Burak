@@ -203,6 +203,15 @@ wc = ws.cell(row=19, column=6,
     value='=SUMPRODUCT((Aufgaben[Status]<>"erledigt")*(Aufgaben[Termin]>=TODAY())*(Aufgaben[Termin]<TODAY()+7))')
 wc.font = Font(name=FONT_NAME, bold=True, color=ORANGE); wc.alignment = center; wc.border = border
 
+# ---- Tests & Lieferungen (rechts, Zeilen 20-22)
+ws.cell(row=20, column=5, value="TESTS & LIEFERUNGEN").font = sub_font
+for ri, lbl, f in [
+    (21, "Tests bestanden", '=COUNTIF(Testprotokolle[Ergebnis],"bestanden")'),
+    (22, "Lieferungen offen", '=COUNTIF(Logistik[Status],"offen")')]:
+    lc = ws.cell(row=ri, column=5, value=lbl); lc.font = kpi_lbl; lc.alignment = left; lc.border = border
+    vc = ws.cell(row=ri, column=6, value=f); vc.font = Font(name=FONT_NAME, size=12, bold=True, color=NAVY)
+    vc.alignment = center; vc.border = border
+
 # ---- Countdown (links, Zeilen 16-21)
 ws.cell(row=16, column=2, value="COUNTDOWN").font = sub_font
 cd_fmt = '0" Tage";"ueberfaellig";"heute"'
@@ -560,6 +569,7 @@ header_row(ws, 1, cols)
 log = [
     (D(7,15), "Burak Uecoez", "Projektsteuerungs-Tool erstellt und mit Projektdaten vorbefuellt."),
     (D(7,15), "Burak Uecoez", "Erweiterung: Terminplan (Gantt), Personal & Zutritt, Kontakte, Dashboard-Kennzahlen (Fortschritt, Countdowns, Ampel)."),
+    (D(7,15), "Burak Uecoez", "Ergaenzt: Lieferungen & Logistik, Testprotokolle (Testnachweise fuer Closeout), Budget & Fakturierung (nur EUR-Referenz)."),
 ]
 r = 2
 for datum, wer, was in log:
@@ -575,6 +585,150 @@ for rr in range(2, last + 1):
     ws.cell(row=rr, column=1).alignment = center
 make_table(ws, "Aenderungslog", 1, last, len(cols))
 page_setup(ws, freeze="A2")
+
+# ================================================================ 10) LIEFERUNGEN & LOGISTIK
+ws = wb.create_sheet("Lieferungen & Logistik")
+cols = ["Nr.", "Lieferung / Gegenstand", "Paket", "Anlieferung geplant", "Ort",
+        "Kran/Lift", "Tank/Containment", "Verantwortlich", "Status", "Bemerkung"]
+widths(ws, [6, 30, 12, 18, 22, 12, 18, 15, 13, 28])
+header_row(ws, 1, cols)
+logi = [
+    ("Headloads (54x 200 kW)", "Headload", D(8,3), "ZRH12 Winterthur", "ja", "-", "Aggreko", "offen", "Lift Plan erforderlich"),
+    ("Loadbank 6 MVA", "Loadbank", D(8,17), "ZRH12 Winterthur", "ja", "-", "Aggreko", "offen", "Kranfrage klaeren"),
+    ("Tank / Betankung", "Headload", "vor Testbeginn", "ZRH12 Winterthur", "nein", "110%-Containment", "Burak", "offen", "Standort festlegen"),
+    ("Kabel- & Anschlussmaterial", "beide", "vor Testbeginn", "ZRH12 Winterthur", "nein", "-", "Aggreko", "offen", ""),
+    ("Ruecktransport Loadbank", "Loadbank", D(11,2), "ab ZRH12", "ja", "-", "Aggreko", "offen", "nach Mietende"),
+    ("Ruecktransport Headloads", "Headload", D(12,11), "ab ZRH12", "ja", "-", "Aggreko", "offen", "nach Mietende"),
+    ("Demontage & Abtransport", "beide", D(12,14), "ZRH12 Winterthur", "ja", "-", "Aggreko", "offen", ""),
+]
+r = 2
+for i, (geg, pk, dat, ort, kran, tank, verant, stat, bem) in enumerate(logi, 1):
+    ws.cell(row=r, column=1, value=i); ws.cell(row=r, column=2, value=geg)
+    ws.cell(row=r, column=3, value=pk)
+    dc = ws.cell(row=r, column=4, value=dat)
+    if isinstance(dat, datetime.datetime): dc.number_format = "DD.MM.YYYY"
+    ws.cell(row=r, column=5, value=ort); ws.cell(row=r, column=6, value=kran)
+    ws.cell(row=r, column=7, value=tank); ws.cell(row=r, column=8, value=verant)
+    ws.cell(row=r, column=9, value=stat); ws.cell(row=r, column=10, value=bem)
+    r += 1
+last = r - 1
+body(ws, 2, last, len(cols))
+for rr in range(2, last + 1):
+    for cc in (1, 3, 4, 6, 8, 9):
+        ws.cell(row=rr, column=cc).alignment = center
+make_table(ws, "Logistik", 1, last, len(cols))
+add_dv(ws, "Loadbank,Headload,beide", f"C2:C{last}")
+add_dv(ws, "ja,nein,offen", f"F2:F{last}")
+add_dv(ws, "Burak,Aggreko,DPR,MiT", f"H2:H{last}")
+add_dv(ws, "offen,geplant,geliefert,zurueck,verschoben", f"I2:I{last}")
+for val, fill, txt in [("geliefert", GREEN, GREEN_TXT), ("zurueck", GREEN, GREEN_TXT),
+                       ("verschoben", ORANGE_FILL, ORANGE_TXT), ("geplant", YELLOW, YELLOW_TXT)]:
+    ws.conditional_formatting.add(f"I2:I{last}", CellIsRule(operator="equal", formula=[f'"{val}"'],
+        fill=PatternFill("solid", fgColor=fill), font=Font(name=FONT_NAME, color=txt)))
+page_setup(ws, freeze="A2")
+
+# ================================================================ 11) TESTPROTOKOLLE
+ws = wb.create_sheet("Testprotokolle")
+cols = ["Nr.", "Test / Messung", "Paket", "Datum", "Sollwert", "Istwert", "Einheit",
+        "Ergebnis", "Foto/Nachweis", "Bemerkung"]
+widths(ws, [6, 36, 12, 13, 12, 12, 10, 16, 14, 28])
+header_row(ws, 1, cols)
+tests = [
+    ("Sichtpruefung & Anschlusskontrolle", "Loadbank", "i.O.", "-"),
+    ("Isolationspruefung", "Loadbank", "", "MOhm"),
+    ("Lastschritt 25% (1.5 MVA)", "Loadbank", 1.5, "MVA"),
+    ("Lastschritt 50% (3.0 MVA)", "Loadbank", 3.0, "MVA"),
+    ("Lastschritt 75% (4.5 MVA)", "Loadbank", 4.5, "MVA"),
+    ("Lastschritt 100% (6.0 MVA)", "Loadbank", 6.0, "MVA"),
+    ("Frequenzstabilitaet", "Loadbank", 50, "Hz"),
+    ("Sichtpruefung Headloads", "Headload", "i.O.", "-"),
+    ("Lastschritt 2 MW", "Headload", 2.0, "MW"),
+    ("Lastschritt 4 MW", "Headload", 4.0, "MW"),
+    ("Lastschritt 6 MW", "Headload", 6.0, "MW"),
+    ("Lastschritt 8 MW (Volllast)", "Headload", 8.0, "MW"),
+    ("Waermeabfuhr-Nachweis (Dauerlauf)", "Headload", "-", "-"),
+    ("Not-Aus / Sicherheitskette", "beide", "i.O.", "-"),
+]
+r = 2
+for i, (name, pk, soll, einh) in enumerate(tests, 1):
+    ws.cell(row=r, column=1, value=i); ws.cell(row=r, column=2, value=name)
+    ws.cell(row=r, column=3, value=pk)
+    ws.cell(row=r, column=4).number_format = "DD.MM.YYYY"
+    ws.cell(row=r, column=5, value=soll)          # Sollwert
+    ws.cell(row=r, column=6, value=None)          # Istwert (vor Ort eintragen)
+    ws.cell(row=r, column=7, value=einh)
+    ws.cell(row=r, column=8, value="offen")       # Ergebnis
+    ws.cell(row=r, column=9, value="offen")       # Foto/Nachweis
+    ws.cell(row=r, column=10, value="")
+    r += 1
+last = r - 1
+body(ws, 2, last, len(cols))
+for rr in range(2, last + 1):
+    for cc in (1, 3, 4, 5, 6, 7, 8, 9):
+        ws.cell(row=rr, column=cc).alignment = center
+make_table(ws, "Testprotokolle", 1, last, len(cols))
+add_dv(ws, "Loadbank,Headload,beide", f"C2:C{last}")
+add_dv(ws, "bestanden,nicht bestanden,offen,n.a.", f"H2:H{last}")
+add_dv(ws, "ja,nein,offen", f"I2:I{last}")
+ws.conditional_formatting.add(f"H2:H{last}", CellIsRule(operator="equal", formula=['"bestanden"'],
+    fill=PatternFill("solid", fgColor=GREEN), font=Font(name=FONT_NAME, color=GREEN_TXT)))
+ws.conditional_formatting.add(f"H2:H{last}", CellIsRule(operator="equal", formula=['"nicht bestanden"'],
+    fill=PatternFill("solid", fgColor=RED), font=Font(name=FONT_NAME, color=RED_TXT)))
+ws.conditional_formatting.add(f"I2:I{last}", CellIsRule(operator="equal", formula=['"ja"'],
+    fill=PatternFill("solid", fgColor=GREEN), font=Font(name=FONT_NAME, color=GREEN_TXT)))
+ws.cell(row=last + 2, column=2,
+    value="Istwerte, Datum und Foto-Nachweis vor Ort eintragen. Ergebnis = Basis fuer das Closeout-Paket.").font = small_it
+ws.merge_cells(start_row=last + 2, start_column=2, end_row=last + 2, end_column=10)
+page_setup(ws, freeze="A2")
+
+# ================================================================ 12) BUDGET & FAKTURIERUNG
+ws = wb.create_sheet("Budget & Fakturierung")
+cols = ["Nr.", "Kategorie", "Position", "Bezug (Angebot/PO)", "Paket", "Menge / Tage",
+        "EUR (Referenz)", "Termin / Faelligkeit", "Status", "Bemerkung"]
+widths(ws, [6, 18, 30, 20, 12, 13, 16, 20, 13, 32])
+header_row(ws, 1, cols)
+EUR_FMT = '#\'##0" EUR"'
+bud = [
+    ("Einkauf-Referenz", "Loadbank 6 MVA - Miete", "P-640380-3", "Loadbank", 110, "Mietende 02.11.", "offen", "Basis 110 Tage; PO-Pruefung 78/131 falsch"),
+    ("Einkauf-Referenz", "Headload 8 MW - Miete", "P-650395-2", "Headload", 110, "Mietende 11.12.", "offen", ""),
+    ("Logistik", "Transport / Kran / Lift", "-", "beide", None, "-", "offen", "Details in Lieferungen & Logistik"),
+    ("Kraftstoff", "Betankung (separat)", "-", "Headload", None, "-", "offen", "Zollprozess: Kraftstoff vs. Equipment"),
+    ("Fakturierung", "Rate 1 (Staffelung)", "PO 49A/49B", "beide", None, "n. Abstimmung", "offen", "Staffelungs-Fakturierung klaeren"),
+    ("Fakturierung", "Rate 2 (Staffelung)", "PO 49A/49B", "beide", None, "n. Abstimmung", "offen", ""),
+    ("Fakturierung", "Schlussrechnung", "PO 49A/49B", "beide", None, "Closeout Dez.", "offen", "nach Abnahme"),
+]
+r = 2
+for i, (kat, pos, bez, pk, menge, term, stat, bem) in enumerate(bud, 1):
+    ws.cell(row=r, column=1, value=i); ws.cell(row=r, column=2, value=kat)
+    ws.cell(row=r, column=3, value=pos); ws.cell(row=r, column=4, value=bez)
+    ws.cell(row=r, column=5, value=pk); ws.cell(row=r, column=6, value=menge)
+    ec = ws.cell(row=r, column=7, value=None); ec.number_format = EUR_FMT   # EUR-Wert eintragen
+    ws.cell(row=r, column=8, value=term); ws.cell(row=r, column=9, value=stat)
+    ws.cell(row=r, column=10, value=bem)
+    r += 1
+last = r - 1
+body(ws, 2, last, len(cols))
+for rr in range(2, last + 1):
+    for cc in (1, 2, 5, 6, 7, 9):
+        ws.cell(row=rr, column=cc).alignment = center
+make_table(ws, "Budget", 1, last, len(cols))
+add_dv(ws, "Einkauf-Referenz,Fakturierung,Logistik,Kraftstoff", f"B2:B{last}")
+add_dv(ws, "Loadbank,Headload,beide", f"E2:E{last}")
+add_dv(ws, "offen,gestellt,bezahlt,geprueft", f"I2:I{last}")
+for val, fill, txt in [("bezahlt", GREEN, GREEN_TXT), ("geprueft", GREEN, GREEN_TXT),
+                       ("gestellt", YELLOW, YELLOW_TXT)]:
+    ws.conditional_formatting.add(f"I2:I{last}", CellIsRule(operator="equal", formula=[f'"{val}"'],
+        fill=PatternFill("solid", fgColor=fill), font=Font(name=FONT_NAME, color=txt)))
+ws.cell(row=last + 2, column=2,
+    value="Nur EUR-Einkaufsreferenzen aus den Aggreko-Angeboten. KEINE CHF-Preise (Vertraulichkeit / Marge).").font = small_it
+ws.merge_cells(start_row=last + 2, start_column=2, end_row=last + 2, end_column=10)
+page_setup(ws, freeze="A2")
+
+# ---------------------------------------------------------------- Blatt-Reihenfolge
+order = ["Dashboard", "Terminplan", "Meilensteine", "Aufgaben", "Personal & Zutritt",
+         "Lieferungen & Logistik", "Testprotokolle", "Offene Punkte & Risiken",
+         "Budget & Fakturierung", "Dokumente", "Kontakte", "Aenderungslog"]
+wb._sheets.sort(key=lambda s: order.index(s.title))
 
 # ---------------------------------------------------------------- Speichern
 wb.properties.creator = "Mobil in Time AG"
