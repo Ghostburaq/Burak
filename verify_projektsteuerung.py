@@ -137,10 +137,23 @@ charts = [n for n in z.namelist() if "charts/chart" in n]
 chart_refs_ok = True
 for n in charts:
     d = z.read(n).decode()
-    for ref in re.findall(r"<c:f>(.*?)</c:f>", d):
+    for ref in re.findall(r"<f>(.*?)</f>", d):
         shref = ref.split("!")[0].strip("'")
         if shref not in wb.sheetnames: chart_refs_ok = False
 check(f"Diagramme ({len(charts)}) referenzieren existierende Blaetter", chart_refs_ok)
+for n in sorted(charts):
+    d = z.read(n).decode()
+    is_bar = "barChart" in d
+    kind = "Balken" if is_bar else "Doughnut"
+    check(f"{kind}: Kategorien als Text (strRef) -> Namen sichtbar", "<strRef>" in d.split("<cat>")[1][:40] if "<cat>" in d else False)
+    if is_bar:
+        check("Balken: Datenbeschriftung (Werte) aktiv", '<showVal val="1"' in d)
+        check("Balken: beide Achsen sichtbar (delete=0)", d.count('<delete val="0" />') == 2)
+        check("Balken: Wertachse unten (axPos b)", '<axPos val="b" />' in d)
+        check("Balken: Achsenbeschriftung aktiviert (tickLblPos)", d.count('<tickLblPos val="nextTo" />') == 2)
+    else:
+        check("Doughnut: Prozent-Beschriftung aktiv", '<showPercent val="1"' in d)
+        check("Doughnut: ausgeblendete Hilfsdaten werden geplottet (plotVisOnly=0)", '<plotVisOnly val="0" />' in d)
 import warnings
 warnings.simplefilter("error")
 try:

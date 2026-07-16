@@ -24,6 +24,8 @@ from openpyxl.worksheet.properties import PageSetupProperties
 from openpyxl.chart import BarChart, DoughnutChart, Reference
 from openpyxl.chart.series import DataPoint
 from openpyxl.chart.shapes import GraphicalProperties
+from openpyxl.chart.label import DataLabelList
+from openpyxl.chart.data_source import AxDataSource, StrRef
 
 # ---------------------------------------------------------------- Farben / Stile
 NAVY = "1F3A5F"; ORANGE = "E8740C"; WHITE = "FFFFFF"
@@ -355,6 +357,9 @@ dn = DoughnutChart(holeSize=55)
 dn.title = "Aufgaben nach Status"
 dn.add_data(Reference(ws, min_col=11, min_row=1, max_row=6), titles_from_data=True)
 dn.set_categories(Reference(ws, min_col=10, min_row=2, max_row=6))
+# Kategorien sind TEXT -> als strRef speichern, sonst zeigt Excel keine Namen
+dn.series[0].cat = AxDataSource(strRef=StrRef("'Dashboard'!$J$2:$J$6"))
+dn.dataLabels = DataLabelList(showPercent=True)      # Prozente im Ring
 dn.visible_cells_only = False
 dn.height = 8; dn.width = 9
 dn.series[0].data_points = [DataPoint(idx=i, spPr=GraphicalProperties(solidFill=c))
@@ -365,8 +370,15 @@ bc = BarChart(); bc.type = "bar"
 bc.title = "Offene Aufgaben je Owner"
 bc.add_data(Reference(ws, min_col=3, min_row=OWN_TITLE + 1, max_row=own_last), titles_from_data=True)
 bc.set_categories(Reference(ws, min_col=2, min_row=OWN_TITLE + 2, max_row=own_last))
+# Owner-Namen sind TEXT -> strRef, sonst leere Kategorienachse
+bc.series[0].cat = AxDataSource(strRef=StrRef(f"'Dashboard'!$B${OWN_TITLE+2}:$B${own_last}"))
+bc.dataLabels = DataLabelList(showVal=True)          # Werte an den Balken
 bc.legend = None
 bc.height = 8; bc.width = 11
+# Achsen explizit sichtbar + korrekt positioniert (Kategorien links, Werte unten)
+bc.x_axis.delete = False; bc.y_axis.delete = False
+bc.x_axis.tickLblPos = "nextTo"; bc.y_axis.tickLblPos = "nextTo"
+bc.x_axis.axPos = "l"; bc.y_axis.axPos = "b"
 bc.series[0].graphicalProperties = GraphicalProperties(solidFill=ORANGE)
 ws.add_chart(bc, f"H{OWN_TITLE}")
 
@@ -983,6 +995,7 @@ log = [
     (D(7,15), "Burak Uecoez", "Aenderung", "Tool erstellt und vorbefuellt; Erweiterungen: Gantt, Personal, Kontakte, Logistik, Testprotokolle, Kommerziell.", "-"),
     (D(7,16), "Burak Uecoez", "Aenderung", "V2-Aenderungen uebernommen; Kalender 2026 gegen ISO-Kalender geprueft; Samstag-Termine korrigiert.", "-"),
     (D(7,16), "Burak Uecoez", "Aenderung", "V5: EUR-Werte + PO-Nummern ergaenzt, Blaetter Termine & Meetings und Kommerziell, Stopp-Punkte mit Wahrscheinlichkeit, Kontakte mit Ansprechpartnern, naechste 5 Meilensteine.", "-"),
+    (D(7,16), "Burak Uecoez", "Aenderung", "Diagramm-Fixes: Owner-Namen an der Achse, Prozente im Status-Ring, Werte an den Balken, Wertachse unten.", "-"),
 ]
 r = 2
 for datum, wer, typ, was, ausw in log:
