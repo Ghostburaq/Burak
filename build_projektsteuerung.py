@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-Projektsteuerungs-Tool MiT-PWR-WIN-2026-001  (V5 - Finalstand)
+Projektsteuerungs-Tool MiT-PWR-WIN-2026-001  (V6 - Vollausbau ohne VBA)
 SharePoint-taugliche .xlsx ohne Makros. Schweizer Schreibweise (ss statt scharfes S).
 Datum TT.MM.JJJJ, Arial, Navy #1F3A5F (Kopf), Orange #E8740C (Akzente).
 
-13 Registerblaetter:
-  Dashboard | Terminplan (Wochen-Gantt) | Meilensteine | Aufgaben | Termine & Meetings |
-  Personal & Zutritt | Lieferungen & Logistik | Testprotokolle | Stopp-Punkte & Risiken |
-  Kommerziell | Dokumente | Kontakte | Aenderungslog & Entscheide
+17 Registerblaetter:
+  Dashboard | Wochenbericht | Terminplan (Wochen-Gantt) | Meilensteine | Aufgaben |
+  Termine & Meetings | Personal & Zutritt | Schichtplan | Lieferungen & Logistik |
+  Testprotokolle | Fuel-Log | Stopp-Punkte & Risiken | Kommerziell | Trend |
+  Dokumente | Kontakte | Aenderungslog & Entscheide
 
 Alle Formeln intern englisch/komma-getrennt (Excel-Standard, deutsch angezeigt).
 Nur Basis-Funktionen -> kompatibel inkl. Excel im Browser. Keine CHF-Verkaufspreise.
@@ -21,11 +22,13 @@ from openpyxl.worksheet.datavalidation import DataValidation
 from openpyxl.formatting.rule import CellIsRule, FormulaRule, DataBarRule
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.properties import PageSetupProperties
-from openpyxl.chart import BarChart, DoughnutChart, Reference
+from openpyxl.chart import BarChart, DoughnutChart, LineChart, Reference
 from openpyxl.chart.series import DataPoint
 from openpyxl.chart.shapes import GraphicalProperties
 from openpyxl.chart.label import DataLabelList
 from openpyxl.chart.data_source import AxDataSource, StrRef
+from openpyxl.chart.marker import Marker
+from openpyxl.drawing.line import LineProperties
 
 # ---------------------------------------------------------------- Farben / Stile
 NAVY = "1F3A5F"; ORANGE = "E8740C"; WHITE = "FFFFFF"
@@ -112,36 +115,49 @@ def add_dv(ws, items, rng):
     dv.prompt = "Wert aus Dropdown waehlen"
     ws.add_data_validation(dv); dv.add(rng)
 
+def ampel_cf(ws, addr):
+    for kw, fill in [("KRITISCH", RED_TXT), ("ACHTUNG", ORANGE), ("AUF KURS", GREEN_TXT)]:
+        ws.conditional_formatting.add(addr,
+            FormulaRule(formula=[f'ISNUMBER(SEARCH("{kw}",${addr.replace(":","").split()[0][0]}${addr[1:].split(":")[0][1:] if ":" in addr else addr[1:]}))'],
+                        fill=PatternFill("solid", fgColor=fill)))
+
+AMPEL_FORMULA = ('=IF(SUMPRODUCT((Aufgaben[Status]<>"erledigt")*(Aufgaben[Termin]<>"")*'
+                 '(Aufgaben[Termin]<TODAY()))>0,"KRITISCH - ueberfaellige Aufgaben",'
+                 'IF(COUNTIF(Meilensteine[Status],"kritisch")+COUNTIF(Aufgaben[Status],"kritisch")>0,'
+                 '"ACHTUNG - kritische Punkte offen","AUF KURS - keine Ueberfaelligkeiten"))')
+
 # ================================================================ MEILENSTEIN-DATEN (25)
+# (Name, Phase, Plantermin, Verantwortlich, Vorgaenger-Nr, Bemerkung)
 MS = [
-    ("bSuite-Aufnahme", "Vorbereitung", D(7,16,8,0), "Sarah", "08:00, mit Ann-Kathrin & Burak"),
-    ("Unterlagenpaket an DPR (Versicherung, HR-Auszug, Zeichnungsberechtigte, Zollprozess)", "Vorbereitung", D(7,16,12,0), "Ann-Kathrin & Markus", "12:00 an Roxana Minor"),
-    ("Unterschriften Diessenhofen", "Vorbereitung", D(7,16), "Stefan", "Nachmittags"),
-    ("Abstimmungs-Call Aggreko DE", "Vorbereitung", D(7,17,9,0), "Burak / Stephan", "16.07. 14:00 oder 17.07. 09:00"),
-    ("PO-Korrekturliste an DPR", "Vorbereitung", D(7,17), "Burak", "49A: 78/110 Tage; 49B: 131/110 Tage"),
-    ("RAMS-Abgabe Hammertech", "Vorbereitung", D(7,20), "Samuel", "inkl. Personenliste Aggreko"),
-    ("Personenliste Aggreko", "Vorbereitung", D(7,20), "Aggreko", ""),
-    ("NDA MiT-DPR unterzeichnet", "Vorbereitung", D(7,22), "Stefan / Stephan", "eigene NDA, Partei MiT AG"),
-    ("Entsendemeldung Aggreko-Personal", "Vorbereitung", D(7,24), "Aggreko", "gesetzlich spaetestens 26.07."),
-    ("PO 49A/49B final signiert", "Vorbereitung", D(7,24), "Stefan", "nach Korrekturliste; Long-Lead-Frist startet"),
-    ("Zollprozess DE-CH schriftlich bestaetigt", "Vorbereitung", D(7,28), "Markus", "Equipment vs. Kraftstoff"),
-    ("WORKcontrol-Badges + Site Inductions + Kickoff-Meeting DPR", "Vorbereitung", D(7,31), "Ann-Kathrin", "vor 03.08."),
-    ("Lieferung Head-Load-Test", "Ausfuehrung", D(8,3), "Aggreko", "54x 200 kW"),
-    ("Site Setup & Einweisung Headloads", "Ausfuehrung", D(8,5), "Aggreko / MiT", ""),
-    ("Testbeginn Heat-Load", "Ausfuehrung", D(8,10), "Burak / Samuel", ""),
-    ("Abruf 3-MW-Block", "Ausfuehrung", D(8,14), "Burak", "Mitte August"),
-    ("Lieferung Loadbank 6 MVA", "Ausfuehrung", D(8,17), "Aggreko", ""),
-    ("Testbeginn Loadbank", "Ausfuehrung", D(8,19), "Burak / Samuel", ""),
-    ("Abruf 5-MW-Block", "Ausfuehrung", D(9,8), "Burak", "2. September-Woche"),
-    ("Zwischenstand / Review mit DPR", "Ausfuehrung", D(9,30), "Burak", "Quartalsende"),
-    ("Mietende Loadbank", "Ausfuehrung", D(11,2), "Burak / Samuel", "Datum strittig - PO-Fehler"),
-    ("Closeout-Paket EN+DE an DPR", "Abschluss", D(11,30), "Burak / Stephan", "15 Tage vor Leistungsende"),
-    ("Mietende Headloads", "Ausfuehrung", D(12,11), "Burak / Samuel", ""),
-    ("Demontage", "Abschluss", D(12,14), "Aggreko / MiT", ""),
-    ("Abnahme & Restpunkte mit DPR", "Abschluss", D(12,15), "Burak", ""),
+    ("bSuite-Aufnahme", "Vorbereitung", D(7,16,8,0), "Sarah", None, "08:00, mit Ann-Kathrin & Burak"),
+    ("Unterlagenpaket an DPR (Versicherung, HR-Auszug, Zeichnungsberechtigte, Zollprozess)", "Vorbereitung", D(7,16,12,0), "Ann-Kathrin & Markus", None, "12:00 an Roxana Minor"),
+    ("Unterschriften Diessenhofen", "Vorbereitung", D(7,16), "Stefan", None, "Nachmittags"),
+    ("Abstimmungs-Call Aggreko DE", "Vorbereitung", D(7,17,9,0), "Burak / Stephan", None, "16.07. 14:00 oder 17.07. 09:00"),
+    ("PO-Korrekturliste an DPR", "Vorbereitung", D(7,17), "Burak", 4, "49A: 78/110 Tage; 49B: 131/110 Tage"),
+    ("RAMS-Abgabe Hammertech", "Vorbereitung", D(7,20), "Samuel", None, "inkl. Personenliste Aggreko"),
+    ("Personenliste Aggreko", "Vorbereitung", D(7,20), "Aggreko", None, ""),
+    ("NDA MiT-DPR unterzeichnet", "Vorbereitung", D(7,22), "Stefan / Stephan", None, "eigene NDA, Partei MiT AG"),
+    ("Entsendemeldung Aggreko-Personal", "Vorbereitung", D(7,24), "Aggreko", 7, "gesetzlich spaetestens 26.07."),
+    ("PO 49A/49B final signiert", "Vorbereitung", D(7,24), "Stefan", 5, "nach Korrekturliste; Long-Lead-Frist startet"),
+    ("Zollprozess DE-CH schriftlich bestaetigt", "Vorbereitung", D(7,28), "Markus", None, "Equipment vs. Kraftstoff"),
+    ("WORKcontrol-Badges + Site Inductions + Kickoff-Meeting DPR", "Vorbereitung", D(7,31), "Ann-Kathrin", 9, "vor 03.08."),
+    ("Lieferung Head-Load-Test", "Ausfuehrung", D(8,3), "Aggreko", 12, "54x 200 kW"),
+    ("Site Setup & Einweisung Headloads", "Ausfuehrung", D(8,5), "Aggreko / MiT", 13, ""),
+    ("Testbeginn Heat-Load", "Ausfuehrung", D(8,10), "Burak / Samuel", 14, ""),
+    ("Abruf 3-MW-Block", "Ausfuehrung", D(8,14), "Burak", 15, "Mitte August"),
+    ("Lieferung Loadbank 6 MVA", "Ausfuehrung", D(8,17), "Aggreko", 12, ""),
+    ("Testbeginn Loadbank", "Ausfuehrung", D(8,19), "Burak / Samuel", 17, ""),
+    ("Abruf 5-MW-Block", "Ausfuehrung", D(9,8), "Burak", 16, "2. September-Woche"),
+    ("Zwischenstand / Review mit DPR", "Ausfuehrung", D(9,30), "Burak", None, "Quartalsende"),
+    ("Mietende Loadbank", "Ausfuehrung", D(11,2), "Burak / Samuel", 18, "Datum strittig - PO-Fehler"),
+    ("Closeout-Paket EN+DE an DPR", "Abschluss", D(11,30), "Burak / Stephan", 20, "15 Tage vor Leistungsende"),
+    ("Mietende Headloads", "Ausfuehrung", D(12,11), "Burak / Samuel", 15, ""),
+    ("Demontage", "Abschluss", D(12,14), "Aggreko / MiT", 23, ""),
+    ("Abnahme & Restpunkte mit DPR", "Abschluss", D(12,15), "Burak", 24, ""),
 ]
-N_MS = len(MS)                      # 25
+N_MS = len(MS)
 MS_LAST = N_MS + 1                  # 26
+HELP = f"Meilensteine!$L$2:$L${MS_LAST}"   # Hilfsspalte L (eindeutige Termine)
 
 # ================================================================ 1) DASHBOARD
 ws = wb.active
@@ -178,7 +194,7 @@ for lbl, val in stamm:
     r += 1
 STAMM_END = r - 1                    # 15
 
-# ---- KPI Aufgaben (rechts, E/F, Zeilen 4-10)
+# ---- KPI Aufgaben (rechts, Zeilen 4-10)
 ws.cell(row=4, column=5, value="AUFGABEN-STATUS").font = sub_font
 kpi_a = [
     ("Offen", '=COUNTIF(Aufgaben[Status],"offen")', LIGHT),
@@ -230,11 +246,7 @@ ws.conditional_formatting.add("F15", DataBarRule(start_type='num', start_value=0
 
 # ---- Ampel + Woche (17-19)
 ws.cell(row=17, column=5, value="PROJEKTSTATUS (AMPEL)").font = sub_font
-st = ws.cell(row=18, column=5,
-    value=('=IF(SUMPRODUCT((Aufgaben[Status]<>"erledigt")*(Aufgaben[Termin]<>"")*'
-           '(Aufgaben[Termin]<TODAY()))>0,"KRITISCH - ueberfaellige Aufgaben",'
-           'IF(COUNTIF(Meilensteine[Status],"kritisch")+COUNTIF(Aufgaben[Status],"kritisch")>0,'
-           '"ACHTUNG - kritische Punkte offen","AUF KURS - keine Ueberfaelligkeiten"))'))
+st = ws.cell(row=18, column=5, value=AMPEL_FORMULA)
 st.font = Font(name=FONT_NAME, size=11, bold=True, color=WHITE); st.alignment = center
 ws.merge_cells("E18:F18"); ws.cell(row=18, column=6).border = border; st.border = border
 for kw, fill in [("KRITISCH", RED_TXT), ("ACHTUNG", ORANGE), ("AUF KURS", GREEN_TXT)]:
@@ -256,7 +268,7 @@ for ri, lbl, f in [
     vc = ws.cell(row=ri, column=6, value=f); vc.font = Font(name=FONT_NAME, size=12, bold=True, color=NAVY)
     vc.alignment = center; vc.border = border
 
-# ---- Risiken nach Auswirkung (23-26)
+# ---- Risiken (23-26)
 ws.cell(row=23, column=5, value="STOPP-PUNKTE & RISIKEN (offen)").font = sub_font
 for ri, lbl, f, fill, txt in [
     (24, "Auswirkung hoch", '=COUNTIFS(Risiken[Auswirkung],"hoch",Risiken[Status],"<>erledigt")', RED, RED_TXT),
@@ -268,11 +280,34 @@ for ri, lbl, f, fill, txt in [
     vc.font = Font(name=FONT_NAME, size=12, bold=True, color=txt)
     vc.alignment = center; vc.border = border; vc.fill = PatternFill("solid", fgColor=fill)
 
-# ---- Countdown (links, ab STAMM_END+2)
+# ---- Off-Hire-Fristen (27-29)  (WORKDAY = Mo-Fr, ohne Feiertage)
+ws.cell(row=27, column=5, value="OFF-HIRE-FRISTEN (5 Arbeitstage vorher)").font = sub_font
+cd_fmt = '0" Tage";"ueberfaellig";"heute"'
+for ri, lbl, ende in [(28, "Loadbank (Mietende 02.11.) - melden bis", "DATE(2026,11,2)"),
+                      (29, "Headloads (Mietende 11.12.) - melden bis", "DATE(2026,12,11)")]:
+    lc = ws.cell(row=ri, column=5, value=lbl); lc.font = kpi_lbl; lc.alignment = left; lc.border = border
+    vc = ws.cell(row=ri, column=6, value=f'=WORKDAY({ende},-5)-TODAY()')
+    vc.number_format = cd_fmt; vc.font = Font(name=FONT_NAME, bold=True, color=NAVY)
+    vc.alignment = center; vc.border = border
+    dc = ws.cell(row=ri, column=7, value=f'=WORKDAY({ende},-5)')
+    dc.number_format = "DD.MM.YYYY"; dc.font = base_font; dc.alignment = center; dc.border = border
+
+# ---- Offene Entscheide (30-32)
+ws.cell(row=30, column=5, value="OFFENE ENTSCHEIDE").font = sub_font
+ec1 = ws.cell(row=31, column=5, value="offen gesamt"); ec1.font = kpi_lbl; ec1.alignment = left; ec1.border = border
+v1 = ws.cell(row=31, column=6, value='=COUNTIFS(Aenderungslog[Typ],"Entscheid",Aenderungslog[Status],"offen")')
+v1.font = Font(name=FONT_NAME, size=12, bold=True, color=NAVY); v1.alignment = center; v1.border = border
+ec2 = ws.cell(row=32, column=5, value="davon ueberfaellig"); ec2.font = kpi_lbl; ec2.alignment = left
+ec2.border = border; ec2.fill = PatternFill("solid", fgColor=RED)
+v2 = ws.cell(row=32, column=6,
+    value='=SUMPRODUCT((Aenderungslog[Typ]="Entscheid")*(Aenderungslog[Status]="offen")*(Aenderungslog[Termin]<>"")*(Aenderungslog[Termin]<TODAY()))')
+v2.font = Font(name=FONT_NAME, size=12, bold=True, color=RED_TXT); v2.alignment = center
+v2.border = border; v2.fill = PatternFill("solid", fgColor=RED)
+
+# ---- Countdown (links, 17-22)
 CD_TITLE = STAMM_END + 2             # 17
 ws.cell(row=CD_TITLE, column=2, value="COUNTDOWN").font = sub_font
-cd_fmt = '0" Tage";"ueberfaellig";"heute"'
-NX_FIRST = CD_TITLE + 9              # erste Zeile 'naechste Meilensteine' (s. unten)
+NX_FIRST = CD_TITLE + 9              # 26
 counts = [
     ("Tage bis naechster Meilenstein", f'=IFERROR(B{NX_FIRST}-TODAY(),"")'),
     ("Tage bis Entsendefrist Aggreko (24.07.)", '=DATE(2026,7,24)-TODAY()'),
@@ -289,8 +324,7 @@ for lbl, f in counts:
     ws.cell(row=r, column=4).border = border
     r += 1
 
-# ---- Naechste 5 Meilensteine
-HELP = f"Meilensteine!$K$2:$K${MS_LAST}"
+# ---- Naechste 5 Meilensteine (24-30)
 NX_TITLE = r + 1                     # 24
 ws.cell(row=NX_TITLE, column=2, value="NAECHSTE 5 MEILENSTEINE").font = sub_font
 for i, h in enumerate(["Plantermin", "Meilenstein", "Status"]):
@@ -311,16 +345,17 @@ for k in range(1, 6):
     sc = ws.cell(row=ri, column=5,
         value=f'=IFERROR(INDEX(Meilensteine!$G$2:$G${MS_LAST},MATCH(SMALL({HELP},{k}),{HELP},0)),"")')
     sc.font = base_font; sc.alignment = center; sc.border = border
-NX_LAST = NX_TITLE + 6
+NX_LAST = NX_TITLE + 6               # 30
 
-note_r = NX_LAST + 2
-ws.cell(row=note_r, column=2,
-    value="Alle Werte aktualisieren sich automatisch (Formeln, keine Pivots). "
-          "Farben: gruen = erledigt/ok, gelb = in Arbeit, orange = Achtung, rot = kritisch/ueberfaellig.").font = small_it
-ws.merge_cells(start_row=note_r, start_column=2, end_row=note_r, end_column=8)
+note_r = NX_LAST + 2                 # 32 (nur B:D - rechts liegt der Entscheide-Block)
+nt = ws.cell(row=note_r, column=2,
+    value="Werte aktualisieren sich automatisch. Farben: gruen=ok, gelb=in Arbeit, orange=Achtung, rot=kritisch.")
+nt.font = small_it; nt.alignment = left_top
+ws.merge_cells(start_row=note_r, start_column=2, end_row=note_r, end_column=4)
+ws.row_dimensions[note_r].height = 24
 
-# ---- Owner-Auslastung + Charts
-OWN_TITLE = note_r + 2
+# ---- Owner-Auslastung + Charts (ab 34)
+OWN_TITLE = note_r + 2               # 34
 ws.cell(row=OWN_TITLE, column=2, value="OFFENE AUFGABEN JE OWNER").font = sub_font
 oh = ws.cell(row=OWN_TITLE + 1, column=2, value="Owner"); oh.font = hdr_font; oh.fill = hdr_fill
 oh.alignment = center; oh.border = border
@@ -357,9 +392,8 @@ dn = DoughnutChart(holeSize=55)
 dn.title = "Aufgaben nach Status"
 dn.add_data(Reference(ws, min_col=11, min_row=1, max_row=6), titles_from_data=True)
 dn.set_categories(Reference(ws, min_col=10, min_row=2, max_row=6))
-# Kategorien sind TEXT -> als strRef speichern, sonst zeigt Excel keine Namen
 dn.series[0].cat = AxDataSource(strRef=StrRef("'Dashboard'!$J$2:$J$6"))
-dn.dataLabels = DataLabelList(showPercent=True)      # Prozente im Ring
+dn.dataLabels = DataLabelList(showPercent=True)
 dn.visible_cells_only = False
 dn.height = 8; dn.width = 9
 dn.series[0].data_points = [DataPoint(idx=i, spPr=GraphicalProperties(solidFill=c))
@@ -370,12 +404,10 @@ bc = BarChart(); bc.type = "bar"
 bc.title = "Offene Aufgaben je Owner"
 bc.add_data(Reference(ws, min_col=3, min_row=OWN_TITLE + 1, max_row=own_last), titles_from_data=True)
 bc.set_categories(Reference(ws, min_col=2, min_row=OWN_TITLE + 2, max_row=own_last))
-# Owner-Namen sind TEXT -> strRef, sonst leere Kategorienachse
 bc.series[0].cat = AxDataSource(strRef=StrRef(f"'Dashboard'!$B${OWN_TITLE+2}:$B${own_last}"))
-bc.dataLabels = DataLabelList(showVal=True)          # Werte an den Balken
+bc.dataLabels = DataLabelList(showVal=True)
 bc.legend = None
 bc.height = 8; bc.width = 11
-# Achsen explizit sichtbar + korrekt positioniert (Kategorien links, Werte unten)
 bc.x_axis.delete = False; bc.y_axis.delete = False
 bc.x_axis.tickLblPos = "nextTo"; bc.y_axis.tickLblPos = "nextTo"
 bc.x_axis.axPos = "l"; bc.y_axis.axPos = "b"
@@ -383,9 +415,107 @@ bc.series[0].graphicalProperties = GraphicalProperties(solidFill=ORANGE)
 ws.add_chart(bc, f"H{OWN_TITLE}")
 
 page_setup(ws, freeze="A1", title_rows=None)
-ws.print_area = f"A1:M{own_last + 10}"
+ws.print_area = f"A1:M{own_last + 12}"
 
-# ================================================================ 2) TERMINPLAN (WOCHEN-GANTT)
+# ================================================================ 2) WOCHENBERICHT (A4 hoch, druckfertig)
+ws = wb.create_sheet("Wochenbericht")
+ws.sheet_view.showGridLines = False
+widths(ws, [3, 16, 46, 16, 16, 14])
+ws["B2"] = "WOCHENBERICHT"; ws["B2"].font = title_font; ws.merge_cells("B2:F2")
+ws["B3"] = "MiT-PWR-WIN-2026-001  |  DPR Construction / Vantage ZRH12 Winterthur"
+ws["B3"].font = sub_font; ws.merge_cells("B3:F3")
+bw = ws.cell(row=4, column=2,
+    value='="Berichtswoche: KW "&WEEKNUM(TODAY(),21)&"  |  Stand: "&TEXT(TODAY(),"DD.MM.YYYY")&"  |  PL: Burak Uecoez"')
+bw.font = bold_font; ws.merge_cells("B4:F4")
+
+amp = ws.cell(row=6, column=2, value=AMPEL_FORMULA)
+amp.font = Font(name=FONT_NAME, size=12, bold=True, color=WHITE); amp.alignment = center
+ws.merge_cells("B6:F6")
+for cc in range(2, 7): ws.cell(row=6, column=cc).border = border
+for kw, fill in [("KRITISCH", RED_TXT), ("ACHTUNG", ORANGE), ("AUF KURS", GREEN_TXT)]:
+    ws.conditional_formatting.add("B6",
+        FormulaRule(formula=[f'ISNUMBER(SEARCH("{kw}",$B$6))'],
+                    fill=PatternFill("solid", fgColor=fill)))
+
+ws.cell(row=8, column=2, value="KENNZAHLEN").font = sub_font
+kpis_b = [
+    ("Aufgaben offen", '=COUNTIF(Aufgaben[Status],"offen")'),
+    ("in Arbeit", '=COUNTIF(Aufgaben[Status],"in Arbeit")'),
+    ("erledigt (gesamt)", '=COUNTIF(Aufgaben[Status],"erledigt")'),
+    ("kritisch", '=COUNTIF(Aufgaben[Status],"kritisch")'),
+    ("ueberfaellig", '=SUMPRODUCT((Aufgaben[Status]<>"erledigt")*(Aufgaben[Termin]<>"")*(Aufgaben[Termin]<TODAY()))'),
+    ("davon diese Woche erledigt", '=COUNTIFS(Aufgaben[Erledigt am],">="&(TODAY()-7),Aufgaben[Erledigt am],"<="&TODAY())'),
+]
+r = 9
+for lbl, f in kpis_b:
+    lc = ws.cell(row=r, column=2, value=lbl); lc.font = kpi_lbl; lc.alignment = left; lc.border = border
+    ws.merge_cells(start_row=r, start_column=2, end_row=r, end_column=3)
+    ws.cell(row=r, column=3).border = border
+    vc = ws.cell(row=r, column=4, value=f); vc.font = bold_font; vc.alignment = center; vc.border = border
+    r += 1
+
+ws.cell(row=16, column=2, value="NAECHSTE 5 MEILENSTEINE").font = sub_font
+for i, h in enumerate(["Plantermin", "Meilenstein", "Status"]):
+    col = [2, 3, 4][i]
+    c = ws.cell(row=17, column=col, value=h)
+    c.font = hdr_font; c.fill = hdr_fill; c.alignment = center; c.border = border
+for k in range(1, 6):
+    ri = 17 + k
+    tc = ws.cell(row=ri, column=2, value=f'=IFERROR(INT(SMALL({HELP},{k})),"")')
+    tc.number_format = "DD.MM.YYYY"; tc.font = base_font; tc.alignment = center; tc.border = border
+    nc = ws.cell(row=ri, column=3,
+        value=f'=IFERROR(INDEX(Meilensteine!$B$2:$B${MS_LAST},MATCH(SMALL({HELP},{k}),{HELP},0)),"")')
+    nc.font = base_font; nc.alignment = left; nc.border = border
+    sc = ws.cell(row=ri, column=4,
+        value=f'=IFERROR(INDEX(Meilensteine!$G$2:$G${MS_LAST},MATCH(SMALL({HELP},{k}),{HELP},0)),"")')
+    sc.font = base_font; sc.alignment = center; sc.border = border
+status_cf(ws, "D", 18, 22)
+
+ws.cell(row=24, column=2, value="OFFENE STOPP-PUNKTE & RISIKEN (Auswirkung hoch)").font = sub_font
+RH = "'Stopp-Punkte & Risiken'"
+for k in range(1, 7):
+    ri = 24 + k
+    f = (f'=IFERROR(INDEX({RH}!$C$1:$C$50,SMALL({RH}!$K$2:$K$40,{k}))&"   ["&'
+         f'INDEX({RH}!$F$1:$F$50,SMALL({RH}!$K$2:$K$40,{k}))&", bis "&'
+         f'TEXT(INDEX({RH}!$G$1:$G$50,SMALL({RH}!$K$2:$K$40,{k})),"DD.MM.")&"]","")')
+    c = ws.cell(row=ri, column=2, value=f); c.font = base_font; c.alignment = left; c.border = border
+    ws.merge_cells(start_row=ri, start_column=2, end_row=ri, end_column=6)
+    for cc in range(3, 7): ws.cell(row=ri, column=cc).border = border
+
+ws.cell(row=32, column=2, value="OFFENE ENTSCHEIDE").font = sub_font
+LG = "'Aenderungslog & Entscheide'"
+for k in range(1, 5):
+    ri = 32 + k
+    f = (f'=IFERROR(INDEX({LG}!$D$1:$D$60,SMALL({LG}!$H$2:$H$40,{k}))&"   ["&'
+         f'INDEX({LG}!$B$1:$B$60,SMALL({LG}!$H$2:$H$40,{k}))&"]","")')
+    c = ws.cell(row=ri, column=2, value=f); c.font = base_font; c.alignment = left; c.border = border
+    ws.merge_cells(start_row=ri, start_column=2, end_row=ri, end_column=6)
+    for cc in range(3, 7): ws.cell(row=ri, column=cc).border = border
+
+ws.cell(row=38, column=2, value="OFF-HIRE-FRISTEN").font = sub_font
+oh1 = ws.cell(row=39, column=2,
+    value='="Loadbank: Off-Hire melden bis "&TEXT(WORKDAY(DATE(2026,11,2),-5),"DD.MM.YYYY")&" (noch "&(WORKDAY(DATE(2026,11,2),-5)-TODAY())&" Tage)"')
+oh1.font = base_font; ws.merge_cells("B39:F39")
+oh2 = ws.cell(row=40, column=2,
+    value='="Headloads: Off-Hire melden bis "&TEXT(WORKDAY(DATE(2026,12,11),-5),"DD.MM.YYYY")&" (noch "&(WORKDAY(DATE(2026,12,11),-5)-TODAY())&" Tage)"')
+oh2.font = base_font; ws.merge_cells("B40:F40")
+
+ws.cell(row=42, column=2, value="FORTSCHRITT DIESE WOCHE (manuell ausfuellen)").font = sub_font
+for ri in range(43, 47):
+    ws.merge_cells(start_row=ri, start_column=2, end_row=ri, end_column=6)
+    for cc in range(2, 7): ws.cell(row=ri, column=cc).border = border
+ws.cell(row=48, column=2, value="PROBLEME & NAECHSTE SCHRITTE (manuell ausfuellen)").font = sub_font
+for ri in range(49, 53):
+    ws.merge_cells(start_row=ri, start_column=2, end_row=ri, end_column=6)
+    for cc in range(2, 7): ws.cell(row=ri, column=cc).border = border
+ws.cell(row=54, column=2,
+    value="Als PDF exportieren (Datei > Exportieren) und an DPR senden. Enthaelt KEINE EUR-Einkaufspreise.").font = small_it
+ws.merge_cells("B54:F54")
+page_setup(ws, freeze="A1", title_rows=None)
+ws.page_setup.orientation = "portrait"
+ws.print_area = "A1:F55"
+
+# ================================================================ 3) TERMINPLAN (WOCHEN-GANTT)
 ws = wb.create_sheet("Terminplan")
 ws.sheet_view.showGridLines = False
 week_starts = []
@@ -487,14 +617,14 @@ leg.font = small_it
 ws.merge_cells(start_row=M1 + 2, start_column=2, end_row=M1 + 2, end_column=LAST_WK_COL)
 page_setup(ws, freeze="E4", title_rows="2:3")
 
-# ================================================================ 3) MEILENSTEINE
+# ================================================================ 4) MEILENSTEINE
 ws = wb.create_sheet("Meilensteine")
 cols = ["Nr.", "Meilenstein", "Phase", "Plantermin", "KW", "Ist-Termin", "Status",
-        "Verantwortlich", "Countdown (Tage)", "Bemerkung"]
-widths(ws, [6, 44, 14, 15, 8, 13, 13, 20, 12, 32])
+        "Verantwortlich", "Countdown (Tage)", "Vorgaenger (Nr.)", "Bemerkung"]
+widths(ws, [6, 42, 13, 15, 8, 13, 12, 19, 11, 11, 30])
 header_row(ws, 1, cols)
 r = 2
-for i, (name, phase, term, verant, bem) in enumerate(MS, 1):
+for i, (name, phase, term, verant, vorg, bem) in enumerate(MS, 1):
     ws.cell(row=r, column=1, value=i)
     ws.cell(row=r, column=2, value=name)
     ws.cell(row=r, column=3, value=phase)
@@ -507,14 +637,16 @@ for i, (name, phase, term, verant, bem) in enumerate(MS, 1):
     cd = ws.cell(row=r, column=9,
         value=f'=IF($G{r}="erledigt","✔",IF($D{r}="","",INT($D{r})-TODAY()))')
     cd.number_format = '0" Tg";-0" Tg"'
-    ws.cell(row=r, column=10, value=bem)
-    ws.cell(row=r, column=11,
+    ws.cell(row=r, column=10, value=vorg)
+    ws.cell(row=r, column=11, value=bem)
+    # Hilfsspalte L: eindeutiger Termin fuer Dashboard/Wochenbericht
+    ws.cell(row=r, column=12,
         value=f'=IF(AND($G{r}<>"erledigt",$D{r}<>"",$D{r}>=TODAY()),$D{r}+ROW()/10000,"")')
     r += 1
 last = r - 1
 body(ws, 2, last, len(cols))
 for rr in range(2, last + 1):
-    for cc in (1, 3, 4, 5, 6, 7, 9):
+    for cc in (1, 3, 4, 5, 6, 7, 9, 10):
         ws.cell(row=rr, column=cc).alignment = center
 make_table(ws, "Meilensteine", 1, last, len(cols))
 add_dv(ws, "Vorbereitung,Ausfuehrung,Abschluss", f"C2:C{last}")
@@ -531,34 +663,35 @@ ws.conditional_formatting.add(f"I2:I{last}", CellIsRule(operator="lessThanOrEqua
     fill=PatternFill("solid", fgColor=RED), font=Font(name=FONT_NAME, bold=True, color=RED_TXT)))
 ws.conditional_formatting.add(f"I2:I{last}", CellIsRule(operator="lessThanOrEqual", formula=["10"],
     fill=PatternFill("solid", fgColor=ORANGE_FILL), font=Font(name=FONT_NAME, color=ORANGE_TXT)))
-ws.column_dimensions["K"].hidden = True
-ws.cell(row=1, column=11, value="(Hilfsspalte)").font = small_it
+# Abhaengigkeits-Warnung: Vorgaenger kritisch/verschoben -> Name + Vorgaenger-Zelle markieren
+dep_rule = (f'AND($J2<>"",IFERROR(OR(INDEX($G$2:$G${last},MATCH($J2,$A$2:$A${last},0))="kritisch",'
+            f'INDEX($G$2:$G${last},MATCH($J2,$A$2:$A${last},0))="verschoben"),FALSE))')
+for colrange in (f"B2:B{last}", f"J2:J{last}"):
+    ws.conditional_formatting.add(colrange,
+        FormulaRule(formula=[dep_rule], fill=PatternFill("solid", fgColor=RED),
+                    font=Font(name=FONT_NAME, bold=True, color=RED_TXT)))
+ws.column_dimensions["L"].hidden = True
+ws.cell(row=1, column=12, value="(Hilfsspalte)").font = small_it
 page_setup(ws, freeze="A2")
 
-# ================================================================ 4) AUFGABEN (finale Verteilung)
+# ================================================================ 5) AUFGABEN
 ws = wb.create_sheet("Aufgaben")
 cols = ["Nr.", "Aufgabe", "Paket", "Owner", "Termin", "Status", "Prioritaet", "Bemerkung", "Erledigt am"]
 widths(ws, [6, 52, 12, 18, 14, 13, 12, 36, 14])
 header_row(ws, 1, cols)
 au = [
-    # Markus
     ("Versicherungsnachweis via Finance beschaffen", "Admin", "Markus", D(7,16), "hoch", ""),
     ("Zollprozess DE-CH schriftlich klaeren (Kostentraeger; Equipment voruebergehende Verwendung vs. Kraftstoff definitive Einfuhr)", "Admin", "Markus", D(7,17), "hoch", ""),
     ("Deckungssummen bei Roxana Minor erfragen", "Admin", "Markus", D(7,17), "mittel", ""),
-    # Ann-Kathrin
     ("HR-Auszug nachfassen", "Admin", "Ann-Kathrin", D(7,16), "hoch", ""),
     ("Beide Angebote im MiT-Layout aufbereiten", "beide", "Ann-Kathrin", D(7,17), "mittel", "P-640380-3 / P-650395-2"),
     ("WORKcontrol-Registrierung MiT", "Admin", "Ann-Kathrin", D(7,24), "hoch", "vor Badges; CHF 25/Person Erstanmeldung"),
     ("Versand Gesamtpaket an Roxana Minor (Tanya cc)", "Admin", "Ann-Kathrin", D(7,16,12,0), "hoch", ""),
-    # Stefan
     ("Unterschriften leisten (Diessenhofen)", "Admin", "Stefan", D(7,16), "hoch", "Donnerstag nachmittags"),
     ("Entscheid EUR/CHF-Kurs und Absicherung mit Olli", "Admin", "Stefan", D(7,17), "hoch", "FX-Risiko"),
     ("Verhandlungslinie Korrekturliste festlegen", "beide", "Stefan", D(7,17), "hoch", ""),
-    # Sarah
     ("bSuite-Anlage + Intercompany-Beauftragung Aggreko (Back-to-Back)", "beide", "Sarah", D(7,16), "hoch", ""),
-    # Samuel
     ("RAMS-Praxischeck: Anlieferung/8-t-Kranhub, Installation, Testbetrieb, Betankung/Leckage, Demobilisierung", "beide", "Samuel", D(7,20), "hoch", "5 Taetigkeiten, Hammertech"),
-    # Burak
     ("PO-Korrekturliste erstellen und einreichen", "beide", "Burak / Stephan", D(7,17), "hoch", "49A 78/110 Tage; 49B 131/110 Tage"),
     ("Schriftliche Aggreko-Terminbestaetigung 03.08. / 17.08. einholen", "beide", "Burak", D(7,20), "hoch", ""),
     ("Staffelungs-Fakturierung klaeren (5-MW-Block ab Abruf oder Mietbeginn?)", "beide", "Burak", D(7,24), "mittel", ""),
@@ -599,7 +732,7 @@ ws.conditional_formatting.add(f"E2:E{last}",
                 fill=PatternFill("solid", fgColor=RED), font=Font(name=FONT_NAME, color=RED_TXT)))
 page_setup(ws, freeze="A2")
 
-# ================================================================ 5) TERMINE & MEETINGS
+# ================================================================ 6) TERMINE & MEETINGS
 ws = wb.create_sheet("Termine & Meetings")
 cols = ["Nr.", "Meeting", "Rhythmus", "Dauer", "Teilnahmepflicht", "Status", "Bemerkung"]
 widths(ws, [6, 34, 20, 10, 34, 13, 28])
@@ -612,7 +745,7 @@ meet = [
     ("EHS-Meeting", "woechentlich", "1 h", "Safety / PL", ""),
     ("Pull Planning", "woechentlich", "2 h", "PL / Foreman", ""),
     ("DABS (Daily Activity Briefing)", "taeglich", "30 Min", "Crew vor Ort", ""),
-    ("Long-Lead-Status-Reporting", "14-taeglich", "-", "PL", "Bericht an DPR"),
+    ("Long-Lead-Status-Reporting", "14-taeglich", "-", "PL", "Bericht an DPR (siehe Wochenbericht)"),
     ("Record Drawings", "monatlich", "-", "PL", "Stand der Dokumentation"),
 ]
 r = 2
@@ -637,7 +770,7 @@ ws.conditional_formatting.add(f"F2:F{last}", CellIsRule(operator="equal", formul
     fill=PatternFill("solid", fgColor=LIGHT)))
 page_setup(ws, freeze="A2")
 
-# ================================================================ 6) PERSONAL & ZUTRITT
+# ================================================================ 7) PERSONAL & ZUTRITT
 ws = wb.create_sheet("Personal & Zutritt")
 cols = ["Nr.", "Name", "Firma", "Funktion", "Entsendemeldung", "WORKcontrol-Ausweis (Status/Nr.)",
         "Site Induction", "Status", "Bemerkung"]
@@ -687,7 +820,35 @@ hint.font = Font(name=FONT_NAME, size=9, bold=True, color=RED_TXT)
 ws.merge_cells(start_row=last + 2, start_column=2, end_row=last + 2, end_column=9)
 page_setup(ws, freeze="A2")
 
-# ================================================================ 7) LIEFERUNGEN & LOGISTIK
+# ================================================================ 8) SCHICHTPLAN
+ws = wb.create_sheet("Schichtplan")
+cols = ["Nr.", "Datum", "KW", "Name", "Firma", "Funktion", "Von", "Bis", "Vor Ort", "Bemerkung"]
+widths(ws, [6, 14, 9, 26, 12, 20, 9, 9, 10, 30])
+header_row(ws, 1, cols)
+r = 2
+for i in range(1, 21):
+    ws.cell(row=r, column=1, value=i)
+    ws.cell(row=r, column=2).number_format = "DD.MM.YYYY"
+    ws.cell(row=r, column=3, value=f'=IF($B{r}="","","KW "&WEEKNUM($B{r},21))')
+    ws.cell(row=r, column=7).number_format = "hh:mm"
+    ws.cell(row=r, column=8).number_format = "hh:mm"
+    r += 1
+last = r - 1
+body(ws, 2, last, len(cols))
+for rr in range(2, last + 1):
+    for cc in (1, 2, 3, 5, 7, 8, 9):
+        ws.cell(row=rr, column=cc).alignment = center
+make_table(ws, "Schichtplan", 1, last, len(cols))
+add_dv(ws, "Aggreko,MiT,DPR", f"E2:E{last}")
+add_dv(ws, "ja,nein", f"I2:I{last}")
+ws.conditional_formatting.add(f"I2:I{last}", CellIsRule(operator="equal", formula=['"ja"'],
+    fill=PatternFill("solid", fgColor=GREEN), font=Font(name=FONT_NAME, color=GREEN_TXT)))
+ws.cell(row=last + 2, column=2,
+    value="Anwesenheit vor Ort je Tag erfassen (DABS-Pflicht, 24/7-Kette siehe Kontakte). KW berechnet sich automatisch.").font = small_it
+ws.merge_cells(start_row=last + 2, start_column=2, end_row=last + 2, end_column=10)
+page_setup(ws, freeze="A2")
+
+# ================================================================ 9) LIEFERUNGEN & LOGISTIK
 ws = wb.create_sheet("Lieferungen & Logistik")
 cols = ["Nr.", "Lieferung / Gegenstand", "Paket", "Anlieferung geplant", "Ort",
         "Kran/Lift", "Tank/Containment", "Verantwortlich", "Status", "Bemerkung"]
@@ -728,7 +889,7 @@ for val, fill, txt in [("geliefert", GREEN, GREEN_TXT), ("zurueck", GREEN, GREEN
         fill=PatternFill("solid", fgColor=fill), font=Font(name=FONT_NAME, color=txt)))
 page_setup(ws, freeze="A2")
 
-# ================================================================ 8) TESTPROTOKOLLE
+# ================================================================ 10) TESTPROTOKOLLE
 ws = wb.create_sheet("Testprotokolle")
 cols = ["Nr.", "Test / Messung", "Paket", "Datum", "Sollwert", "Istwert", "Einheit",
         "Ergebnis", "Pruefer", "Foto/Nachweis", "Bemerkung"]
@@ -786,7 +947,39 @@ ws.cell(row=last + 2, column=2,
 ws.merge_cells(start_row=last + 2, start_column=2, end_row=last + 2, end_column=11)
 page_setup(ws, freeze="A2")
 
-# ================================================================ 9) STOPP-PUNKTE & RISIKEN
+# ================================================================ 11) FUEL-LOG
+ws = wb.create_sheet("Fuel-Log")
+cols = ["Nr.", "Datum", "Menge (Liter)", "Lieferschein-Nr.", "Zoll-Kategorie",
+        "Auffangwanne geprueft", "Erfasst von", "Bemerkung"]
+widths(ws, [6, 14, 14, 18, 20, 18, 14, 34])
+header_row(ws, 1, cols)
+r = 2
+for i in range(1, 16):
+    ws.cell(row=r, column=1, value=i)
+    ws.cell(row=r, column=2).number_format = "DD.MM.YYYY"
+    ws.cell(row=r, column=3).number_format = "#'##0\" l\""
+    r += 1
+last = r - 1
+body(ws, 2, last, len(cols))
+for rr in range(2, last + 1):
+    for cc in (1, 2, 3, 4, 5, 6, 7):
+        ws.cell(row=rr, column=cc).alignment = center
+make_table(ws, "FuelLog", 1, last, len(cols))
+add_dv(ws, "definitive Einfuhr,Rueckfuhr", f"E2:E{last}")
+add_dv(ws, "ja,nein", f"F2:F{last}")
+add_dv(ws, "Burak,Samuel,Aggreko,MiT", f"G2:G{last}")
+ws.conditional_formatting.add(f"F2:F{last}", CellIsRule(operator="equal", formula=['"nein"'],
+    fill=PatternFill("solid", fgColor=RED), font=Font(name=FONT_NAME, bold=True, color=RED_TXT)))
+tl = ws.cell(row=last + 2, column=2, value="Total Liter"); tl.font = bold_font
+ts = ws.cell(row=last + 2, column=3, value="=SUM(FuelLog[Menge (Liter)])")
+ts.font = bold_font; ts.number_format = "#'##0\" l\""; ts.border = border
+ws.cell(row=last + 3, column=2,
+    value="Kraftstoff = definitive Einfuhr (Zoll!). Fuel Unreturned wird mit EUR 2.20/l belastet. "
+          "Betankung nur am Standort mit 110%-Auffangwanne.").font = small_it
+ws.merge_cells(start_row=last + 3, start_column=2, end_row=last + 3, end_column=8)
+page_setup(ws, freeze="A2")
+
+# ================================================================ 12) STOPP-PUNKTE & RISIKEN
 ws = wb.create_sheet("Stopp-Punkte & Risiken")
 cols = ["Nr.", "Typ", "Beschreibung", "Auswirkung", "Wahrscheinlichkeit", "Owner", "Termin", "Status", "Massnahme"]
 widths(ws, [6, 14, 50, 12, 15, 16, 13, 12, 40])
@@ -812,6 +1005,8 @@ for i, (typ, besch, ausw, wahr, ow, term, mass) in enumerate(rk, 1):
     ws.cell(row=r, column=5, value=wahr); ws.cell(row=r, column=6, value=ow)
     ws.cell(row=r, column=7, value=term).number_format = "DD.MM.YYYY"
     ws.cell(row=r, column=8, value="offen"); ws.cell(row=r, column=9, value=mass)
+    # Hilfsspalte K fuer Wochenbericht: Zeilen-Nr., wenn offen & Auswirkung hoch
+    ws.cell(row=r, column=11, value=f'=IF(AND($H{r}<>"erledigt",$D{r}="hoch"),ROW(),"")')
     r += 1
 last = r - 1
 body(ws, 2, last, len(cols))
@@ -831,9 +1026,11 @@ ws.conditional_formatting.add(f"E2:E{last}", CellIsRule(operator="equal", formul
     fill=PatternFill("solid", fgColor=ORANGE_FILL), font=Font(name=FONT_NAME, bold=True, color=ORANGE_TXT)))
 ws.conditional_formatting.add(f"B2:B{last}", CellIsRule(operator="equal", formula=['"Stopp-Punkt"'],
     font=Font(name=FONT_NAME, bold=True, color=RED_TXT)))
+ws.column_dimensions["K"].hidden = True
+ws.cell(row=1, column=11, value="(Hilfsspalte)").font = small_it
 page_setup(ws, freeze="A2")
 
-# ================================================================ 10) KOMMERZIELL
+# ================================================================ 13) KOMMERZIELL
 ws = wb.create_sheet("Kommerziell")
 cols = ["Nr.", "Position", "Paket", "EUR-Wert (Einkauf, Referenz)", "Rechnungsstatus",
         "Zahlungsziel", "CHF Verkauf", "Bemerkung"]
@@ -846,7 +1043,7 @@ kom = [
     ("Einkaufsvolumen total", "beide", "=D2+D3", None, "-", "Summe beider Angebote"),
     ("Transport (Schaetzposition)", "beide", None, "offen", "30 Tage", "nach Aufwand gemaess Angebot"),
     ("Technikereinsaetze (Schaetzposition)", "beide", None, "offen", "30 Tage", "nach Aufwand gemaess Angebot"),
-    ("Fuel Unreturned", "Headload", 2.20, "offen", "30 Tage", "EUR 2.20 pro Liter nicht retournierter Kraftstoff"),
+    ("Fuel Unreturned", "Headload", 2.20, "offen", "30 Tage", "EUR 2.20 pro Liter; Mengen siehe Fuel-Log"),
     ("Off-Hire-Fristen", "beide", None, None, "-", "Abmeldung 5 Arbeitstage im Voraus, sonst Weiterberechnung"),
     ("Rate 1 (Staffelungs-Fakturierung)", "beide", None, "offen", "30 Tage", "Staffelung klaeren: 5-MW ab Abruf oder Mietbeginn?"),
     ("Rate 2 (Staffelungs-Fakturierung)", "beide", None, "offen", "30 Tage", ""),
@@ -868,7 +1065,6 @@ body(ws, 2, last, len(cols))
 for rr in range(2, last + 1):
     for cc in (1, 3, 4, 5, 6, 7):
         ws.cell(row=rr, column=cc).alignment = center
-# Total-Zeile hervorheben
 for cc in range(1, len(cols) + 1):
     ws.cell(row=4, column=cc).font = bold_font
 make_table(ws, "Kommerziell", 1, last, len(cols))
@@ -884,7 +1080,57 @@ ws.cell(row=last + 2, column=2,
 ws.merge_cells(start_row=last + 2, start_column=2, end_row=last + 2, end_column=8)
 page_setup(ws, freeze="A2")
 
-# ================================================================ 11) DOKUMENTE
+# ================================================================ 14) TREND
+ws = wb.create_sheet("Trend")
+ws.sheet_view.showGridLines = False
+widths(ws, [8, 14, 16, 20, 30])
+ws["A1"] = "TREND - offene Aufgaben & erledigte Meilensteine (jeden Freitag eintragen)"
+ws["A1"].font = sub_font
+ws.merge_cells("A1:E1")
+lc = ws.cell(row=2, column=1, value="Aktueller Stand (zum Uebertragen):"); lc.font = kpi_lbl
+ws.merge_cells("A2:B2")
+c1 = ws.cell(row=2, column=3, value='=COUNTA(Aufgaben[Nr.])-COUNTIF(Aufgaben[Status],"erledigt")')
+c1.font = bold_font; c1.alignment = center; c1.border = border
+c2 = ws.cell(row=2, column=4, value='=COUNTIF(Meilensteine[Status],"erledigt")')
+c2.font = bold_font; c2.alignment = center; c2.border = border
+cols = ["KW", "Datum (Fr)", "Aufgaben offen", "Meilensteine erledigt", "Bemerkung"]
+header_row(ws, 4, cols)
+r = 5
+fri = datetime.datetime(2026, 7, 17)
+while fri <= datetime.datetime(2026, 12, 31):
+    ws.cell(row=r, column=1, value="KW%d" % fri.isocalendar()[1])
+    dc = ws.cell(row=r, column=2, value=fri); dc.number_format = "DD.MM.YYYY"
+    r += 1
+    fri += timedelta(days=7)
+last = r - 1
+body(ws, 5, last, len(cols))
+for rr in range(5, last + 1):
+    for cc in (1, 2, 3, 4):
+        ws.cell(row=rr, column=cc).alignment = center
+make_table(ws, "Trend", 4, last, len(cols))
+ws.cell(row=last + 2, column=1,
+    value="Jeden Freitag die beiden Werte aus Zeile 2 als ZAHL eintragen (kopieren > Werte einfuegen). "
+          "So entsteht der Verlauf - ganz ohne Makros.").font = small_it
+ws.merge_cells(start_row=last + 2, start_column=1, end_row=last + 2, end_column=5)
+
+lch = LineChart()
+lch.title = "Projekt-Trend 2026"
+lch.add_data(Reference(ws, min_col=3, min_row=4, max_row=last), titles_from_data=True)
+lch.add_data(Reference(ws, min_col=4, min_row=4, max_row=last), titles_from_data=True)
+lch.set_categories(Reference(ws, min_col=1, min_row=5, max_row=last))
+for s in lch.series:
+    s.cat = AxDataSource(strRef=StrRef(f"'Trend'!$A$5:$A${last}"))
+    s.smooth = False
+    s.marker = Marker(symbol="circle", size=6)
+lch.series[0].graphicalProperties = GraphicalProperties(ln=LineProperties(solidFill=ORANGE, w=22000))
+lch.series[1].graphicalProperties = GraphicalProperties(ln=LineProperties(solidFill=NAVY, w=22000))
+lch.x_axis.delete = False; lch.y_axis.delete = False
+lch.x_axis.tickLblPos = "nextTo"; lch.y_axis.tickLblPos = "nextTo"
+lch.height = 9; lch.width = 16
+ws.add_chart(lch, "G4")
+page_setup(ws, freeze="A5", title_rows="4:4")
+
+# ================================================================ 15) DOKUMENTE
 ws = wb.create_sheet("Dokumente")
 cols = ["Nr.", "Dokument", "Version/Datum", "Quelle", "SharePoint-Link", "Status", "Bemerkung"]
 widths(ws, [6, 44, 18, 12, 30, 13, 32])
@@ -909,6 +1155,7 @@ dok += [
     ("Intercompany-Order Aggreko", "offen", "MiT", "Entwurf", "Back-to-Back, Sarah/bSuite"),
     ("RAMS-Paket", "offen", "MiT", "Entwurf", "Abgabe 20.07. Hammertech"),
     ("Long-Lead-Liste", "offen", "MiT", "Entwurf", "3-Tage-Frist ab Vertragsunterzeichnung"),
+    ("Wochenbericht (PDF-Export)", "laufend", "MiT", "Entwurf", "aus Blatt Wochenbericht"),
 ]
 r = 2
 for i, (name, ver, q, stat, bem) in enumerate(dok, 1):
@@ -934,7 +1181,7 @@ ws.conditional_formatting.add(f"F2:F{last}", CellIsRule(operator="equal", formul
     fill=PatternFill("solid", fgColor=GREY), font=Font(name=FONT_NAME, color="808080")))
 page_setup(ws, freeze="A2")
 
-# ================================================================ 12) KONTAKTE
+# ================================================================ 16) KONTAKTE
 ws = wb.create_sheet("Kontakte")
 cols = ["Nr.", "Name", "Firma", "Rolle", "Telefon", "E-Mail", "24/7", "Bemerkung"]
 widths(ws, [6, 26, 14, 30, 22, 28, 8, 30])
@@ -982,49 +1229,66 @@ ws.conditional_formatting.add(f"G2:G{last}", CellIsRule(operator="equal", formul
     fill=PatternFill("solid", fgColor=GREEN), font=Font(name=FONT_NAME, bold=True, color=GREEN_TXT)))
 page_setup(ws, freeze="A2")
 
-# ================================================================ 13) AENDERUNGSLOG & ENTSCHEIDE
+# ================================================================ 17) AENDERUNGSLOG & ENTSCHEIDE
 ws = wb.create_sheet("Aenderungslog & Entscheide")
-cols = ["Datum", "Wer", "Typ", "Was", "Auswirkung"]
-widths(ws, [14, 18, 13, 60, 30])
+cols = ["Datum", "Wer", "Typ", "Was", "Auswirkung", "Termin", "Status"]
+widths(ws, [14, 18, 13, 56, 22, 13, 12])
 header_row(ws, 1, cols)
 log = [
-    (D(7,15), "Burak Uecoez", "Aenderung", "Projektaufsetzung, Aufgabenverteilung.", "-"),
-    (D(7,15), "Stefan / Olli", "Entscheid", "OFFEN: EUR/CHF-Kurs und Absicherung.", "FX-Risiko"),
-    (D(7,15), "Stefan", "Entscheid", "OFFEN: Verhandlungslinie / Redline-Linie Korrekturliste.", "PO-Korrektur"),
-    (D(7,15), "Stefan", "Entscheid", "OFFEN: MiT-Vertragskonstellation final (Parteien, NDA).", "Vertraege"),
-    (D(7,15), "Burak Uecoez", "Aenderung", "Tool erstellt und vorbefuellt; Erweiterungen: Gantt, Personal, Kontakte, Logistik, Testprotokolle, Kommerziell.", "-"),
-    (D(7,16), "Burak Uecoez", "Aenderung", "V2-Aenderungen uebernommen; Kalender 2026 gegen ISO-Kalender geprueft; Samstag-Termine korrigiert.", "-"),
-    (D(7,16), "Burak Uecoez", "Aenderung", "V5: EUR-Werte + PO-Nummern ergaenzt, Blaetter Termine & Meetings und Kommerziell, Stopp-Punkte mit Wahrscheinlichkeit, Kontakte mit Ansprechpartnern, naechste 5 Meilensteine.", "-"),
-    (D(7,16), "Burak Uecoez", "Aenderung", "Diagramm-Fixes: Owner-Namen an der Achse, Prozente im Status-Ring, Werte an den Balken, Wertachse unten.", "-"),
+    (D(7,15), "Burak Uecoez", "Aenderung", "Projektaufsetzung, Aufgabenverteilung.", "-", None, None),
+    (D(7,15), "Stefan / Olli", "Entscheid", "EUR/CHF-Kurs und Absicherung festlegen.", "FX-Risiko", D(7,17), "offen"),
+    (D(7,15), "Stefan", "Entscheid", "Verhandlungslinie / Redline-Linie Korrekturliste.", "PO-Korrektur", D(7,17), "offen"),
+    (D(7,15), "Stefan", "Entscheid", "MiT-Vertragskonstellation final (Parteien, NDA).", "Vertraege", D(7,20), "offen"),
+    (D(7,15), "Burak Uecoez", "Aenderung", "Tool erstellt und vorbefuellt; Erweiterungen: Gantt, Personal, Kontakte, Logistik, Testprotokolle, Kommerziell.", "-", None, None),
+    (D(7,16), "Burak Uecoez", "Aenderung", "V2-Aenderungen uebernommen; Kalender 2026 gegen ISO-Kalender geprueft; Samstag-Termine korrigiert.", "-", None, None),
+    (D(7,16), "Burak Uecoez", "Aenderung", "V5: EUR-Werte + PO-Nummern, Termine & Meetings, Kommerziell, Wahrscheinlichkeit, Kontakte, naechste 5 Meilensteine; Diagramm-Fixes.", "-", None, None),
+    (D(7,16), "Burak Uecoez", "Aenderung", "V6: Wochenbericht, Schichtplan, Fuel-Log, Trend, Vorgaenger-Abhaengigkeiten, Off-Hire-Countdown, Entscheidungs-Tracker.", "-", None, None),
 ]
 r = 2
-for datum, wer, typ, was, ausw in log:
+for datum, wer, typ, was, ausw, term, stat in log:
     ws.cell(row=r, column=1, value=datum).number_format = "DD.MM.YYYY"
     ws.cell(row=r, column=2, value=wer); ws.cell(row=r, column=3, value=typ)
     ws.cell(row=r, column=4, value=was); ws.cell(row=r, column=5, value=ausw)
+    tc = ws.cell(row=r, column=6, value=term)
+    tc.number_format = "DD.MM.YYYY"
+    ws.cell(row=r, column=7, value=stat)
+    ws.cell(row=r, column=8, value=f'=IF(AND($C{r}="Entscheid",$G{r}="offen"),ROW(),"")')
     r += 1
+first_empty = r
 for _ in range(20):
     ws.cell(row=r, column=1).number_format = "DD.MM.YYYY"
+    ws.cell(row=r, column=6).number_format = "DD.MM.YYYY"
+    ws.cell(row=r, column=8, value=f'=IF(AND($C{r}="Entscheid",$G{r}="offen"),ROW(),"")')
     r += 1
 last = r - 1
 body(ws, 2, last, len(cols))
 for rr in range(2, last + 1):
-    ws.cell(row=rr, column=1).alignment = center
-    ws.cell(row=rr, column=3).alignment = center
+    for cc in (1, 3, 6, 7):
+        ws.cell(row=rr, column=cc).alignment = center
 make_table(ws, "Aenderungslog", 1, last, len(cols))
 add_dv(ws, "Aenderung,Entscheid", f"C2:C{last}")
+add_dv(ws, "offen,entschieden", f"G2:G{last}")
 ws.conditional_formatting.add(f"C2:C{last}", CellIsRule(operator="equal", formula=['"Entscheid"'],
     fill=PatternFill("solid", fgColor=ORANGE_FILL), font=Font(name=FONT_NAME, bold=True, color=ORANGE_TXT)))
+ws.conditional_formatting.add(f"F2:F{last}",
+    FormulaRule(formula=['AND($G2="offen",$F2<>"",$F2<TODAY())'],
+                fill=PatternFill("solid", fgColor=RED), font=Font(name=FONT_NAME, bold=True, color=RED_TXT)))
+ws.conditional_formatting.add(f"G2:G{last}", CellIsRule(operator="equal", formula=['"entschieden"'],
+    fill=PatternFill("solid", fgColor=GREEN), font=Font(name=FONT_NAME, color=GREEN_TXT)))
+ws.column_dimensions["H"].hidden = True
+ws.cell(row=1, column=8, value="(Hilfsspalte)").font = small_it
 page_setup(ws, freeze="A2")
 
 # ---------------------------------------------------------------- Reihenfolge + Tabfarben
-order = ["Dashboard", "Terminplan", "Meilensteine", "Aufgaben", "Termine & Meetings",
-         "Personal & Zutritt", "Lieferungen & Logistik", "Testprotokolle",
-         "Stopp-Punkte & Risiken", "Kommerziell", "Dokumente", "Kontakte",
+order = ["Dashboard", "Wochenbericht", "Terminplan", "Meilensteine", "Aufgaben",
+         "Termine & Meetings", "Personal & Zutritt", "Schichtplan",
+         "Lieferungen & Logistik", "Testprotokolle", "Fuel-Log",
+         "Stopp-Punkte & Risiken", "Kommerziell", "Trend", "Dokumente", "Kontakte",
          "Aenderungslog & Entscheide"]
 wb._sheets.sort(key=lambda s: order.index(s.title))
-tab_colors = {"Dashboard": NAVY, "Terminplan": ORANGE, "Meilensteine": ORANGE,
-              "Aufgaben": ORANGE, "Stopp-Punkte & Risiken": "C00000", "Kommerziell": "70AD47"}
+tab_colors = {"Dashboard": NAVY, "Wochenbericht": NAVY, "Terminplan": ORANGE,
+              "Meilensteine": ORANGE, "Aufgaben": ORANGE,
+              "Stopp-Punkte & Risiken": "C00000", "Kommerziell": "70AD47", "Trend": "70AD47"}
 for s in wb.worksheets:
     s.sheet_properties.tabColor = tab_colors.get(s.title, "8EA9C1")
 

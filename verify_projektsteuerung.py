@@ -34,7 +34,7 @@ print("1) FUNKTIONS-WHITELIST (jede verwendete Funktion: geht / geht nicht)")
 WHITELIST = {  # Basis-Funktionen, in jeder Excel-Version ab 2010 inkl. Browser verfuegbar
     "COUNTIF","COUNTIFS","COUNTA","SUMPRODUCT","TODAY","TEXT","IF","IFERROR",
     "ISNUMBER","SEARCH","INT","SMALL","INDEX","MATCH","ROW","REPT","ROUND",
-    "WEEKNUM","DATE","AND",
+    "WEEKNUM","DATE","AND","OR","WORKDAY","SUM",
 }
 used = {}
 for sn, coord, f in formulas:
@@ -81,9 +81,9 @@ for sn, coord, f in formulas:
             if int(row) > wb[sheet].max_row + 25:
                 rng_errs.append(f"{sn}!{coord}: {sheet}!{col}{row}")
 check("Alle Blatt-Bezuege innerhalb der Datenbereiche", not rng_errs, "; ".join(rng_errs[:5]))
-helper_ref = f"$K$2:$K${ms_last}"
-dash_f = [f for _,_,f in formulas if "Meilensteine!$K$" in f]
-check(f"Dashboard-Hilfsspalte nutzt K2:K{ms_last} (25 Meilensteine)",
+helper_ref = f"$L$2:$L${ms_last}"
+dash_f = [f for _,_,f in formulas if "Meilensteine!$L$" in f]
+check(f"Hilfsspalte Meilensteine L2:L{ms_last} (25 Meilensteine)",
       all(helper_ref in f for f in dash_f) and len(dash_f) >= 15, f"{len(dash_f)} Formeln")
 
 print("\n5) SYNTAX (Klammern & Anfuehrungszeichen balanciert, keine Semikolons, keine dt. Namen)")
@@ -143,10 +143,16 @@ for n in charts:
 check(f"Diagramme ({len(charts)}) referenzieren existierende Blaetter", chart_refs_ok)
 for n in sorted(charts):
     d = z.read(n).decode()
-    is_bar = "barChart" in d
-    kind = "Balken" if is_bar else "Doughnut"
+    if "barChart" in d: kind = "Balken"
+    elif "doughnutChart" in d: kind = "Doughnut"
+    elif "lineChart" in d: kind = "Linie"
+    else: kind = "?"
     check(f"{kind}: Kategorien als Text (strRef) -> Namen sichtbar", "<strRef>" in d.split("<cat>")[1][:40] if "<cat>" in d else False)
-    if is_bar:
+    if kind == "Linie":
+        check("Linie: 2 Serien (Aufgaben offen, Meilensteine erledigt)", d.count("<ser>") == 2)
+        check("Linie: Achsen sichtbar", d.count('<delete val="0" />') == 2)
+        continue
+    if kind == "Balken":
         check("Balken: Datenbeschriftung (Werte) aktiv", '<showVal val="1"' in d)
         check("Balken: beide Achsen sichtbar (delete=0)", d.count('<delete val="0" />') == 2)
         check("Balken: Wertachse unten (axPos b)", '<axPos val="b" />' in d)
