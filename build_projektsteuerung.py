@@ -371,10 +371,10 @@ bc.set_categories(Reference(ws, min_col=2, min_row=33, max_row=own_last))
 bc.legend = None
 bc.height = 8; bc.width = 11
 bc.series[0].graphicalProperties = GraphicalProperties(solidFill=ORANGE)
-ws.add_chart(bc, "G31")
+ws.add_chart(bc, "H31")
 
 page_setup(ws, freeze="A1", title_rows=None)
-ws.print_area = "A1:H49"
+ws.print_area = "A1:M49"
 
 # ================================================================ 2) TERMINPLAN (WOCHEN-GANTT)
 ws = wb.create_sheet("Terminplan")
@@ -552,7 +552,7 @@ au = [
     ("Deckungssummen bei DPR erfragen", "Admin", "Markus", D(7,17), "mittel", ""),
     ("HR-Auszug bereitstellen", "Admin", "Ann-Kathrin", D(7,16), "hoch", ""),
     ("Beide Angebote in MiT-Layout bringen", "beide", "Ann-Kathrin", D(7,17), "mittel", "P-640380-3 / P-650395-2"),
-    ("WORKcontrol-Registrierung MiT", "Admin", "Ann-Kathrin", D(7,25), "hoch", "vor Badges"),
+    ("WORKcontrol-Registrierung MiT", "Admin", "Ann-Kathrin", D(7,24), "hoch", "vor Badges (25.07. = Samstag)"),
     ("Versand Gesamtpaket an DPR", "Admin", "Ann-Kathrin", D(7,17,12,0), "hoch", "mit Unterlagenpaket 17.07."),
     ("Entscheid CHF-Kurs / Absicherung mit Olli", "Admin", "Stefan", D(7,17), "hoch", "FX EUR/CHF"),
     ("Redline-Linie festlegen", "beide", "Stefan", D(7,17), "hoch", ""),
@@ -564,9 +564,9 @@ au = [
     ("Staffelungs-Fakturierung klaeren", "beide", "Ann-Kathrin", D(7,24), "mittel", ""),
     ("PL-Benennung Aggreko DE anfordern", "beide", "Burak", D(7,20), "mittel", ""),
     ("Heavy-Duty-Strombedarf bei DPR einreichen", "beide", "Burak", D(7,24), "hoch", ""),
-    ("NDA MiT-DPR anstossen", "Admin", "Stefan / Stephan", D(7,18), "hoch", "eigene NDA"),
+    ("NDA MiT-DPR anstossen", "Admin", "Stefan / Stephan", D(7,17), "hoch", "eigene NDA; vor Unterzeichnung 22.07."),
     ("Kranfrage / Lift Plan klaeren", "beide", "Markus", D(7,28), "mittel", ""),
-    ("24/7-Kontaktkette aufstellen", "beide", "Markus", D(8,1), "mittel", ""),
+    ("24/7-Kontaktkette aufstellen", "beide", "Markus", D(7,31), "mittel", "vor Lieferung 03.08.; 01.08. = Bundesfeier"),
     ("Tank-Standort mit 110%-Containment festlegen", "Headload", "Markus", D(7,30), "hoch", ""),
 ]
 r = 2
@@ -905,6 +905,7 @@ log = [
     (D(7,15), "Burak Uecoez", "Ergaenzt: Lieferungen & Logistik, Testprotokolle (Testnachweise fuer Closeout), Budget & Fakturierung (nur EUR-Referenz)."),
     (D(7,16), "Burak Uecoez", "V2-Aenderungen uebernommen: Unterlagenpaket 17.07., Verantwortliche aktualisiert (Stephan, Samuel, Markus, Ann-Kathrin, Aggreko/MiT)."),
     (D(7,16), "Burak Uecoez", "Grafik-Ausbau: Wochen-Gantt mit Meilenstein-Rauten und Heute-Markierung, 8 neue Detail-Meilensteine mit KW und Countdown, Diagramme und Owner-Auslastung im Dashboard."),
+    (D(7,16), "Burak Uecoez", "Kalender-Gegenpruefung 2026: alle KW/Wochentage verifiziert; 3 Samstag-Termine korrigiert (NDA 17.07., WORKcontrol 24.07., Kontaktkette 31.07. statt 01.08./Bundesfeier)."),
 ]
 r = 2
 for datum, wer, was in log:
