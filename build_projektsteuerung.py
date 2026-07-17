@@ -1243,6 +1243,7 @@ log = [
     (D(7,16), "Burak Uecoez", "Aenderung", "V2-Aenderungen uebernommen; Kalender 2026 gegen ISO-Kalender geprueft; Samstag-Termine korrigiert.", "-", None, None),
     (D(7,16), "Burak Uecoez", "Aenderung", "V5: EUR-Werte + PO-Nummern, Termine & Meetings, Kommerziell, Wahrscheinlichkeit, Kontakte, naechste 5 Meilensteine; Diagramm-Fixes.", "-", None, None),
     (D(7,16), "Burak Uecoez", "Aenderung", "V6: Wochenbericht, Schichtplan, Fuel-Log, Trend, Vorgaenger-Abhaengigkeiten, Off-Hire-Countdown, Entscheidungs-Tracker.", "-", None, None),
+    (D(7,16), "Burak Uecoez", "Aenderung", "Blatt 'Anleitung' ergaenzt: Pflege-Routine, Vertraulichkeitsregeln, SharePoint-Setup, Farb-Legende, Blattuebersicht. Alle Formeln per Neuberechnung verifiziert.", "-", None, None),
 ]
 r = 2
 for datum, wer, typ, was, ausw, term, stat in log:
@@ -1279,14 +1280,100 @@ ws.column_dimensions["H"].hidden = True
 ws.cell(row=1, column=8, value="(Hilfsspalte)").font = small_it
 page_setup(ws, freeze="A2")
 
+# ================================================================ 18) ANLEITUNG & SPIELREGELN
+ws = wb.create_sheet("Anleitung")
+ws.sheet_view.showGridLines = False
+widths(ws, [3, 30, 34, 30, 24])
+ws["B2"] = "ANLEITUNG & SPIELREGELN"; ws["B2"].font = title_font; ws.merge_cells("B2:E2")
+ws["B3"] = "Projektsteuerungs-Tool MiT-PWR-WIN-2026-001 - so bleibt es aktuell und sicher"
+ws["B3"].font = sub_font; ws.merge_cells("B3:E3")
+
+def text_block(row, title, lines, title_color=ORANGE):
+    ws.cell(row=row, column=2, value=title).font = Font(name=FONT_NAME, size=11, bold=True, color=title_color)
+    r = row + 1
+    for ln in lines:
+        c = ws.cell(row=r, column=2, value="- " + ln)
+        c.font = base_font; c.alignment = left_top
+        ws.merge_cells(start_row=r, start_column=2, end_row=r, end_column=5)
+        r += 1
+    return r + 1
+
+r = text_block(5, "PFLEGE-ROUTINE (wer macht was wann)", [
+    "Taeglich: Status in Aufgaben & Meilensteinen aktualisieren; Schichtplan fuehren (DABS-Pflicht).",
+    "Woechentlich (Freitag): Trend-Blatt - Werte aus Zeile 2 als ZAHL in die aktuelle KW-Zeile uebertragen; "
+    "Wochenbericht ergaenzen und als PDF an Roxana Minor senden; Log-Eintrag machen.",
+    "14-taeglich: Long-Lead-Status an DPR (Basis: Wochenbericht).",
+    "Bei jeder Aenderung / jedem Entscheid: Eintrag im Blatt 'Aenderungslog & Entscheide' - Entscheide immer mit Termin und Status.",
+    "Zu bearbeiten sind nur: Status-/Dropdown-Spalten, Ist-Termine, Istwerte (Testprotokolle), Trend-Spalten C+D, "
+    "Schichtplan, Fuel-Log sowie die manuellen Abschnitte im Wochenbericht. Alle uebrigen Zellen rechnen automatisch.",
+])
+r = text_block(r, "VERTRAULICHKEIT", [
+    "Diese Datei ist INTERN (MiT): Sie enthaelt EUR-Einkaufspreise Aggreko - niemals an DPR oder extern weitergeben.",
+    "DPR erhaelt ausschliesslich den Wochenbericht als PDF (enthaelt keine Preise).",
+    "NDA: kein direkter Vantage-Kontakt, keine Fotos nach aussen, keine Aussenkommunikation - alles ueber DPR.",
+    "CHF-Verkaufspreise nur via Innendienst/ARM - bewusst nicht in dieser Datei.",
+], title_color=RED_TXT)
+r = text_block(r, "SHAREPOINT & ZUSAMMENARBEIT", [
+    "Bibliotheks-Versionierung aktivieren - dann braucht niemand Dateinamen wie 'V2_final'.",
+    "Berechtigungen: Projektteam = Bearbeiten; keine externen Gaeste auf dieser Datei.",
+    "Gleichzeitige Bearbeitung im Browser ist moeglich (Datei enthaelt keine Makros).",
+    "Dropdowns nutzen statt Freitext - Dashboard und Wochenbericht werten die exakten Statusworte aus.",
+])
+
+ws.cell(row=r, column=2, value="FARB-LEGENDE").font = Font(name=FONT_NAME, size=11, bold=True, color=ORANGE)
+r += 1
+for lbl, fill, txt in [("erledigt / ok", GREEN, GREEN_TXT), ("in Arbeit", YELLOW, YELLOW_TXT),
+                       ("Achtung / verschoben", ORANGE_FILL, ORANGE_TXT),
+                       ("kritisch / ueberfaellig", RED, RED_TXT), ("aktuelle Woche (Terminplan)", TODAY_TINT, NAVY)]:
+    c = ws.cell(row=r, column=2, value=lbl)
+    c.fill = PatternFill("solid", fgColor=fill); c.font = Font(name=FONT_NAME, size=10, bold=True, color=txt)
+    c.alignment = center; c.border = border
+    r += 1
+r += 1
+
+ws.cell(row=r, column=2, value="BLATTUEBERSICHT").font = Font(name=FONT_NAME, size=11, bold=True, color=ORANGE)
+r += 1
+ov_hdr = r
+header_row(ws, ov_hdr, ["Blatt", "Zweck", "Pflege-Rhythmus"], start=2)
+uebersicht = [
+    ("Dashboard", "KPIs, Ampel, Countdowns, Diagramme - alles automatisch", "nur lesen"),
+    ("Wochenbericht", "druckfertiger Status fuer DPR (PDF-Export)", "Freitag ergaenzen"),
+    ("Terminplan", "Wochen-Gantt KW29-53 mit Meilenstein-Rauten", "automatisch"),
+    ("Meilensteine", "25 Meilensteine mit KW, Countdown, Vorgaenger", "Status/Ist-Termin pflegen"),
+    ("Aufgaben", "24 Aufgaben mit Owner, Termin, Prioritaet", "taeglich Status pflegen"),
+    ("Termine & Meetings", "Meeting-Pflichten aus Supplemental Conditions r2", "Status pflegen"),
+    ("Personal & Zutritt", "Entsendemeldung, WORKcontrol, Inductions", "bei Personaldaten"),
+    ("Schichtplan", "Anwesenheit vor Ort je Tag", "taeglich eintragen"),
+    ("Lieferungen & Logistik", "An-/Ruecktransporte, Kran, Tank", "bei Lieferungen"),
+    ("Testprotokolle", "Soll/Ist-Messwerte als Closeout-Basis", "bei Tests eintragen"),
+    ("Fuel-Log", "Betankungen, Zoll-Kategorie, Auffangwanne", "je Betankung"),
+    ("Stopp-Punkte & Risiken", "12 Punkte mit Auswirkung & Wahrscheinlichkeit", "woechentlich pruefen"),
+    ("Kommerziell", "EUR-Einkaufsreferenzen, Raten (INTERN!)", "bei Rechnungen"),
+    ("Trend", "Burndown-Kurve ueber die Projektlaufzeit", "Freitag Werte eintragen"),
+    ("Dokumente", "Dokumentenliste mit Status & Ablage", "bei neuen Versionen"),
+    ("Kontakte", "Ansprechpartner inkl. 24/7-Nummern", "bei Aenderungen"),
+    ("Aenderungslog & Entscheide", "Nachvollziehbarkeit + Entscheidungs-Tracker", "bei jeder Aenderung"),
+    ("Anleitung", "dieses Blatt", "-"),
+]
+r = ov_hdr + 1
+for blatt, zweck, ryt in uebersicht:
+    ws.cell(row=r, column=2, value=blatt).font = bold_font
+    ws.cell(row=r, column=3, value=zweck).font = base_font
+    ws.cell(row=r, column=4, value=ryt).font = base_font
+    for cc in (2, 3, 4):
+        ws.cell(row=r, column=cc).alignment = left; ws.cell(row=r, column=cc).border = border
+    r += 1
+page_setup(ws, freeze="A1", title_rows=None)
+ws.print_area = f"A1:E{r + 1}"
+
 # ---------------------------------------------------------------- Reihenfolge + Tabfarben
-order = ["Dashboard", "Wochenbericht", "Terminplan", "Meilensteine", "Aufgaben",
+order = ["Dashboard", "Anleitung", "Wochenbericht", "Terminplan", "Meilensteine", "Aufgaben",
          "Termine & Meetings", "Personal & Zutritt", "Schichtplan",
          "Lieferungen & Logistik", "Testprotokolle", "Fuel-Log",
          "Stopp-Punkte & Risiken", "Kommerziell", "Trend", "Dokumente", "Kontakte",
          "Aenderungslog & Entscheide"]
 wb._sheets.sort(key=lambda s: order.index(s.title))
-tab_colors = {"Dashboard": NAVY, "Wochenbericht": NAVY, "Terminplan": ORANGE,
+tab_colors = {"Dashboard": NAVY, "Anleitung": GREY, "Wochenbericht": NAVY, "Terminplan": ORANGE,
               "Meilensteine": ORANGE, "Aufgaben": ORANGE,
               "Stopp-Punkte & Risiken": "C00000", "Kommerziell": "70AD47", "Trend": "70AD47"}
 for s in wb.worksheets:
