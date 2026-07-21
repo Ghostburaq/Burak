@@ -1164,7 +1164,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
       <div class="tb-spacer"></div>
       <div class="tb-search" style="position:relative">
         <span class="tb-icon">⌕</span>
-        <input id="globalSearch" type="text" placeholder="Suche Kontakt, Firma..." autocomplete="off"
+        <input id="globalSearch" type="text" placeholder="Suche Firma, Kontakt, Einsatzort..." autocomplete="off"
                oninput="window.searchGlobal(this.value)"
                onkeydown="if(event.key==='Escape'){this.blur();document.getElementById('globalSearchResults').classList.add('hidden')}"
                onblur="setTimeout(()=>{const r=document.getElementById('globalSearchResults');if(r)r.classList.add('hidden')},180)">
@@ -1274,7 +1274,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
       <div class="page" id="page-kontakte">
         <div class="table-wrap">
           <div class="table-toolbar">
-            <input id="filterSearch" placeholder="Filter Firma / Kontakt..." oninput="window.renderKontakte()">
+            <input id="filterSearch" placeholder="Filter Firma / Kontakt / Einsatzort / Planer..." oninput="window.renderKontakte()">
             <select id="filterStatus" onchange="window.renderKontakte()">
               <option value="">Alle Status</option>
               <option value="Lead">Lead</option>
@@ -1307,6 +1307,8 @@ input,select,textarea{font-family:inherit;font-size:14px}
               <option value="firma">Firma A-Z</option>
               <option value="created">Neueste zuerst</option>
             </select>
+            <button class="btn btn-ghost btn-sm" onclick="window.exportFilteredList('xlsx')" title="Aktuell gefilterte Liste als Excel exportieren">↓ Liste (Excel)</button>
+            <button class="btn btn-ghost btn-sm" onclick="window.exportFilteredList('csv')" title="Aktuell gefilterte Liste als CSV exportieren">↓ CSV</button>
             <span style="flex:1"></span>
             <span class="tx-dim mono" id="kontakteCount" style="font-size:12px"></span>
           </div>
@@ -1314,7 +1316,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
             <table class="tbl">
               <thead><tr>
                 <th style="width:32px"><input type="checkbox" class="bulk-cb-all" onchange="window.bulkToggleAll(event)" title="Alle auswählen"></th>
-                <th>Score</th><th>Firma</th><th>Kontakt</th><th>Segment</th><th>Status</th>
+                <th>Score</th><th>Firma</th><th>Kontakt</th><th>Einsatzort</th><th>Segment</th><th>Status</th>
                 <th>Tags</th>
                 <th class="tx-right">CHF</th><th>Letzte Akt.</th><th>Wiedervorlage</th>
               </tr></thead>
@@ -1745,6 +1747,9 @@ input,select,textarea{font-family:inherit;font-size:14px}
         <div class="field"><label>Berater / Verantwortlich</label>
           <input id="cSalesRep" list="salesRepList" placeholder="z.B. Burak Ücöz">
           <datalist id="salesRepList"></datalist>
+        </div>
+        <div class="field"><label>Planer</label>
+          <input id="cPlaner" placeholder="z.B. H+A Haustechnikplanung GmbH">
         </div>
         <div class="field"><label>Status</label>
           <select id="cStatus">
@@ -3099,6 +3104,9 @@ window.renderKontakte = function renderKontakte(){
     (c.kontakt||'').toLowerCase().includes(search) ||
     (c.email||'').toLowerCase().includes(search) ||
     (c.tel||'').toLowerCase().includes(search) ||
+    (c.ort||'').toLowerCase().includes(search) ||
+    (c.planer||'').toLowerCase().includes(search) ||
+    (c.salesRep||'').toLowerCase().includes(search) ||
     (c.notiz||'').toLowerCase().includes(search) ||
     parseTags(c.tags).some(t=>t.toLowerCase().includes(search)) ||
     (c.extraEmails||[]).some(e=>(e.val||'').toLowerCase().includes(search)) ||
@@ -3116,12 +3124,15 @@ window.renderKontakte = function renderKontakte(){
   else if(sort === 'firma') list.sort((a,b)=>(a.firma||'').localeCompare(b.firma||'','de'));
   else if(sort === 'created') list.sort((a,b)=>(b.created||'').localeCompare(a.created||''));
 
+  // Remember the current filtered view so it can be exported 1:1
+  _lastFilteredIds = list.map(c => c.id);
+
   document.getElementById('kontakteCount').textContent =
     list.length + ' / ' + STATE.contacts.length + ' Kontakte';
 
   const body = document.getElementById('kontakteBody');
   if(list.length === 0){
-    body.innerHTML = `<tr><td colspan="10">
+    body.innerHTML = `<tr><td colspan="11">
       <div class="empty">
         <div class="empty-icon">⎈</div>
         <h3>${STATE.contacts.length === 0 ? 'Noch keine Kontakte' : 'Keine Treffer für Filter'}</h3>
@@ -3139,6 +3150,7 @@ window.renderKontakte = function renderKontakte(){
       <td><span class="score ${scoreClass(c.score)}">${c.score}</span></td>
       <td class="fw-bold">${escHtml(c.firma)}</td>
       <td class="tx-mute">${escHtml(c.kontakt||'—')}<br><span class="tx-dim" style="font-size:11px">${escHtml(c.email||'')}${c.salesRep?` · 👤 ${escHtml(c.salesRep)}`:''}</span></td>
+      <td class="tx-mute" style="font-size:12px;max-width:180px">${c.ort?'📍 '+escHtml(c.ort):'—'}</td>
       <td class="tx-mute">${escHtml(c.segment||'—')}${c.kategorie?`<br><span class="${katPillClass(c.kategorie)}">${escHtml(c.kategorie)}</span>`:''}</td>
       <td><span class="bd ${statusClass(c.status)}">${c.status}</span></td>
       <td class="tag-cell">${renderTagChips(c.tags,{max:4,click:true})}</td>
@@ -4507,6 +4519,7 @@ window.openContactForm = function(){
   document.getElementById('cSegment').value = 'Industrie';
   document.getElementById('cKategorie').value = '';
   document.getElementById('cSalesRep').value = '';
+  document.getElementById('cPlaner').value = '';
   populateSalesRepDatalist();
   document.getElementById('cStatus').value = 'Lead';
   document.getElementById('cChf').value = '';
@@ -4545,6 +4558,7 @@ window.openContact = function(id){
   document.getElementById('cSegment').value = c.segment || 'Industrie';
   document.getElementById('cKategorie').value = c.kategorie || '';
   document.getElementById('cSalesRep').value = c.salesRep || '';
+  document.getElementById('cPlaner').value = c.planer || '';
   populateSalesRepDatalist();
   document.getElementById('cStatus').value = c.status || 'Lead';
   document.getElementById('cChf').value = c.chf != null ? String(c.chf) : '';
@@ -4630,6 +4644,7 @@ window.saveContact = function(){
     segment: document.getElementById('cSegment').value,
     kategorie: document.getElementById('cKategorie').value || null,
     salesRep: document.getElementById('cSalesRep').value.trim() || null,
+    planer:  document.getElementById('cPlaner').value.trim() || null,
     status:  newStatus,
     chf:     parseCHF(document.getElementById('cChf').value),
     prob:    (function(){ const v = parseFloat(document.getElementById('cProb').value); return isNaN(v)?null:v; })(),
@@ -4877,6 +4892,9 @@ window.searchGlobal = function(q){
     (c.kontakt||'').toLowerCase().includes(query) ||
     (c.email||'').toLowerCase().includes(query) ||
     (c.tel||'').toLowerCase().includes(query) ||
+    (c.ort||'').toLowerCase().includes(query) ||
+    (c.planer||'').toLowerCase().includes(query) ||
+    (c.salesRep||'').toLowerCase().includes(query) ||
     (c.extraContacts||[]).some(p=>((p.name||'')+' '+(p.email||'')+' '+(p.tel||'')).toLowerCase().includes(query))
   ).slice(0, 8);
   if(matches.length === 0){
@@ -4885,7 +4903,7 @@ window.searchGlobal = function(q){
     wrap.innerHTML = matches.map(c => `
       <div class="gs-item" onclick="window.gsOpen('${c.id}')">
         <div class="gs-firma">${escHtml(c.firma)}</div>
-        <div class="gs-meta">${escHtml(c.kontakt||'')} · <span class="bd ${statusClass(c.status)}">${escHtml(c.status||'—')}</span> · ${fmtCHF(c.chf)}</div>
+        <div class="gs-meta">${escHtml(c.kontakt||c.ort||'')} · <span class="bd ${statusClass(c.status)}">${escHtml(c.status||'—')}</span> · ${fmtCHF(c.chf)}${c.ort?' · 📍 '+escHtml(c.ort):''}</div>
       </div>
     `).join('');
   }
@@ -5977,6 +5995,168 @@ window.importExcel = function(){
   document.getElementById('excelImport').click();
 };
 
+// ════════════════════════════════════════════════════════════════════════
+//  ERP-IMPORT — Abacus "Verkaufschancen" (issue_list_*.xls)
+// ════════════════════════════════════════════════════════════════════════
+// Returns {imported, updated, skipped} if the aoa matches the ERP format,
+// otherwise null (caller falls through to the generic Excel importer).
+function tryImportErpVerkaufschancen(aoa){
+  if(!aoa || !aoa.length) return null;
+  // Locate the header row (usually row 0) by its signature columns
+  let hRow = -1;
+  for(let i = 0; i < Math.min(5, aoa.length); i++){
+    const low = aoa[i].map(c => String(c||'').toLowerCase().trim());
+    if(low.includes('verkaufschancen') && low.includes('bezugsobjekt')){ hRow = i; break; }
+  }
+  if(hRow === -1) return null;
+
+  const headers = aoa[hRow].map(h => String(h||'').trim());
+  const H = {};
+  headers.forEach((h, i) => { H[h.toLowerCase()] = i; });
+  const col = name => { const i = H[name.toLowerCase()]; return i === undefined ? -1 : i; };
+  const get = (row, name) => { const i = col(name); return i >= 0 ? String(row[i] == null ? '' : row[i]).trim() : ''; };
+
+  const iVK = col('VERKAUFSCHANCEN');
+  const iBezug = col('BEZUGSOBJEKT');
+  if(iVK < 0 || iBezug < 0) return null;
+
+  // ERP date format is M/D/YY or M/D/YYYY
+  const erpDate = v => {
+    if(!v) return null;
+    if(v instanceof Date && !isNaN(v)) return localISO(v);
+    const s = String(v).trim();
+    let m = s.match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+    if(m){ let y = m[3].length === 2 ? '20'+m[3] : m[3]; return y+'-'+m[1].padStart(2,'0')+'-'+m[2].padStart(2,'0'); }
+    m = s.match(/(\d{1,2})\.(\d{1,2})\.(\d{4})/);
+    if(m) return m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0');
+    const d = new Date(s); return isNaN(d) ? null : localISO(d);
+  };
+  // Map OBJEKT_TYP → Kategorie (Strom / Wärme / Kälte / USV / Mix)
+  const mapKategorie = typ => {
+    const t = (typ||'').toLowerCase();
+    if(/wärme|waerme|pellet|\böl\b|oel|heiz|methanol/.test(t)) return 'Wärme';
+    if(/kälte|kaelte|kühl|kuehl|klima|cool|chiller/.test(t)) return 'Kälte';
+    if(/usv|ups/.test(t)) return 'USV';
+    if(/strom|generator|bess|aggregat|trafo/.test(t)) return 'Strom';
+    return '';
+  };
+  // Normalise "Nachname Vorname" → "Vorname Nachname"
+  const flipName = n => {
+    n = (n||'').trim(); if(!n) return '';
+    const parts = n.split(/\s+/);
+    return parts.length === 2 ? parts[1] + ' ' + parts[0] : n;
+  };
+
+  const existingByErp = {};
+  STATE.contacts.forEach(c => { if(c.erpId) existingByErp[c.erpId] = c; });
+
+  let imported = 0, updated = 0, skipped = 0;
+  const now = new Date().toISOString();
+
+  for(let r = hRow + 1; r < aoa.length; r++){
+    const row = aoa[r];
+    if(!row || !row.length) continue;
+    const erpId = get(row, 'VERKAUFSCHANCEN');
+    const bezug = get(row, 'BEZUGSOBJEKT');
+    if(!erpId && !bezug) continue;               // empty row
+    // firma | betriebsort  (BEZUGSOBJEKT)
+    const bezugParts = bezug.split('|');
+    const firma = (bezugParts[0] || '').trim();
+    const betriebsOrt = (bezugParts[1] || '').trim();
+    if(!firma){ skipped++; continue; }
+
+    // Einsatzort = Strasse, PLZ Ort  (this is what the user searches by)
+    const eStrasse = get(row, 'Einsatzort_Strasse___Nr');
+    const ePlz = get(row, 'Einsatzort_PLZ');
+    const eOrt = get(row, 'Einsatzort_Ort');
+    const eBez = get(row, 'Einsatzort_Bezeichnung');
+    const ort = [eStrasse, [ePlz, eOrt].filter(Boolean).join(' ')].filter(Boolean).join(', ') || eOrt || betriebsOrt;
+
+    const kategorie = mapKategorie(get(row, 'OBJEKT_TYP'));
+    const salesRep = flipName(get(row, 'Kundenberater') || get(row, 'Bearbeiter'));
+    // Planer: dedicated column, else extracted from the "Planer: …" line in Bemerkungen
+    let planer = get(row, 'Planer');
+    if(!planer){
+      const bm = get(row, 'Bemerkungen');
+      const pm = bm.match(/planer\s*:\s*([^\n]+)/i);
+      if(pm) planer = pm[1].trim();
+    }
+    const anlage = get(row, 'Anlage');
+    const betreff = get(row, 'BETREFF').replace(/^\s+/, '');
+    const leistung = get(row, 'Leistung_KW');
+    const mietVon = erpDate(get(row, 'Einsatz_von'));
+    const mietBis = erpDate(get(row, 'Einsatz_bis'));
+    const mietTage = get(row, 'Mietdauer_Tage');
+    const chf = parseCHF(get(row, 'Offertsumme'));
+    const naechster = erpDate(get(row, 'Naechster_Kontakt'));
+    const offerteBis = erpDate(get(row, 'Offerte_bis'));
+    const bemerkungen = get(row, 'Bemerkungen');
+    const bauprojekt = get(row, 'Bauprojekt') || eBez;
+    const entscheidung = get(row, 'Entscheidung').toLowerCase();
+    const grZuschlag = get(row, 'Gruende_Zuschlag');
+    const grAbsage = get(row, 'Gruende_Absage');
+
+    // Status: won/lost from Entscheidung, else Angebot (offer follow-up)
+    let status = 'Angebot';
+    let closeReason = '';
+    if(/zuschlag|gewonnen|won/.test(entscheidung) || grZuschlag){ status = 'Gewonnen'; closeReason = grZuschlag; }
+    else if(/absage|verloren|lost/.test(entscheidung) || grAbsage){ status = 'Verloren'; closeReason = grAbsage; }
+    else if(chf == null || chf === 0){ status = 'Kontaktiert'; }
+
+    // Wiedervorlage: next contact, else offer-until, else rental start
+    const wv = naechster || offerteBis || mietVon;
+
+    // Notiz
+    const notizLines = [];
+    if(betreff) notizLines.push('Anlage/Betreff: ' + betreff + (leistung ? ' · ' + leistung + ' kW' : ''));
+    if(anlage && anlage !== betreff) notizLines.push('Typ: ' + anlage);
+    if(bauprojekt) notizLines.push('Projekt: ' + bauprojekt);
+    if(mietVon || mietBis) notizLines.push('Mietdauer: ' + (mietVon?fmtDate(mietVon):'?') + ' – ' + (mietBis?fmtDate(mietBis):'?') + (mietTage ? ' (' + mietTage + ' Tage)' : ''));
+    if(betriebsOrt) notizLines.push('Firmensitz: ' + betriebsOrt);
+    if(planer) notizLines.push('Planer: ' + planer);
+    if(bemerkungen) notizLines.push(bemerkungen);
+
+    const data = {
+      erpId,
+      firma,
+      kontakt: '',
+      ort,
+      kategorie,
+      salesRep,
+      planer,
+      segment: 'Bau',
+      status,
+      chf,
+      prob: status==='Gewonnen'?100:status==='Verloren'?0:40,
+      wv: wv || null,
+      next: get(row, 'SCHRITT') || 'Nachfassen',
+      closeReason: closeReason || undefined,
+      tags: [anlage, 'ERP'].filter(Boolean),
+      notiz: notizLines.join('\n'),
+      updated: now
+    };
+
+    const existing = existingByErp[erpId];
+    if(existing){
+      Object.assign(existing, data);
+      updated++;
+    } else {
+      data.id = uid();
+      data.created = now;
+      STATE.contacts.push(data);
+      existingByErp[erpId] = data;
+      // Auto-log an "Angebot" activity for the offer
+      STATE.activities.push({
+        id: uid(), contactId: data.id, date: offerteBis || todayISO(),
+        typ: 'Angebot', sum: (betreff||'Angebot') + (chf!=null?' · '+fmtCHF(chf):''),
+        next: data.next, newStatus: null, created: now
+      });
+      imported++;
+    }
+  }
+  return { imported, updated, skipped };
+}
+
 window.handleExcelFile = function(input){
   const file = input.files[0];
   if(!file) return;
@@ -5998,6 +6178,22 @@ window.handleExcelFile = function(input){
       if(!sheetName) sheetName = wb.SheetNames[0];
       const ws = wb.Sheets[sheetName];
       const aoa = XLSX.utils.sheet_to_json(ws, {header:1, defval:'', raw:false});
+
+      // ── Dedicated parser for the Abacus/ERP "Verkaufschancen" export ──
+      // (issue_list_*.xls). Detected by its signature headers. Handles the
+      // "Firma | Ort" BEZUGSOBJEKT column, Einsatzort, Kundenberater, Anlage,
+      // Offertsumme and dedups by the unique VK-Nummer.
+      const erpResult = tryImportErpVerkaufschancen(aoa);
+      if(erpResult){
+        saveState();
+        const parts = [];
+        if(erpResult.imported) parts.push(erpResult.imported + ' neue Verkaufschancen');
+        if(erpResult.updated)  parts.push(erpResult.updated + ' aktualisiert');
+        if(erpResult.skipped)  parts.push(erpResult.skipped + ' übersprungen');
+        showToast('✓ ERP-Import: ' + (parts.join(' · ') || 'keine Daten'), 'success');
+        refreshAll();
+        return;
+      }
 
       // Find header row: must have MULTIPLE distinct header keywords in SEPARATE cells
       // (not a single cell containing a long help sentence)
@@ -6222,14 +6418,14 @@ window.importJsonFile = function(input){
 };
 
 window.exportCSV = function(){
-  const headers = ['Firma','Kontakt','Email','Weitere Emails','Tel','Weitere Tel','Weitere Kontaktpersonen','Position','Ort','Segment','Status','CHF','Prob','Wiedervorlage','Letzte Aktivität','Notiz','Erstellt'];
+  const headers = ['ERP-Nr','Firma','Kontakt','Email','Weitere Emails','Tel','Weitere Tel','Weitere Kontaktpersonen','Position','Einsatzort','Kategorie','Berater','Planer','Segment','Status','Grund','CHF','Prob','Wiedervorlage','Letzte Aktivität','Notiz','Tags','Erstellt'];
   const rows = STATE.contacts.map(c => [
-    c.firma, c.kontakt, c.email,
+    c.erpId, c.firma, c.kontakt, c.email,
     (c.extraEmails||[]).map(e=>e.val).join(' | '),
     c.tel, (c.extraTels||[]).map(t=>t.val).join(' | '),
     (c.extraContacts||[]).map(p=>[p.name,p.position,p.email,p.tel].filter(Boolean).join(' / ')).join(' || '),
-    c.position, c.ort, c.segment, c.status,
-    c.chf, c.prob, c.wv, lastActivityDate(c.id), c.notiz, c.created
+    c.position, c.ort, c.kategorie, c.salesRep, c.planer, c.segment, c.status, c.closeReason,
+    c.chf, c.prob, c.wv, lastActivityDate(c.id), c.notiz, parseTags(c.tags).join(', '), c.created
   ].map(v => v === null || v === undefined ? '' : String(v).replace(/[\r\n]+/g,' ').replace(/"/g,'""')));
   const csv = [headers.join(';'), ...rows.map(r => r.map(v => '"'+v+'"').join(';'))].join('\n');
   const blob = new Blob(['\uFEFF' + csv], {type:'text/csv;charset=utf-8'});
@@ -6238,6 +6434,47 @@ window.exportCSV = function(){
   a.download = 'mit-crm-kontakte-' + todayISO() + '.csv';
   a.click();
   showToast('CSV exportiert', 'success');
+};
+
+// Export the CURRENTLY FILTERED Kontakte list (respects search + all filters)
+let _lastFilteredIds = null;
+window.exportFilteredList = function(format){
+  const idSet = new Set(_lastFilteredIds || STATE.contacts.map(c=>c.id));
+  const list = STATE.contacts.filter(c => idSet.has(c.id));
+  if(!list.length){ showToast('Keine Kontakte in der aktuellen Ansicht', 'warn'); return; }
+
+  // Describe the active filter for the filename
+  const rep = (document.getElementById('filterSalesRep')||{}).value || '';
+  const kat = (document.getElementById('filterKategorie')||{}).value || '';
+  const stat = (document.getElementById('filterStatus')||{}).value || '';
+  const suffix = [rep, kat, stat].filter(Boolean).join('_').replace(/[^a-zA-Z0-9_]/g,'') || 'gefiltert';
+
+  const headers = ['ERP-Nr','Firma','Kontakt','Einsatzort','Kategorie','Berater','Planer','Segment','Status','CHF','Wahrscheinlichkeit %','Wiedervorlage','Nächster Schritt','Notiz','Tags'];
+  const rowOf = c => [
+    c.erpId||'', c.firma||'', c.kontakt||'', c.ort||'', c.kategorie||'', c.salesRep||'', c.planer||'',
+    c.segment||'', c.status||'', c.chf!=null?c.chf:'', c.prob!=null?c.prob:'', c.wv||'',
+    c.next||'', c.notiz||'', parseTags(c.tags).join(', ')
+  ];
+
+  if(format === 'xlsx' && window.XLSX){
+    const wb = XLSX.utils.book_new();
+    const rows = list.map(c => rowOf(c).map(v => typeof v === 'number' ? v : String(v)));
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+    ws['!cols'] = [{wch:16},{wch:30},{wch:20},{wch:32},{wch:12},{wch:18},{wch:22},{wch:12},{wch:14},{wch:12},{wch:8},{wch:14},{wch:26},{wch:50},{wch:22}];
+    XLSX.utils.book_append_sheet(wb, ws, 'Liste');
+    XLSX.writeFile(wb, 'MiT-Liste-' + suffix + '-' + todayISO() + '.xlsx');
+    markBackup();
+    showToast('✓ ' + list.length + ' Kontakte als Excel exportiert', 'success');
+  } else {
+    const rows = list.map(c => rowOf(c).map(v => String(v==null?'':v).replace(/[\r\n]+/g,' ').replace(/"/g,'""')));
+    const csv = [headers.join(';'), ...rows.map(r => r.map(v=>'"'+v+'"').join(';'))].join('\n');
+    const blob = new Blob(['﻿' + csv], {type:'text/csv;charset=utf-8'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'MiT-Liste-' + suffix + '-' + todayISO() + '.csv';
+    a.click();
+    showToast('✓ ' + list.length + ' Kontakte als CSV exportiert', 'success');
+  }
 };
 
 window.resetAll = function(){
@@ -6893,9 +7130,10 @@ window.exportCrmExcel = function(){
 
   // ── Sheet 1: Kontakte ──
   const kontakteHeaders = [
-    'ID','Firma','Kontakt','Email','Weitere Emails','Tel','Weitere Tel',
-    'Position','Einsatzort','Segment','Status','CHF','Wahrscheinlichkeit %',
-    'Wiedervorlage','Nächster Schritt','Notiz','Weitere Kontaktpersonen','Erstellt','Aktualisiert'
+    'ID','ERP-Nr','Firma','Kontakt','Email','Weitere Emails','Tel','Weitere Tel',
+    'Position','Einsatzort','Kategorie','Berater','Planer','Segment','Status','Grund',
+    'CHF','Wahrscheinlichkeit %','Wiedervorlage','Nächster Schritt','Notiz','Tags',
+    'Weitere Kontaktpersonen','Erstellt','Aktualisiert'
   ];
 
   const serializeExtraContacts = list => (list||[]).map(p=>{
@@ -6905,6 +7143,7 @@ window.exportCrmExcel = function(){
 
   const kontakteRows = STATE.contacts.map(c => [
     c.id || '',
+    c.erpId || '',
     c.firma || '',
     c.kontakt || '',
     c.email || '',
@@ -6913,13 +7152,18 @@ window.exportCrmExcel = function(){
     (c.extraTels||[]).map(t=>t.label ? t.label+': '+t.val : t.val).join(' | '),
     c.position || '',
     c.ort || '',
+    c.kategorie || '',
+    c.salesRep || '',
+    c.planer || '',
     c.segment || '',
     c.status || '',
+    c.closeReason || '',
     c.chf != null ? Number(c.chf) : '',
     c.prob != null ? Number(c.prob) : '',
     c.wv || '',
     c.next || '',
     c.notiz || '',
+    parseTags(c.tags).join(', '),
     serializeExtraContacts(c.extraContacts),
     c.created ? c.created.slice(0,10) : '',
     c.updated ? c.updated.slice(0,10) : ''
@@ -6929,9 +7173,9 @@ window.exportCrmExcel = function(){
 
   // Column widths
   wsKontakte['!cols'] = [
-    {wch:15},{wch:30},{wch:22},{wch:28},{wch:24},{wch:18},{wch:18},
-    {wch:20},{wch:28},{wch:14},{wch:14},{wch:12},{wch:8},
-    {wch:14},{wch:30},{wch:50},{wch:40},{wch:12},{wch:12}
+    {wch:15},{wch:18},{wch:30},{wch:22},{wch:28},{wch:24},{wch:18},{wch:18},
+    {wch:16},{wch:32},{wch:12},{wch:18},{wch:24},{wch:12},{wch:14},{wch:24},
+    {wch:12},{wch:8},{wch:14},{wch:30},{wch:50},{wch:24},{wch:40},{wch:12},{wch:12}
   ];
 
   XLSX.utils.book_append_sheet(wb, wsKontakte, 'Kontakte');
@@ -7070,7 +7314,10 @@ window.importCrmExcelFile = function(input){
           return (name||email||tel) ? {name, position, email, tel} : null;
         }).filter(Boolean) : [];
 
+        const erpId = String(row['ERP-Nr']||'').trim();
+        const tags = String(row['Tags']||'').split(/[,;]+/).map(t=>t.trim()).filter(Boolean);
         const contactData = {
+          erpId:     erpId || undefined,
           firma,
           kontakt:   String(row['Kontakt']||'').trim(),
           email:     String(row['Email']||'').trim(),
@@ -7080,26 +7327,35 @@ window.importCrmExcelFile = function(input){
           extraContacts,
           position:  String(row['Position']||'').trim(),
           ort:       String(row['Einsatzort']||'').trim(),
+          kategorie: String(row['Kategorie']||'').trim() || null,
+          salesRep:  String(row['Berater']||'').trim() || null,
+          planer:    String(row['Planer']||'').trim() || null,
           segment:   String(row['Segment']||'').trim() || 'Sonstige',
           status:    String(row['Status']||'').trim() || 'Lead',
+          closeReason: String(row['Grund']||'').trim() || undefined,
           chf:       parseCHF(row['CHF']),
           prob:      parseCHF(row['Wahrscheinlichkeit %']),
           wv:        parseDate(row['Wiedervorlage']),
           next:      String(row['Nächster Schritt']||'').trim(),
           notiz:     String(row['Notiz']||'').trim(),
+          tags,
           updated:   new Date().toISOString()
         };
 
-        // If we have an ID and it matches an existing contact → update
-        const existing = id ? STATE.contacts.find(c=>c.id===id) : null;
+        // Match priority: ERP-Nr → row ID → firma+kontakt duplicate
+        let existing = id ? STATE.contacts.find(c=>c.id===id) : null;
+        if(!existing && erpId) existing = STATE.contacts.find(c=>c.erpId===erpId);
         if(existing){
           Object.assign(existing, contactData);
           updatedContacts++;
         } else {
-          // Check for duplicate by firma+kontakt
+          // Check for duplicate by firma+kontakt+ort (same firma at a different
+          // Einsatzort must remain a separate opportunity)
           const dup = STATE.contacts.find(c=>
+            !c.erpId && !contactData.erpId &&
             (c.firma||'').toLowerCase()===firma.toLowerCase() &&
-            (c.kontakt||'').toLowerCase()===(contactData.kontakt||'').toLowerCase()
+            (c.kontakt||'').toLowerCase()===(contactData.kontakt||'').toLowerCase() &&
+            (c.ort||'').toLowerCase()===(contactData.ort||'').toLowerCase()
           );
           if(dup){
             Object.assign(dup, contactData);
