@@ -7256,10 +7256,25 @@ window.importCrmExcelFile = function(input){
       const hasAktivitaeten = wb.SheetNames.includes('Aktivitäten');
 
       if(!hasKontakte){
-        // Fall through to regular Excel import
-        showToast('Kein CRM-Export erkannt — versuche normalen Import', 'warn');
+        // Not a CRM export. Try the ERP-Verkaufschancen parser directly on
+        // the already-read workbook (so the user doesn't have to re-pick the
+        // file); otherwise tell them to use the Lead-Liste option.
+        const ws0 = wb.Sheets[wb.SheetNames[0]];
+        const aoa0 = XLSX.utils.sheet_to_json(ws0, {header:1, defval:'', raw:false});
+        const erp = tryImportErpVerkaufschancen(aoa0);
         closeModal('modalImport');
-        window.importExcel();
+        if(erp){
+          saveState();
+          const parts = [];
+          if(erp.imported) parts.push(erp.imported + ' neue Verkaufschancen');
+          if(erp.updated)  parts.push(erp.updated + ' aktualisiert');
+          if(erp.skipped)  parts.push(erp.skipped + ' übersprungen');
+          showToast('✓ ERP-Import: ' + (parts.join(' · ') || 'keine Daten'), 'success');
+          refreshAll();
+        } else {
+          showToast('Kein CRM-Export erkannt — bitte "Lead-Liste" wählen', 'warn');
+          window.importExcel();
+        }
         return;
       }
 
