@@ -420,6 +420,23 @@ input,select,textarea{font-family:inherit;font-size:14px}
 
 .tab-pane{display:none}
 .tab-pane.active{display:block}
+.tab-badge{display:inline-block;min-width:18px;padding:1px 6px;border-radius:9px;background:var(--brand);color:#fff;font-size:11px;font-weight:700;text-align:center;margin-left:4px}
+
+/* KI-Agent chat */
+.agent-card{display:flex;flex-direction:column}
+.agent-log{min-height:320px;max-height:52vh;overflow-y:auto;padding:6px 2px;display:flex;flex-direction:column;gap:10px}
+.agent-empty{color:var(--text-mute);text-align:center;padding:48px 16px;line-height:1.7}
+.agent-msg{display:flex}
+.agent-msg.agent-user{justify-content:flex-end}
+.agent-msg.agent-assistant{justify-content:flex-start}
+.agent-bubble{max-width:80%;padding:10px 14px;border-radius:14px;font-size:13.5px;line-height:1.6;white-space:pre-wrap}
+.agent-user .agent-bubble{background:var(--brand);color:#fff;border-bottom-right-radius:4px}
+.agent-assistant .agent-bubble{background:var(--bg-input);border:1px solid var(--line);color:var(--text);border-bottom-left-radius:4px}
+.agent-quick{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 8px}
+.chip{padding:6px 12px;border-radius:16px;border:1px solid var(--line);background:transparent;color:var(--text-mute);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
+.chip:hover{border-color:var(--brand);color:var(--brand)}
+.agent-input-row{display:flex;gap:8px;align-items:flex-end}
+.agent-input-row textarea{flex:1;resize:vertical;min-height:42px;max-height:160px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--r-md);font-family:inherit;font-size:13.5px;background:var(--bg-input);color:var(--text)}
 
 /* Helpers */
 .row{display:flex;align-items:center;gap:10px}
@@ -517,6 +534,9 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .turbo-mode-title{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:20px;color:var(--brand);letter-spacing:0.02em}
 .turbo-mode-sub{font-size:12.5px;color:var(--text-mute);margin-top:3px;max-width:560px}
 .turbo-mode-btn{font-size:14px;padding:11px 22px;box-shadow:0 4px 14px rgba(200,16,46,0.30)}
+/* Hidden Turbo mode: hides the bar + the per-row ⚡ quick buttons */
+body.turbo-off .turbo-mode-bar,
+body.turbo-off .btn-turbo{display:none !important}
 
 /* "Auf Erledigt setzen" button */
 .btn-done{background:#0f766e;color:#fff;font-weight:600}
@@ -1409,13 +1429,45 @@ input,select,textarea{font-family:inherit;font-size:14px}
       <!-- ═══ KI ═══ -->
       <div class="page" id="page-ki">
         <div class="tabs">
-          <button class="tab active" data-kit="email" onclick="window.kiTab('email')">✉ Email-Generator</button>
+          <button class="tab active" data-kit="agent" onclick="window.kiTab('agent')">🤖 KI-Agent</button>
+          <button class="tab" data-kit="email" onclick="window.kiTab('email')">✉ Email-Generator</button>
           <button class="tab" data-kit="call" onclick="window.kiTab('call')">⚡ Anruf-Vorbereitung</button>
           <button class="tab" data-kit="objection" onclick="window.kiTab('objection')">⚔ Einwand-Behandlung</button>
+          <button class="tab" data-kit="scheduled" onclick="window.kiTab('scheduled')">⏰ Geplante Mails <span class="tab-badge" id="schedMailCount">0</span></button>
+        </div>
+
+        <!-- KI-Agent tab -->
+        <div class="tab-pane active" id="kit-agent">
+          <div class="card agent-card">
+            <div class="agent-log" id="kiAgentLog"></div>
+            <div class="agent-quick">
+              <button class="chip" onclick="window.kiAgentQuick('Welche 3 Kontakte soll ich heute zuerst kontaktieren und warum?')">Wen heute zuerst?</button>
+              <button class="chip" onclick="window.kiAgentQuick('Welche Deals drohen zu kippen oder sind überfällig?')">Risiken</button>
+              <button class="chip" onclick="window.kiAgentQuick('Fasse den Zustand meiner Pipeline in 5 Bullets zusammen.')">Pipeline-Status</button>
+              <button class="chip" onclick="window.kiAgentQuick('Schlage für meine überfälligen Wiedervorlagen je einen konkreten nächsten Schritt vor.')">Follow-up-Plan</button>
+            </div>
+            <div class="agent-input-row">
+              <textarea id="kiAgentInput" rows="1" placeholder="Frag den KI-Agenten zu deinem CRM… (Enter zum Senden)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();window.kiAgentSend();}"></textarea>
+              <button class="btn btn-primary" onclick="window.kiAgentSend()">Senden</button>
+              <button class="btn btn-ghost btn-sm" onclick="window.kiAgentReset()" title="Unterhaltung zurücksetzen">↺</button>
+            </div>
+            <div class="tx-dim" style="font-size:11px;margin-top:6px">Der Agent nutzt eine Momentaufnahme deines CRM (Kontakte, Pipeline, Wiedervorlagen). Daten werden nur an die Anthropic-API gesendet. Modell: Claude Sonnet 4.5</div>
+          </div>
+        </div>
+
+        <!-- Scheduled mails tab -->
+        <div class="tab-pane" id="kit-scheduled">
+          <div class="card">
+            <div class="section-h" style="margin-top:0">⏰ Geplante Nachfassmails</div>
+            <p class="tx-mute mb-md" style="font-size:13px;line-height:1.6">
+              Zeitgesteuerte Nachfassmails: Wird eine Mail fällig, meldet sich das CRM automatisch. Mit einem Klick öffnet sie in Outlook und wird als gesendet protokolliert. Erstellen: im Kontakt „✉ Nachfassmail“ → „Für später planen“.
+            </p>
+            <div id="schedMailList"></div>
+          </div>
         </div>
 
         <!-- Email tab -->
-        <div class="tab-pane active" id="kit-email">
+        <div class="tab-pane" id="kit-email">
           <div class="card">
             <div class="form-grid">
               <div class="field"><label>Kontakt aus Datenbank</label>
@@ -1662,6 +1714,15 @@ input,select,textarea{font-family:inherit;font-size:14px}
             <button class="btn btn-ghost btn-sm" onclick="window.addTurboPreset()">＋ Vorlage hinzufügen</button>
             <button class="btn btn-primary btn-sm" onclick="window.saveTurboSettings()">Turbo-Vorlagen speichern</button>
           </div>
+          <div class="row gap-md mt-md" style="align-items:center;flex-wrap:wrap">
+            <label style="font-size:13px;display:flex;align-items:center;gap:8px">Tageslimit
+              <input id="turboLimitInput" type="number" min="1" max="500" style="width:80px" title="Max. Turbo-Aktionen pro Tag">
+            </label>
+            <button class="btn btn-ghost btn-sm" onclick="window.saveTurboLimit()">Limit speichern</button>
+            <span class="tx-dim" id="turboUsedInfo" style="font-size:12px"></span>
+            <span style="flex:1"></span>
+            <label class="widget-toggle" style="margin:0"><input type="checkbox" id="turboHideToggle" onchange="window.setTurboHidden(this.checked)"><span>Turbo-Modus ausblenden</span></label>
+          </div>
 
           <div class="section-h">E-Mail Signatur</div>
           <p class="tx-mute mb-md" style="font-size:12px;line-height:1.6;margin-top:-8px">Wird automatisch an generierte Emails angehängt. Die KI fügt danach keine eigene Signatur mehr ein.</p>
@@ -1794,7 +1855,10 @@ input,select,textarea{font-family:inherit;font-size:14px}
       <div id="cNextActionWrap" class="hidden">
         <div class="row" style="gap:8px;flex-wrap:wrap">
           <button class="btn btn-ghost btn-sm" onclick="window.kiNextAction()" style="border-color:var(--brand);color:var(--brand)">💡 Next-Best-Action mit KI</button>
-          <button class="btn btn-ghost btn-sm" onclick="window.kiTimelineSummary()">✦ KI-Zusammenfassung der Historie</button>
+          <button class="btn btn-ghost btn-sm" onclick="window.kiTimelineSummary()">✦ KI-Zusammenfassung</button>
+          <button class="btn btn-ghost btn-sm" onclick="window.kiNachfassMail()" title="Professionelle Nachfassmail (auch wenn telefonisch nicht erreicht)">✉ Nachfassmail</button>
+          <button class="btn btn-ghost btn-sm" onclick="window.kiStructureNotes()" title="Rohe Gesprächsnotiz sauber strukturieren">✍ Notiz strukturieren</button>
+          <button class="btn btn-ghost btn-sm" onclick="window.kiSuggestTasks()" title="Aufgaben & Follow-up-Schritte vorschlagen">✅ Aufgaben/Follow-up</button>
           <span class="flex1"></span>
           <button class="btn btn-ghost btn-sm" id="cCallStart" onclick="window.startCallTimer()" title="Anruf-Timer starten">⏱ Anruf starten</button>
           <div id="cCallTimer" class="hidden call-timer">
@@ -1804,6 +1868,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
         </div>
         <div id="cNextActionOut" class="hidden nba-out"></div>
         <div id="cTimelineSummary" class="hidden nba-out"></div>
+        <div id="cKiAssistOut" class="hidden nba-out"></div>
       </div>
 
       <!-- PDF Attachments (only in Edit mode) -->
@@ -1881,6 +1946,37 @@ input,select,textarea{font-family:inherit;font-size:14px}
     <div class="modal-foot">
       <button class="btn btn-ghost" onclick="window.closeModal('modalActivity')">Abbrechen</button>
       <button class="btn btn-primary" onclick="window.saveActivity()">Loggen</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- MODAL: KI-Mail Ergebnis (Nachfassmail etc.)                             -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<div class="modal-bg" id="modalKiMail">
+  <div class="modal lg">
+    <div class="modal-h">
+      <div class="modal-title" id="kiMailTitle">✉ Generierte Email</div>
+      <button class="modal-x" onclick="window.closeModal('modalKiMail')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="tx-dim mb-md" id="kiMailTo" style="font-size:12px"></div>
+      <div class="field"><label>Betreff</label><input id="kiMailSubject"></div>
+      <div class="field full" style="margin-top:10px"><label>Text (editierbar)</label>
+        <textarea id="kiMailBody" rows="12" style="font-family:inherit"></textarea>
+      </div>
+      <div class="row gap-md mt-md" style="align-items:center;flex-wrap:wrap;background:var(--panel-2,#f6f8fb);padding:10px;border-radius:8px">
+        <span style="font-size:13px">⏰ Für später planen am</span>
+        <input id="kiMailScheduleDate" type="date" style="max-width:170px">
+        <button class="btn btn-ghost btn-sm" onclick="window.kiMailSchedule()">Planen</button>
+        <span class="tx-dim" style="font-size:11px">Das CRM erinnert dich, wenn die Mail fällig ist.</span>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="window.closeModal('modalKiMail')">Schliessen</button>
+      <span class="flex1"></span>
+      <button class="btn btn-ghost btn-sm" onclick="window.kiMailCopy()">📋 Kopieren</button>
+      <button class="btn btn-primary" onclick="window.kiMailOutlook()" style="border-color:#0078d4">📬 In Outlook öffnen</button>
     </div>
   </div>
 </div>
@@ -2066,6 +2162,7 @@ const ATT_KEY     = 'mit_crm_attachments'; // {contactId: [{name, b64, size, dat
 const STATE = {
   contacts: [],     // {id, firma, kontakt, email, tel, position, ort, segment, status, chf, prob, wv, next, notiz, created, updated}
   activities: [],   // {id, contactId, date, typ, sum, next, newWv, newStatus, created}
+  scheduledMails: [], // {id, contactId, to, sendDate, subject, body, created, sent}
   meta: { v: 1, created: new Date().toISOString() }
 };
 
@@ -2185,6 +2282,7 @@ function loadState(){
       const d = JSON.parse(raw);
       if(d.contacts) STATE.contacts = d.contacts;
       if(d.activities) STATE.activities = d.activities;
+      if(Array.isArray(d.scheduledMails)) STATE.scheduledMails = d.scheduledMails;
       if(d.meta) STATE.meta = d.meta;
     }
   }catch(e){
@@ -2273,7 +2371,7 @@ window.nav = function(page){
   else if(page === 'wiedervorlagen') renderWiedervorlagen();
   else if(page === 'aktivitaeten') renderAktivitaeten();
   else if(page === 'kalender'){ calDate = calDate || new Date(); renderCalendar(); }
-  else if(page === 'ki') populateKiSelects();
+  else if(page === 'ki'){ populateKiSelects(); renderKiAgentLog(); renderScheduledMails(); }
 };
 
 // ════════════════════════════════════════════════════════════════════════
@@ -3364,6 +3462,34 @@ function loadTurboPresets(){
 }
 function saveTurboPresets(list){ localStorage.setItem(TURBO_KEY, JSON.stringify(list)); }
 
+// ── Turbo daily limit + hide toggle ───────────────────────────────────
+const TURBO_LIMIT_KEY  = 'mit_crm_turbo_limit';   // max actions per day
+const TURBO_USED_KEY   = 'mit_crm_turbo_used';     // {date, count}
+const TURBO_HIDDEN_KEY = 'mit_crm_turbo_hidden';   // '1' = hide the whole feature
+function loadTurboLimit(){ const n = parseInt(localStorage.getItem(TURBO_LIMIT_KEY)); return (n && n > 0) ? n : 25; }
+function turboUsedToday(){
+  try{ const u = JSON.parse(localStorage.getItem(TURBO_USED_KEY)||'{}'); return (u.date === todayISO()) ? (u.count||0) : 0; }catch(e){ return 0; }
+}
+function turboRemaining(){ return Math.max(0, loadTurboLimit() - turboUsedToday()); }
+function turboRecord(n){
+  const cur = turboUsedToday();
+  localStorage.setItem(TURBO_USED_KEY, JSON.stringify({date: todayISO(), count: cur + (n||1)}));
+}
+function turboIsHidden(){ return localStorage.getItem(TURBO_HIDDEN_KEY) === '1'; }
+window.setTurboHidden = function(hidden){
+  localStorage.setItem(TURBO_HIDDEN_KEY, hidden ? '1' : '0');
+  document.body.classList.toggle('turbo-off', hidden);
+  refreshAll();
+  renderTurboSettings();
+};
+window.saveTurboLimit = function(){
+  const v = parseInt((document.getElementById('turboLimitInput')||{}).value);
+  if(!v || v < 1){ showToast('Ungültiges Limit', 'error'); return; }
+  localStorage.setItem(TURBO_LIMIT_KEY, String(v));
+  showToast('✓ Turbo-Tageslimit: ' + v + ' Aktionen', 'success');
+  refreshAll();
+};
+
 window.openTurbo = function(ev, contactId){
   ev.stopPropagation();
   let pop = document.getElementById('turboPop');
@@ -3393,6 +3519,11 @@ window.openTurbo = function(ev, contactId){
 window.closeTurbo = function(){ const pop=document.getElementById('turboPop'); if(pop) pop.style.display='none'; };
 
 window.turboLog = function(contactId, idx){
+  if(turboRemaining() < 1){
+    window.closeTurbo();
+    showToast('⛔ Turbo-Tageslimit erreicht (' + loadTurboLimit() + ' Aktionen) — morgen wieder', 'warn');
+    return;
+  }
   const presets = loadTurboPresets();
   const p = presets[idx]; if(!p) return;
   const c = STATE.contacts.find(x=>x.id===contactId); if(!c) return;
@@ -3405,10 +3536,11 @@ window.turboLog = function(contactId, idx){
   c.next = p.text;
   if(c.status === 'Lead') c.status = 'Kontaktiert';
   c.updated = new Date().toISOString();
+  turboRecord(1);
   saveState();
   window.closeTurbo();
   refreshAll();
-  showToast('⚡ ' + c.firma + ': ' + p.text + ' · WV ' + fmtDate(c.wv), 'success');
+  showToast('⚡ ' + c.firma + ': ' + p.text + ' · WV ' + fmtDate(c.wv) + ' · ' + turboRemaining() + ' übrig heute', 'success');
 };
 
 // Settings: render + save preset editor
@@ -3426,6 +3558,11 @@ function renderTurboSettings(){
       <span class="tx-dim" style="font-size:11px">Tage</span>
       <button class="btn-remove-field" onclick="window._turboRemove(${i})">✕</button>
     </div>`).join('');
+  // Sync limit + hide controls
+  const li = document.getElementById('turboLimitInput'); if(li && !li.value) li.value = loadTurboLimit();
+  const info = document.getElementById('turboUsedInfo'); if(info) info.textContent = 'Heute genutzt: ' + turboUsedToday() + ' / ' + loadTurboLimit() + ' · ' + turboRemaining() + ' übrig';
+  const ht = document.getElementById('turboHideToggle'); if(ht) ht.checked = turboIsHidden();
+  document.body.classList.toggle('turbo-off', turboIsHidden());
 }
 let _turboDraft = null;
 function turboDraft(){ if(!_turboDraft) _turboDraft = loadTurboPresets(); return _turboDraft; }
@@ -3479,17 +3616,26 @@ window.markErledigt = function(){
 };
 
 window.bulkTurbo = function(){
+  const remaining = turboRemaining();
+  if(remaining < 1){
+    showToast('⛔ Turbo-Tageslimit erreicht (' + loadTurboLimit() + ' Aktionen) — morgen wieder', 'warn');
+    return;
+  }
   const todayIso = todayISO();
-  const due = STATE.contacts.filter(c =>
+  const allDue = STATE.contacts.filter(c =>
     !['Gewonnen','Verloren','Pausiert','Erledigt'].includes(c.status) &&
     c.wv && c.wv.slice(0,10) <= todayIso
   ).sort((a,b)=>(a.wv||'').localeCompare(b.wv||''));
-  if(!due.length){ showToast('Keine überfälligen oder heute fälligen Wiedervorlagen', 'warn'); return; }
+  if(!allDue.length){ showToast('Keine überfälligen oder heute fälligen Wiedervorlagen', 'warn'); return; }
+  // Respect the daily limit — only process up to the remaining allowance
+  const due = allDue.slice(0, remaining);
+  const capped = allDue.length - due.length;
   const presets = loadTurboPresets();
   if(!presets.length){ showToast('Keine Turbo-Vorlagen konfiguriert', 'error'); return; }
   const preview = due.slice(0,5).map((c,i)=>`  • ${c.firma} → "${presets[i % presets.length].text}" (+${presets[i % presets.length].days}d)`).join('\n');
   const extra = due.length>5 ? `\n  … und ${due.length-5} weitere` : '';
-  if(!confirm(`⚡ Turbo-Modus\n\n${due.length} fällige Wiedervorlage${due.length>1?'n':''} werden in einem Schritt mit rotierenden Nachfass-Notizen abgearbeitet:\n\n${preview}${extra}\n\nFortfahren?`)) return;
+  const cap = capped>0 ? `\n\n(Tageslimit: nur ${due.length} von ${allDue.length} — ${capped} bleiben für morgen)` : '';
+  if(!confirm(`⚡ Turbo-Modus\n\n${due.length} fällige Wiedervorlage${due.length>1?'n':''} werden in einem Schritt mit rotierenden Nachfass-Notizen abgearbeitet:\n\n${preview}${extra}${cap}\n\nFortfahren?`)) return;
   const now = new Date().toISOString();
   due.forEach((c,i)=>{
     const p = presets[i % presets.length];
@@ -3503,9 +3649,10 @@ window.bulkTurbo = function(){
     if(c.status === 'Lead') c.status = 'Kontaktiert';
     c.updated = now;
   });
+  turboRecord(due.length);
   saveState();
   refreshAll();
-  showToast('⚡ Turbo-Modus: ' + due.length + ' Calls geloggt, alle Wiedervorlagen neu terminiert', 'success');
+  showToast('⚡ Turbo: ' + due.length + ' Calls geloggt' + (capped>0?' · '+capped+' wg. Tageslimit übrig':'') + ' · ' + turboRemaining() + ' übrig heute', 'success');
 };
 
 // ════════════════════════════════════════════════════════════════════════
@@ -5487,6 +5634,37 @@ window.kiCopy = function(targetId){
   navigator.clipboard.writeText(text).then(()=>showToast('Kopiert','success'));
 };
 
+// ── Reusable: full CRM history context for a contact ──────────────────────
+// Produces a compact but complete dossier the model can use to individualise
+// output. maxActs caps the number of activities embedded (newest first).
+function buildContactHistoryContext(c, maxActs=25){
+  if(!c) return '';
+  const acts = STATE.activities
+    .filter(a=>a.contactId===c.id)
+    .sort((a,b)=>(b.date||'').localeCompare(a.date||''))
+    .slice(0, maxActs);
+  const lines = [];
+  lines.push(`Firma: ${c.firma||'—'}`);
+  lines.push(`Ansprechpartner: ${c.kontakt||'—'}${c.position?' ('+c.position+')':''}`);
+  if(c.ort) lines.push(`Einsatzort/Adresse: ${c.ort}`);
+  lines.push(`Segment: ${c.segment||'—'} · Status: ${c.status||'—'}${c.kategorie?' · Produktlinie: '+c.kategorie:''}`);
+  lines.push(`Angebots-Wert: ${fmtCHF(c.chf)} · Wahrscheinlichkeit: ${c.prob||'?'}%`);
+  if(c.next) lines.push(`Geplanter nächster Schritt: ${c.next}`);
+  if(c.wv) lines.push(`Wiedervorlage: ${fmtDate(c.wv)}`);
+  const tags = parseTags(c.tags);
+  if(tags.length) lines.push(`Tags: ${tags.join(', ')}`);
+  if(c.notiz) lines.push(`Notizen: ${c.notiz}`);
+  if(c.closeReason) lines.push(`Abschluss-Grund: ${c.closeReason}`);
+  lines.push('');
+  lines.push('Kompletter Aktivitäts-Verlauf (neueste zuerst):');
+  lines.push(acts.length
+    ? acts.map(a => `- ${fmtDate(a.date)} [${a.typ||'—'}] ${a.sum||''}${a.next?' → nächster Schritt: '+a.next:''}`).join('\n')
+    : '- (noch keine protokollierten Aktivitäten)');
+  return lines.join('\n');
+}
+
+const MIT_KI_SYSTEM = `Du bist Burak Ücöz, Sales Engineer bei Mobil in Time AG (An Aggreko Company). Du verkaufst temporäre Energielösungen: Generatoren 30-2100 kVA, BESS Batteriespeicher, Trafos, Heat/Cool, USV. Stage V, HVO100-fähig, EMV/PQ-Expertise (EN 50160, IEC 61000-4-30). 19 Standorte CH. Schreibe in Schweizer B2B-Sprache, professionell, direkt, niemals Floskeln oder Marketing-Sprech. Kein "Sehr geehrter" wenn nicht zwingend nötig. WICHTIG: Füge KEINE Signatur, KEINE Grussformel mit Absender und KEINEN "Mit freundlichen Grüssen"-Block ein — die Signatur wird separat angehängt.`;
+
 window.kiGenEmail = async function(){
   const firma = document.getElementById('kiEmFirma').value.trim();
   const kontakt = document.getElementById('kiEmKontakt2').value.trim();
@@ -5499,14 +5677,22 @@ window.kiGenEmail = async function(){
   const out = document.getElementById('kiEmOut');
   out.innerHTML = '<div class="loading"><span></span><span></span><span></span></div> Generiere personalisierte Email...';
 
-  const system = `Du bist Burak Ücöz, Sales Engineer bei Mobil in Time AG (An Aggreko Company). Du verkaufst temporäre Energielösungen: Generatoren 30-2100 kVA, BESS Batteriespeicher, Trafos, Heat/Cool, USV. Stage V, HVO100-fähig, EMV/PQ-Expertise (EN 50160, IEC 61000-4-30). 19 Standorte CH. Schreibe in Schweizer B2B-Sprache, professionell, direkt, niemals Floskeln oder Marketing-Sprech. Maximal 100 Wörter. Kein "Sehr geehrter" wenn nicht zwingend nötig. WICHTIG: Füge KEINE Signatur, KEINE Grussformel mit Absender und KEINEN "Mit freundlichen Grüssen"-Block ein — die Signatur wird separat angehängt.`;
+  const system = MIT_KI_SYSTEM + ' Maximal 120 Wörter. Nutze — falls vorhanden — den CRM-Verlauf, um konkret auf frühere Gespräche, offene Punkte und den aktuellen Stand Bezug zu nehmen. Erfinde niemals Fakten, die nicht aus dem Verlauf hervorgehen.';
+
+  // If a DB contact is selected, embed the full history for individualisation
+  const selId = (document.getElementById('kiEmKontakt')||{}).value;
+  const selContact = selId ? STATE.contacts.find(x=>x.id===selId) : null;
+  const historyBlock = selContact
+    ? `\n\nCRM-VERLAUF DIESES KONTAKTS (nutze ihn, um die Email individuell zu machen):\n${buildContactHistoryContext(selContact)}`
+    : '';
 
   const prompt = `Schreibe eine ${typ}-Email an ${kontakt||'einen Ansprechpartner'} bei ${firma} (Branche: ${branche}).
-Kontext: ${kontext||'kein spezifischer Anlass'}
-Stil: ${stil}
+Anlass/Kontext: ${kontext||'kein spezifischer Anlass'}
+Stil: ${stil}${historyBlock}
+
 Liefere zuerst BETREFF auf einer Zeile, dann eine Leerzeile, dann den Email-Text. Keine Erklärung dazu, nur die Email.`;
 
-  const resp = await callClaude(prompt, system, 800);
+  const resp = await callClaude(prompt, system, 900);
   if(resp){
     const fullText = resp + getSignatureBlock();
     out.textContent = fullText;
@@ -5595,6 +5781,339 @@ Halte jede Strategie auf 2-3 Sätze. Konkret, zitierbar, sofort einsetzbar.`;
   else out.textContent = 'Fehler bei der Generierung — bitte erneut versuchen.';
 };
 
+
+// ════════════════════════════════════════════════════════════════════════
+//  KI-MAIL RESULT MODAL — shared by Nachfassmail & other generators
+//  Shows a generated email with Copy / Outlook / Schedule-for-later actions.
+// ════════════════════════════════════════════════════════════════════════
+let _kiMailState = { to:'', subject:'', body:'', contactId:null };
+
+function showKiMailModal(opts){
+  _kiMailState = {
+    to: opts.to||'',
+    subject: opts.subject||'',
+    body: opts.body||'',
+    contactId: opts.contactId||null
+  };
+  const t = document.getElementById('kiMailTitle'); if(t) t.textContent = opts.title || '✉ Generierte Email';
+  const subEl = document.getElementById('kiMailSubject'); if(subEl) subEl.value = _kiMailState.subject;
+  const bodyEl = document.getElementById('kiMailBody'); if(bodyEl) bodyEl.value = _kiMailState.body;
+  const toInfo = document.getElementById('kiMailTo');
+  if(toInfo) toInfo.textContent = _kiMailState.to ? ('An: ' + _kiMailState.to) : 'Keine E-Mail-Adresse hinterlegt — bitte in Outlook ergänzen';
+  const dateEl = document.getElementById('kiMailScheduleDate');
+  if(dateEl){ const d = new Date(); d.setDate(d.getDate()+3); dateEl.value = localISO(d); }
+  openModal('modalKiMail');
+}
+function _kiMailCurrent(){
+  return {
+    to: _kiMailState.to,
+    subject: (document.getElementById('kiMailSubject')||{}).value || _kiMailState.subject,
+    body: (document.getElementById('kiMailBody')||{}).value || _kiMailState.body,
+    contactId: _kiMailState.contactId
+  };
+}
+window.kiMailCopy = function(){
+  const m = _kiMailCurrent();
+  navigator.clipboard.writeText((m.subject?'Betreff: '+m.subject+'\n\n':'') + m.body)
+    .then(()=>showToast('Kopiert','success'))
+    .catch(()=>showToast('Kopieren nicht möglich','error'));
+};
+window.kiMailOutlook = function(){
+  const m = _kiMailCurrent();
+  const to = m.to ? encodeURIComponent(m.to) : '';
+  const subject = encodeURIComponent(m.subject || 'Mobil in Time AG');
+  const body = encodeURIComponent(m.body);
+  window.location.href = `mailto:${to}?subject=${subject}&body=${body}`;
+  showToast('📬 Outlook öffnet…', 'success');
+};
+window.kiMailSchedule = function(){
+  const m = _kiMailCurrent();
+  const dateEl = document.getElementById('kiMailScheduleDate');
+  const sendDate = dateEl ? dateEl.value : '';
+  if(!sendDate){ showToast('Sende-Datum wählen', 'error'); return; }
+  STATE.scheduledMails.push({
+    id: uid(), contactId: m.contactId, to: m.to,
+    sendDate, subject: m.subject, body: m.body,
+    created: new Date().toISOString(), sent: false
+  });
+  saveState();
+  closeModal('modalKiMail');
+  renderScheduledMails();
+  showToast('⏰ Nachfassmail geplant für ' + fmtDate(sendDate), 'success');
+};
+
+// ════════════════════════════════════════════════════════════════════════
+//  NICHT-ERREICHT NACHFASSMAIL — professional follow-up after a missed call
+//  Goals: Status anfragen · Bedarf prüfen · Unterstützung anbieten · Rückmeldung fördern
+// ════════════════════════════════════════════════════════════════════════
+window.kiNachfassMail = async function(contactId){
+  const id = contactId || currentContactId;
+  if(!id){ showToast('Kein Kontakt gewählt', 'error'); return; }
+  const c = STATE.contacts.find(x=>x.id===id);
+  if(!c){ showToast('Kontakt nicht gefunden', 'error'); return; }
+  if(!localStorage.getItem(API_KEY)){ showToast('API-Key fehlt', 'error'); window.openApiKey(); return; }
+
+  showToast('✦ Nachfassmail wird erstellt…', 'info', 3000);
+  const system = MIT_KI_SYSTEM + ' Maximal 130 Wörter. Freundlich, professionell, nicht aufdringlich.';
+  const prompt = `Der Kunde wurde telefonisch NICHT erreicht. Schreibe eine professionelle Nachfassmail, die:
+1. auf den erfolglosen Telefonversuch Bezug nimmt (ohne Vorwurf),
+2. nach dem aktuellen Status/Stand des Projekts fragt,
+3. den möglichen Bedarf prüft bzw. offene Punkte anspricht,
+4. konkrete Unterstützung anbietet (z.B. technische Auslegung, Termin, Angebot),
+5. aktiv zu einer Rückmeldung ermutigt (einfache Antwortmöglichkeit).
+
+Beziehe dich individuell auf den CRM-Verlauf.
+
+${buildContactHistoryContext(c)}
+
+Liefere zuerst BETREFF auf einer Zeile, dann eine Leerzeile, dann den Email-Text. Nur die Email, keine Erklärung.`;
+
+  const resp = await callClaude(prompt, system, 900);
+  if(!resp){ showToast('Fehler bei der Generierung', 'error'); return; }
+  const parsed = parseEmailOutput(resp);
+  const fullBody = (parsed.body || resp) + getSignatureBlock();
+  showKiMailModal({
+    title: '✉ Nachfassmail — telefonisch nicht erreicht',
+    contactId: id,
+    to: c.email || '',
+    subject: parsed.subject || ('Nachfassung — ' + c.firma),
+    body: fullBody
+  });
+};
+
+// ════════════════════════════════════════════════════════════════════════
+//  KI-ASSIST in Kontakt-Modal — Gesprächsnotiz strukturieren · Aufgaben/Follow-up
+// ════════════════════════════════════════════════════════════════════════
+window.kiStructureNotes = async function(){
+  if(!currentContactId){ return; }
+  const c = STATE.contacts.find(x=>x.id===currentContactId); if(!c) return;
+  const ta = document.getElementById('cNotiz');
+  const raw = (ta ? ta.value : '').trim();
+  if(!raw){ showToast('Keine Notizen zum Strukturieren', 'info'); return; }
+  if(!localStorage.getItem(API_KEY)){ showToast('API-Key fehlt', 'error'); window.openApiKey(); return; }
+  const out = document.getElementById('cKiAssistOut');
+  out.classList.remove('hidden');
+  out.innerHTML = '<div class="loading"><span></span><span></span><span></span></div> Claude strukturiert die Gesprächsnotiz…';
+  const resp = await callClaude(
+    `Strukturiere die folgende rohe Gesprächsnotiz zu einer sauberen, professionellen CRM-Notiz. Nutze knappe Bulletpoints unter den Überschriften "Situation", "Bedarf", "Vereinbart", "Nächster Schritt". Erfinde nichts dazu. Schweizer Direktsprache.\n\nRohnotiz:\n${raw}`,
+    'Du bist ein präziser Vertriebs-Assistent, der Gesprächsnotizen sauber strukturiert.',
+    600
+  );
+  if(!resp){ out.innerHTML = '<div class="tx-mute">Fehler — API-Key prüfen.</div>'; return; }
+  _kiAssistResult = resp;
+  out.innerHTML = '<div class="nba-tag">✍ Strukturierte Notiz</div><div class="nba-text">'+escHtml(resp).replace(/\n/g,'<br>')+'</div>'+
+    '<div class="row" style="gap:6px;margin-top:8px"><button class="btn btn-tiny btn-primary" onclick="window.kiApplyNotes()">In Notizfeld übernehmen</button><button class="btn btn-tiny btn-ghost" onclick="document.getElementById(\'cKiAssistOut\').classList.add(\'hidden\')">Schliessen</button></div>';
+};
+let _kiAssistResult = '';
+window.kiApplyNotes = function(){
+  const ta = document.getElementById('cNotiz');
+  if(ta && _kiAssistResult){ ta.value = _kiAssistResult; showToast('✓ Notiz übernommen — Speichern nicht vergessen', 'success'); }
+  const out = document.getElementById('cKiAssistOut'); if(out) out.classList.add('hidden');
+};
+
+window.kiSuggestTasks = async function(){
+  if(!currentContactId){ return; }
+  const c = STATE.contacts.find(x=>x.id===currentContactId); if(!c) return;
+  if(!localStorage.getItem(API_KEY)){ showToast('API-Key fehlt', 'error'); window.openApiKey(); return; }
+  const out = document.getElementById('cKiAssistOut');
+  out.classList.remove('hidden');
+  out.innerHTML = '<div class="loading"><span></span><span></span><span></span></div> Claude leitet Aufgaben & Follow-ups ab…';
+  const resp = await callClaude(
+    `Leite aus dem CRM-Verlauf dieses Kontakts die konkret sinnvollen nächsten Aufgaben und Follow-up-Schritte ab. Gib maximal 4 Aufgaben als nummerierte Liste, jede mit einem empfohlenen Zeitrahmen (z.B. "diese Woche", "in 2 Wochen"). Priorisiere nach Abschluss-Chance. Keine Floskeln.\n\n${buildContactHistoryContext(c)}`,
+    'Du bist Senior Sales Coach für Mobil in Time AG. Du gibst konkrete, umsetzbare Aufgaben.',
+    600
+  );
+  if(!resp){ out.innerHTML = '<div class="tx-mute">Fehler — API-Key prüfen.</div>'; return; }
+  out.innerHTML = '<div class="nba-tag">✅ Aufgaben & Follow-up-Vorschläge</div><div class="nba-text">'+escHtml(resp).replace(/\n/g,'<br>')+'</div>'+
+    '<div class="row" style="gap:6px;margin-top:8px"><button class="btn btn-tiny btn-ghost" onclick="document.getElementById(\'cKiAssistOut\').classList.add(\'hidden\')">Schliessen</button></div>';
+};
+
+// ════════════════════════════════════════════════════════════════════════
+//  KI-AGENT — conversational assistant with live CRM context
+// ════════════════════════════════════════════════════════════════════════
+let _kiAgentHistory = [];  // [{role:'user'|'assistant', content}]
+
+function buildCrmOverview(){
+  const cs = STATE.contacts;
+  const open = cs.filter(c=>!['Gewonnen','Verloren','Pausiert','Erledigt'].includes(c.status));
+  const todayIso = todayISO();
+  const overdue = open.filter(c=>c.wv && c.wv.slice(0,10) < todayIso);
+  const byStatus = {};
+  cs.forEach(c=>{ byStatus[c.status] = (byStatus[c.status]||0)+1; });
+  const topDeals = [...open].filter(c=>c.chf).sort((a,b)=>(b.chf||0)-(a.chf||0)).slice(0,15);
+  const lines = [];
+  lines.push(`Kontakte gesamt: ${cs.length} · offen: ${open.length} · überfällige Wiedervorlagen: ${overdue.length}`);
+  lines.push('Nach Status: ' + Object.entries(byStatus).map(([k,v])=>k+':'+v).join(', '));
+  lines.push('');
+  lines.push('Top offene Deals (Firma · Status · Wert · WV · Ansprechpartner):');
+  lines.push(topDeals.map(c=>`- ${c.firma} · ${c.status} · ${fmtCHF(c.chf)} · WV ${c.wv?fmtDate(c.wv):'—'} · ${c.kontakt||'—'}`).join('\n') || '- keine');
+  if(overdue.length){
+    lines.push('');
+    lines.push('Überfällige Wiedervorlagen (max 15):');
+    lines.push(overdue.slice(0,15).map(c=>`- ${c.firma} · fällig ${fmtDate(c.wv)} · ${c.next||'—'}`).join('\n'));
+  }
+  return lines.join('\n');
+}
+
+function renderKiAgentLog(){
+  const log = document.getElementById('kiAgentLog');
+  if(!log) return;
+  if(!_kiAgentHistory.length){
+    log.innerHTML = '<div class="agent-empty">🤖 Frag mich zu deinen Kontakten, Pipeline oder Follow-ups.<br><span class="tx-dim" style="font-size:12px">z.B. „Welche 3 Kontakte soll ich heute zuerst anrufen?“ · „Fasse den Stand bei Roche zusammen“ · „Wo droht mir Umsatz wegzubrechen?“</span></div>';
+    return;
+  }
+  log.innerHTML = _kiAgentHistory.map(m =>
+    `<div class="agent-msg agent-${m.role}"><div class="agent-bubble">${escHtml(m.content).replace(/\n/g,'<br>')}</div></div>`
+  ).join('');
+  log.scrollTop = log.scrollHeight;
+}
+
+window.kiAgentQuick = function(text){
+  const inp = document.getElementById('kiAgentInput');
+  if(inp){ inp.value = text; }
+  window.kiAgentSend();
+};
+
+window.kiAgentSend = async function(){
+  const inp = document.getElementById('kiAgentInput');
+  const text = (inp ? inp.value : '').trim();
+  if(!text) return;
+  if(!localStorage.getItem(API_KEY)){ showToast('API-Key fehlt', 'error'); window.openApiKey(); return; }
+  _kiAgentHistory.push({role:'user', content:text});
+  if(inp) inp.value = '';
+  renderKiAgentLog();
+  const log = document.getElementById('kiAgentLog');
+  if(log){
+    const t = document.createElement('div');
+    t.className = 'agent-msg agent-assistant'; t.id='kiAgentTyping';
+    t.innerHTML = '<div class="agent-bubble"><div class="loading"><span></span><span></span><span></span></div></div>';
+    log.appendChild(t); log.scrollTop = log.scrollHeight;
+  }
+  const system = `Du bist der persönliche KI-Vertriebs-Agent von Burak Ücöz bei Mobil in Time AG (Aggreko CH, temporäre Energielösungen). Du hast Zugriff auf eine Momentaufnahme seines CRM (unten). Beantworte Fragen konkret und datenbezogen, schlage priorisierte nächste Schritte und Follow-ups vor, und weise auf Risiken (überfällige WV, stockende Deals) hin. Schweizer Direktsprache, kurz und umsetzbar. Wenn Daten fehlen, sag es ehrlich statt zu erfinden.
+
+AKTUELLE CRM-MOMENTAUFNAHME:
+${buildCrmOverview()}`;
+  // Send last ~10 turns for context
+  const msgs = _kiAgentHistory.slice(-10).map(m=>({role:m.role, content:m.content}));
+  const resp = await callClaudeConversation(msgs, system, 1000);
+  const typing = document.getElementById('kiAgentTyping'); if(typing) typing.remove();
+  if(resp){
+    _kiAgentHistory.push({role:'assistant', content:resp});
+  } else {
+    _kiAgentHistory.push({role:'assistant', content:'⚠ Fehler bei der Anfrage — bitte API-Key/Guthaben prüfen und erneut versuchen.'});
+  }
+  renderKiAgentLog();
+};
+
+window.kiAgentReset = function(){
+  _kiAgentHistory = [];
+  renderKiAgentLog();
+};
+
+// Multi-turn variant of callClaude (accepts a messages array)
+async function callClaudeConversation(messages, system='', maxTokens=1000){
+  const key = localStorage.getItem(API_KEY);
+  if(!key){ showToast('API-Key fehlt', 'error'); window.openApiKey(); return null; }
+  try{
+    const resp = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'x-api-key':key,
+        'anthropic-version':'2023-06-01',
+        'content-type':'application/json',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body: JSON.stringify({ model:'claude-sonnet-4-5', max_tokens:maxTokens, system, messages })
+    });
+    const data = await resp.json();
+    if(data.error) throw new Error(friendlyAnthropicError(data.error));
+    if(!data.content || !data.content[0] || !data.content[0].text) throw new Error('Leere Antwort vom KI-Modell');
+    return data.content[0].text;
+  }catch(err){
+    showToast('KI-Fehler: ' + err.message, 'error');
+    return null;
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════
+//  GEPLANTE NACHFASSMAILS — time-controlled follow-up mail queue
+// ════════════════════════════════════════════════════════════════════════
+function renderScheduledMails(){
+  const wrap = document.getElementById('schedMailList');
+  if(!wrap) return;
+  const mails = (STATE.scheduledMails||[]).filter(m=>!m.sent)
+    .sort((a,b)=>(a.sendDate||'').localeCompare(b.sendDate||''));
+  const badge = document.getElementById('schedMailCount');
+  if(badge) badge.textContent = mails.length;
+  if(!mails.length){
+    wrap.innerHTML = '<div class="tx-mute" style="padding:12px;font-size:13px">Keine geplanten Nachfassmails. Erstelle eine über „Nachfassmail“ im Kontakt und wähle „Für später planen“.</div>';
+    return;
+  }
+  const todayIso = todayISO();
+  wrap.innerHTML = mails.map(m=>{
+    const c = STATE.contacts.find(x=>x.id===m.contactId);
+    const due = m.sendDate <= todayIso;
+    return `<div class="todo-row">
+      <span class="bd ${due?'st-verhandlung':'st-lead'} todo-tag">${due?'fällig':'geplant'}</span>
+      <div style="flex:1;min-width:0">
+        <div class="todo-firma">${escHtml(m.subject||'(kein Betreff)')}</div>
+        <div class="todo-meta">${escHtml(c?c.firma:'—')} · ${escHtml(m.to||'keine Adresse')} · Senden am ${fmtDate(m.sendDate)}</div>
+      </div>
+      <div class="todo-actions">
+        <button class="btn btn-tiny btn-primary" onclick="window.sendScheduledMail('${m.id}')" title="In Outlook öffnen & als gesendet markieren">📬 Senden</button>
+        <button class="btn btn-tiny btn-ghost" onclick="window.editScheduledMail('${m.id}')">Ansehen</button>
+        <button class="btn btn-tiny btn-ghost" onclick="window.deleteScheduledMail('${m.id}')">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+window.sendScheduledMail = function(id){
+  const m = (STATE.scheduledMails||[]).find(x=>x.id===id); if(!m) return;
+  const to = m.to ? encodeURIComponent(m.to) : '';
+  const subject = encodeURIComponent(m.subject || 'Mobil in Time AG');
+  const body = encodeURIComponent(m.body||'');
+  window.location.href = `mailto:${to}?subject=${subject}&body=${body}`;
+  m.sent = true; m.sentAt = new Date().toISOString();
+  // Log as activity
+  if(m.contactId){
+    STATE.activities.push({ id: uid(), contactId: m.contactId, date: todayISO(), typ:'Mail',
+      sum: 'Nachfassmail gesendet: ' + (m.subject||''), next:'', created:new Date().toISOString() });
+  }
+  saveState();
+  renderScheduledMails();
+  refreshAll();
+  showToast('📬 Outlook öffnet — Mail als gesendet markiert', 'success');
+};
+window.editScheduledMail = function(id){
+  const m = (STATE.scheduledMails||[]).find(x=>x.id===id); if(!m) return;
+  showKiMailModal({ title:'⏰ Geplante Nachfassmail', contactId:m.contactId, to:m.to, subject:m.subject, body:m.body });
+  // Remove the old scheduled copy so re-scheduling doesn't duplicate; user can re-schedule or send
+  STATE.scheduledMails = STATE.scheduledMails.filter(x=>x.id!==id);
+  saveState(); renderScheduledMails();
+};
+window.deleteScheduledMail = function(id){
+  STATE.scheduledMails = (STATE.scheduledMails||[]).filter(x=>x.id!==id);
+  saveState(); renderScheduledMails();
+  showToast('Geplante Mail entfernt', 'info');
+};
+// Fires from the reminder loop: notify about follow-up mails due today
+const SCHED_MAIL_FIRED_KEY = 'mit_crm_sched_mail_fired_v1';
+function checkScheduledMails(){
+  const todayIso = todayISO();
+  let fired = [];
+  try{ fired = JSON.parse(localStorage.getItem(SCHED_MAIL_FIRED_KEY)||'[]'); }catch(e){}
+  const firedSet = new Set(fired);
+  let any = false;
+  (STATE.scheduledMails||[]).forEach(m=>{
+    if(m.sent) return;
+    if((m.sendDate||'') > todayIso) return;
+    if(firedSet.has(m.id)) return;
+    const c = STATE.contacts.find(x=>x.id===m.contactId);
+    showToast('⏰ Nachfassmail fällig: ' + (c?c.firma:'') + ' — im KI-Tab senden', 'warn', 6000);
+    firedSet.add(m.id); any = true;
+  });
+  if(any) localStorage.setItem(SCHED_MAIL_FIRED_KEY, JSON.stringify([...firedSet].slice(-200)));
+}
 
 // ════════════════════════════════════════════════════════════════════════
 //  KI-IMPORT — PDF / Excel auto-extraction → Kontakt + Aktivität + Pipeline
@@ -6405,6 +6924,7 @@ window.importJsonFile = function(input){
       if(!confirm('Aktuelle Daten überschreiben? (' + (d.contacts?.length||0) + ' Kontakte)')) return;
       STATE.contacts = d.contacts || [];
       STATE.activities = d.activities || [];
+      STATE.scheduledMails = Array.isArray(d.scheduledMails) ? d.scheduledMails : [];
       STATE.meta = d.meta || STATE.meta;
       saveState();
       refreshAll();
@@ -6483,6 +7003,7 @@ window.resetAll = function(){
   localStorage.removeItem(STORAGE_KEY);
   STATE.contacts = [];
   STATE.activities = [];
+  STATE.scheduledMails = [];
   saveState();
   refreshAll();
   showToast('Alle Daten zurückgesetzt', 'success');
@@ -8332,6 +8853,7 @@ function init(){
     document.getElementById('wbCcEmail').value = wbSettings.ccEmail;
   // Bind backdrop close on all modals now that DOM is complete
   attachBackdropClose();
+  document.body.classList.toggle('turbo-off', turboIsHidden());
   renderTurboSettings();
   renderRepSettings();
   renderWidgetSettings();
@@ -8346,10 +8868,12 @@ function init(){
   renderToday();
   updateSidebarBadge();
   populateKiSelects();
+  renderKiAgentLog();
+  renderScheduledMails();
   // Periodic alarm bell refresh (every 60s) — catches items becoming due mid-session
-  setInterval(()=>{ updateAlarmBell(); renderOverdueBanner(); checkTimeReminders(); }, 30*1000);
+  setInterval(()=>{ updateAlarmBell(); renderOverdueBanner(); checkTimeReminders(); checkScheduledMails(); }, 30*1000);
   // Run once shortly after load (lets user see anything already pending)
-  setTimeout(checkTimeReminders, 4000);
+  setTimeout(()=>{ checkTimeReminders(); checkScheduledMails(); }, 4000);
   // Backup reminder (toast if last export >7d)
   checkBackupReminder();
   // Onboarding tour on very first visit
