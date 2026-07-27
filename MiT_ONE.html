@@ -1826,6 +1826,64 @@ const WOCHENZIEL_MIN=5, WOCHENZIEL_MAX=7;
 function weekStartOf(d){ const x=new Date(d.getFullYear(),d.getMonth(),d.getDate()); x.setDate(x.getDate()-((x.getDay()+6)%7)); return x; }
 function weekKeyOf(iso){ const d=toDate(iso); if(!d)return ''; const ws=weekStartOf(d); return ws.toISOString().slice(0,10); }
 function termineOfWeek(wkStartIso){ return TERMINE.filter(t=>weekKeyOf(t.datum)===wkStartIso).sort((a,b)=>(a.datum+a.zeit).localeCompare(b.datum+b.zeit)); }
+/* Begründung: WARUM dieser Termin + Kurzinfo zum Kunden */
+function termBegruendung(k){
+  const parts=[];
+  const pr=String(k.prio||'').trim();
+  if(pr==='A')parts.push('Prio-A-Zielkunde'); else if(pr==='B')parts.push('Prio-B-Kunde');
+  if(k.seg)parts.push(String(k.seg));
+  if(k.kva)parts.push('Bedarf: '+k.kva);
+  if(+k.wert>0)parts.push('Potential '+fmtCHF(k.wert));
+  if(+k.fc>0)parts.push('Forecast '+fmtCHF(k.fc));
+  if(k.status)parts.push('Status: '+k.status);
+  if(k.next)parts.push('Nächster Schritt: '+k.next);
+  const info=[];
+  if(k.ap)info.push('AP: '+k.ap+(k.funk?' ('+k.funk+')':''));
+  if(k.tel)info.push('Tel: '+k.tel);
+  if(k.mail)info.push(k.mail);
+  if(k.ort||k.kt)info.push([k.ort,k.kt].filter(Boolean).join(' '));
+  return 'WARUM: '+(parts.join(' · ')||'Zielkunde aus CRM')+(info.length?' | INFO: '+info.join(' · '):'');
+}
+/* Vorschlag übernehmen → Dialog vorbefüllt inkl. Begründung */
+window.termSuggest=i=>{
+  const k=K.find(x=>x._i===i); if(!k)return;
+  termNewDialog();
+  setTimeout(()=>{
+    const set=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v;};
+    set('tm-kunde',k.co); set('tm-betreff','MiT Strom — Termin mit '+k.co);
+    set('tm-ort',[k.ort,k.kt].filter(Boolean).join(' '));
+    set('tm-notiz',termBegruendung(k));
+  },80);
+};
+/* ⚡ AUTO-PLANUNG: füllt die Woche automatisch mit den besten Kandidaten */
+window.termAutoPlan=wk=>{
+  const geplant=new Set(TERMINE.map(t=>norm(t.kunde)));
+  const score=k=>{ const pr=String(k.prio||'').trim();
+    return (pr==='A'?100:pr==='B'?50:10)+(+k.wert>0?25:0)+(+k.fc>0?15:0)+(k.tel?5:0)+(k.next?5:0); };
+  const cands=K.filter(k=>k.co&&!geplant.has(norm(k.co))).map(k=>({k,s:score(k)})).sort((a,b)=>b.s-a.s);
+  const existing=termineOfWeek(wk).length;
+  const ziel=6; const need=Math.max(0,ziel-existing);
+  if(!need){ toast('✓ Woche ist bereits voll geplant ('+existing+' Termine)'); return; }
+  const ws=toDate(wk); const slots=[];
+  for(let d=0;d<5;d++){ for(const z of ['09:00','14:00']){
+    const dt=new Date(ws.getFullYear(),ws.getMonth(),ws.getDate()+d);
+    const iso=dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
+    if(!TERMINE.some(t=>t.datum===iso&&t.zeit===z)) slots.push({iso,z});
+  }}
+  let created=0;
+  for(let i=0;i<cands.length&&created<need&&created<slots.length;i++){
+    const {k}=cands[i]; const slot=slots[created];
+    const art=/kontaktiert|gespräch|offerte|follow/i.test(String(k.status||''))?'Follow-up-Termin':'Erstbesuch';
+    TERMINE.push({id:uid8(),kunde:k.co,datum:slot.iso,zeit:slot.z,dauer:60,
+      typ:'Besuch vor Ort',betreff:'MiT Strom — '+art+' '+k.co,
+      ort:[k.ort,k.kt].filter(Boolean).join(' '),
+      notiz:termBegruendung(k),auto:true,done:false,created:new Date().toISOString()});
+    created++;
+  }
+  termSave();
+  toast('⚡ '+created+' Termine automatisch geplant — mit Begründung & Kundeninfo');
+  Views.rerender('termine'); Views.rerender('kalender'); Views.rerender('dashboard');
+};
 window.termNewDialog=(preDate)=>{
   const kunden=[...new Set([...KA.map(k=>k.co),...K.map(k=>k.co)])].filter(Boolean).slice(0,900);
   Drawer.open('＋ Termin planen',`
@@ -1898,6 +1956,7 @@ function buildTermine(el){
     return `<div class="card"><div class="card-h"><h3>${title}</h3><span class="sub">${wkLbl(wk)}</span>
       <div style="flex:1"></div>
       <span class="badge ${zielOk?'b-green':n>0?'b-orange':'b-gray'}">${n} / ${WOCHENZIEL_MIN}–${WOCHENZIEL_MAX} Termine</span>
+      <button class="tbtn primary" onclick="termAutoPlan('${wk}')" title="Beste Prio-A/B-Kandidaten automatisch auf Mo–Fr 09:00/14:00 verteilen — mit Begründung">⚡ Auto-Planen</button>
       <button class="tbtn" onclick="termICSweek('${wk}')">📆 → Outlook</button></div>
       <div class="card-b" style="padding-top:12px">
       <div class="prow" style="margin-bottom:14px"><div class="pbar" style="height:9px"><div style="width:${pct}%;background:${zielOk?'linear-gradient(90deg,var(--green),#30d158)':'linear-gradient(90deg,var(--blue),var(--teal))'}"></div></div>
@@ -1907,8 +1966,9 @@ function buildTermine(el){
         <div class="ms-chk ${t.done?'on':''}" onclick="termDone('${t.id}')">${t.done?'✓':''}</div>
         <span style="width:34px;font-size:11px;font-weight:700;color:var(--tx2)">${DAYS[(d.getDay()+6)%7]} ${d.getDate()}.</span>
         <span style="width:44px;font-size:12px;font-weight:700">${esc(t.zeit)}</span>
-        <div class="mt2" style="min-width:0"><span>${esc(t.kunde)}</span>
-          <span style="font-weight:400;color:var(--tx2);font-size:11.5px"> · ${esc(t.typ)}${t.ort?' · '+esc(t.ort):''}</span></div>
+        <div class="mt2" style="min-width:0"><span>${esc(t.kunde)}</span>${t.auto?' <span class="badge b-purple" style="font-size:9px;padding:1px 6px">⚡ auto</span>':''}
+          <span style="font-weight:400;color:var(--tx2);font-size:11.5px"> · ${esc(t.typ)}${t.ort?' · '+esc(t.ort):''}</span>
+          ${t.notiz?`<div style="font-weight:400;color:var(--tx2);font-size:10.5px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(t.notiz)}">${esc(String(t.notiz).slice(0,110))}</div>`:''}</div>
         <button class="tbtn" style="padding:4px 10px;font-size:11px" onclick="termICSone('${t.id}')">📆</button>
         <button class="del ms-row" style="border:none;background:none" onclick="termDel('${t.id}')">✕</button>
       </div>`;}).join(''):'<div class="empty" style="padding:18px">Noch keine Termine — «＋ Termin» oder Vorschläge unten nutzen</div>'}
@@ -1918,14 +1978,15 @@ function buildTermine(el){
   const geplant=new Set(TERMINE.map(t=>norm(t.kunde)));
   const vorschlaege=K.filter(k=>String(k.prio).trim()==='A'&&!geplant.has(norm(k.co))).slice(0,6);
   el.innerHTML=`<div class="hero" style="display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap">
-    <div style="flex:1"><h1>Terminplanung</h1><p>Wochenziel: ${WOCHENZIEL_MIN}–${WOCHENZIEL_MAX} Kundentermine · Export direkt in deinen Outlook-Kalender</p></div>
+    <div style="flex:1"><h1>Terminplanung</h1><p>Wochenziel: ${WOCHENZIEL_MIN}–${WOCHENZIEL_MAX} Kundentermine · ⚡ Auto-Planen füllt die Woche mit Begründung · Export direkt nach Outlook</p></div>
     <button class="tbtn primary" onclick="termNewDialog()">＋ Termin</button></div>
     <div class="grid2">${weekBlock(thisWk,'📌 Diese Woche')}${weekBlock(nextWk,'📅 Nächste Woche')}</div>
     <div class="card"><div class="card-h"><h3>💡 Termin-Vorschläge</h3><span class="sub">Prio-A-Kunden ohne geplanten Termin</span></div>
       <div class="card-b" style="padding:8px 12px">
       ${vorschlaege.length?vorschlaege.map(k=>`<div class="linkcard" style="display:flex;align-items:center;gap:12px">
-        <div style="flex:1" onclick="openKunde(${k._i})"><div class="t">${esc(k.co)}</div><div class="s">${esc(k.ort||'')} ${esc(k.kt||'')} · ${esc(k.seg||'')}${k.tel?' · '+esc(k.tel):''}</div></div>
-        <button class="tbtn primary" style="padding:5px 14px;font-size:12px" onclick="termNewDialog();setTimeout(()=>{document.getElementById('tm-kunde').value=${JSON.stringify(String(k.co))};document.getElementById('tm-betreff').value='MiT Strom — Termin mit '+${JSON.stringify(String(k.co))}},60)">＋ Einplanen</button>
+        <div style="flex:1;min-width:0" onclick="openKunde(${k._i})"><div class="t">${esc(k.co)}</div><div class="s">${esc(k.ort||'')} ${esc(k.kt||'')} · ${esc(k.seg||'')}${k.tel?' · '+esc(k.tel):''}</div>
+        <div class="s" style="color:var(--blue);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(termBegruendung(k))}">${esc(termBegruendung(k).slice(0,120))}</div></div>
+        <button class="tbtn primary" style="padding:5px 14px;font-size:12px" onclick="termSuggest(${k._i})">＋ Einplanen</button>
       </div>`).join(''):'<div class="empty" style="padding:16px">Alle Prio-A-Kunden haben Termine 💪</div>'}
       </div></div>
     <div class="card"><div class="card-h"><h3>🗂 Alle geplanten Termine (${TERMINE.length})</h3>
