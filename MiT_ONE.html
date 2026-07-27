@@ -451,14 +451,18 @@ function exportRows(name, headers, rows){
 const Tables={};
 function DataTable(cfg){
   // cfg: {id, data, cols:[{k,label,fmt,badge}], search:[keys], filters:{label,key,values}?, pageSize, onRow, exportName}
-  const st={q:'',sort:null,dir:1,page:0,filter:null};
+  const st={q:'',sort:null,dir:1,page:0,filter:null,sel:{},plz:''};
   Tables[cfg.id]={cfg,st};
   const container=document.createElement('div'); container.className='card'; container.id='tbl-'+cfg.id;
   container.innerHTML=`
     <div class="tbar">
       <div class="tsearch"><input placeholder="Suchen in ${cfg.data.length} Einträgen…" data-role="q"></div>
+      ${cfg.plzKey?`<input data-role="plz" placeholder="PLZ…" style="width:76px;background:var(--bg2);border:1px solid var(--line);border-radius:99px;padding:7px 12px;font-size:13px;font-family:inherit;color:var(--tx);outline:none">`:''}
+      <div data-role="sels" style="display:flex;gap:6px;flex-wrap:wrap"></div>
       <div data-role="chips" style="display:flex;gap:6px;flex-wrap:wrap"></div>
       <div style="flex:1"></div>
+      <span data-role="fcount" style="font-size:11.5px;color:var(--tx2)"></span>
+      <button class="tbtn" data-role="clr" style="display:none">✕ Filter</button>
       <button class="tbtn" data-role="exp">↓ Export</button>
     </div>
     <div class="twrap"><table class="dt"><thead></thead><tbody></tbody></table></div>
@@ -474,6 +478,25 @@ function DataTable(cfg){
   };
   container.querySelector('[data-role=prev]').onclick=()=>{if(st.page>0){st.page--;render();}};
   container.querySelector('[data-role=next]').onclick=()=>{st.page++;render();};
+  if(cfg.plzKey){ const pEl=container.querySelector('[data-role=plz]');
+    let pdeb; pEl.addEventListener('input',()=>{clearTimeout(pdeb);pdeb=setTimeout(()=>{st.plz=pEl.value.trim();st.page=0;render();},140)}); }
+  if(cfg.selects){ const wrap=container.querySelector('[data-role=sels]');
+    cfg.selects.forEach(sc=>{
+      const uniq=[...new Set(cfg.data.map(d=>String(sc.get?sc.get(d):d[sc.k]??'').trim()).filter(v=>v&&v!=='—'))].sort((a,b)=>a.localeCompare(b,'de'));
+      if(uniq.length<2) return;
+      const sel=document.createElement('select');
+      sel.style.cssText='background:var(--bg2);border:1px solid var(--line);border-radius:99px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--tx);font-family:inherit;outline:none;cursor:pointer;max-width:150px';
+      sel.innerHTML=`<option value="">${esc(sc.label)}: Alle</option>`+uniq.map(v=>`<option>${esc(v)}</option>`).join('');
+      sel.onchange=()=>{ st.sel[sc.k]=sel.value; st.page=0; render(); };
+      wrap.appendChild(sel);
+    });
+  }
+  container.querySelector('[data-role=clr]').onclick=()=>{
+    st.q=''; st.plz=''; st.sel={}; st.filter=null; st.page=0;
+    qEl.value=''; const pEl=container.querySelector('[data-role=plz]'); if(pEl)pEl.value='';
+    container.querySelectorAll('[data-role=sels] select').forEach(x=>x.value='');
+    container.querySelectorAll('[data-role=chips] .chip').forEach((c,i)=>c.classList.toggle('on',i===0));
+    render(); };
   if(cfg.filters){
     const wrap=container.querySelector('[data-role=chips]');
     const all=document.createElement('div'); all.className='chip on'; all.textContent='Alle';
@@ -488,6 +511,8 @@ function DataTable(cfg){
   function filtered(){
     let rows=cfg.data;
     if(st.filter&&cfg.filters) rows=rows.filter(d=>String(cfg.filters.get?cfg.filters.get(d):d[cfg.filters.key]||'').includes(st.filter));
+    if(cfg.selects) for(const sc of cfg.selects){ const v=st.sel[sc.k]; if(v) rows=rows.filter(d=>String(sc.get?sc.get(d):d[sc.k]??'').trim()===v); }
+    if(cfg.plzKey&&st.plz) rows=rows.filter(d=>String(d[cfg.plzKey]||'').startsWith(st.plz));
     if(st.q){ const q=st.q; rows=rows.filter(d=>cfg.search.some(k=>String(d[k]||'').toLowerCase().includes(q))); }
     if(st.sort){ const c=cfg.cols.find(x=>x.k===st.sort);
       rows=[...rows].sort((a,b)=>{ let va=a[st.sort],vb=b[st.sort];
@@ -510,6 +535,9 @@ function DataTable(cfg){
       return `<td>${v}</td>`;}).join('')+'</tr>').join('');
     if(cfg.onRow) tbody.querySelectorAll('tr').forEach(tr=>tr.onclick=()=>cfg.onRow(slice[+tr.dataset.ri]));
     container.querySelector('[data-role=info]').textContent=`${fmtN(rows.length)} Einträge`;
+    const active=(st.q?1:0)+(st.plz?1:0)+(st.filter?1:0)+Object.values(st.sel).filter(Boolean).length;
+    container.querySelector('[data-role=fcount]').textContent=active?`${active} Filter aktiv · ${fmtN(rows.length)} Treffer`:'';
+    container.querySelector('[data-role=clr]').style.display=active?'':'none';
     container.querySelector('[data-role=pg]').textContent=`${st.page+1} / ${pages}`;
     container.querySelector('[data-role=prev]').disabled=st.page===0;
     container.querySelector('[data-role=next]').disabled=st.page>=pages-1;
@@ -695,6 +723,7 @@ function buildDashboard(el){
       <div class="kpi"><div class="glow" style="background:var(--purple)"></div><div class="lbl">Aktive Pipeline</div><div class="val" data-count="${actV}">0</div><div class="sub">${act.length} Deals</div></div>
       <div class="kpi"><div class="glow" style="background:var(--orange)"></div><div class="lbl">Ø Marge</div><div class="val">${Math.round(margeAvg*100)}%</div><div class="sub">über alle Deals</div></div>
       <div class="kpi"><div class="glow" style="background:var(--red)"></div><div class="lbl">Prio-A Kunden</div><div class="val">${prioA}</div><div class="sub">von ${fmtN(K.length)} im CRM</div></div>
+      <div class="kpi" style="cursor:pointer" onclick="Views.show('termine')"><div class="glow" style="background:var(--pink)"></div><div class="lbl">Termine diese Woche</div><div class="val">${termineOfWeek(weekStartOf(new Date()).toISOString().slice(0,10)).length} / ${WOCHENZIEL_MIN}</div><div class="sub">Wochenziel ${WOCHENZIEL_MIN}–${WOCHENZIEL_MAX} → planen</div></div>
     </div>
     <div class="grid2">
       <div class="card"><div class="card-h"><h3>💼 Pipeline nach Segment</h3><span class="sub">aktive Deals</span></div><div class="card-b">
@@ -772,6 +801,7 @@ function buildPipeline(el){
     body.appendChild(DataTable({id:'pipeTable',data:P,exportName:'Pipeline',
       search:['co','seg','kt','fleet','status','next'],
       filters:{key:'_st',values:['WON','OFFERTE','FOLLOW-UP','TO OFFER','OPPORTUNITY','LOST'],get:d=>pStatus(d)},
+      selects:[{k:'kt',label:'Kanton'},{k:'seg',label:'Segment'}],
       cols:[
         {k:'co',label:'Kunde'},{k:'seg',label:'Segment'},{k:'kt',label:'Kt'},
         {k:'fleet',label:'Leistung'},{k:'kw',label:'kW'},
@@ -832,18 +862,23 @@ function buildDC(el){
     tabEl.querySelectorAll('button').forEach(b=>b.onclick=()=>{cur=b.dataset.t;renderTabs();renderBody();}); }
   function renderBody(){ bodyEl.innerHTML='';
     if(cur==='betreiber') bodyEl.appendChild(DataTable({id:'dcb',data:DCB,exportName:'DC_Betreiber',search:['co','kt','typ','status'],
+      selects:[{k:'kt',label:'Kanton'},{k:'typ',label:'Typ'},{k:'prio',label:'Prio'}],
       cols:[{k:'co',label:'Betreiber'},{k:'typ',label:'Typ'},{k:'kt',label:'Kt'},{k:'itmw',label:'IT-MW'},{k:'status',label:'Status 2026'},{k:'ausbau',label:'Ausbau 26-28'},{k:'notstrom',label:'Notstrom'},{k:'prio',label:'Prio MiT'}],
       onRow:d=>Drawer.open(d.co,`${kv('Typ',esc(d.typ))}${kv('Eigentümer',esc(d.eigen))}${kv('Adresse',esc(d.adr))}${kv('Kanton',esc(d.kt))}${kv('IT-MW',esc(d.itmw))}${kv('Status',esc(d.status))}${kv('Ausbau',esc(d.ausbau))}${kv('Notstrom',esc(d.notstrom))}${kv('Kühlung',esc(d.kuehl))}${kv('HVO',esc(d.hvo))}${kv('PQ Kl.A',esc(d.pq))}${kv('Ansprechpartner',esc(d.ap))}${kv('Kontakt',esc(d.kontakt))}${kv('Priorität',esc(d.prio))}${kv('Bemerkung',esc(d.bem))}${relatedHTML(d.co)}`)}));
     if(cur==='projekte') bodyEl.appendChild(DataTable({id:'dcp',data:DCP,exportName:'DC_Bauprojekte',search:['projekt','bauherr','gu','betreiber','kt'],
+      selects:[{k:'kt',label:'Kanton'},{k:'prio',label:'Prio'},{k:'status',label:'Status'}],
       cols:[{k:'projekt',label:'Projekt'},{k:'kt',label:'Kt'},{k:'bauherr',label:'Bauherr'},{k:'gu',label:'GU/TU'},{k:'baustart',label:'Baustart',fmt:v=>fmtD(v)},{k:'itmw',label:'IT-MW'},{k:'chf',label:'MiT-Potential',fmt:v=>fmtCHF(v)},{k:'prio',label:'Prio'},{k:'status',label:'Status'}],
       onRow:d=>Drawer.open(d.projekt,`${kv('Status MiT',esc(d.status))}${kv('Verantwortlich',esc(d.verantw))}${kv('Adresse',esc(d.adr))}${kv('Bauherr',esc(d.bauherr))}${kv('GU / TU',esc(d.gu))}${kv('Architektur',esc(d.arch))}${kv('Gebäudetechnik',esc(d.gt))}${kv('Betreiber',esc(d.betreiber))}${kv('Typ',esc(d.typ))}${kv('Bedarf',esc(d.bedarf))}${kv('Baustart',esc(fmtD(d.baustart)))}${kv('IBN',esc(fmtD(d.ibn)))}${kv('Invest',fmtCHF(d.invest))}${kv('IT-MW',esc(d.itmw))}${kv('MiT-Produkte',esc(d.prod))}${kv('CHF-Potential',`<b>${fmtCHF(d.chf)}</b>`)}${kv('Kontakt',esc(d.kontakt))}${kv('Nächste Aktion',esc(d.next))}${kv('Anmerkung',esc(d.anm))}`)}));
-    if(cur==='standorte') bodyEl.appendChild(DataTable({id:'dcs',data:DCS,exportName:'DC_Standorte',search:['name','betreiber','ort','kt'],
+    if(cur==='standorte') bodyEl.appendChild(DataTable({id:'dcs',data:DCS,exportName:'DC_Standorte',search:['name','betreiber','ort','kt'],plzKey:'plz',
+      selects:[{k:'kt',label:'Kanton'},{k:'status',label:'Status'},{k:'prio',label:'Prio'},{k:'betreiber',label:'Betreiber'}],
       cols:[{k:'code',label:'Code'},{k:'betreiber',label:'Betreiber'},{k:'name',label:'Standort'},{k:'ort',label:'Ort'},{k:'kt',label:'Kt'},{k:'itmw',label:'IT-MW'},{k:'tier',label:'Tier'},{k:'entf',label:'Entf. km'},{k:'prio',label:'Prio'}],
       onRow:d=>Drawer.open(d.name||d.code,`${kv('Betreiber',esc(d.betreiber))}${kv('Adresse',esc(d.strasse)+', '+esc(d.plz)+' '+esc(d.ort))}${kv('IT-MW',esc(d.itmw))}${kv('Status',esc(d.status))}${kv('Tier',esc(d.tier))}${kv('Entfernung Thayngen',esc(d.entf)+' km')}${kv('GPS',esc(d.gps))}${kv('Priorität',esc(d.prio))}${kv('Besonderheit',esc(d.bes))}`)}));
     if(cur==='kontakte') bodyEl.appendChild(DataTable({id:'dck',data:DCK,exportName:'DC_Kontakte',search:['co','name','funk','fokus'],
+      selects:[{k:'prio',label:'Prio'},{k:'status',label:'Status'},{k:'seg',label:'Segment'}],
       cols:[{k:'name',label:'Name'},{k:'co',label:'Unternehmen'},{k:'funk',label:'Funktion'},{k:'prio',label:'Prio'},{k:'status',label:'Status'},{k:'fokus',label:'Produkt-Fokus'},{k:'next',label:'Nächste Aktion'}],
       onRow:d=>openDCK(d._i)}));
     if(cur==='markt'){ bodyEl.appendChild(DataTable({id:'dcm',data:DCM,exportName:'DC_Marktanalyse',search:['projekt','ort','gu'],
+      selects:[{k:'statusK',label:'Status'},{k:'prio',label:'Prio'},{k:'naehe',label:'Nähe'}],
       cols:[{k:'projekt',label:'Projekt/Betreiber'},{k:'ort',label:'Standort'},{k:'km',label:'km'},{k:'mw',label:'MW'},{k:'statusK',label:'Status'},{k:'gu',label:'GU'},{k:'opp',label:'MiT-Opportunität'},{k:'score',label:'Score'},{k:'prio',label:'Prio'}],
       onRow:d=>Drawer.open(d.projekt,`${kv('Standort',esc(d.ort))}${kv('Entfernung',esc(d.km)+' km')}${kv('Leistung',esc(d.mw)+' MW')}${kv('Status',esc(d.statusK)+' — '+esc(d.statusD))}${kv('Nähe-Klasse',esc(d.naehe))}${kv('GU/Partner',esc(d.gu))}${kv('Opportunität',esc(d.opp))}${kv('Score',esc(d.score))}${kv('Nächster Schritt',esc(d.next))}${kv('Notizen',esc(d.notiz))}`)}));
       const mkCard=document.createElement('div'); mkCard.className='card';
@@ -879,7 +914,7 @@ function buildGlobal(el){
   el.innerHTML=`<div class="hero"><h1>Global-Projekte</h1><p>${fmtN(GP.rows.length)} Projekte weltweit · ${fmtN(GK.rows.length)} Kontakte — Aggreko-Pipeline-Daten</p></div>`;
   el.appendChild(DataTable({id:'gp',data:gpData,exportName:'Global_Projekte',pageSize:50,
     search:['name','land','firma','sektor'],
-    filters:{key:'land',values:['U.S.A.','Germany','Ireland','United Kingdom','Netherlands','Switzerland']},
+    selects:[{k:'land',label:'Land'},{k:'sektor',label:'Sektor'},{k:'phase',label:'Phase'},{k:'status',label:'Status'}],
     cols:[{k:'name',label:'Projekt'},{k:'wert',label:'Wert $',fmt:v=>v?'$ '+fmtN(v):'—'},{k:'sektor',label:'Sektor'},
       {k:'phase',label:'Phase'},{k:'status',label:'Status'},{k:'land',label:'Land'},{k:'start',label:'Baustart'},{k:'firma',label:'Hauptfirma'}],
     onRow:d=>openGP(d._i)}));
@@ -889,6 +924,7 @@ function buildGlobalK(el){
   el.innerHTML=`<div class="hero"><h1>Global-Kontakte</h1><p>${fmtN(GK.rows.length)} Projekt-Kontakte weltweit</p></div>`;
   el.appendChild(DataTable({id:'gk',data:gkData,exportName:'Global_Kontakte',pageSize:50,
     search:['vn','nn','funk','firma','proj','land'],
+    selects:[{k:'land',label:'Land'},{k:'stadt',label:'Stadt'}],
     cols:[{k:'nn',label:'Name',fmt:(v,d)=>esc((d.vn||'')+' '+(v||''))},{k:'funk',label:'Funktion'},{k:'firma',label:'Firma'},
       {k:'mail',label:'E-Mail',fmt:v=>v?`<a href="mailto:${esc(v)}" onclick="event.stopPropagation()" style="color:var(--blue)">${esc(v)}</a>`:'—'},
       {k:'tel',label:'Telefon'},{k:'stadt',label:'Stadt'},{k:'land',label:'Land'},{k:'proj',label:'Projekt'}],
@@ -901,7 +937,8 @@ Views.add('pipeline','Pipeline','Übersicht','◉',P.length,buildPipeline);
 Views.add('forecast','Forecast & Ziele','Übersicht','◈',null,buildForecast);
 Views.add('kunden','Kunden-CRM','Vertrieb','◎',K.length,tableView('Kunden-CRM',`${K.length} Zielkunden mit Akquise-Status`,{
   id:'kundenT',data:K,exportName:'Kunden_CRM',search:['co','ort','ap','seg','status','prod'],
-  filters:{key:'prio',values:['A','B','C']},
+  filters:{key:'prio',values:['A','B','C']},plzKey:'plz',
+  selects:[{k:'kt',label:'Kanton'},{k:'seg',label:'Segment'},{k:'status',label:'Status'}],
   cols:[{k:'prio',label:'Prio',fmt:v=>`<span class="badge ${v==='A'?'b-red':v==='B'?'b-orange':'b-gray'}">${esc(v||'—')}</span>`},
     {k:'co',label:'Firma'},{k:'seg',label:'Segment'},{k:'ort',label:'Ort'},{k:'kt',label:'Kt'},
     {k:'ap',label:'Ansprechpartner'},{k:'status',label:'Status'},{k:'kva',label:'Bedarf'},
@@ -909,6 +946,7 @@ Views.add('kunden','Kunden-CRM','Vertrieb','◎',K.length,tableView('Kunden-CRM'
   onRow:d=>openKunde(d._i)},'<button class="tbtn primary" onclick="kundeNewDialog()">＋ Neuer Kunde</button>'));
 Views.add('kartei','Kundenkartei','Vertrieb','▤',KA.length,tableView('Kundenkartei',`${KA.length} CH-Kunden & Kontakte`,{
   id:'karteiT',data:KA,exportName:'Kundenkartei',search:['co','ap','seg','kt','verantw'],
+  selects:[{k:'kt',label:'Kanton'},{k:'seg',label:'Segment'},{k:'mit',label:'MiT Strom'},{k:'verantw',label:'Verantwortlich'}],
   cols:[{k:'co',label:'Kunde'},{k:'seg',label:'Segment'},{k:'kt',label:'Kt'},{k:'verantw',label:'Verantwortlich'},
     {k:'ap',label:'Ansprechperson'},{k:'tel',label:'Telefon'},{k:'mit',label:'MiT Strom'},{k:'pstatus',label:'Pipeline'}],
   onRow:d=>openKartei(d._i)}));
@@ -1158,6 +1196,7 @@ function collectEvents(){
     items.push({d:dd.toISOString().slice(0,10),t:a.aktion||a.co,s:'Akquise · '+(a.co||''),c:'#ff9500',fn:()=>Views.show('akquise')}); });
   K.forEach(k=>{ const f=ovGet('K',k._i).fup??k.fup; const dd=toDate(f);
     if(dd) items.push({d:dd.toISOString().slice(0,10),t:'Follow-up: '+k.co,s:'CRM · '+(k.status||''),c:'#5ac8fa',ref:{type:'kfup',i:k._i},fn:()=>openKunde(k._i)}); });
+  TERMINE.forEach(t=>{ if(t.datum) items.push({d:t.datum,t:(t.done?'✓ ':'')+t.zeit+' '+t.kunde,s:'Termin · '+(t.typ||''),c:t.done?'#8e8e93':'#ff2d55',done:t.done,ref:{type:'termin',id:t.id},fn:()=>Views.show('termine')}); });
   return items.sort((a,b)=>a.d.localeCompare(b.d));
 }
 /* Drag&Drop: Termin auf neuen Tag ziehen */
@@ -1168,6 +1207,7 @@ window.calMove=function(refJson,iso){
   else if(ref.type==='pstart'){ const p=PROJECTS.find(x=>x.id===ref.pid); if(p){ p.start=iso; projLog(p,'📅 Start verschoben auf '+iso); projSave(); } }
   else if(ref.type==='pende'){ const p=PROJECTS.find(x=>x.id===ref.pid); if(p){ p.ende=iso; projLog(p,'📅 Ende verschoben auf '+iso); projSave(); } }
   else if(ref.type==='dealfup'){ const d=P.find(x=>x._i===ref.i); if(d){ d.fup=iso; if(d._new){const ex=EXTRA.deals[d._xi];if(ex)ex.fup=iso;extraSave();} else ovSet('P',ref.i,{fup:iso}); } }
+  else if(ref.type==='termin'){ termMove(ref.id,iso); return; }
   else if(ref.type==='kfup'){ const k=K.find(x=>x._i===ref.i); if(k){ k.fup=iso; if(k._new){const ex=EXTRA.kunden[k._xi];if(ex)ex.fup=iso;extraSave();} else ovSet('K',ref.i,{fup:iso}); } }
   else return;
   toast('📅 Verschoben auf '+fmtD(iso));
@@ -1218,9 +1258,10 @@ function buildKalender(el){
       <button class="tbtn" onclick="calToday()">Heute</button>
       <div style="flex:1"></div>
       <div class="seg-ctl"><button class="${calMode==='monat'?'on':''}" onclick="calSetMode('monat')">Monat</button><button class="${calMode==='woche'?'on':''}" onclick="calSetMode('woche')">Woche</button><button class="${calMode==='agenda'?'on':''}" onclick="calSetMode('agenda')">Agenda</button></div>
+      <button class="tbtn primary" onclick="termNewDialog()">＋ Termin</button>
       <button class="tbtn" onclick="calICS()" title="Für Outlook/Apple/Google Kalender">📆 .ics</button>
       <div style="display:flex;gap:10px;font-size:11px;color:var(--tx2);flex-wrap:wrap">
-        <span>🔵 Milestones</span><span>🟢 Start</span><span>🟣 Follow-ups</span><span>🟠 Akquise</span></div>
+        <span>🔴 Termine</span><span>🔵 Milestones</span><span>🟢 Start</span><span>🟣 Follow-ups</span><span>🟠 Akquise</span></div>
     </div><div id="calBody"></div>`;
   const body=el.querySelector('#calBody');
   if(calMode==='agenda'){
@@ -1777,6 +1818,126 @@ document.addEventListener('paste',e=>{
     const f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0]; if(f)importFile(f); });
 })();
 
+/* ═══════════════ TERMINPLANUNG — Wochenziel 5–7 · Outlook-Export ═══════════════ */
+const TERM_KEY='one_termine_v1';
+let TERMINE=[]; try{TERMINE=JSON.parse(localStorage.getItem(TERM_KEY)||'[]')}catch(e){}
+const termSave=()=>{ localStorage.setItem(TERM_KEY,JSON.stringify(TERMINE)); try{if(window.Spot)Spot.idx=null;}catch(e){} };
+const WOCHENZIEL_MIN=5, WOCHENZIEL_MAX=7;
+function weekStartOf(d){ const x=new Date(d.getFullYear(),d.getMonth(),d.getDate()); x.setDate(x.getDate()-((x.getDay()+6)%7)); return x; }
+function weekKeyOf(iso){ const d=toDate(iso); if(!d)return ''; const ws=weekStartOf(d); return ws.toISOString().slice(0,10); }
+function termineOfWeek(wkStartIso){ return TERMINE.filter(t=>weekKeyOf(t.datum)===wkStartIso).sort((a,b)=>(a.datum+a.zeit).localeCompare(b.datum+b.zeit)); }
+window.termNewDialog=(preDate)=>{
+  const kunden=[...new Set([...KA.map(k=>k.co),...K.map(k=>k.co)])].filter(Boolean).slice(0,900);
+  Drawer.open('＋ Termin planen',`
+    <div class="fld"><label>Kunde / Firma *</label><input id="tm-kunde" list="tm-kl" placeholder="Tippen zum Suchen…"><datalist id="tm-kl">${kunden.map(k=>`<option value="${esc(k)}">`).join('')}</datalist></div>
+    <div class="form-grid">
+      <div class="fld"><label>Datum *</label><input id="tm-datum" type="date" value="${preDate||today()}"></div>
+      <div class="fld"><label>Uhrzeit</label><input id="tm-zeit" type="time" value="09:00"></div>
+      <div class="fld"><label>Dauer</label><select id="tm-dauer"><option value="30">30 Min.</option><option value="60" selected>1 Std.</option><option value="90">1.5 Std.</option><option value="120">2 Std.</option></select></div>
+      <div class="fld"><label>Typ</label><select id="tm-typ"><option>Besuch vor Ort</option><option>Teams-Call</option><option>Telefontermin</option><option>Messe/Event</option></select></div>
+    </div>
+    <div class="fld"><label>Betreff</label><input id="tm-betreff" placeholder="z.B. Vorstellung MiT Temporärstrom"></div>
+    <div class="fld"><label>Ort / Link</label><input id="tm-ort" placeholder="Adresse oder Teams-Link"></div>
+    <div class="fld"><label>Notiz</label><textarea id="tm-notiz"></textarea></div>
+    <button class="tbtn primary" style="width:100%;justify-content:center;padding:11px" onclick="termCreate()">✓ Termin einplanen</button>`);
+  const kInp=document.getElementById('tm-kunde');
+  kInp.addEventListener('change',()=>{ const b=document.getElementById('tm-betreff');
+    if(b&&!b.value) b.value='MiT Strom — Termin mit '+kInp.value; });
+};
+window.termCreate=()=>{
+  const g=x=>document.getElementById(x).value.trim();
+  if(!g('tm-kunde')||!g('tm-datum')){ toast('⚠ Kunde und Datum sind Pflicht'); return; }
+  TERMINE.push({id:uid8(),kunde:g('tm-kunde'),datum:g('tm-datum'),zeit:g('tm-zeit')||'09:00',
+    dauer:+document.getElementById('tm-dauer').value||60,typ:document.getElementById('tm-typ').value,
+    betreff:g('tm-betreff')||('MiT Strom — '+g('tm-kunde')),ort:g('tm-ort'),notiz:g('tm-notiz'),done:false,created:new Date().toISOString()});
+  termSave(); Drawer.close(); toast('📅 Termin eingeplant');
+  Views.rerender('termine'); Views.rerender('kalender'); Views.rerender('dashboard');
+};
+window.termDel=id=>{ TERMINE=TERMINE.filter(t=>t.id!==id); termSave(); toast('Termin gelöscht'); Views.rerender('termine'); Views.rerender('kalender'); };
+window.termDone=id=>{ const t=TERMINE.find(x=>x.id===id); if(t){t.done=!t.done;termSave();Views.rerender('termine');Views.rerender('kalender');} };
+window.termMove=(id,iso)=>{ const t=TERMINE.find(x=>x.id===id); if(t){t.datum=iso;termSave();toast('📅 Termin → '+fmtD(iso));Views.rerender('termine');Views.rerender('kalender');} };
+/* ── Outlook: .ics mit Uhrzeiten (VEVENT mit DTSTART/DTEND lokal) ── */
+function icsForTermine(list,name){
+  const pad=n=>String(n).padStart(2,'0');
+  const stamp=new Date().toISOString().replace(/[-:.]/g,'').slice(0,15)+'Z';
+  const lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//MiT ONE//Terminplanung//DE','CALSCALE:GREGORIAN','METHOD:PUBLISH'];
+  list.forEach(t=>{
+    const [h,mi]=(t.zeit||'09:00').split(':').map(Number);
+    const d0=toDate(t.datum); if(!d0)return;
+    const start=new Date(d0.getFullYear(),d0.getMonth(),d0.getDate(),h,mi);
+    const end=new Date(start.getTime()+(t.dauer||60)*60000);
+    const fmt=x=>x.getFullYear()+pad(x.getMonth()+1)+pad(x.getDate())+'T'+pad(x.getHours())+pad(x.getMinutes())+'00';
+    lines.push('BEGIN:VEVENT','UID:mitone-term-'+t.id+'@mitone','DTSTAMP:'+stamp,
+      'DTSTART:'+fmt(start),'DTEND:'+fmt(end),
+      'SUMMARY:'+String(t.betreff||t.kunde).replace(/[\n,;]/g,' '),
+      'LOCATION:'+String(t.ort||'').replace(/[\n,;]/g,' '),
+      'DESCRIPTION:'+String((t.typ||'')+(t.notiz?' — '+t.notiz:'')).replace(/[\n,;]/g,' '),
+      'STATUS:CONFIRMED','BEGIN:VALARM','TRIGGER:-PT30M','ACTION:DISPLAY','DESCRIPTION:Erinnerung','END:VALARM','END:VEVENT');
+  });
+  lines.push('END:VCALENDAR');
+  const b=new Blob([lines.join('\r\n')],{type:'text/calendar;charset=utf-8'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(b);
+  a.download=(name||'MiT_Termine')+'.ics'; a.click(); URL.revokeObjectURL(a.href);
+}
+window.termICSweek=wk=>{ const list=termineOfWeek(wk).filter(t=>!t.done);
+  if(!list.length){toast('⚠ Keine offenen Termine in der Woche');return;}
+  icsForTermine(list,'MiT_Woche_'+wk); toast('📆 '+list.length+' Termine → Outlook-Datei (.ics) — doppelklicken zum Importieren'); };
+window.termICSone=id=>{ const t=TERMINE.find(x=>x.id===id); if(t){icsForTermine([t],'Termin_'+norm(t.kunde).slice(0,18)); toast('📆 Termin als .ics — in Outlook öffnen');} };
+/* ── Terminplanung-View ── */
+function buildTermine(el){
+  const thisWk=weekStartOf(new Date()).toISOString().slice(0,10);
+  const nextWk=new Date(weekStartOf(new Date()).getTime()+7*864e5).toISOString().slice(0,10);
+  const wkLbl=w=>{ const d=toDate(w); const e=new Date(d.getTime()+4*864e5);
+    return `${d.getDate()}.${d.getMonth()+1}. – ${e.getDate()}.${e.getMonth()+1}.${e.getFullYear()}`; };
+  const weekBlock=(wk,title)=>{
+    const list=termineOfWeek(wk);
+    const n=list.filter(t=>!t.done).length+list.filter(t=>t.done).length;
+    const pct=Math.min(100,Math.round(n/WOCHENZIEL_MIN*100));
+    const zielOk=n>=WOCHENZIEL_MIN;
+    const DAYS=['Mo','Di','Mi','Do','Fr','Sa','So'];
+    return `<div class="card"><div class="card-h"><h3>${title}</h3><span class="sub">${wkLbl(wk)}</span>
+      <div style="flex:1"></div>
+      <span class="badge ${zielOk?'b-green':n>0?'b-orange':'b-gray'}">${n} / ${WOCHENZIEL_MIN}–${WOCHENZIEL_MAX} Termine</span>
+      <button class="tbtn" onclick="termICSweek('${wk}')">📆 → Outlook</button></div>
+      <div class="card-b" style="padding-top:12px">
+      <div class="prow" style="margin-bottom:14px"><div class="pbar" style="height:9px"><div style="width:${pct}%;background:${zielOk?'linear-gradient(90deg,var(--green),#30d158)':'linear-gradient(90deg,var(--blue),var(--teal))'}"></div></div>
+      <b>${zielOk?'✓ Wochenziel erreicht':pct+'%'}</b></div>
+      ${list.length?list.map(t=>{ const d=toDate(t.datum);
+        return `<div class="ms-row ${t.done?'done':''}">
+        <div class="ms-chk ${t.done?'on':''}" onclick="termDone('${t.id}')">${t.done?'✓':''}</div>
+        <span style="width:34px;font-size:11px;font-weight:700;color:var(--tx2)">${DAYS[(d.getDay()+6)%7]} ${d.getDate()}.</span>
+        <span style="width:44px;font-size:12px;font-weight:700">${esc(t.zeit)}</span>
+        <div class="mt2" style="min-width:0"><span>${esc(t.kunde)}</span>
+          <span style="font-weight:400;color:var(--tx2);font-size:11.5px"> · ${esc(t.typ)}${t.ort?' · '+esc(t.ort):''}</span></div>
+        <button class="tbtn" style="padding:4px 10px;font-size:11px" onclick="termICSone('${t.id}')">📆</button>
+        <button class="del ms-row" style="border:none;background:none" onclick="termDel('${t.id}')">✕</button>
+      </div>`;}).join(''):'<div class="empty" style="padding:18px">Noch keine Termine — «＋ Termin» oder Vorschläge unten nutzen</div>'}
+      </div></div>`;
+  };
+  /* Vorschläge: Prio-A-Kunden ohne Termin */
+  const geplant=new Set(TERMINE.map(t=>norm(t.kunde)));
+  const vorschlaege=K.filter(k=>String(k.prio).trim()==='A'&&!geplant.has(norm(k.co))).slice(0,6);
+  el.innerHTML=`<div class="hero" style="display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap">
+    <div style="flex:1"><h1>Terminplanung</h1><p>Wochenziel: ${WOCHENZIEL_MIN}–${WOCHENZIEL_MAX} Kundentermine · Export direkt in deinen Outlook-Kalender</p></div>
+    <button class="tbtn primary" onclick="termNewDialog()">＋ Termin</button></div>
+    <div class="grid2">${weekBlock(thisWk,'📌 Diese Woche')}${weekBlock(nextWk,'📅 Nächste Woche')}</div>
+    <div class="card"><div class="card-h"><h3>💡 Termin-Vorschläge</h3><span class="sub">Prio-A-Kunden ohne geplanten Termin</span></div>
+      <div class="card-b" style="padding:8px 12px">
+      ${vorschlaege.length?vorschlaege.map(k=>`<div class="linkcard" style="display:flex;align-items:center;gap:12px">
+        <div style="flex:1" onclick="openKunde(${k._i})"><div class="t">${esc(k.co)}</div><div class="s">${esc(k.ort||'')} ${esc(k.kt||'')} · ${esc(k.seg||'')}${k.tel?' · '+esc(k.tel):''}</div></div>
+        <button class="tbtn primary" style="padding:5px 14px;font-size:12px" onclick="termNewDialog();setTimeout(()=>{document.getElementById('tm-kunde').value=${JSON.stringify(String(k.co))};document.getElementById('tm-betreff').value='MiT Strom — Termin mit '+${JSON.stringify(String(k.co))}},60)">＋ Einplanen</button>
+      </div>`).join(''):'<div class="empty" style="padding:16px">Alle Prio-A-Kunden haben Termine 💪</div>'}
+      </div></div>
+    <div class="card"><div class="card-h"><h3>🗂 Alle geplanten Termine (${TERMINE.length})</h3>
+      <div style="flex:1"></div><button class="tbtn" onclick="icsForTermine(TERMINE.filter(t=>!t.done),'MiT_Alle_Termine');toast('📆 Alle offenen Termine als .ics')">📆 Alle → Outlook</button></div>
+      <div class="card-b" style="padding-top:6px;max-height:300px;overflow-y:auto">
+      ${TERMINE.length?[...TERMINE].sort((a,b)=>(a.datum+a.zeit).localeCompare(b.datum+b.zeit)).map(t=>
+        `<div class="kvrow"><span class="k">${fmtD(t.datum)} ${esc(t.zeit)}</span><span class="v">${t.done?'✓ ':''}${esc(t.kunde)} <span style="color:var(--tx2);font-weight:400">· ${esc(t.typ)}</span></span></div>`).join('')
+      :'<div class="empty" style="padding:14px">—</div>'}
+      </div></div>`;
+}
+Views.add('termine','Terminplanung','Vertrieb','◷',null,buildTermine);
+
 /* ═══════════════ SIDEBAR BUILD ═══════════════ */
 (function(){
   const sb=$('sidebar'); const groups={};
@@ -1807,6 +1968,7 @@ const Spot={
       ...DCB.map(d=>({g:'Data Center',t:d.co,s:'Betreiber · '+(d.kt||''),fn:()=>{Views.show('dc');}})),
       ...DCK.map(d=>({g:'DC-Kontakte',t:d.name,s:(d.co||''),fn:()=>openDCK(d._i)})),
       ...PROJECTS.map(p=>({g:'Projekte',t:p.name,s:(p.status||'')+' · '+(p.kunde||''),fn:()=>projOpen(p.id)})),
+      ...TERMINE.map(t=>({g:'Termine',t:t.kunde,s:fmtD(t.datum)+' '+t.zeit+' · '+(t.typ||''),fn:()=>Views.show('termine')})),
     ];
   },
   render(q){ this.buildIdx(); this.sel=0;
