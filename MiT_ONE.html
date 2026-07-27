@@ -1856,16 +1856,38 @@ window.termSuggest=i=>{
   },80);
 };
 /* ⚡ AUTO-PLANUNG: füllt die Woche automatisch mit den besten Kandidaten */
-window.termAutoPlan=wk=>{
+/* Gewichteter Zufall: hoher Score = höhere Chance, aber jedes Mal ein anderer Mix */
+function weightedShuffle(cands){
+  const pool=cands.slice(0,44);            /* Top-Pool: gut genug, aber genug Auswahl */
+  const out=[]; const rest=[...pool];
+  while(rest.length){
+    let total=rest.reduce((s2,c)=>s2+c.s,0);
+    let r=Math.random()*total;
+    let idx=0;
+    for(let i=0;i<rest.length;i++){ r-=rest[i].s; if(r<=0){idx=i;break;} }
+    out.push(rest.splice(idx,1)[0]);
+  }
+  return out.concat(cands.slice(44));
+}
+window.termAutoPlan=(wk,reshuffle)=>{
+  if(reshuffle){
+    /* Nur automatisch geplante, noch offene Termine der Woche neu würfeln — manuelle bleiben */
+    const before=TERMINE.length;
+    TERMINE=TERMINE.filter(t=>!(t.auto&&!t.done&&weekKeyOf(t.datum)===wk));
+    if(TERMINE.length<before) termSave();
+  }
   const geplant=new Set(TERMINE.map(t=>norm(t.kunde)));
   const score=k=>{ const pr=String(k.prio||'').trim();
     return (pr==='A'?100:pr==='B'?50:10)+(+k.wert>0?25:0)+(+k.fc>0?15:0)+(k.tel?5:0)+(k.next?5:0); };
-  const cands=K.filter(k=>k.co&&!geplant.has(norm(k.co))).map(k=>({k,s:score(k)})).sort((a,b)=>b.s-a.s);
+  const ranked=K.filter(k=>k.co&&!geplant.has(norm(k.co))).map(k=>({k,s:score(k)})).sort((a,b)=>b.s-a.s);
+  const cands=weightedShuffle(ranked);     /* 🎲 jedes Mal ein anderer Mix */
   const existing=termineOfWeek(wk).length;
-  const ziel=6; const need=Math.max(0,ziel-existing);
-  if(!need){ toast('✓ Woche ist bereits voll geplant ('+existing+' Termine)'); return; }
+  const ziel=6+Math.round(Math.random());  /* mal 6, mal 7 — im Wochenziel 5–7 */
+  const need=Math.max(0,ziel-existing);
+  if(!need){ toast('✓ Woche voll ('+existing+' Termine) — «🎲 Neu würfeln» tauscht die Auto-Termine'); return; }
   const ws=toDate(wk); const slots=[];
-  for(let d=0;d<5;d++){ for(const z of ['09:00','14:00']){
+  /* Verteilung über die Woche: erst Mo–Fr je 09:00, dann Mo–Fr je 14:00, 11:00 nur als Überlauf */
+  for(const z of ['09:00','14:00','11:00']){ for(let d=0;d<5;d++){
     const dt=new Date(ws.getFullYear(),ws.getMonth(),ws.getDate()+d);
     const iso=dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
     if(!TERMINE.some(t=>t.datum===iso&&t.zeit===z)) slots.push({iso,z});
@@ -1956,7 +1978,8 @@ function buildTermine(el){
     return `<div class="card"><div class="card-h"><h3>${title}</h3><span class="sub">${wkLbl(wk)}</span>
       <div style="flex:1"></div>
       <span class="badge ${zielOk?'b-green':n>0?'b-orange':'b-gray'}">${n} / ${WOCHENZIEL_MIN}–${WOCHENZIEL_MAX} Termine</span>
-      <button class="tbtn primary" onclick="termAutoPlan('${wk}')" title="Beste Prio-A/B-Kandidaten automatisch auf Mo–Fr 09:00/14:00 verteilen — mit Begründung">⚡ Auto-Planen</button>
+      <button class="tbtn primary" onclick="termAutoPlan('${wk}')" title="Beste Prio-A/B-Kandidaten per gewichtetem Zufall auf Mo–Fr verteilen — mit Begründung">⚡ Auto-Planen</button>
+      ${list.some(t=>t.auto&&!t.done)?`<button class="tbtn" onclick="termAutoPlan('${wk}',true)" title="Auto-Termine dieser Woche verwerfen und neue Kandidaten würfeln — manuelle Termine bleiben">🎲 Neu würfeln</button>`:''}
       <button class="tbtn" onclick="termICSweek('${wk}')">📆 → Outlook</button></div>
       <div class="card-b" style="padding-top:12px">
       <div class="prow" style="margin-bottom:14px"><div class="pbar" style="height:9px"><div style="width:${pct}%;background:${zielOk?'linear-gradient(90deg,var(--green),#30d158)':'linear-gradient(90deg,var(--blue),var(--teal))'}"></div></div>
@@ -1974,14 +1997,17 @@ function buildTermine(el){
       </div>`;}).join(''):'<div class="empty" style="padding:18px">Noch keine Termine — «＋ Termin» oder Vorschläge unten nutzen</div>'}
       </div></div>`;
   };
-  /* Vorschläge: Prio-A-Kunden ohne Termin */
+  /* Vorschläge: Prio-A-Kunden ohne Termin — zufällig gemischt, 🎲 mischt neu */
   const geplant=new Set(TERMINE.map(t=>norm(t.kunde)));
-  const vorschlaege=K.filter(k=>String(k.prio).trim()==='A'&&!geplant.has(norm(k.co))).slice(0,6);
+  const vsPool=K.filter(k=>String(k.prio).trim()==='A'&&!geplant.has(norm(k.co)));
+  for(let i=vsPool.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [vsPool[i],vsPool[j]]=[vsPool[j],vsPool[i]]; }
+  const vorschlaege=vsPool.slice(0,6);
   el.innerHTML=`<div class="hero" style="display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap">
     <div style="flex:1"><h1>Terminplanung</h1><p>Wochenziel: ${WOCHENZIEL_MIN}–${WOCHENZIEL_MAX} Kundentermine · ⚡ Auto-Planen füllt die Woche mit Begründung · Export direkt nach Outlook</p></div>
     <button class="tbtn primary" onclick="termNewDialog()">＋ Termin</button></div>
     <div class="grid2">${weekBlock(thisWk,'📌 Diese Woche')}${weekBlock(nextWk,'📅 Nächste Woche')}</div>
-    <div class="card"><div class="card-h"><h3>💡 Termin-Vorschläge</h3><span class="sub">Prio-A-Kunden ohne geplanten Termin</span></div>
+    <div class="card"><div class="card-h"><h3>💡 Termin-Vorschläge</h3><span class="sub">${vsPool.length} Prio-A-Kunden ohne Termin — zufällige Auswahl</span>
+      <div style="flex:1"></div><button class="tbtn" onclick="Views.rerender('termine')" title="Andere 6 Kandidaten anzeigen">🎲 Neu mischen</button></div>
       <div class="card-b" style="padding:8px 12px">
       ${vorschlaege.length?vorschlaege.map(k=>`<div class="linkcard" style="display:flex;align-items:center;gap:12px">
         <div style="flex:1;min-width:0" onclick="openKunde(${k._i})"><div class="t">${esc(k.co)}</div><div class="s">${esc(k.ort||'')} ${esc(k.kt||'')} · ${esc(k.seg||'')}${k.tel?' · '+esc(k.tel):''}</div>
