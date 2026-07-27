@@ -1196,7 +1196,7 @@ function collectEvents(){
     items.push({d:dd.toISOString().slice(0,10),t:a.aktion||a.co,s:'Akquise · '+(a.co||''),c:'#ff9500',fn:()=>Views.show('akquise')}); });
   K.forEach(k=>{ const f=ovGet('K',k._i).fup??k.fup; const dd=toDate(f);
     if(dd) items.push({d:dd.toISOString().slice(0,10),t:'Follow-up: '+k.co,s:'CRM · '+(k.status||''),c:'#5ac8fa',ref:{type:'kfup',i:k._i},fn:()=>openKunde(k._i)}); });
-  TERMINE.forEach(t=>{ if(t.datum) items.push({d:t.datum,t:(t.done?'✓ ':'')+t.zeit+' '+t.kunde,s:'Termin · '+(t.typ||''),c:t.done?'#8e8e93':'#ff2d55',done:t.done,ref:{type:'termin',id:t.id},fn:()=>Views.show('termine')}); });
+  TERMINE.forEach(t=>{ if(t.datum) items.push({d:t.datum,t:(t.done?'✓ ':'')+t.zeit+' '+t.kunde,s:'Termin · '+(t.typ||''),c:t.done?'#8e8e93':'#ff2d55',done:t.done,ref:{type:'termin',id:t.id},fn:()=>termOpen(t.id)}); });
   return items.sort((a,b)=>a.d.localeCompare(b.d));
 }
 /* Drag&Drop: Termin auf neuen Tag ziehen */
@@ -1822,6 +1822,19 @@ document.addEventListener('paste',e=>{
 const TERM_KEY='one_termine_v1';
 let TERMINE=[]; try{TERMINE=JSON.parse(localStorage.getItem(TERM_KEY)||'[]')}catch(e){}
 const termSave=()=>{ localStorage.setItem(TERM_KEY,JSON.stringify(TERMINE)); try{if(window.Spot)Spot.idx=null;}catch(e){} };
+/* Sperrliste: einmal exportierte/genommene Kunden kommen nicht wieder in Auto-Planung & Vorschläge */
+const HIST_KEY='one_besucht_v1';
+let BESUCHT=[]; try{BESUCHT=JSON.parse(localStorage.getItem(HIST_KEY)||'[]')}catch(e){}
+const histSave=()=>localStorage.setItem(HIST_KEY,JSON.stringify(BESUCHT));
+const histSet=()=>new Set(BESUCHT.map(b=>norm(b.kunde)));
+function histAdd(t){ if(!BESUCHT.some(b=>norm(b.kunde)===norm(t.kunde)))
+  BESUCHT.push({kunde:t.kunde,datum:t.datum,zeit:t.zeit,am:new Date().toISOString().slice(0,10)}); }
+window.histRemove=i=>{ BESUCHT.splice(i,1); histSave(); toast('Aus Sperrliste entfernt'); Views.rerender('termine'); };
+window.histClear=()=>{ if(!confirm(BESUCHT.length+' Einträge aus der Sperrliste löschen? Diese Kunden können danach wieder vorgeschlagen werden.'))return;
+  BESUCHT=[]; histSave(); toast('Sperrliste geleert'); Views.rerender('termine'); };
+function markExported(list){ let n=0;
+  list.forEach(t=>{ if(!t.exported){t.exported=true;t.exportedAt=new Date().toISOString().slice(0,10);n++;} histAdd(t); });
+  termSave(); histSave(); Views.rerender('termine'); Views.rerender('kalender'); return n; }
 const WOCHENZIEL_MIN=5, WOCHENZIEL_MAX=7;
 function weekStartOf(d){ const x=new Date(d.getFullYear(),d.getMonth(),d.getDate()); x.setDate(x.getDate()-((x.getDay()+6)%7)); return x; }
 function weekKeyOf(iso){ const d=toDate(iso); if(!d)return ''; const ws=weekStartOf(d); return ws.toISOString().slice(0,10); }
@@ -1871,12 +1884,12 @@ function weightedShuffle(cands){
 }
 window.termAutoPlan=(wk,reshuffle)=>{
   if(reshuffle){
-    /* Nur automatisch geplante, noch offene Termine der Woche neu würfeln — manuelle bleiben */
+    /* Nur automatisch geplante, offene und NICHT exportierte Termine neu würfeln */
     const before=TERMINE.length;
-    TERMINE=TERMINE.filter(t=>!(t.auto&&!t.done&&weekKeyOf(t.datum)===wk));
+    TERMINE=TERMINE.filter(t=>!(t.auto&&!t.done&&!t.exported&&weekKeyOf(t.datum)===wk));
     if(TERMINE.length<before) termSave();
   }
-  const geplant=new Set(TERMINE.map(t=>norm(t.kunde)));
+  const geplant=new Set([...TERMINE.map(t=>norm(t.kunde)),...histSet()]);
   const score=k=>{ const pr=String(k.prio||'').trim();
     return (pr==='A'?100:pr==='B'?50:10)+(+k.wert>0?25:0)+(+k.fc>0?15:0)+(k.tel?5:0)+(k.next?5:0); };
   const ranked=K.filter(k=>k.co&&!geplant.has(norm(k.co))).map(k=>({k,s:score(k)})).sort((a,b)=>b.s-a.s);
@@ -1933,6 +1946,40 @@ window.termCreate=()=>{
   termSave(); Drawer.close(); toast('📅 Termin eingeplant');
   Views.rerender('termine'); Views.rerender('kalender'); Views.rerender('dashboard');
 };
+/* Termin-Detailfenster: alles sehen + Wann/Wo/Notizen direkt ändern */
+window.termOpen=id=>{
+  const t=TERMINE.find(x=>x.id===id); if(!t)return;
+  const k=K.find(x=>norm(x.co)===norm(t.kunde));
+  Drawer.open(t.kunde,`
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
+      ${t.exported?'<span class="badge b-green">📤 Exportiert '+esc(t.exportedAt||'')+'</span>':''}
+      ${t.done?'<span class="badge b-gray">✓ Erledigt</span>':'<span class="badge b-blue">Offen</span>'}
+      ${t.auto?'<span class="badge b-purple">⚡ Auto-geplant</span>':''}
+    </div>
+    <div class="dr-sec">Wann</div>
+    <div class="form-grid">
+      <div class="fld"><label>Datum</label><input type="date" value="${esc(t.datum)}" onchange="termSet('${t.id}','datum',this.value)"></div>
+      <div class="fld"><label>Uhrzeit</label><input type="time" value="${esc(t.zeit)}" onchange="termSet('${t.id}','zeit',this.value)"></div>
+      <div class="fld"><label>Dauer (Min.)</label><input type="number" min="15" step="15" value="${t.dauer||60}" onchange="termSet('${t.id}','dauer',+this.value)"></div>
+      <div class="fld"><label>Typ</label><select onchange="termSet('${t.id}','typ',this.value)">${['Besuch vor Ort','Teams-Call','Telefontermin','Messe/Event'].map(x=>`<option ${x===t.typ?'selected':''}>${x}</option>`).join('')}</select></div>
+    </div>
+    <div class="dr-sec">Wo</div>
+    <div class="fld"><input value="${esc(t.ort||'')}" placeholder="Adresse oder Teams-Link" onchange="termSet('${t.id}','ort',this.value)"></div>
+    <div class="dr-sec">Betreff</div>
+    <div class="fld"><input value="${esc(t.betreff||'')}" onchange="termSet('${t.id}','betreff',this.value)"></div>
+    <div class="dr-sec">📝 Meine Notizen</div>
+    <div class="fld"><textarea rows="5" placeholder="Gesprächsnotizen, Vorbereitung, Ergebnis…" onchange="termSet('${t.id}','eigeneNotiz',this.value)">${esc(t.eigeneNotiz||'')}</textarea></div>
+    ${t.notiz?`<div class="dr-sec">Begründung (automatisch)</div><div style="font-size:12px;color:var(--tx2);line-height:1.6;background:var(--bg2);border-radius:10px;padding:10px 12px">${esc(t.notiz)}</div>`:''}
+    ${k?`<div class="dr-sec">Kunde im CRM</div>${linkRow(k.co,[k.ap,k.tel].filter(Boolean).join(' · ')||'CRM öffnen',`openKunde(${k._i})`)}`:''}
+    <div style="display:flex;gap:8px;margin-top:18px;flex-wrap:wrap">
+      <button class="tbtn primary" style="flex:1;justify-content:center" onclick="termICSone('${t.id}')">📆 → Outlook</button>
+      <button class="tbtn" style="flex:1;justify-content:center" onclick="termDone('${t.id}');termOpen('${t.id}')">${t.done?'↺ Wieder öffnen':'✓ Erledigt'}</button>
+      <button class="tbtn" style="color:var(--red)" onclick="termDel('${t.id}');Drawer.close()">🗑</button>
+    </div>`);
+};
+window.termSet=(id,k2,v)=>{ const t=TERMINE.find(x=>x.id===id); if(!t)return;
+  t[k2]=v; termSave(); toast('✓ Gespeichert');
+  Views.rerender('termine'); Views.rerender('kalender'); };
 window.termDel=id=>{ TERMINE=TERMINE.filter(t=>t.id!==id); termSave(); toast('Termin gelöscht'); Views.rerender('termine'); Views.rerender('kalender'); };
 window.termDone=id=>{ const t=TERMINE.find(x=>x.id===id); if(t){t.done=!t.done;termSave();Views.rerender('termine');Views.rerender('kalender');} };
 window.termMove=(id,iso)=>{ const t=TERMINE.find(x=>x.id===id); if(t){t.datum=iso;termSave();toast('📅 Termin → '+fmtD(iso));Views.rerender('termine');Views.rerender('kalender');} };
@@ -1961,8 +2008,9 @@ function icsForTermine(list,name){
 }
 window.termICSweek=wk=>{ const list=termineOfWeek(wk).filter(t=>!t.done);
   if(!list.length){toast('⚠ Keine offenen Termine in der Woche');return;}
-  icsForTermine(list,'MiT_Woche_'+wk); toast('📆 '+list.length+' Termine → Outlook-Datei (.ics) — doppelklicken zum Importieren'); };
-window.termICSone=id=>{ const t=TERMINE.find(x=>x.id===id); if(t){icsForTermine([t],'Termin_'+norm(t.kunde).slice(0,18)); toast('📆 Termin als .ics — in Outlook öffnen');} };
+  icsForTermine(list,'MiT_Woche_'+wk); markExported(list);
+  toast('📆 '+list.length+' Termine → Outlook · Kunden in Sperrliste (kommen nicht mehr vor)'); };
+window.termICSone=id=>{ const t=TERMINE.find(x=>x.id===id); if(t){icsForTermine([t],'Termin_'+norm(t.kunde).slice(0,18)); markExported([t]); toast('📆 Termin → Outlook · '+t.kunde+' gesperrt');} };
 /* ── Terminplanung-View ── */
 function buildTermine(el){
   const thisWk=weekStartOf(new Date()).toISOString().slice(0,10);
@@ -1989,7 +2037,7 @@ function buildTermine(el){
         <div class="ms-chk ${t.done?'on':''}" onclick="termDone('${t.id}')">${t.done?'✓':''}</div>
         <span style="width:34px;font-size:11px;font-weight:700;color:var(--tx2)">${DAYS[(d.getDay()+6)%7]} ${d.getDate()}.</span>
         <span style="width:44px;font-size:12px;font-weight:700">${esc(t.zeit)}</span>
-        <div class="mt2" style="min-width:0"><span>${esc(t.kunde)}</span>${t.auto?' <span class="badge b-purple" style="font-size:9px;padding:1px 6px">⚡ auto</span>':''}
+        <div class="mt2" style="min-width:0;cursor:pointer" onclick="termOpen('${t.id}')"><span>${esc(t.kunde)}</span>${t.exported?' <span class="badge b-green" style="font-size:9px;padding:1px 6px">📤</span>':''}${t.auto?' <span class="badge b-purple" style="font-size:9px;padding:1px 6px">⚡ auto</span>':''}${t.eigeneNotiz?' <span title="Notiz vorhanden">📝</span>':''}
           <span style="font-weight:400;color:var(--tx2);font-size:11.5px"> · ${esc(t.typ)}${t.ort?' · '+esc(t.ort):''}</span>
           ${t.notiz?`<div style="font-weight:400;color:var(--tx2);font-size:10.5px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(t.notiz)}">${esc(String(t.notiz).slice(0,110))}</div>`:''}</div>
         <button class="tbtn" style="padding:4px 10px;font-size:11px" onclick="termICSone('${t.id}')">📆</button>
@@ -1998,7 +2046,7 @@ function buildTermine(el){
       </div></div>`;
   };
   /* Vorschläge: Prio-A-Kunden ohne Termin — zufällig gemischt, 🎲 mischt neu */
-  const geplant=new Set(TERMINE.map(t=>norm(t.kunde)));
+  const geplant=new Set([...TERMINE.map(t=>norm(t.kunde)),...histSet()]);
   const vsPool=K.filter(k=>String(k.prio).trim()==='A'&&!geplant.has(norm(k.co)));
   for(let i=vsPool.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [vsPool[i],vsPool[j]]=[vsPool[j],vsPool[i]]; }
   const vorschlaege=vsPool.slice(0,6);
@@ -2015,11 +2063,19 @@ function buildTermine(el){
         <button class="tbtn primary" style="padding:5px 14px;font-size:12px" onclick="termSuggest(${k._i})">＋ Einplanen</button>
       </div>`).join(''):'<div class="empty" style="padding:16px">Alle Prio-A-Kunden haben Termine 💪</div>'}
       </div></div>
+    <div class="card"><div class="card-h"><h3>🚫 Sperrliste — bereits genommene Kunden (${BESUCHT.length})</h3>
+      <span class="sub">kommen in Auto-Planung & Vorschlägen nicht mehr vor</span>
+      <div style="flex:1"></div>${BESUCHT.length?`<button class="tbtn" onclick="histClear()">Alle freigeben</button>`:''}</div>
+      <div class="card-b" style="padding-top:6px;max-height:220px;overflow-y:auto">
+      ${BESUCHT.length?BESUCHT.map((b,i)=>`<div class="kvrow"><span class="k">${esc(fmtD(b.datum))} ${esc(b.zeit||'')}</span>
+        <span class="v">${esc(b.kunde)} <button class="tbtn" style="padding:2px 10px;font-size:10.5px;margin-left:8px" onclick="histRemove(${i})">freigeben</button></span></div>`).join('')
+      :'<div class="empty" style="padding:14px">Noch keine — Kunden landen hier automatisch nach dem Outlook-Export</div>'}
+      </div></div>
     <div class="card"><div class="card-h"><h3>🗂 Alle geplanten Termine (${TERMINE.length})</h3>
-      <div style="flex:1"></div><button class="tbtn" onclick="icsForTermine(TERMINE.filter(t=>!t.done),'MiT_Alle_Termine');toast('📆 Alle offenen Termine als .ics')">📆 Alle → Outlook</button></div>
+      <div style="flex:1"></div><button class="tbtn" onclick="(function(){const l=TERMINE.filter(t=>!t.done);if(!l.length){toast('⚠ Keine offenen Termine');return;}icsForTermine(l,'MiT_Alle_Termine');markExported(l);toast('📆 '+l.length+' Termine → Outlook · Kunden gesperrt');})()">📆 Alle → Outlook</button></div>
       <div class="card-b" style="padding-top:6px;max-height:300px;overflow-y:auto">
       ${TERMINE.length?[...TERMINE].sort((a,b)=>(a.datum+a.zeit).localeCompare(b.datum+b.zeit)).map(t=>
-        `<div class="kvrow"><span class="k">${fmtD(t.datum)} ${esc(t.zeit)}</span><span class="v">${t.done?'✓ ':''}${esc(t.kunde)} <span style="color:var(--tx2);font-weight:400">· ${esc(t.typ)}</span></span></div>`).join('')
+        `<div class="kvrow" style="cursor:pointer" onclick="termOpen('${t.id}')"><span class="k">${fmtD(t.datum)} ${esc(t.zeit)}</span><span class="v">${t.done?'✓ ':''}${t.exported?'📤 ':''}${esc(t.kunde)} <span style="color:var(--tx2);font-weight:400">· ${esc(t.typ)}</span>${t.eigeneNotiz?' 📝':''}</span></div>`).join('')
       :'<div class="empty" style="padding:14px">—</div>'}
       </div></div>`;
 }
