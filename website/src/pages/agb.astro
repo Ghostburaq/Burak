@@ -1,0 +1,110 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import DraftBanner from '../components/DraftBanner.astro';
+import { site } from '../lib/site';
+---
+
+<BaseLayout
+  title="Allgemeine Geschäftsbedingungen"
+  description="Entwurf der AGB für Messungen, Analysen, Beratung und Gutachten."
+  path="/agb"
+  current=""
+>
+  <article class="prose-plain mx-auto max-w-prose text-ink-800">
+    <h1 class="text-3xl font-semibold text-ink-900">Allgemeine Geschäftsbedingungen (Entwurf)</h1>
+    <DraftBanner text="Entwurf. Rechtswahl, Gerichtsstand, Haftungsbegrenzung und steuerliche Angaben sind vor Live-Gang zwingend mit einem Anwalt und einem Treuhänder/Steuerberater abzustimmen." />
+
+    <h2>1. Geltungsbereich</h2>
+    <p>
+      Diese Allgemeinen Geschäftsbedingungen (AGB) gelten für alle Verträge zwischen {site.owner},
+      {site.address.street}, {site.address.zip} {site.address.city}, {site.address.country} („Auftragnehmer“) und
+      dem Auftraggeber über Leistungen im Bereich Netzqualitäts- und EMV-Messungen, -Analysen, -Beratung und
+      -Gutachten. Abweichende oder entgegenstehende Bedingungen des Auftraggebers gelten nur, wenn sie
+      ausdrücklich schriftlich anerkannt wurden.
+    </p>
+
+    <h2>2. Vertragsgegenstand</h2>
+    <p>
+      Gegenstand des Vertrages ist die im Angebot oder in der Auftragsbestätigung konkret beschriebene Leistung.
+      Der Auftragnehmer schuldet die fachgerechte Durchführung der Messung bzw. Analyse und einen nachvollziehbar
+      dokumentierten Bericht; ein bestimmter wirtschaftlicher Erfolg wird nicht geschuldet.
+    </p>
+
+    <h2>3. Mitwirkungspflichten des Auftraggebers</h2>
+    <ul>
+      <li>Rechtzeitige Bereitstellung aller für die Leistung erforderlichen Informationen (Anlagenschema,
+        Betriebsdaten, Zugangsdaten, Ansprechpartner).</li>
+      <li>Sicherer und ungehinderter Zugang zu den Messstellen; Einweisung in einschlägige Sicherheitsvorschriften
+        vor Ort.</li>
+      <li>Benennung einer verantwortlichen Elektrofachkraft für Schalthandlungen, sofern erforderlich.</li>
+      <li>Rechtzeitige Mitteilung sicherheits- oder ergebnisrelevanter Änderungen am Untersuchungsobjekt.</li>
+    </ul>
+
+    <h2>4. Termine, Absage, Verhinderung</h2>
+    <p>
+      Termine werden verbindlich vereinbart. Sagt der Auftraggeber einen bestätigten Vor-Ort-Termin weniger als
+      fünf Werktage vor Beginn ab, kann der bereits entstandene Aufwand (u. a. Reservierung, Anreiseplanung) in
+      Rechnung gestellt werden. <em>TODO: Frist und Pauschale mit Anwalt abstimmen.</em>
+    </p>
+
+    <h2>5. Vergütung und Zahlungsbedingungen</h2>
+    <p>
+      Die Vergütung richtet sich nach dem Angebot oder der Auftragsbestätigung. Zahlungen sind, sofern nicht
+      anders vereinbart, innerhalb von 30 Tagen nach Rechnungsstellung ohne Abzug fällig. Reisezeit und
+      Reisekosten werden nach Vereinbarung abgerechnet.
+    </p>
+    <p>
+      <em>TODO (Steuern/MwSt): Die Behandlung der Umsatzsteuer bzw. der Schweizer MWST ist vor Vertragsabschluss
+      abschließend mit einem Treuhänder/Steuerberater zu klären. Bei B2B-Dienstleistungen an Schweizer Kunden
+      liegt der Leistungsort i. d. R. in der Schweiz (§ 3a Abs. 2 UStG); der pauschale Verweis auf § 19 UStG ist
+      dann inhaltlich unpassend. Zudem kann eine Schweizer MWST-Registrierungspflicht entstehen. Auf der Website
+      werden dazu keine Aussagen getroffen; die konkrete Regelung erfolgt im individuellen Angebot bzw. in der
+      Rechnung.</em>
+    </p>
+
+    <h2>6. Haftung</h2>
+    <p>
+      Der Auftragnehmer haftet nach den gesetzlichen Bestimmungen für Vorsatz und grobe Fahrlässigkeit sowie für
+      die Verletzung von Leben, Körper und Gesundheit. Für einfache Fahrlässigkeit haftet der Auftragnehmer nur
+      bei Verletzung einer wesentlichen Vertragspflicht (Kardinalpflicht) und begrenzt auf den bei Vertragsschluss
+      vorhersehbaren, typischerweise eintretenden Schaden.
+    </p>
+    <p>
+      <em>TODO: Konkrete Haftungshöchstsumme, Ausschluss von Folgeschäden, Verjährung und der Umgang mit
+      Gutachten/Beweissicherung sind mit einem Anwalt zu formulieren. Die Haftung für Empfehlungen setzt eine
+      korrekte Messgrundlage voraus; Empfehlungen ersetzen keine Ausführungsplanung durch eine hierzu
+      qualifizierte Fachperson.</em>
+    </p>
+
+    <h2>7. Vertraulichkeit</h2>
+    <p>
+      Der Auftragnehmer behandelt alle im Rahmen des Auftrags erlangten Informationen vertraulich und
+      verwendet sie ausschließlich zur Erfüllung des Vertrages. Eine Weitergabe an Dritte erfolgt nur mit
+      schriftlicher Zustimmung des Auftraggebers oder aufgrund gesetzlicher Verpflichtung.
+    </p>
+
+    <h2>8. Nutzungsrechte an Berichten</h2>
+    <p>
+      Berichte, Auswertungen und Gutachten dürfen vom Auftraggeber für die vereinbarten internen Zwecke sowie
+      zur Vorlage bei Netzbetreibern, Behörden oder Versicherern verwendet werden. Eine Veröffentlichung,
+      insbesondere in gekürzter oder veränderter Form, bedarf der schriftlichen Zustimmung des Auftragnehmers.
+    </p>
+
+    <h2>9. Rechtswahl und Gerichtsstand</h2>
+    <p>
+      <em>TODO: Bitte mit Anwalt festlegen — deutscher Anbieter, schweizerische Auftraggeber:
+      wahlweise deutsches Recht (BGB/HGB) mit Gerichtsstand am Sitz des Auftragnehmers oder Schweizer Recht (OR)
+      mit Gerichtsstand am Ort der Leistungserbringung. Eine Mischung ist zu vermeiden.</em>
+    </p>
+
+    <h2>10. Salvatorische Klausel</h2>
+    <p>
+      Sollten einzelne Bestimmungen dieser AGB unwirksam sein oder werden, bleibt die Wirksamkeit der übrigen
+      Bestimmungen hiervon unberührt.
+    </p>
+
+    <p class="mt-8 italic text-ink-500">
+      Stand: TODO. Diese AGB sind ein Entwurf und vor Live-Gang durch eine Fachperson zu prüfen.
+    </p>
+  </article>
+</BaseLayout>

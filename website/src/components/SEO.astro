@@ -1,0 +1,29 @@
+---
+import { site } from '../lib/site';
+
+interface Props {
+  title: string;
+  description: string;
+  path?: string;
+  jsonLd?: unknown;
+}
+const { title, description, path = '', jsonLd } = Astro.props;
+const canonical = new URL(path, Astro.site ?? `https://${site.domain}`).toString();
+const fullTitle = `${title} | ${site.brand}`;
+---
+
+<title>{fullTitle}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonical} />
+<meta property="og:title" content={fullTitle} />
+<meta property="og:description" content={description} />
+<meta property="og:type" content="website" />
+<meta property="og:url" content={canonical} />
+<meta property="og:site_name" content={site.brand} />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content={fullTitle} />
+<meta name="twitter:description" content={description} />
+
+{jsonLd && (
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)}></script>
+)}

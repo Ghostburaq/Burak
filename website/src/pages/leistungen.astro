@@ -1,0 +1,108 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SineDivider from '../components/SineDivider.astro';
+
+const services = [
+  {
+    id: 'pq-messung',
+    title: 'PQ-Messkampagne nach IEC 61000-4-30 Klasse A',
+    when: 'Wenn eine belastbare Aussage ueber die Spannungsqualitaet am Uebergabepunkt oder an einer Unterverteilung noetig ist &mdash; typischerweise ueber sieben Tage.',
+    what: 'Kontinuierliche Messung der Spannungsmerkmale (Frequenz, Spannungshoehe, Flicker, Unsymmetrie, Oberschwingungen, Ereignisse). Bewertung ueblicherweise mittels 95-Perzentil-Betrachtung im Bezugsrahmen EN 50160.',
+    outcome: 'Nachvollziehbarer Bericht mit Messkurven, Bewertung gegen den gewaehlten Bezugsrahmen und einer klaren Aussage: Ist die Netzqualitaet auffaellig, unauffaellig oder grenzwertig.',
+  },
+  {
+    id: 'en50160',
+    title: 'EN-50160-Konformitaetsbewertung',
+    when: 'Wenn zwischen Kunde und Netzbetreiber Klaerungsbedarf ueber die Einhaltung der Spannungsmerkmale am Uebergabepunkt besteht.',
+    what: 'Auswertung einer normkonformen Messung gegen die Merkmale der EN 50160, inklusive Einordnung von Ereignissen und Perzentil-Betrachtung.',
+    outcome: 'Konkrete Aussage zur Norm-Referenz &mdash; ohne Grauzone, ohne Wunschdenken. Grundlage fuer Gespraeche mit dem Netzbetreiber.',
+  },
+  {
+    id: 'stoerungsanalyse',
+    title: 'Stoerungs- und Ursachenanalyse',
+    when: 'Bei wiederkehrenden Symptomen wie Flicker, unerklaerten Ausloesungen von Schutzeinrichtungen, IT-Aussetzern, Antriebsstoerungen oder Verdacht auf Oberschwingungs- oder Resonanzprobleme.',
+    what: 'Systematische Suche nach der Ursache: Symptomaufnahme, Messplan, gezielte Messung an mehreren Punkten wenn noetig, Auswertung nach dem Prinzip Differentialdiagnose &mdash; erst Fakten trennen, dann Hypothesen ausschliessen.',
+    outcome: 'Begruendete Aussage zur wahrscheinlichsten Ursache mit klarer Angabe der Sicherheit &mdash; und Empfehlungen, was als Naechstes messtechnisch oder betrieblich zu klaeren ist. Keine Ursache wird behauptet, wo nur eine Korrelation belegt ist.',
+  },
+  {
+    id: 'emv-beratung',
+    title: 'EMV- und Installationsberatung',
+    when: 'Vor Beschaffung, Umbau oder Erweiterung, oder wenn EMV-Symptome (Datenfehler, Stoerungen in benachbarter Elektronik, Erdungsprobleme) auftreten.',
+    what: 'Beurteilung von Aufbau, Verkabelung, Schirmung, Erdung und Filterkonzept &mdash; im Kontext der geplanten oder bestehenden Anlage.',
+    outcome: 'Priorisierte Empfehlungen. Was muss gemacht werden, was hilft, was ist Zusatzaufwand ohne Nutzen.',
+  },
+  {
+    id: 'netzrueckwirkung',
+    title: 'Netzrueckwirkungs-Beurteilung',
+    when: 'Bei Anschluss oder Erweiterung nicht-linearer Verbraucher, Umrichter-Antriebe, Ladestationen, PV/BESS &mdash; oder wenn der Netzbetreiber eine Beurteilung verlangt.',
+    what: 'Beurteilung auf technischer Basis (Rahmen D-A-CH-CZ). Massgebend sind im Einzelfall stets die Werkvorschriften des zustaendigen Netzbetreibers.',
+    outcome: 'Aussagefaehige Grundlage fuer die Anmeldung beim Netzbetreiber und fuer die Auswahl von Filter- oder Kompensationsmassnahmen.',
+  },
+  {
+    id: 'gutachten',
+    title: 'Gutachten und Beweissicherung',
+    when: 'Wenn eine Messung als Beweismittel dienen soll &mdash; im Streitfall, fuer Versicherung, fuer Verhandlungen mit Netzbetreiber oder Hersteller.',
+    what: 'Rechtsfest dokumentierte Messung: Messaufbau, Geraetekonfiguration, Rohdaten, Auswertung, Fotos, Zeitachse. Formale Dokumentation, damit die Messung Bestand hat.',
+    outcome: 'Nachvollziehbares Gutachten. Trennt sauber zwischen gemessenem Befund und fachlicher Wuerdigung.',
+  },
+];
+---
+
+<BaseLayout
+  title="Leistungen"
+  description="PQ-Messungen nach IEC 61000-4-30 Klasse A, EN-50160-Bewertung, Stoerungs- und Ursachenanalyse, EMV-Beratung, Netzrueckwirkung, Gutachten."
+  path="/leistungen"
+  current="/leistungen"
+>
+  <header>
+    <p class="text-xs font-semibold uppercase tracking-widest text-accent">Leistungen</p>
+    <h1 class="mt-2 text-3xl font-semibold leading-tight text-ink-900 md:text-4xl">
+      Messung, Analyse, Beratung &mdash; sauber getrennt.
+    </h1>
+    <p class="mt-4 max-w-prose text-ink-700">
+      Jede Leistung mit klarer Antwort auf drei Fragen: Was wird gemacht, wann ist sie sinnvoll, was haben Sie
+      am Ende in der Hand. Kein Marketing-Sprech, keine Pauschalversprechen.
+    </p>
+  </header>
+
+  <SineDivider />
+
+  <div class="mt-10 space-y-10">
+    {services.map((s) => (
+      <article id={s.id} class="scroll-mt-24 rounded-lg border border-ink-200 bg-white p-6 md:p-8">
+        <h2 class="text-xl font-semibold text-ink-900 md:text-2xl">{s.title}</h2>
+        <dl class="mt-5 grid gap-5 md:grid-cols-3">
+          <div>
+            <dt class="text-xs font-semibold uppercase tracking-wider text-ink-500">Wann sinnvoll</dt>
+            <dd class="mt-1.5 text-sm leading-relaxed text-ink-800" set:html={s.when}></dd>
+          </div>
+          <div>
+            <dt class="text-xs font-semibold uppercase tracking-wider text-ink-500">Was gemacht wird</dt>
+            <dd class="mt-1.5 text-sm leading-relaxed text-ink-800" set:html={s.what}></dd>
+          </div>
+          <div>
+            <dt class="text-xs font-semibold uppercase tracking-wider text-ink-500">Was Sie erhalten</dt>
+            <dd class="mt-1.5 text-sm leading-relaxed text-ink-800" set:html={s.outcome}></dd>
+          </div>
+        </dl>
+      </article>
+    ))}
+  </div>
+
+  <aside class="mt-12 rounded-lg border border-ink-200 bg-ink-50 p-6 text-sm leading-relaxed text-ink-700">
+    <p>
+      <strong class="text-ink-900">Zu Zahlen und Grenzwerten:</strong> Konkrete Grenz- oder Perzentil-Werte werden im
+      Bericht immer gegen die im Einzelfall geltende Normfassung geprueft und dort ausgewiesen. Auf der Website nennen
+      wir Normen nur als Bezugsrahmen und verzichten bewusst auf pauschale Zahlenangaben.
+    </p>
+  </aside>
+
+  <div class="mt-10 flex flex-wrap gap-3">
+    <a href="/kontakt" class="inline-flex items-center rounded-md bg-ink-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-ink-800">
+      Anfrage stellen
+    </a>
+    <a href="/ablauf" class="inline-flex items-center rounded-md border border-ink-300 bg-white px-4 py-2.5 text-sm font-medium text-ink-800 hover:border-ink-500">
+      Ablauf einer Messung
+    </a>
+  </div>
+</BaseLayout>

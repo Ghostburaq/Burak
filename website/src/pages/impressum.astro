@@ -1,0 +1,92 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import DraftBanner from '../components/DraftBanner.astro';
+import { site } from '../lib/site';
+---
+
+<BaseLayout
+  title="Impressum"
+  description="Anbieterkennzeichnung nach § 5 DDG."
+  path="/impressum"
+  current=""
+>
+  <article class="prose-plain mx-auto max-w-prose text-ink-800">
+    <h1 class="text-3xl font-semibold text-ink-900">Impressum</h1>
+    <DraftBanner />
+
+    <p><strong>Angaben gemäß § 5 DDG (Digitale-Dienste-Gesetz):</strong></p>
+
+    <h2>Diensteanbieter</h2>
+    <p>
+      {site.owner}<br />
+      Einzelunternehmen (Kleingewerbe, keine Handelsregistereintragung)<br />
+      {site.address.street}<br />
+      {site.address.zip} {site.address.city}<br />
+      {site.address.country}
+    </p>
+
+    <h2>Kontakt</h2>
+    <p>
+      Telefon: {site.contact.phone}<br />
+      E-Mail: <a href={`mailto:${site.contact.email}`}>{site.contact.email}</a>
+    </p>
+
+    <h2>Umsatzsteuer</h2>
+    <p>
+      <em>TODO: Bitte prüfen. Ist eine Umsatzsteuer-Identifikationsnummer nach § 27a UStG vergeben? Falls
+      <strong>ja</strong>, hier eintragen. Falls <strong>nein</strong>, diese Zeile ersatzlos streichen — keine
+      erfundenen Nummern eintragen.</em>
+    </p>
+
+    <h2>Wirtschafts-Identifikationsnummer</h2>
+    <p>
+      <em>TODO: Nur eintragen, sofern tatsächlich vorhanden. Andernfalls Abschnitt streichen.</em>
+    </p>
+
+    <h2>Berufsrechtliche Angaben</h2>
+    <p>
+      <em>TODO: Falls die Berufsbezeichnung „Ingenieur“ geführt wird, sind je nach Bundesland zusätzliche Angaben
+      erforderlich (verleihender Staat, berufsrechtliche Regelungen, zuständige Kammer). Vor Live-Gang durch die
+      zuständige Ingenieurkammer bzw. eine Fachperson prüfen und ergänzen. Wird die Bezeichnung nicht geführt,
+      diesen Abschnitt streichen.</em>
+    </p>
+
+    <h2>Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV</h2>
+    <p>
+      {site.owner}, Anschrift wie oben.
+    </p>
+
+    <h2>Streitbeilegung</h2>
+    <p>
+      Zur Teilnahme an einem Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle sind wir nicht
+      verpflichtet und nicht bereit.
+    </p>
+    <p>
+      <em>TODO: Aktuellen Stand zur Online-Streitbeilegung prüfen. Die frühere EU-OS-Plattform wurde 2025
+      eingestellt; ein Link auf ec.europa.eu/consumers/odr darf nicht mehr eingebaut werden. Formulierung ggf. an
+      neue Rechtslage anpassen.</em>
+    </p>
+
+    <h2>Haftung für Inhalte</h2>
+    <p>
+      Als Diensteanbieter sind wir gemäß § 7 Abs. 1 DDG für eigene Inhalte auf diesen Seiten nach den allgemeinen
+      Gesetzen verantwortlich. Nach §§ 8 bis 10 DDG sind wir als Diensteanbieter jedoch nicht verpflichtet,
+      übermittelte oder gespeicherte fremde Informationen zu überwachen oder nach Umständen zu forschen, die auf
+      eine rechtswidrige Tätigkeit hinweisen.
+    </p>
+
+    <h2>Haftung für Links</h2>
+    <p>
+      Unser Angebot enthält gegebenenfalls Links zu externen Websites Dritter, auf deren Inhalte wir keinen
+      Einfluss haben. Deshalb können wir für diese fremden Inhalte auch keine Gewähr übernehmen. Für die Inhalte
+      der verlinkten Seiten ist stets der jeweilige Anbieter oder Betreiber der Seiten verantwortlich.
+    </p>
+
+    <h2>Urheberrecht</h2>
+    <p>
+      Die durch die Seitenbetreiber erstellten Inhalte und Werke auf diesen Seiten unterliegen dem deutschen
+      Urheberrecht. Vervielfältigung, Bearbeitung, Verbreitung und jede Art der Verwertung außerhalb der Grenzen
+      des Urheberrechts bedürfen der schriftlichen Zustimmung des jeweiligen Autors bzw. Erstellers.
+    </p>
+  </article>
+</BaseLayout>

@@ -1,0 +1,136 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import DraftBanner from '../components/DraftBanner.astro';
+import { site } from '../lib/site';
+---
+
+<BaseLayout
+  title="Datenschutzerklärung"
+  description="Datenschutzerklärung nach DSGVO mit Bezug zum revidierten Schweizer DSG (revDSG)."
+  path="/datenschutz"
+  current=""
+>
+  <article class="prose-plain mx-auto max-w-prose text-ink-800">
+    <h1 class="text-3xl font-semibold text-ink-900">Datenschutzerklärung</h1>
+    <DraftBanner />
+
+    <p>
+      Der Schutz Ihrer personenbezogenen Daten ist uns ein wichtiges Anliegen. Nachfolgend informieren wir Sie
+      über die Verarbeitung Ihrer Daten im Zusammenhang mit dem Besuch dieser Website und der Nutzung des
+      Kontaktformulars. Die Verarbeitung erfolgt in Übereinstimmung mit der Datenschutz-Grundverordnung (DSGVO)
+      der EU sowie ergänzend, soweit einschlägig, mit dem revidierten Schweizer Datenschutzgesetz (revDSG, in
+      Kraft seit 1. September 2023).
+    </p>
+
+    <h2>1. Verantwortliche Stelle</h2>
+    <p>
+      {site.owner}<br />
+      {site.address.street}<br />
+      {site.address.zip} {site.address.city}, {site.address.country}<br />
+      E-Mail: <a href={`mailto:${site.contact.email}`}>{site.contact.email}</a><br />
+      Telefon: {site.contact.phone}
+    </p>
+    <p>
+      <em>TODO: Prüfen, ob nach Art. 14 revDSG eine Vertretung in der Schweiz zu benennen ist. Für eine kleine
+      Beratungs-Website mit Kontaktformular in der Regel nicht der Fall — Prüfung dokumentieren, keine
+      Behauptung ohne Prüfung.</em>
+    </p>
+
+    <h2>2. Zugriffs- und Server-Logdaten</h2>
+    <p>
+      Beim Aufruf dieser Website erhebt der Hostinganbieter automatisch Informationen, die Ihr Browser übermittelt
+      (u. a. Datum und Uhrzeit des Zugriffs, aufgerufene Seite, übertragene Datenmenge, Referrer, User-Agent,
+      gekürzte IP-Adresse). Diese Daten werden zur Sicherstellung eines störungsfreien Betriebs und zur
+      Gewährleistung der Sicherheit verarbeitet.
+    </p>
+    <ul>
+      <li><strong>Rechtsgrundlage:</strong> Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an sicherem und
+        stabilem Betrieb).</li>
+      <li><strong>Speicherdauer:</strong> nach Standardvorgaben des Hosters; anschließend werden die Daten
+        gelöscht oder anonymisiert. <em>TODO: konkrete Speicherdauer nach Auswahl des Hosters ergänzen.</em></li>
+      <li><strong>Auftragsverarbeitung:</strong> Der Hoster verarbeitet die Daten im Auftrag auf Grundlage eines
+        Auftragsverarbeitungsvertrages (AVV) nach Art. 28 DSGVO. <em>TODO: Hoster benennen (z. B. Netlify,
+        Cloudflare Pages, Vercel) und Speicherort/Drittlandbezug angeben; ggf. Standardvertragsklauseln
+        erwähnen.</em></li>
+    </ul>
+
+    <h2>3. Kontaktformular und E-Mail-Kontakt</h2>
+    <p>
+      Wenn Sie uns über das Kontaktformular oder per E-Mail eine Anfrage senden, werden Ihre Angaben (Name,
+      Firma, E-Mail-Adresse, ggf. Telefonnummer, Ihre Nachricht) zum Zweck der Bearbeitung der Anfrage sowie für
+      den Fall von Anschlussfragen bei uns gespeichert.
+    </p>
+    <ul>
+      <li><strong>Rechtsgrundlage:</strong> Art. 6 Abs. 1 lit. b DSGVO (Anbahnung eines Vertragsverhältnisses)
+        bzw. Art. 6 Abs. 1 lit. a DSGVO (Einwilligung durch aktives Setzen des Häkchens am Formular).</li>
+      <li><strong>Speicherdauer:</strong> bis zur endgültigen Erledigung der Anfrage; anschließend gelten die
+        gesetzlichen Aufbewahrungsfristen (z. B. Handels- und Steuerrecht).</li>
+      <li><strong>Formular-Dienstleister:</strong> <em>TODO: Anbieter des Formular-Endpoints benennen (z. B.
+        Formspree, Netlify Forms, eigene Serverless Function). Sitz, Speicherort, Drittlandbezug und AVV/SCC
+        angeben.</em></li>
+    </ul>
+
+    <h2>4. Cookies und Tracking</h2>
+    <p>
+      Diese Website setzt keine Marketing- oder Tracking-Cookies. Es kommen ausschließlich technisch notwendige
+      Verarbeitungen zum Einsatz. Ein Cookie-Banner ist daher nicht erforderlich.
+    </p>
+    <p>
+      <em>TODO: Falls später doch Web-Analyse oder Cookies eingesetzt werden, sind die Anforderungen des
+      TDDDG (§ 25) sowie ggf. das Einholen einer Einwilligung zu beachten und dieser Abschnitt zu erweitern.</em>
+    </p>
+
+    <h2>5. Empfänger und Auftragsverarbeiter</h2>
+    <p>
+      Personenbezogene Daten werden ausschließlich an Auftragsverarbeiter weitergegeben, die zur Erbringung der
+      Website und der Kontaktverarbeitung notwendig sind (Hoster, Formular-Dienstleister, ggf. E-Mail-Provider).
+      Mit diesen bestehen Verträge nach Art. 28 DSGVO. Eine Datenübermittlung in Drittländer außerhalb des EWR
+      erfolgt nur auf Grundlage geeigneter Garantien (z. B. Standardvertragsklauseln der EU).
+    </p>
+
+    <h2>6. Ihre Rechte</h2>
+    <ul>
+      <li>Auskunft (Art. 15 DSGVO)</li>
+      <li>Berichtigung (Art. 16 DSGVO)</li>
+      <li>Löschung (Art. 17 DSGVO)</li>
+      <li>Einschränkung der Verarbeitung (Art. 18 DSGVO)</li>
+      <li>Datenübertragbarkeit (Art. 20 DSGVO)</li>
+      <li>Widerspruch (Art. 21 DSGVO)</li>
+      <li>Widerruf erteilter Einwilligungen mit Wirkung für die Zukunft (Art. 7 Abs. 3 DSGVO)</li>
+    </ul>
+    <p>
+      Für die Ausübung Ihrer Rechte genügt eine formlose Mitteilung an die oben genannte Adresse.
+    </p>
+
+    <h2>7. Beschwerderecht</h2>
+    <p>
+      Sie haben das Recht, sich bei einer Datenschutz-Aufsichtsbehörde über die Verarbeitung Ihrer
+      personenbezogenen Daten zu beschweren.
+    </p>
+    <ul>
+      <li><strong>Deutschland:</strong> zuständig ist die Datenschutzaufsicht des Bundeslandes, in dem der
+        Verantwortliche seinen Sitz hat. <em>TODO: Nach Eintrag der Adresse die zuständige Landesbehörde
+        einsetzen (z. B. LfDI Baden-Württemberg, BayLDA Bayern etc.).</em></li>
+      <li><strong>Schweiz:</strong> Eidgenössischer Datenschutz- und Öffentlichkeitsbeauftragter (EDÖB),
+        Feldeggweg 1, 3003 Bern.</li>
+    </ul>
+
+    <h2>8. Datensicherheit</h2>
+    <p>
+      Die Übertragung erfolgt verschlüsselt über HTTPS. Wir treffen technische und organisatorische Maßnahmen,
+      um Ihre Daten gegen zufällige oder vorsätzliche Manipulation, Verlust, Zerstörung oder gegen den Zugriff
+      unberechtigter Personen zu schützen.
+    </p>
+
+    <h2>9. Änderungen dieser Datenschutzerklärung</h2>
+    <p>
+      Wir behalten uns vor, diese Datenschutzerklärung anzupassen, damit sie stets den aktuellen rechtlichen
+      Anforderungen entspricht oder um Änderungen unserer Leistungen umzusetzen. Für Ihren erneuten Besuch gilt
+      dann die neue Datenschutzerklärung.
+    </p>
+
+    <p class="mt-8 italic text-ink-500">
+      Stand: TODO. Diese Erklärung ist ein Entwurf und vor Live-Gang durch eine Fachperson zu prüfen.
+    </p>
+  </article>
+</BaseLayout>

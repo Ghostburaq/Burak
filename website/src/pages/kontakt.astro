@@ -1,0 +1,118 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { site } from '../lib/site';
+
+const endpoint = site.contactEndpoint;
+---
+
+<BaseLayout
+  title="Kontakt"
+  description="Erstgespraech anfragen, Symptom beschreiben, Rueckruf vereinbaren. E-Mail und Telefon direkt sichtbar."
+  path="/kontakt"
+  current="/kontakt"
+>
+  <header>
+    <p class="text-xs font-semibold uppercase tracking-widest text-accent">Kontakt</p>
+    <h1 class="mt-2 text-3xl font-semibold leading-tight text-ink-900 md:text-4xl">
+      Kurz beschreiben, was das Symptom ist &mdash; der Rest ergibt sich im Gespraech.
+    </h1>
+  </header>
+
+  <div class="mt-10 grid gap-10 md:grid-cols-[1.4fr_1fr]">
+    <section aria-labelledby="form-heading" class="rounded-lg border border-ink-200 bg-white p-6 md:p-8">
+      <h2 id="form-heading" class="text-lg font-semibold text-ink-900">Anfrage</h2>
+      <p class="mt-2 text-sm text-ink-700">
+        Pflichtfelder mit <span aria-hidden="true">*</span> markiert. Ich melde mich in der Regel innerhalb von zwei
+        Werktagen.
+      </p>
+
+      {!endpoint && (
+        <p class="mt-4 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <strong>Hinweis:</strong> Der Formular-Endpoint ist noch nicht konfiguriert. Bis dahin greift der
+          <code class="rounded bg-amber-100 px-1">mailto:</code>-Fallback am Formular-Ende. TODO: Endpoint waehlen
+          (siehe <code>OFFENE_PUNKTE.md</code>).
+        </p>
+      )}
+
+      <form
+        method="POST"
+        action={endpoint || `mailto:${site.contact.email}`}
+        enctype={endpoint ? 'application/x-www-form-urlencoded' : 'text/plain'}
+        class="mt-6 space-y-5"
+        novalidate
+      >
+        <div class="grid gap-5 md:grid-cols-2">
+          <label class="block text-sm">
+            <span class="mb-1 block font-medium text-ink-800">Name <span aria-hidden="true" class="text-accent">*</span></span>
+            <input required name="name" autocomplete="name" class="block w-full rounded-md border border-ink-300 bg-white px-3 py-2 text-sm text-ink-900 shadow-sm focus:border-ink-500" />
+          </label>
+          <label class="block text-sm">
+            <span class="mb-1 block font-medium text-ink-800">Firma</span>
+            <input name="firma" autocomplete="organization" class="block w-full rounded-md border border-ink-300 bg-white px-3 py-2 text-sm text-ink-900 shadow-sm focus:border-ink-500" />
+          </label>
+          <label class="block text-sm">
+            <span class="mb-1 block font-medium text-ink-800">E-Mail <span aria-hidden="true" class="text-accent">*</span></span>
+            <input required type="email" name="email" autocomplete="email" class="block w-full rounded-md border border-ink-300 bg-white px-3 py-2 text-sm text-ink-900 shadow-sm focus:border-ink-500" />
+          </label>
+          <label class="block text-sm">
+            <span class="mb-1 block font-medium text-ink-800">Telefon (optional)</span>
+            <input type="tel" name="telefon" autocomplete="tel" class="block w-full rounded-md border border-ink-300 bg-white px-3 py-2 text-sm text-ink-900 shadow-sm focus:border-ink-500" />
+          </label>
+        </div>
+
+        <label class="block text-sm">
+          <span class="mb-1 block font-medium text-ink-800">Nachricht <span aria-hidden="true" class="text-accent">*</span></span>
+          <textarea required name="nachricht" rows="6" class="block w-full rounded-md border border-ink-300 bg-white px-3 py-2 text-sm text-ink-900 shadow-sm focus:border-ink-500" placeholder="Kurz: Symptom, Standort, seit wann, was bereits versucht wurde."></textarea>
+        </label>
+
+        <label class="flex items-start gap-3 text-sm text-ink-700">
+          <input required type="checkbox" name="einwilligung" class="mt-1 h-4 w-4 rounded border-ink-400 text-ink-900 focus:ring-ink-500" />
+          <span>
+            Ich willige ein, dass meine Angaben zur Bearbeitung meiner Anfrage verarbeitet werden. Details in der
+            <a href="/datenschutz" class="underline decoration-ink-300 underline-offset-4 hover:decoration-ink-700">Datenschutzerklaerung</a>.
+            Die Einwilligung kann jederzeit widerrufen werden.
+            <span aria-hidden="true" class="text-accent">*</span>
+          </span>
+        </label>
+
+        <div class="flex flex-wrap items-center gap-4">
+          <button type="submit" class="inline-flex items-center rounded-md bg-ink-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-ink-800">
+            Anfrage senden
+          </button>
+          <span class="text-xs text-ink-500">Keine Newsletter-Anmeldung. Keine Weitergabe an Dritte ausser den zur Bearbeitung noetigen Auftragsverarbeitern.</span>
+        </div>
+      </form>
+    </section>
+
+    <aside class="space-y-4">
+      <div class="rounded-lg border border-ink-200 bg-white p-6">
+        <h2 class="text-xs font-semibold uppercase tracking-wider text-ink-500">Direktkontakt</h2>
+        <dl class="mt-3 space-y-3 text-sm text-ink-800">
+          <div>
+            <dt class="text-ink-500">E-Mail</dt>
+            <dd><a class="underline decoration-ink-300 underline-offset-4 hover:decoration-ink-700" href={`mailto:${site.contact.email}`}>{site.contact.email}</a></dd>
+          </div>
+          <div>
+            <dt class="text-ink-500">Telefon</dt>
+            <dd><a class="underline decoration-ink-300 underline-offset-4 hover:decoration-ink-700" href={`tel:${site.contact.phone.replace(/\s+/g, '')}`}>{site.contact.phone}</a></dd>
+          </div>
+          <div>
+            <dt class="text-ink-500">Anschrift</dt>
+            <dd>
+              {site.owner}<br />
+              {site.address.street}<br />
+              {site.address.zip} {site.address.city}<br />
+              {site.address.country}
+            </dd>
+          </div>
+        </dl>
+      </div>
+      <div class="rounded-lg border border-ink-200 bg-ink-900 p-6 text-ink-100">
+        <h2 class="text-xs font-semibold uppercase tracking-wider text-ink-300">Antwortzeit</h2>
+        <p class="mt-2 text-sm leading-relaxed">
+          Antwort in der Regel innert zwei Werktagen. Bei akuten Prozessstoerungen kurz per Telefon melden.
+        </p>
+      </div>
+    </aside>
+  </div>
+</BaseLayout>

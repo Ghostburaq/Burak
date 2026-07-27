@@ -1,0 +1,37 @@
+---
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import SEO from '../components/SEO.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  path?: string;
+  jsonLd?: unknown;
+  current?: string;
+}
+const { title, description, path, jsonLd, current } = Astro.props;
+---
+
+<!doctype html>
+<html lang="de-CH">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0F172A" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <SEO title={title} description={description} path={path} jsonLd={jsonLd} />
+  </head>
+  <body class="min-h-screen bg-ink-50 text-ink-900">
+    <a
+      href="#main"
+      class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-ink-900 focus:px-3 focus:py-2 focus:text-white"
+    >Zum Inhalt springen</a>
+    <Header current={current} />
+    <main id="main" class="mx-auto w-full max-w-content px-5 py-12 md:px-8 md:py-16">
+      <slot />
+    </main>
+    <Footer />
+  </body>
+</html>
