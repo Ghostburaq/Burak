@@ -330,23 +330,23 @@ const offerTable = new Table({
     new TableRow({
       children: [
         totalCell("",                  { width: { size: COL_POS, type: WidthType.DXA } }),
-        totalCell("Zwischensumme netto", { width: { size: COL_DESC, type: WidthType.DXA } }),
+        totalCell("Zwischensumme", { width: { size: COL_DESC, type: WidthType.DXA } }),
         totalCell("[0.00]",            { width: { size: COL_PRICE, type: WidthType.DXA }, align: AlignmentType.RIGHT }),
       ],
     }),
-    // MWST
+    // MWST-Ausweis: nicht MWST-pflichtig
     new TableRow({
       children: [
         bodyCell("", { width: { size: COL_POS, type: WidthType.DXA } }),
-        bodyCell("MWST 8,1 %", { width: { size: COL_DESC, type: WidthType.DXA }, color: GREY_D }),
-        bodyCell("[0.00]", { width: { size: COL_PRICE, type: WidthType.DXA }, align: AlignmentType.RIGHT, color: GREY_D }),
+        bodyCell("Nicht MWST-pflichtig gemäss Art. 10 Abs. 2 MWSTG", { width: { size: COL_DESC, type: WidthType.DXA }, color: GREY_D }),
+        bodyCell("keine MWST", { width: { size: COL_PRICE, type: WidthType.DXA }, align: AlignmentType.RIGHT, color: GREY_D }),
       ],
     }),
-    // Grand total
+    // Grand total (ohne MWST)
     new TableRow({
       children: [
         totalCell("",  { width: { size: COL_POS, type: WidthType.DXA },   strong: true }),
-        totalCell("TOTAL INKL. MWST", { width: { size: COL_DESC, type: WidthType.DXA }, strong: true }),
+        totalCell("TOTAL (OHNE MWST)", { width: { size: COL_DESC, type: WidthType.DXA }, strong: true }),
         totalCell("CHF  [0.00]", { width: { size: COL_PRICE, type: WidthType.DXA }, align: AlignmentType.RIGHT, strong: true }),
       ],
     }),
@@ -360,7 +360,9 @@ const s3 = [
     spacing: { before: 160, after: 40 },
     children: [
       new TextRun({ text: "Pauschal-Festpreis. ", font: FONT, size: 18, color: NAVY, bold: true }),
-      new TextRun({ text: "Alle Beträge in CHF, Preise exkl. MWST; die gesetzliche MWST von 8,1 % ist separat ausgewiesen.", font: FONT, size: 18, color: GREY_D }),
+      new TextRun({ text: "Alle Beträge in CHF. ", font: FONT, size: 18, color: GREY_D }),
+      new TextRun({ text: "Ohne MWST – nicht MWST-pflichtig ", font: FONT, size: 18, color: NAVY, bold: true }),
+      new TextRun({ text: "(Art. 10 Abs. 2 MWSTG).", font: FONT, size: 18, color: GREY_D }),
     ],
   }),
 ];
@@ -420,7 +422,7 @@ const s5 = [
 const s6 = [
   h1("6  Konditionen"),
   bullet("Gültigkeit dieses Angebots: bis [TT.MM.JJJJ]."),
-  bullet("Preise exkl. MWST, in CHF. Zahlbar innert 30 Tagen netto nach Schlussrechnung."),
+  bullet("Preise in CHF. Ohne MWST – nicht MWST-pflichtig (Art. 10 Abs. 2 MWSTG). Zahlbar innert 30 Tagen netto nach Schlussrechnung."),
   bullet("Arbeiten an der elektrischen Anlage erfolgen fachgerecht nach den geltenden Schweizer Vorschriften (NIN, NIV, ESTI)."),
   bullet("[Weitere Konditionen bei Bedarf.]"),
 ];
