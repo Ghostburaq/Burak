@@ -2,3 +2,8 @@ __pycache__/
 *.pyc
 .DS_Store
 /tmp/
+
+# Node build deps for the templates
+node_modules/
+package-lock.json
+package.json

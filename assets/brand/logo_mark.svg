@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0B2545"/>
+      <stop offset="1" stop-color="#123A6B"/>
+    </linearGradient>
+    <linearGradient id="wave" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#00E5FF"/>
+      <stop offset="1" stop-color="#00B8D9"/>
+    </linearGradient>
+  </defs>
+  <!-- Rounded square badge -->
+  <rect x="16" y="16" width="480" height="480" rx="92" fill="url(#bg)"/>
+  <!-- subtle inner border -->
+  <rect x="34" y="34" width="444" height="444" rx="78" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="2"/>
+
+  <!-- Monogram BÜ -->
+  <g fill="#F5F7FA" font-family="'Helvetica Neue', Arial, sans-serif" font-weight="800">
+    <text x="256" y="332" font-size="300" text-anchor="middle" letter-spacing="-8">BÜ</text>
+  </g>
+
+  <!-- Sine wave signal cutting under monogram -->
+  <path d="M 60 400 Q 110 350 160 400 T 260 400 T 360 400 T 460 400"
+        fill="none" stroke="url(#wave)" stroke-width="14" stroke-linecap="round"/>
+
+  <!-- small impulse dot right side (indicates measurement) -->
+  <circle cx="460" cy="400" r="10" fill="#00E5FF"/>
+</svg>
