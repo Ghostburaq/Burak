@@ -1,4 +1,4 @@
-// Build master template DOCX for Burak Ücöz (Power Quality / EMV).
+// Build master template DOCX for kabuu — Netzqualität & EMV Messungen · Engineering.
 // A4 · Letterhead with logo · brand accent · placeholder-driven.
 
 const fs = require("fs");
@@ -27,8 +27,8 @@ const FONT_H = "Calibri";
 
 // ---------- Assets ----------
 const BRAND = "/home/user/Burak/assets/brand";
-const LOCKUP = fs.readFileSync(path.join(BRAND, "logo_lockup.png"));
-const MARK   = fs.readFileSync(path.join(BRAND, "logo_mark_512.png"));
+const LOCKUP = fs.readFileSync(path.join(BRAND, "kabuu_logo.png"));
+const MARK   = fs.readFileSync(path.join(BRAND, "kabuu_mark.png"));
 
 // ---------- Helpers ----------
 const T = (text, opts = {}) => new TextRun({ font: FONT, size: 20, color: INK, ...opts, text });
@@ -84,14 +84,14 @@ function borderNone() {
 // ---------- Header ----------
 const header = new Header({
   children: [
-    // Logo lockup, right-aligned, spans full width
+    // Logo lockup — kabuu (square-ish, aspect 730:470 ≈ 1.55)
     new Paragraph({
       alignment: AlignmentType.LEFT,
       spacing: { after: 0 },
       children: [
         new ImageRun({
           data: LOCKUP,
-          transformation: { width: 460, height: 115 },
+          transformation: { width: 190, height: 122 },
           type: "png",
         }),
       ],
@@ -120,7 +120,7 @@ const footer = new Footer({
         { type: TabStopType.RIGHT,  position: 9072 },
       ],
       children: [
-        new TextRun({ text: "Burak Ücöz  ·  Power Quality / EMV", font: FONT, size: 16, color: NAVY, bold: true }),
+        new TextRun({ text: "kabuu  ·  Netzqualität & EMV Messungen  ·  Engineering", font: FONT, size: 16, color: NAVY, bold: true }),
         new TextRun({ text: "\t[Strasse Nr.] · [PLZ Ort] · [Telefon] · [E-Mail]", font: FONT, size: 16, color: GREY_M }),
         new TextRun({ text: "\tSeite ", font: FONT, size: 16, color: GREY_M }),
         new TextRun({ children: [PageNumber.CURRENT], font: FONT, size: 16, color: NAVY, bold: true }),
@@ -136,7 +136,7 @@ const footer = new Footer({
 const senderLine = new Paragraph({
   spacing: { before: 100, after: 40 },
   children: [
-    new TextRun({ text: "Burak Ücöz  ·  Power Quality / EMV  ·  ", font: FONT, size: 14, color: GREY_M }),
+    new TextRun({ text: "kabuu  ·  Netzqualität & EMV Messungen  ·  Engineering  ·  ", font: FONT, size: 14, color: GREY_M }),
     new TextRun({ text: "[Strasse Nr.], [PLZ Ort]", font: FONT, size: 14, color: GREY_M }),
   ],
   border: { bottom: { color: GREY_L, size: 4, style: BorderStyle.SINGLE, space: 2 } },
@@ -180,7 +180,7 @@ const addressAndMeta = new Table({
             new Paragraph({ spacing: { after: 40 }, children: [new TextRun({ text: "Gültig bis  ", font: FONT, size: 18, color: GREY_M }), new TextRun({ text: "[TT.MM.JJJJ]", font: FONT, size: 18, color: INK, bold: true })] }),
             new Paragraph({ spacing: { after: 0, before: 60 }, children: [new TextRun({ text: "Sachbearbeiter", font: FONT, size: 14, color: GREY_M, allCaps: true, characterSpacing: 40 })] }),
             new Paragraph({ spacing: { after: 40 }, children: [new TextRun({ text: "Burak Ücöz", font: FONT, size: 18, color: INK, bold: true })] }),
-            new Paragraph({ spacing: { after: 0 }, children: [new TextRun({ text: "Power Quality / EMV", font: FONT, size: 16, color: CYAN, bold: true })] }),
+            new Paragraph({ spacing: { after: 0 }, children: [new TextRun({ text: "Netzqualität & EMV Messungen", font: FONT, size: 16, color: NAVY, bold: true })] }),
           ],
         }),
       ],
@@ -443,7 +443,7 @@ const closing = [
   }),
   new Paragraph({
     spacing: { before: 0, after: 200 },
-    children: [new TextRun({ text: "Power Quality / EMV", font: FONT, size: 18, color: CYAN, bold: true })],
+    children: [new TextRun({ text: "kabuu — Netzqualität & EMV Messungen · Engineering", font: FONT, size: 18, color: NAVY, bold: true })],
   }),
 ];
 
@@ -496,7 +496,7 @@ const signHint = new Paragraph({
 const doc = new Document({
   creator: "Burak Ücöz",
   title: "Angebot — Master-Vorlage",
-  description: "Master-Vorlage Angebot · Power Quality / EMV",
+  description: "Master-Vorlage Angebot · kabuu · Netzqualität & EMV Messungen · Engineering",
   styles: {
     default: {
       document: { run: { font: FONT, size: 20, color: INK } },

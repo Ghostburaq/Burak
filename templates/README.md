@@ -1,7 +1,7 @@
 # Angebot · Master-Vorlage
 
-Master-Vorlage für Kunden-Angebote unter dem persönlichen Brand
-**Burak Ücöz · Power Quality / EMV**.
+Master-Vorlage für Kunden-Angebote unter der Marke
+**kabuu — Netzqualität & EMV Messungen · Engineering** (Sachbearbeiter: Burak Ücöz).
 
 | Datei | Zweck |
 |-------|-------|
@@ -29,8 +29,9 @@ node templates/build_template.js
 
 Die Logo-Assets liegen unter `assets/brand/`:
 
-- `logo_mark.svg` / `logo_mark_{256,512,1024}.png` — quadratische Marke (BÜ)
-- `logo_lockup.svg` / `logo_lockup.png` — horizontale Marke + Wordmark
+- `kabuu_logo.png` — offizielles kabuu-Logo (Hexagon-Mark + Wordmark + Tagline)
+- `kabuu_logo_512.png` — Höhen-normalisierte Variante (512 px)
+- `kabuu_mark.png` — nur die Hexagon-Marke (für Favicon / kleine Kontexte)
 
 ## Platzhalter
 
