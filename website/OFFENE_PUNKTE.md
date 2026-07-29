@@ -1,119 +1,105 @@
 # OFFENE PUNKTE (vor Live-Gang klaeren)
 
-Diese Datei sammelt alle Luecken. Nichts davon ist erfunden, alles wartet auf eine
+Zentrale Sammlung aller Luecken. Nichts davon ist erfunden, alles wartet auf eine
 Entscheidung, eine Angabe oder eine Pruefung. Sortiert nach Prioritaet.
 
-Sprachhinweis: Diese Datei ist Arbeitskommunikation und in Schweizer Schreibweise
-(ss). Die Rechtstexte (Impressum, Datenschutz, AGB) folgen bewusst deutscher
-Rechtschreibung, siehe Abschnitt Rechtstexte.
+Kontext: Sitz Schweiz. Rechtsform Einzelunternehmen. Marke Engineering.Kabuu.
+Deployment auf Netlify. Sprache Schweizer Schreibweise (ss).
 
 ---
 
-## 1. FAKTEN (unbedingt, sonst Platzhalter live)
+## 1. DOMAIN, LOGO, ASSETS
 
-- [ ] Firmenname / Absendermarke: aktuell "Kabuu Engineering" als Annahme.
-      Wenn anders gewuenscht, in `src/lib/site.ts` (`brand`) aendern und in
-      Header, Footer, Impressum, Datenschutz, AGB pruefen.
-- [ ] Ladungsfaehige Anschrift in Deutschland (Strasse, PLZ, Ort). Kein Postfach.
-      Aendern in `src/lib/site.ts` (`address`).
-- [ ] Geschaeftliche E-Mail (nicht privat, wenn moeglich eigene Domain).
-- [ ] Telefonnummer (mit Landesvorwahl).
-- [ ] Domain (nach Registrierung eintragen in `astro.config.mjs` -> `SITE_URL`
-      und in `src/lib/site.ts` -> `domain`).
-- [ ] Logo: aktuell wird ein SVG-Sinuskurven-Icon verwendet. Falls ein echtes
-      Logo vorliegt, in `public/` ablegen und in `Header.astro`/`Footer.astro`
-      einbinden.
-- [ ] Portrait fuer die Seite "Ueber mich" optional.
+- [ ] **Domain festlegen** und im Netlify-Dashboard sowie in `astro.config.mjs`
+      (`SITE_URL`) und `src/lib/site.ts` (`domain`) eintragen.
+- [ ] **SVG-Logo erstellen lassen.** Aktuell liegt unter `public/logo/signet.svg`
+      ein Uebergangs-Signet (Sechseck-Rahmen + drei Signalkurven in den Logo-Farben).
+      Die im Brief genannten PNGs (`kabuu-signet-1024/512/256.png` und
+      `kabuu-signet-flat-512.png`) sind bei der Session nicht mitgeliefert worden.
+      Sobald das echte SVG oder die PNGs vorliegen: unter `public/logo/` ablegen
+      und Header/Footer/Favicon entsprechend anpassen.
+- [ ] Favicon-Set generieren (`favicon.ico`, `apple-touch-icon.png`,
+      `site.webmanifest`), sobald das echte Logo verfuegbar ist. Aktuell nur SVG-Favicon.
+- [ ] **GLB (3D-Version) NICHT einbinden** &mdash; bewusst nicht integrieren
+      (Bundle-Groesse, Lighthouse). Statische Renderings genuegen.
 
-## 2. STEUER / MWST (heikel, mit Treuhaender/Steuerberater klaeren)
+## 2. FIRMENRECHTLICHES
 
-- [ ] Umsatzsteuerstatus in Deutschland: Kleinunternehmer nach Paragraf 19 UStG
-      bestaetigt oder nicht? Keine pauschale Behauptung ohne Pruefung.
-- [ ] USt-IdNr. vorhanden? Wenn ja, in Impressum eintragen. Wenn nein, Abschnitt
-      im Impressum ersatzlos streichen (nicht erfinden).
-- [ ] Wirtschafts-Identifikationsnummer (W-IdNr.): nur eintragen, wenn tatsaechlich
-      vergeben.
-- [ ] B2B-Leistungen an Schweizer Kunden: Leistungsort liegt in der Regel in der
-      Schweiz (Paragraf 3a Abs. 2 UStG). Der pauschale Paragraf-19-Vermerk
-      passt inhaltlich nicht auf diese Umsaetze. Klaerung erforderlich, wie
-      Rechnungen korrekt gestellt werden.
-- [ ] Schweizer MWST-Registrierungspflicht pruefen. Ankntuepfung u.a.:
-      weltweiter Umsatz ab CHF 100'000 UND Leistungen in der Schweiz. Bei
-      Registrierungspflicht: Schweizer Steuervertreter noetig.
-- [ ] Rechnungs- und Offertenvorlagen erst erstellen, wenn die Punkte oben
-      geklaert sind. Auf der Website stehen daher bewusst keine Preise und
-      kein pauschaler MwSt-Satz.
+- [ ] **Firmenname pruefen.** Nach Art. 945 OR muss bei einer Einzelfirma der
+      Familienname wesentlicher Bestandteil der Firma sein. &laquo;Engineering.Kabuu&raquo;
+      ist damit eher Geschaeftsbezeichnung/Marke als eingetragene Firma. Mit
+      Treuhaender klaeren, ob und wie die Firma im Handelsregister gefuehrt wird.
+      Danach Abschnitt &laquo;Firmenname und Handelsregister&raquo; in
+      `src/pages/impressum.astro` anpassen oder streichen.
+- [ ] **Berufsbezeichnung &laquo;Ingenieur&raquo;.** Klaeren, ob die Bezeichnung
+      gefuehrt werden darf und wie sie geschrieben wird, bevor sie auf der Seite
+      verwendet wird. Bis dahin steht ein TODO auf `src/pages/ueber.astro`.
 
-## 3. RECHTSTEXTE (Entwuerfe, durch Anwalt/Fachperson pruefen lassen)
+## 3. MWST / STEUERN (mit Treuhaender)
 
-Alle drei Texte sind mit `DraftBanner` als Entwurf gekennzeichnet und folgen
-deutscher Rechtschreibung.
+- [ ] **MWST-Warnhinweis.** Die Befreiung von der MWST-Pflicht (Umsatz unter
+      CHF 100'000 nach MWSTG) entfaellt, sobald der weltweite Jahresumsatz die
+      Schwelle erreicht. Dann besteht Anmeldepflicht und die Preise sind neu zu
+      kalkulieren. Rechtzeitig ueberwachen und Offerten-/Rechnungsvorlagen anpassen.
+- [ ] **Leistungen an Kunden im Ausland.** Steuerliche Behandlung mit Treuhaender
+      klaeren, bevor Offerten- und Rechnungsvorlagen erstellt werden.
+- [ ] **Status einer allenfalls bestehenden Registrierung in Deutschland.**
+      Vollstaendigkeit pruefen. Auf der Website steht bewusst keine deutsche
+      Rechtsterminologie (§ 19 UStG etc.); die Formulierung in den AGB ist auf
+      Schweizer Recht abgestellt.
 
-- [ ] Impressum (Paragraf 5 DDG) durchgehen:
-      - Umsatzsteuer-Angaben je nach Fakten-Block einsetzen oder streichen.
-      - Berufsrechtliche Angaben zur Bezeichnung "Ingenieur" pruefen (je Bundesland
-        Ingenieurkammer/Ingenieurgesetz). Falls die Bezeichnung nicht gefuehrt
-        wird, Abschnitt ersatzlos streichen.
-      - Streitbeilegungshinweis auf aktuelle Rechtslage pruefen. Die EU-OS-
-        Plattform wurde 2025 eingestellt, kein alter OS-Link mehr.
-- [ ] Datenschutz (DSGVO + revDSG):
-      - Hoster benennen, AVV/SCC, Speicherort/Drittlandbezug.
-      - Formular-Dienstleister benennen, AVV, Datenhaltung.
-      - Zustaendige Landesdatenschutzbehoerde nach Sitz einsetzen.
-      - Pruefen, ob nach Art. 14 revDSG eine Vertretung in der Schweiz
-        erforderlich ist (fuer eine kleine Beratungs-Website mit Kontaktformular
-        i.d.R. nicht, aber Pruefung dokumentieren).
-      - "Stand: TODO" durch tatsaechliches Datum ersetzen.
-- [ ] AGB (Entwurf):
-      - Rechtswahl und Gerichtsstand mit Anwalt festlegen (deutsches Recht ODER
-        Schweizer Recht, nicht mischen).
-      - Haftungsbegrenzung finalisieren (Hoehe, Ausschluss Folgeschaeden,
-        Verjaehrung).
-      - Frist und Aufwandspauschale bei Terminabsage konkretisieren.
+## 4. NETLIFY / HOSTING / DATENSCHUTZ
 
-## 4. FORMULAR-DIENST
+- [ ] **DPA mit Netlify.** Auftragsbearbeitungsvertrag (Data Processing Addendum)
+      abschliessen bzw. die Annahme dokumentieren. In der Datenschutzerklaerung
+      unter Ziffer 4 eingetragen als TODO.
+- [ ] **Grundlage der Bekanntgabe ins Ausland** (u.a. USA) nach revDSG konkret
+      benennen (z.B. Standardvertragsklauseln, anerkannte Angemessenheitsentscheidung).
+      Aktuellen Stand abklaeren. In `src/pages/datenschutz.astro` Ziffer 5 einsetzen.
+- [ ] **Aufbewahrungsdauer** der Formulareingaenge festlegen und in
+      `src/pages/datenschutz.astro` Ziffer 6 eintragen.
+- [ ] **E-Mail-Benachrichtigung** fuer Formulareingaenge im Netlify-Dashboard
+      aktivieren.
+- [ ] **Netlify-Formular-Limits** im gewaehlten Plan pruefen (aktuelle Kontingente
+      koennen sich aendern).
+- [ ] **CSP-Header** nach dem ersten Live-Deploy im Browser (DevTools -> Console)
+      auf Verstoesse pruefen. Aktuell schlank gesetzt in `netlify.toml`.
+- [ ] **EU-Kunden / DSGVO.** Pruefen, ob durch gezielte Ansprache von EU-Kunden
+      zusaetzlich die DSGVO greift und die Datenschutzerklaerung ergaenzt werden muss.
 
-Der Formular-Endpoint ist zentral in `.env` als `PUBLIC_CONTACT_ENDPOINT`
-gekapselt und wird in `src/pages/kontakt.astro` verwendet. Ohne Endpoint greift
-ein `mailto:`-Fallback (Notloesung, im Formular sichtbar markiert).
+## 5. RECHTSTEXTE (durch Anwalt pruefen lassen)
 
-- [ ] Anbieter auswaehlen. Vorschlaege mit Datenhaltung in EU/CH:
-      - **Netlify Forms** (falls Hosting auf Netlify): einfach, Formulare landen
-        im Netlify-Dashboard, Datenhaltung siehe Netlify-DPA.
-      - **Formspree** (EU-Region moeglich).
-      - **Basin** / **Getform** (Alternativen).
-      - Eigene Serverless Function beim Hoster (mehr Kontrolle, mehr Aufwand).
-- [ ] AVV mit dem gewaehlten Anbieter abschliessen und in der
-      Datenschutzerklaerung eintragen.
-- [ ] Spam-Schutz waehlen (Honeypot-Feld, Cloudflare Turnstile, hCaptcha).
-      Aktuell ist kein Spam-Schutz aktiv.
+Alle drei Texte sind mit `DraftBanner` als Entwurf gekennzeichnet und in Schweizer
+Schreibweise verfasst.
 
-## 5. INHALTLICHES (freischalten oder nachschaerfen)
+- [ ] **Kontakt/Impressum:** Abschnitt Firmenname/Handelsregister nach Klaerung
+      anpassen oder streichen.
+- [ ] **Datenschutz:** siehe Abschnitt 4 (Netlify, Bekanntgabe, Aufbewahrung, DSGVO).
+      &laquo;Stand: TODO&raquo; durch tatsaechliches Datum ersetzen.
+- [ ] **AGB:** Haftungshoechstsumme, Verjaehrung, Frist bei Terminabsage,
+      Gerichtsstand, Aufbewahrungsfrist Messdaten mit Anwalt finalisieren.
 
-- [ ] "Ueber mich"-Kurzprofil: Ausbildung, Stationen, Praxisschwerpunkt.
-      Nur belegbare Angaben, frueherer Arbeitgeber nur nach Freigabe.
-- [ ] Berufsbezeichnung: pruefen, ob "Ingenieur" gefuehrt werden darf.
-- [ ] Referenzen: bleiben anonymisiert, bis eine schriftliche Namensfreigabe des
-      jeweiligen Kunden vorliegt.
-- [ ] Zertifikate/Mitgliedschaften: nur eintragen, wenn tatsaechlich vorhanden.
+## 6. INHALTLICHES
+
+- [ ] Kurzprofil auf `src/pages/ueber.astro` (Abschnitt &laquo;Hintergrund&raquo;)
+      ausfuellen. Nur belegbare Angaben. Frueherer Arbeitgeber nur nach
+      ausdruecklicher Freigabe.
+- [ ] Zertifikate / Mitgliedschaften nur eintragen, wenn tatsaechlich vorhanden.
 - [ ] Zusatz-Messmittel (Thermografie, Oszilloskop, EMV-Nahfeldsonden) auflisten,
-      sofern verfuegbar.
+      sofern vorhanden.
+- [ ] Referenzen: nur anonymisiert bis zur schriftlichen Freigabe des Kunden.
 
-## 6. TECHNISCHES
+## 7. QUALITAETSSICHERUNG
 
-- [ ] Site-URL in `astro.config.mjs` nach Domain-Wahl setzen (wichtig fuer
-      Sitemap und Canonical-Links).
-- [ ] Falls spaeter Analytics gewuenscht: nur cookielose, datensparsame Loesung
-      (z.B. Plausible EU, Umami self-hosted). Andernfalls TDDDG-Konformitaet
-      und Cookie-Banner beachten und Datenschutztext erweitern.
-- [ ] Lighthouse-Check nach dem ersten Live-Deploy: Ziel gruen in allen vier
-      Kategorien.
+- [ ] Lighthouse nach erstem Live-Deploy in allen vier Kategorien pruefen. Ziel: gruen.
 - [ ] Screen-Reader-Test der Formular-Labels und Fokus-Zustaende.
+- [ ] Farb-Kontraste stichprobenartig in DevTools pruefen (WCAG 2.1 AA).
+- [ ] Robots.txt und sitemap.xml nach Domain-Setzung auf korrekte URLs pruefen.
 
-## 7. STRUKTUR I18N (spaeter)
+## 8. SPRACHERWEITERUNG (spaeter)
 
-Verzeichnisse `fr/` und `it/` sind noch nicht angelegt, weil Deutsch beim Launch
-die einzige aktive Sprache ist. Wenn spaeter erweitert werden soll:
-- Struktur `src/pages/{de,fr,it}/...` einfuehren
+Verzeichnisse `fr/` und `it/` sind noch nicht angelegt. Beim Launch ist Deutsch die
+einzige aktive Sprache. Fuer spaetere Erweiterung:
+- `src/pages/{de,fr,it}/...`-Struktur einfuehren
 - Sprachumschalter im Header
 - `hreflang`-Tags in `SEO.astro`

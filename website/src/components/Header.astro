@@ -5,13 +5,10 @@ interface Props { current?: string }
 const { current = '' } = Astro.props;
 ---
 
-<header class="sticky top-0 z-40 border-b border-ink-200 bg-white/85 backdrop-blur">
-  <div class="mx-auto flex max-w-content items-center justify-between gap-6 px-5 py-4 md:px-8">
-    <a href="/" class="flex items-center gap-2 font-semibold text-ink-900" aria-label={`${site.brand} — Startseite`}>
-      <svg width="26" height="26" viewBox="0 0 64 64" aria-hidden="true">
-        <rect width="64" height="64" rx="10" fill="#0F172A" />
-        <path d="M8 40 Q16 20 24 40 T40 40 T56 40" fill="none" stroke="#B45309" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
-      </svg>
+<header class="sticky top-0 z-40 border-b border-ink-200 bg-white/90 backdrop-blur">
+  <div class="mx-auto flex max-w-content items-center justify-between gap-6 px-5 py-3 md:px-8">
+    <a href="/" class="flex items-center gap-3 font-semibold text-anthrazit" aria-label={`${site.brand} — Startseite`}>
+      <img src="/logo/signet.svg" alt="" width="36" height="36" class="h-9 w-9" decoding="async" />
       <span class="hidden text-[0.98rem] tracking-tight sm:inline">{site.brand}</span>
     </a>
 
@@ -22,8 +19,8 @@ const { current = '' } = Astro.props;
             <a
               href={item.href}
               class:list={[
-                'transition hover:text-ink-900',
-                current === item.href && 'text-ink-900 font-medium',
+                'no-underline transition hover:text-violett',
+                current === item.href && 'text-anthrazit font-medium',
               ]}
               aria-current={current === item.href ? 'page' : undefined}
             >{item.label}</a>
@@ -34,7 +31,7 @@ const { current = '' } = Astro.props;
 
     <a
       href="/kontakt"
-      class="inline-flex items-center rounded-md bg-ink-900 px-3.5 py-2 text-sm font-medium text-white transition hover:bg-ink-800"
+      class="inline-flex items-center rounded-md bg-violett px-3.5 py-2 text-sm font-medium text-white no-underline transition hover:bg-[#2611b8]"
     >Erstgespraech anfragen</a>
   </div>
 
@@ -46,8 +43,8 @@ const { current = '' } = Astro.props;
           <a
             href={item.href}
             class:list={[
-              'block rounded px-2 py-2 hover:bg-ink-100',
-              current === item.href && 'font-medium text-ink-900',
+              'block rounded px-2 py-2 no-underline hover:bg-ink-100',
+              current === item.href && 'font-medium text-anthrazit',
             ]}
           >{item.label}</a>
         </li>

@@ -5,10 +5,28 @@
 [build.environment]
   NODE_VERSION = "22"
 
+# Kontaktformular via Netlify Forms — als statisches HTML im Build ausgezeichnet,
+# damit Netlify das Formular beim Deploy erkennt. Siehe kontakt.astro.
+
 [[headers]]
   for = "/*"
   [headers.values]
-    X-Frame-Options = "SAMEORIGIN"
-    X-Content-Type-Options = "nosniff"
-    Referrer-Policy = "strict-origin-when-cross-origin"
-    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    X-Content-Type-Options    = "nosniff"
+    X-Frame-Options           = "SAMEORIGIN"
+    Referrer-Policy           = "strict-origin-when-cross-origin"
+    Strict-Transport-Security = "max-age=63072000; includeSubDomains; preload"
+    Permissions-Policy        = "camera=(), microphone=(), geolocation=()"
+    # Schlanke CSP: eigene Assets, inline Styles/Scripts (Astro + kleines Inline-Snippet),
+    # Bilder als Data-URIs erlaubt. Keine Drittanbieter.
+    # TODO: nach dem ersten Live-Deploy CSP im Browser (DevTools -> Console) auf Verstoesse pruefen.
+    Content-Security-Policy   = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; form-action 'self' https://*.netlify.app https://netlify.com; base-uri 'self'; frame-ancestors 'self'; object-src 'none'"
+
+[[headers]]
+  for = "/logo/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/_astro/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

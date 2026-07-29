@@ -1,7 +1,7 @@
 ---
 interface Props { text?: string }
-const { text = 'Entwurf. Rechtlich noch nicht freigegeben. Vor Live-Gang zwingend durch eine Fachperson (Anwalt/Treuhaender) pruefen lassen.' } = Astro.props;
+const { text = 'Entwurf. Vor Live-Gang durch Anwalt bzw. Treuhaender pruefen lassen.' } = Astro.props;
 ---
-<div role="note" class="mb-8 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900">
+<div role="note" class="mb-8 rounded-md border border-magenta/40 bg-magenta/5 px-4 py-3 text-sm leading-relaxed text-magenta">
   <strong>Hinweis:</strong> {text}
 </div>

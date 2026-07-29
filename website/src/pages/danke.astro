@@ -1,0 +1,26 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { site } from '../lib/site';
+---
+
+<BaseLayout
+  title="Danke fuer Ihre Anfrage"
+  description="Bestaetigung der Kontaktanfrage."
+  path="/danke"
+  current=""
+  noindex
+>
+  <section class="mx-auto max-w-prose text-center">
+    <p class="text-xs font-semibold uppercase tracking-widest text-violett">Bestaetigung</p>
+    <h1 class="mt-3 text-3xl font-semibold leading-tight text-anthrazit md:text-4xl">Danke fuer Ihre Anfrage.</h1>
+    <p class="mt-5 text-lg text-ink-700">
+      Ihre Nachricht ist eingegangen. Rueckmeldung in der Regel innert zwei Werktagen.
+      Bei akuten Prozessstoerungen bitte kurz per Telefon melden: {' '}
+      <a class="text-violett underline decoration-ink-300 underline-offset-4 hover:decoration-violett" href={`tel:${site.contact.phoneLink}`}>{site.contact.phoneDisplay}</a>.
+    </p>
+    <div class="mt-8 flex flex-wrap justify-center gap-3">
+      <a href="/" class="inline-flex items-center rounded-md border border-ink-300 bg-white px-4 py-2.5 text-sm font-medium text-anthrazit no-underline hover:border-anthrazit">Zur Startseite</a>
+      <a href="/leistungen" class="inline-flex items-center rounded-md bg-violett px-4 py-2.5 text-sm font-medium text-white no-underline hover:bg-[#2611b8]">Leistungen ansehen</a>
+    </div>
+  </section>
+</BaseLayout>

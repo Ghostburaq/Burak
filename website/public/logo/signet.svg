@@ -1,0 +1,18 @@
+<!-- Uebergangs-Signet. Sechseck-Rahmen in Stahlgrau, drei Signalkurven in den Logo-Farben:
+     signalrot (transient), magenta (einschwingend), signal-violett (stabil).
+     TODO: Durch das echte Vektor-Logo ersetzen, sobald verfuegbar. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Engineering.Kabuu Signet">
+  <title>Engineering.Kabuu</title>
+  <!-- Sechseck-Rahmen -->
+  <polygon points="64,8 116,36 116,92 64,120 12,92 12,36"
+           fill="none" stroke="#959AAF" stroke-width="4" stroke-linejoin="round"/>
+  <!-- signalrot: transient (Spike + Abklingen) -->
+  <path d="M22 76 L38 76 L44 40 L50 96 L58 68 L70 74"
+        fill="none" stroke="#E2081B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- magenta: einschwingend (Sinus mit abnehmender Amplitude) -->
+  <path d="M22 76 C 30 62, 38 90, 46 68 S 62 84, 70 74 S 86 78, 94 74 106 74 116 74"
+        fill="none" stroke="#900B6F" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+  <!-- violett: stabile Linie -->
+  <line x1="70" y1="74" x2="116" y2="74"
+        stroke="#3317E9" stroke-width="3.5" stroke-linecap="round"/>
+</svg>

@@ -1,26 +1,24 @@
-// Zentrale Site-Konstanten. TODOs siehe OFFENE_PUNKTE.md.
+// Zentrale Site-Konstanten. Fakten stammen aus BRIEF.md Abschnitt 1 und sind bestaetigt.
+// Offene Punkte in OFFENE_PUNKTE.md.
+
 export const site = {
-  // TODO: Firmenname im Fakten-Block bestaetigen.
-  brand: 'Kabuu Engineering',
+  brand: 'Engineering.Kabuu',
   owner: 'Burak Uecoez',
-  // TODO: Ladungsfaehige Anschrift in Deutschland ergaenzen.
+  rechtsform: 'Einzelunternehmen',
   address: {
-    street: 'TODO: Strasse und Hausnummer',
-    zip: 'TODO: PLZ',
-    city: 'TODO: Ort',
-    country: 'Deutschland',
+    street: 'Im Abt 9 A',
+    zip: '8240',
+    city: 'Thayngen',
+    country: 'Schweiz',
   },
   contact: {
-    // TODO: Geschaeftliche E-Mail im Fakten-Block bestaetigen.
-    email: 'TODO@example.com',
-    // TODO: Telefonnummer eintragen.
-    phone: '+49 TODO',
+    email: 'engineering.kabuu@gmail.com',
+    phoneDisplay: '079 512 98 07',
+    phoneLink: '+41795129807',
   },
-  // TODO: Domain nach Registrierung in astro.config.mjs und hier setzen.
-  domain: 'kabuu-engineering.example',
+  // TODO: Domain festlegen. Bis dahin steht die Netlify-Subdomain als Fallback in astro.config.mjs.
+  domain: 'engineering-kabuu.example',
   claim: 'Netzqualitaet und EMV messen, bevor investiert wird.',
-  // Formular-Endpoint zentral austauschbar. Wahl siehe OFFENE_PUNKTE.md.
-  contactEndpoint: import.meta.env.PUBLIC_CONTACT_ENDPOINT ?? '',
 };
 
 export const nav = [
@@ -32,7 +30,7 @@ export const nav = [
 ];
 
 export const legalNav = [
-  { href: '/impressum', label: 'Impressum' },
+  { href: '/impressum', label: 'Kontakt / Impressum' },
   { href: '/datenschutz', label: 'Datenschutz' },
   { href: '/agb', label: 'AGB' },
 ];

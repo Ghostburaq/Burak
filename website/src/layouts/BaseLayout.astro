@@ -10,8 +10,10 @@ interface Props {
   path?: string;
   jsonLd?: unknown;
   current?: string;
+  noindex?: boolean;
+  hideChrome?: boolean;
 }
-const { title, description, path, jsonLd, current } = Astro.props;
+const { title, description, path, jsonLd, current, noindex, hideChrome = false } = Astro.props;
 ---
 
 <!doctype html>
@@ -19,19 +21,20 @@ const { title, description, path, jsonLd, current } = Astro.props;
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#0F172A" />
+    <meta name="theme-color" content="#12151A" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <SEO title={title} description={description} path={path} jsonLd={jsonLd} />
+    <link rel="apple-touch-icon" href="/logo/signet.svg" />
+    <SEO title={title} description={description} path={path} jsonLd={jsonLd} noindex={noindex} />
   </head>
-  <body class="min-h-screen bg-ink-50 text-ink-900">
+  <body class="min-h-screen bg-ink-50 text-anthrazit">
     <a
       href="#main"
-      class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-ink-900 focus:px-3 focus:py-2 focus:text-white"
+      class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-anthrazit focus:px-3 focus:py-2 focus:text-white"
     >Zum Inhalt springen</a>
-    <Header current={current} />
+    {!hideChrome && <Header current={current} />}
     <main id="main" class="mx-auto w-full max-w-content px-5 py-12 md:px-8 md:py-16">
       <slot />
     </main>
-    <Footer />
+    {!hideChrome && <Footer />}
   </body>
 </html>
