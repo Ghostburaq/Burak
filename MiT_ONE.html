@@ -355,7 +355,7 @@ table.getab input:focus{border-color:var(--blue)}
   <div id="main">
     <header id="topbar">
       <button id="menuBtn" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
-      <div><div id="viewTitle">Dashboard</div><div id="crumb">MiT Strom · 2026</div></div>
+      <div><div id="viewTitle">Dashboard</div><div id="crumb">MiT Strom</div></div>
       <div class="tspacer"></div>
       <div id="searchTrigger" onclick="Spot.open()"><span>⌕</span><span>Suchen…</span><kbd>⌘K</kbd></div>
       <button class="tbtn" id="themeBtn" title="Theme">◐</button>
@@ -725,7 +725,7 @@ function buildDashboard(el){
       <div class="kpi"><div class="glow" style="background:var(--purple)"></div><div class="lbl">Aktive Pipeline</div><div class="val" data-count="${actV}">0</div><div class="sub">${act.length} Deals</div></div>
       <div class="kpi"><div class="glow" style="background:var(--orange)"></div><div class="lbl">Ø Marge</div><div class="val">${Math.round(margeAvg*100)}%</div><div class="sub">über alle Deals</div></div>
       <div class="kpi"><div class="glow" style="background:var(--red)"></div><div class="lbl">Prio-A Kunden</div><div class="val">${prioA}</div><div class="sub">von ${fmtN(K.length)} im CRM</div></div>
-      <div class="kpi" style="cursor:pointer" onclick="Views.show('termine')"><div class="glow" style="background:var(--pink)"></div><div class="lbl">Termine diese Woche</div><div class="val">${termineOfWeek(weekStartOf(new Date()).toISOString().slice(0,10)).length} / ${WOCHENZIEL_MIN}</div><div class="sub">Wochenziel ${WOCHENZIEL_MIN}–${WOCHENZIEL_MAX} → planen</div></div>
+      <div class="kpi" style="cursor:pointer" onclick="Views.show('termine')"><div class="glow" style="background:var(--pink)"></div><div class="lbl">Termine diese Woche</div><div class="val">${kundenTermine(termineOfWeek(heute().wk)).length} / ${TERMINE_PRO_WOCHE}</div><div class="sub">${heute().name} · Mo–Mi planen</div></div>
     </div>
     <div class="grid2">
       <div class="card"><div class="card-h"><h3>💼 Pipeline nach Segment</h3><span class="sub">aktive Deals</span></div><div class="card-b">
@@ -1839,6 +1839,8 @@ function markExported(list){ let n=0;
   termSave(); histSave(); Views.rerender('termine'); Views.rerender('kalender'); return n; }
 const WOCHENZIEL_MIN=5, WOCHENZIEL_MAX=7;
 function weekStartOf(d){ const x=new Date(d.getFullYear(),d.getMonth(),d.getDate()); x.setDate(x.getDate()-((x.getDay()+6)%7)); return x; }
+function isoOf(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+
 function weekKeyOf(iso){ const d=toDate(iso); if(!d)return ''; const ws=weekStartOf(d); return ws.toISOString().slice(0,10); }
 function termineOfWeek(wkStartIso){ return TERMINE.filter(t=>weekKeyOf(t.datum)===wkStartIso).sort((a,b)=>(a.datum+a.zeit).localeCompare(b.datum+b.zeit)); }
 /* Begründung: WARUM dieser Termin + Kurzinfo zum Kunden */
@@ -1885,12 +1887,25 @@ function weightedShuffle(cands){
   return out.concat(cands.slice(44));
 }
 /* ═══ MONATSPLANUNG — Mo/Di Kundentermine · Do/Fr Büro ═══ */
-const KUNDEN_TAGE=[0,1];          /* 0=Mo, 1=Di */
-const BUERO_TAGE=[3,4];           /* 3=Do, 4=Fr */
-const KUNDEN_SLOTS=['09:00','11:00','14:00','16:00'];
+const KUNDEN_TAGE=[0,1,2];        /* Mo, Di, Mi = Kundentermine */
+const BUERO_TAGE=[3,4];           /* Do, Fr = Büro */
+const KUNDEN_SLOTS=['09:00','11:00','14:00'];   /* 3 Slots × 3 Tage = 9 mögliche */
+const TERMINE_PRO_WOCHE=7;        /* Mo–Mi zusammen 7 Kundentermine */
+const KM_LIMIT_KEY='one_km_limit';
+let KM_LIMIT=+(localStorage.getItem(KM_LIMIT_KEY)||400);   /* max. Fahrkilometer pro Woche inkl. An-/Rückfahrt */
+window.setKmLimit=v=>{ KM_LIMIT=Math.max(50,+v||300); localStorage.setItem(KM_LIMIT_KEY,KM_LIMIT);
+  toast('🚗 Kilometer-Limit: '+KM_LIMIT+' km/Woche'); Views.rerender('termine'); };
+/* ── Live-Datum: immer der echte heutige Tag ── */
+const DOW_LANG=['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag','Sonntag'];
+const DOW_KURZ=['Mo','Di','Mi','Do','Fr','Sa','So'];
+function heute(){ const d=new Date(); return {d,iso:isoOf(d),dow:(d.getDay()+6)%7,
+  name:DOW_LANG[(d.getDay()+6)%7], wk:weekStartOf(d).toISOString().slice(0,10),
+  kw:(()=>{const x=new Date(d);x.setDate(x.getDate()+3-((x.getDay()+6)%7));const j=new Date(x.getFullYear(),0,4);
+    return 1+Math.round(((x-j)/864e5-3+((j.getDay()+6)%7))/7);})()}; }
+function heuteText(){ const h=heute();
+  return h.name+', '+h.d.getDate()+'. '+['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'][h.d.getMonth()]+' '+h.d.getFullYear()+' · KW '+h.kw; }
 const isBuero=t=>!!t.buero;
 const kundenTermine=list=>list.filter(t=>!isBuero(t));
-function isoOf(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function weeksOfMonth(y,m){ /* alle Montage, die im Monat einen Mo/Di haben */
   const out=[]; const d=new Date(y,m,1);
   d.setDate(d.getDate()-((d.getDay()+6)%7));      /* auf Montag zurück */
@@ -1917,13 +1932,56 @@ function planBuero(wk){
   }
   return n;
 }
-/* Ganzer Monat: Kundentermine Mo/Di + Bürotage Do/Fr */
+/* ── TAGESPLANUNG: einen einzelnen Tag füllen (max. 3 Termine) ── */
+window.termPlanTag=(iso,forceKt)=>{
+  const d=toDate(iso); if(!d){ toast('⚠ Kein gültiges Datum'); return 0; }
+  const dow=(d.getDay()+6)%7;
+  if(BUERO_TAGE.includes(dow)){ planBuero(weekStartOf(d).toISOString().slice(0,10)); termSave();
+    toast('🏢 '+DOW_LANG[dow]+' ist Bürotag — eingetragen');
+    Views.rerender('termine'); Views.rerender('kalender'); return 0; }
+  if(!KUNDEN_TAGE.includes(dow)){ toast('⚠ '+DOW_LANG[dow]+' ist kein Besuchstag (Mo–Mi)'); return 0; }
+  const belegt=TERMINE.filter(t=>t.datum===iso&&!t.buero).length;
+  const frei=KUNDEN_SLOTS.filter(z=>!TERMINE.some(t=>t.datum===iso&&t.zeit===z));
+  if(!frei.length){ toast('✓ '+DOW_LANG[dow]+' ist voll ('+belegt+' Termine)'); return 0; }
+  const gesperrt=new Set([...TERMINE.map(t=>norm(t.kunde)),...histSet()]);
+  /* Kanton: bevorzugt derselbe wie an diesem Tag / in dieser Woche schon geplant */
+  const wk=weekStartOf(d).toISOString().slice(0,10);
+  const wkKt=[...new Set(termineOfWeek(wk).filter(t=>!t.buero&&t.kt).map(t=>t.kt))];
+  let kt=forceKt||wkKt[0]||null;
+  if(!kt){ const r=kantonRanking(); kt=r.length?r[Math.floor(Math.random()*Math.min(4,r.length))].kt:null; }
+  let pool=kt?kantonPool(kt,gesperrt).map(x=>({k:x.k,c:x.c,s:scoreKunde(x.k)})):[];
+  if(pool.length<frei.length) pool=K.filter(k=>k.co&&coordOf(k)&&!gesperrt.has(norm(k.co)))
+    .map(k=>({k,c:coordOf(k),s:scoreKunde(k)}));
+  /* nächstgelegene zuerst ab letztem Termin des Tages bzw. Basis */
+  const letzte=TERMINE.filter(t=>t.datum===iso&&!t.buero).sort((a,b)=>a.zeit.localeCompare(b.zeit)).pop();
+  let cur=HOME; if(letzte){ const lk=K.find(x=>norm(x.co)===norm(letzte.kunde)); if(lk&&coordOf(lk)) cur=coordOf(lk); }
+  const picked=[];
+  while(picked.length<frei.length&&pool.length){
+    let bi=0,best=-Infinity;
+    pool.forEach((x,i)=>{ const dd=distKm(cur,x.c); const v=(x.s||10)/Math.max(8,dd)*100-dd*0.35;
+      if(v>best){best=v;bi=i;} });
+    const nx=pool.splice(bi,1)[0]; nx.km=distKm(cur,nx.c); cur=nx.c; picked.push(nx);
+  }
+  picked.forEach((x,i)=>{
+    const art=/kontaktiert|gespräch|offerte|follow/i.test(String(x.k.status||''))?'Follow-up-Termin':'Erstbesuch';
+    TERMINE.push({id:uid8(),kunde:x.k.co,datum:iso,zeit:frei[i],dauer:60,typ:'Besuch vor Ort',
+      betreff:'MiT Strom — '+art+' '+x.k.co,ort:[x.k.ort,x.k.kt].filter(Boolean).join(' '),
+      kt:String(x.k.kt||'').trim().toUpperCase(),km:x.km||0,routePos:belegt+i+1,
+      notiz:termBegruendung(x.k),auto:true,done:false,created:new Date().toISOString()});
+  });
+  termSave();
+  toast('📌 '+DOW_LANG[dow]+': '+picked.length+' Termine'+(kt?' in '+kt:'')+' geplant');
+  Views.rerender('termine'); Views.rerender('kalender'); Views.rerender('dashboard');
+  return picked.length;
+};
+/* Ganzer Monat: Kundentermine Mo–Mi + Bürotage Do/Fr */
 window.termPlanMonat=(y,m,reshuffle)=>{
   const wks=weeksOfMonth(y,m);
   let kn=0,bn=0; const kts=[]; const used=new Set();
   wks.forEach(wk=>{
     /* pro Woche einen anderen Kanton: Ranking neu, bereits benutzte überspringen */
-    const rank=kantonRanking().filter(x=>!used.has(x.kt));
+    let rank=kantonRanking().filter(x=>!used.has(x.kt));
+    const mb=rank.filter(x=>x.passt); if(mb.length) rank=mb;
     let pick=null;
     if(rank.length){ const top=rank.slice(0,5); const w=top.map(x=>x.a*3+x.n);
       let r=Math.random()*w.reduce((a,b)=>a+b,0), idx=0;
@@ -1955,6 +2013,8 @@ window.termICSmonat=(y,m)=>{
   toast('📆 '+list.length+' Termine ('+MON[m]+') → Outlook · Kunden gesperrt');
 };
 let lastPlanKt='';
+function scoreKunde(k){ const pr=String(k.prio||'').trim();
+  return (pr==='A'?100:pr==='B'?50:10)+(+k.wert>0?25:0)+(+k.fc>0?15:0)+(k.tel?5:0)+(k.next?5:0); }
 /* ═══ ROUTEN-OPTIMIERUNG: pro Woche ein Kanton, Termine nach Fahrstrecke sortiert ═══ */
 const HOME=[47.6960,8.6340];   /* Basis Schaffhausen — anpassbar */
 function distKm(a,b){ if(!a||!b) return 9999;
@@ -1986,7 +2046,21 @@ function kantonRanking(){
     const pr=String(k.prio||'').trim();
     m[kt]=m[kt]||{kt,n:0,a:0,km:distKm(HOME,GEO_KT[kt]||coordOf(k))};
     m[kt].n++; if(pr==='A')m[kt].a++; });
-  return Object.values(m).filter(x=>x.n>=3).sort((a,b)=>(b.a*3+b.n)-(a.a*3+a.n));
+  /* Tour-Schätzung je Kanton: Hin + Rück + Fahrten zwischen den Kunden vor Ort */
+  const out=Object.values(m).filter(x=>x.n>=TERMINE_PRO_WOCHE);
+  out.forEach(x=>{
+    const pts=K.filter(k=>String(k.kt||'').trim().toUpperCase()===x.kt&&coordOf(k)).map(coordOf).slice(0,40);
+    /* mittlere Nachbardistanz im Kanton als Mass für die Kompaktheit */
+    let sum=0,n2=0;
+    for(let i=0;i<pts.length&&i<14;i++){ let bd=Infinity;
+      for(let j=0;j<pts.length;j++){ if(i===j)continue; const d=distKm(pts[i],pts[j]); if(d<bd)bd=d; }
+      if(isFinite(bd)){sum+=bd;n2++;} }
+    x.spread=n2?Math.round(sum/n2):20;
+    x.tour=x.km*2+x.spread*(TERMINE_PRO_WOCHE-1);   /* geschätzte Wochenstrecke */
+    x.passt=x.tour<=KM_LIMIT;
+  });
+  /* Kantone, die ins Budget passen, zuerst — dann nach Potenzial */
+  return out.sort((a,b)=>(b.passt-a.passt)||((b.a*3+b.n)-(a.a*3+a.n)));
 }
 /* Google-Maps-Route für eine Woche (oder einen Tag) */
 window.mapsRoute=(wk,tagIso)=>{
@@ -2008,12 +2082,13 @@ window.termAutoPlan=(wk,reshuffle,silent,forceKt)=>{
     if(TERMINE.length<before) termSave();
   }
   const geplant=new Set([...TERMINE.map(t=>norm(t.kunde)),...histSet()]);
-  const score=k=>{ const pr=String(k.prio||'').trim();
-    return (pr==='A'?100:pr==='B'?50:10)+(+k.wert>0?25:0)+(+k.fc>0?15:0)+(k.tel?5:0)+(k.next?5:0); };
+  const score=scoreKunde;
   /* ── Kanton der Woche: alle Termine im selben Kanton = kurze Wege ── */
   let cands, wochenKt=forceKt||null;
   if(!wochenKt){
-    const rank=kantonRanking();
+    let rank=kantonRanking();
+    const machbar=rank.filter(x=>x.passt);
+    if(machbar.length) rank=machbar;            /* nur Kantone, in denen 7 Termine ins Budget passen */
     if(rank.length){ const top=rank.slice(0,6);
       const w=top.map(x=>x.a*3+x.n);
       let r=Math.random()*w.reduce((a,b)=>a+b,0), pick=0;
@@ -2031,21 +2106,53 @@ window.termAutoPlan=(wk,reshuffle,silent,forceKt)=>{
   }
   const existing=kundenTermine(termineOfWeek(wk)).length;
   /* Woche gilt ab WOCHENZIEL_MIN als geplant — erneutes Klicken füllt NICHT weiter auf */
-  if(existing>=WOCHENZIEL_MIN){ if(!silent) toast('✓ Woche geplant ('+existing+' Kundentermine) — «🎲 Neu würfeln» tauscht sie'); return 0; }
-  const ziel=6+Math.round(Math.random());  /* mal 6, mal 7 Kundentermine */
+  if(existing>=TERMINE_PRO_WOCHE){ if(!silent) toast('✓ Woche geplant ('+existing+' Termine) — «🎲 Neu würfeln» tauscht sie'); return 0; }
+  const ziel=TERMINE_PRO_WOCHE;   /* fix 7 Kundentermine Mo–Mi */
   const need=Math.max(0,ziel-existing);
   if(!need) return 0;
   const ws=toDate(wk); const slots=[];
-  /* Kundentermine ausschliesslich Montag + Dienstag — abwechselnd Mo/Di je Zeitfenster */
+  /* Kundentermine Mo–Mi: erst jeder Tag 09:00, dann 11:00, dann 14:00 → gleichmässig verteilt */
   for(const z of KUNDEN_SLOTS){ for(const d of KUNDEN_TAGE){
     const dt=new Date(ws.getFullYear(),ws.getMonth(),ws.getDate()+d);
     const iso=isoOf(dt);
     if(!TERMINE.some(t=>t.datum===iso&&t.zeit===z)) slots.push({iso,z});
   }}
-  /* Erst auswählen, dann per Nearest-Neighbour in Fahrreihenfolge bringen */
-  const picked=cands.slice(0,Math.min(need,slots.length))
-    .map(x=>({k:x.k,c:x.c||coordOf(x.k)}));
-  const routed=optimizeRoute(picked.filter(x=>x.c),HOME).concat(picked.filter(x=>!x.c));
+  /* ── Kompakte Auswahl unter km-Budget: greedy nächster Nachbar aus dem Kandidatenpool ── */
+  const wanted=Math.min(need,slots.length);
+  const pool=cands.map(x=>({k:x.k,c:x.c||coordOf(x.k),s:x.s})).filter(x=>x.c);
+  const picked=[]; let cur=HOME, km=0;
+  while(picked.length<wanted&&pool.length){
+    /* Bewertung: Nähe zum aktuellen Punkt gewichtet mit Kundenscore */
+    let bi=0,best=-Infinity;
+    pool.forEach((x,i)=>{ const d=distKm(cur,x.c);
+      const v=(x.s||10)/Math.max(8,d)*100 - d*0.35;   /* nah + wichtig gewinnt */
+      if(v>best){best=v;bi=i;} });
+    const nx=pool.splice(bi,1)[0];
+    const d=distKm(cur,nx.c);
+    /* Rückweg einkalkulieren, damit die Tour im Budget bleibt */
+    if(km+d+distKm(nx.c,HOME)>KM_LIMIT&&picked.length>=Math.min(3,wanted)) break;
+    nx.km=d; km+=d; cur=nx.c; picked.push(nx);
+  }
+  if(picked.length<wanted){ /* auffüllen: greedy ab letztem Punkt, nicht ab Basis */
+    const rest=cands.map(x=>({k:x.k,c:x.c||coordOf(x.k),s:x.s}))
+      .filter(x=>x.c&&!picked.some(p2=>p2.k===x.k));
+    while(picked.length<wanted&&rest.length){
+      let bi=0,bd=Infinity;
+      rest.forEach((x,i)=>{ const d=distKm(cur,x.c); if(d<bd){bd=d;bi=i;} });
+      const nx=rest.splice(bi,1)[0]; nx.km=bd; cur=nx.c; picked.push(nx);
+    }
+  }
+  /* Route optimieren, dann Budget hart durchsetzen: entfernteste Stopps fallen raus */
+  let routed=optimizeRoute(picked.filter(x=>x.c),HOME).concat(picked.filter(x=>!x.c));
+  const tourKm=r=>r.reduce((a,x)=>a+(+x.km||0),0)+(r.length?distKm(r[r.length-1].c,HOME):0);
+  let guard=0;
+  const minKeep=Math.min(WOCHENZIEL_MIN,wanted);
+  while(routed.length>minKeep&&tourKm(routed)>KM_LIMIT&&guard++<40){
+    let wi=0,wd=-1;
+    routed.forEach((x,i)=>{ if((+x.km||0)>wd){wd=+x.km||0;wi=i;} });   /* teuerster Sprung */
+    routed.splice(wi,1);
+    routed=optimizeRoute(routed,HOME);                                 /* neu berechnen */
+  }
   let created=0;
   for(let i=0;i<routed.length&&created<need&&created<slots.length;i++){
     const {k,km}=routed[i]; const slot=slots[created];
@@ -2060,7 +2167,9 @@ window.termAutoPlan=(wk,reshuffle,silent,forceKt)=>{
   termSave();
   lastPlanKt=wochenKt||'';
   if(!silent){
-    toast('⚡ '+created+' Termine in '+(wochenKt?'Kanton '+wochenKt:'der ganzen CH')+' — Route optimiert');
+    const kmT=routed.slice(0,created).reduce((a,x)=>a+(+x.km||0),0);
+    toast('⚡ '+created+' Termine in '+(wochenKt?'Kanton '+wochenKt:'der ganzen CH')+' · ~'+kmT+' km'+
+      (created<need?' (km-Limit '+KM_LIMIT+' erreicht)':''));
     Views.rerender('termine'); Views.rerender('kalender'); Views.rerender('dashboard');
   }
   return created;
@@ -2168,12 +2277,12 @@ function buildTermine(el){
   const weekBlock=(wk,title)=>{
     const list=termineOfWeek(wk);
     const n=kundenTermine(list).length;
-    const pct=Math.min(100,Math.round(n/WOCHENZIEL_MIN*100));
-    const zielOk=n>=WOCHENZIEL_MIN;
+    const pct=Math.min(100,Math.round(n/TERMINE_PRO_WOCHE*100));
+    const zielOk=n>=TERMINE_PRO_WOCHE;
     const DAYS=['Mo','Di','Mi','Do','Fr','Sa','So'];
     return `<div class="card"><div class="card-h"><h3>${title}</h3><span class="sub">${wkLbl(wk)}</span>
       <div style="flex:1"></div>
-      <span class="badge ${zielOk?'b-green':n>0?'b-orange':'b-gray'}">${n} / ${WOCHENZIEL_MIN}–${WOCHENZIEL_MAX} Kundentermine</span>
+      <span class="badge ${n>=TERMINE_PRO_WOCHE?'b-green':n>0?'b-orange':'b-gray'}">${n} / ${TERMINE_PRO_WOCHE} Kundentermine</span>
       ${list.some(t=>t.buero)?'<span class="badge b-blue">🏢 Büro Do+Fr</span>':''}
       ${(()=>{const k2=[...new Set(kundenTermine(list).map(t=>t.kt).filter(Boolean))];
         return k2.length?`<span class="badge b-purple">📍 ${k2.join(' · ')}</span>`:'';})()}
@@ -2206,10 +2315,10 @@ function buildTermine(el){
   for(let i=vsPool.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [vsPool[i],vsPool[j]]=[vsPool[j],vsPool[i]]; }
   const vorschlaege=vsPool.slice(0,6);
   el.innerHTML=`<div class="hero" style="display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap">
-    <div style="flex:1"><h1>Terminplanung</h1><p>Rhythmus: <b>Mo + Di</b> Kundentermine (${WOCHENZIEL_MIN}–${WOCHENZIEL_MAX}/Woche) · <b>Do + Fr</b> Büro · ganzen Monat auf einmal planen</p></div>
+    <div style="flex:1"><h1>Terminplanung</h1><p>Heute ist <b>${heute().name}</b> · Rhythmus: <b>Mo–Mi</b> ${TERMINE_PRO_WOCHE} Kundentermine im selben Kanton · <b>Do+Fr</b> Büro · max. ${KM_LIMIT} km/Woche</p></div>
     <button class="tbtn primary" onclick="termNewDialog()">＋ Termin</button></div>
     <div class="card" style="border-color:var(--line2)"><div class="card-h">
-      <h3>📆 Monatsplanung</h3><span class="sub">Mo+Di Kundentermine (6–7/Woche) · Do+Fr Bürotage · Mi frei</span>
+      <h3>🎯 Planungs-Zentrale</h3><span class="sub">Mo–Mi ${TERMINE_PRO_WOCHE} Kundentermine · Do+Fr Büro · max. ${KM_LIMIT} km/Woche</span>
       <div style="flex:1"></div>
       <select id="planMonat" style="background:var(--bg2);border:1px solid var(--line);border-radius:99px;padding:6px 14px;font-size:12.5px;font-weight:600;color:var(--tx);font-family:inherit;outline:none;cursor:pointer">
         ${(()=>{const MON=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
@@ -2218,15 +2327,36 @@ function buildTermine(el){
             o+=`<option value="${d.getFullYear()}-${d.getMonth()}" ${i===0?'selected':''}>${MON[d.getMonth()]} ${d.getFullYear()}</option>`; }
           return o;})()}
       </select>
-      <button class="tbtn primary" onclick="planMonatBtn()">⚡ Monat planen</button>
-      <button class="tbtn" onclick="planMonatBtn(true)" title="Offene, nicht exportierte Kundentermine neu würfeln">🎲 Neu würfeln</button>
       <button class="tbtn" onclick="planMonatICS()">📆 Monat → Outlook</button>
       <button class="tbtn" style="color:var(--red)" onclick="planMonatClear()">🗑</button>
+      </div>
+      <div class="card-b" style="padding-bottom:10px">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
+          <button class="tbtn primary" onclick="planTagBtn()" title="Nur den gewählten Tag füllen (max. 3 Termine)">📌 Tagesplanung</button>
+          <button class="tbtn primary" onclick="planWocheBtn()" title="Ganze Woche Mo–Mi mit ${TERMINE_PRO_WOCHE} Terminen im selben Kanton">📅 Wochenplanung</button>
+          <button class="tbtn primary" onclick="planMonatBtn()" title="Alle Wochen des Monats, jede Woche ein anderer Kanton">🗓 Monatsplanung</button>
+          <button class="tbtn" onclick="planRandomBtn()" title="Zufälligen Kanton wählen und die Woche neu planen">🎲 Random-Kanton</button>
+          <button class="tbtn" onclick="planMonatBtn(true)" title="Offene, nicht exportierte Termine des Monats neu würfeln">♻️ Monat neu würfeln</button>
+          <div style="flex:1"></div>
+          <label style="font-size:11.5px;color:var(--tx2);display:flex;align-items:center;gap:6px">🚗 max. km/Woche
+            <input type="number" min="50" step="50" value="${KM_LIMIT}" onchange="setKmLimit(this.value)"
+              style="width:76px;background:var(--bg2);border:1px solid var(--line);border-radius:99px;padding:5px 10px;font-size:12px;color:var(--tx);font-family:inherit;outline:none;text-align:center"></label>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--tx2)">
+          <span>Tag:</span><input type="date" id="planTagDatum" value="${heute().iso}"
+            style="background:var(--bg2);border:1px solid var(--line);border-radius:99px;padding:5px 12px;font-size:12px;color:var(--tx);font-family:inherit;outline:none">
+          <span>Woche ab:</span><input type="date" id="planWocheDatum" value="${heute().wk}"
+            style="background:var(--bg2);border:1px solid var(--line);border-radius:99px;padding:5px 12px;font-size:12px;color:var(--tx);font-family:inherit;outline:none">
+          <span>Kanton:</span><select id="planKanton"
+            style="background:var(--bg2);border:1px solid var(--line);border-radius:99px;padding:5px 12px;font-size:12px;font-weight:600;color:var(--tx);font-family:inherit;outline:none;cursor:pointer">
+            <option value="">🎲 automatisch</option>${kantonRanking().map(x=>`<option value="${x.kt}">${x.passt?'✓':'⚠'} ${x.kt} — ${x.n} offen · Tour ~${x.tour} km</option>`).join('')}</select>
+          <span style="margin-left:auto;color:var(--tx3)">📍 heute: ${heuteText()}</span>
+        </div>
       </div>
       <div class="card-b" style="padding-bottom:0"><div style="font-size:11.5px;color:var(--tx2);margin-bottom:8px">
         <b>Kanton-Tour-Vorschlag</b> — Wochen werden automatisch auf verschiedene Kantone verteilt (kurze Wege):</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
-        ${kantonRanking().slice(0,8).map(x=>`<span class="chip" title="${x.n} offene Kunden · ${x.a} Prio-A · ca. ${x.km} km ab Basis">${x.kt} · ${x.n} (${x.a}×A) · ${x.km}km</span>`).join('')||'<span style="font-size:12px;color:var(--tx2)">Alle Kantone abgearbeitet</span>'}
+        ${kantonRanking().slice(0,8).map(x=>`<span class="chip" style="${x.passt?'':'opacity:.55'}" title="${x.n} offene Kunden · ${x.a} Prio-A · Anfahrt ${x.km} km · geschätzte Wochentour ${x.tour} km">${x.passt?'✓':'⚠'} ${x.kt} · ${x.n} (${x.a}×A) · ~${x.tour}km</span>`).join('')||'<span style="font-size:12px;color:var(--tx2)">Alle Kantone abgearbeitet</span>'}
         </div></div>
       <div class="card-b" id="monatUebersicht"></div></div>
     <div class="grid2">${weekBlock(thisWk,'📌 Diese Woche')}${weekBlock(nextWk,'📅 Nächste Woche')}</div>
@@ -2263,6 +2393,23 @@ function selMonat(){ const el=document.getElementById('planMonat');
   const [y,m]=(el?el.value:'').split('-').map(Number);
   return isNaN(y)?[new Date().getFullYear(),new Date().getMonth()]:[y,m]; }
 window.planMonatBtn=re=>{ const [y,m]=selMonat(); termPlanMonat(y,m,!!re); };
+function selKanton(){ const e=document.getElementById('planKanton'); return e&&e.value?e.value:null; }
+window.planTagBtn=()=>{ const e=document.getElementById('planTagDatum');
+  termPlanTag(e&&e.value?e.value:heute().iso,selKanton()); };
+window.planWocheBtn=()=>{ const e=document.getElementById('planWocheDatum');
+  const d=toDate(e&&e.value?e.value:heute().iso)||new Date();
+  const wk=weekStartOf(d).toISOString().slice(0,10);
+  termAutoPlan(wk,false,false,selKanton()); planBuero(wk); termSave();
+  Views.rerender('termine'); Views.rerender('kalender'); Views.rerender('dashboard'); };
+window.planRandomBtn=()=>{ const e=document.getElementById('planWocheDatum');
+  const d=toDate(e&&e.value?e.value:heute().iso)||new Date();
+  const wk=weekStartOf(d).toISOString().slice(0,10);
+  const r=kantonRanking();
+  if(!r.length){ toast('⚠ Keine offenen Kantone mehr'); return; }
+  const kt=r[Math.floor(Math.random()*Math.min(8,r.length))].kt;
+  termAutoPlan(wk,true,false,kt); planBuero(wk); termSave();
+  toast('🎲 Zufalls-Kanton: '+kt);
+  Views.rerender('termine'); Views.rerender('kalender'); Views.rerender('dashboard'); };
 window.planMonatICS=()=>{ const [y,m]=selMonat(); termICSmonat(y,m); };
 window.planMonatClear=()=>{ const [y,m]=selMonat(); termClearMonat(y,m); };
 /* Monatsübersicht: Woche für Woche */
@@ -2294,7 +2441,7 @@ function renderMonatUebersicht(){
         </div>
         ${(()=>{const k2=[...new Set(kundenTermine(list).map(t=>t.kt).filter(Boolean))];
           return k2.length?`<span class="badge b-purple" style="font-size:10px">📍 ${k2.join('/')}</span>`:'';})()}
-        <span class="badge ${kn>=WOCHENZIEL_MIN?'b-green':kn?'b-orange':'b-gray'}" style="font-size:10px">${kn}/${WOCHENZIEL_MIN}–${WOCHENZIEL_MAX}</span>
+        <span class="badge ${kn>=TERMINE_PRO_WOCHE?'b-green':kn?'b-orange':'b-gray'}" style="font-size:10px">${kn}/${TERMINE_PRO_WOCHE}</span>
       </div>`; }).join('')}`;
 }
 Views.add('termine','Terminplanung','Vertrieb','◷',null,buildTermine);
@@ -2453,6 +2600,10 @@ $('exportBtn').onclick=()=>{
 };
 // Expose core objects for inline handlers (defensive across browsers)
 window.Views=Views; window.Drawer=Drawer; window.Spot=Spot; window.toast=toast; window.exportRows=exportRows;
+/* Live-Datum im Header: zeigt immer den echten heutigen Wochentag */
+function tickDatum(){ const c=document.getElementById('crumb'); if(c) c.textContent=heuteText(); }
+tickDatum(); setInterval(tickDatum,60000);
+try{ localStorage.setItem('one_last_open',new Date().toISOString()); }catch(e){}
 // Boot
 const startView=(location.hash||'').replace('#','');
 Views.show(Views.reg[startView]?startView:'dashboard');
