@@ -392,7 +392,12 @@ const fmtN = n => (+n||0).toLocaleString('de-CH',{maximumFractionDigits:0});
 const fmtP = n => { n=+n||0; if(n<=1.5)n*=100; return Math.round(n)+'%'; };
 const esc = s => String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const norm = s => String(s||'').toLowerCase().replace(/\s+ag$|\s+gmbh$|\s+sa$/,'').replace(/[^a-z0-9äöü]/g,'');
-const toDate = v => { if(!v) return null; const d=new Date(v); return isNaN(d)?null:d; };
+const toDate = v => { if(!v) return null;
+  /* reine Datumsstrings lokal parsen — 'new Date("2026-08-03")' wäre UTC-Mitternacht
+     und kippt in der Schweiz (UTC+1/+2) beim Zurückrechnen auf den Vortag */
+  if(typeof v==='string'){ const m=v.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if(m) return new Date(+m[1],+m[2]-1,+m[3]); }
+  const d=new Date(v); return isNaN(d)?null:d; };
 const fmtD = v => { const d=toDate(v); return d ? d.toLocaleDateString('de-CH',{day:'2-digit',month:'2-digit',year:'2-digit'}) : String(v||'—'); };
 
 // Object-ify rows
@@ -440,7 +445,7 @@ function exportRows(name, headers, rows){
   if(window.XLSX){ try{
     const ws=XLSX.utils.aoa_to_sheet([headers,...rows]);
     const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,name.slice(0,30));
-    XLSX.writeFile(wb,`MiT_${name}_${new Date().toISOString().slice(0,10)}.xlsx`);
+    XLSX.writeFile(wb,`MiT_${name}_${isoOf(new Date())}.xlsx`);
     toast('✓ '+name+' als XLSX exportiert'); return;
   }catch(e){console.warn(e)} }
   const csv=[headers,...rows].map(r=>r.map(c=>{const s=String(c==null?'':c);return /[";\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;}).join(';')).join('\n');
@@ -993,7 +998,7 @@ const MS_TPL={
  'Leer':[]
 };
 const uid8=()=>Math.random().toString(36).slice(2,10);
-const today=()=>new Date().toISOString().slice(0,10);
+const today=()=>isoOf(new Date());
 function projLog(p,text){ p.log=p.log||[]; p.log.unshift({ts:new Date().toISOString(),text}); }
 function msProgress(p){ const t=(p.milestones||[]).length; const d=(p.milestones||[]).filter(m=>m.done).length; return {d,t,pct:t?Math.round(d/t*100):0}; }
 function projTotal(p){ return (p.geraete||[]).reduce((s,g)=>s+(+g.menge||1)*(+g.tagespreis||0)*(+g.tage||1),0); }
@@ -1012,7 +1017,7 @@ window.projFromDeal=i=>{ const d=P.find(x=>x._i===i); if(!d)return;
   const st=toDate(d.start), en=st&&+d.dauer?new Date(st.getTime()+(+d.dauer)*864e5):null;
   const p=projNew({name:(d.co||'Projekt')+' — '+(d.fleet||d.seg||''),kunde:d.co,kt:d.kt,segment:d.seg,
     typ:/event/i.test(d.seg)?'Event':/data|dc|rechen/i.test(d.seg)?'Data Center':/bau/i.test(d.seg)?'Bau':/not/i.test(String(d.fleet)+String(d.seg))?'Notstrom':'Industrie',
-    start:st?st.toISOString().slice(0,10):today(),ende:en?en.toISOString().slice(0,10):'',dealRef:i,
+    start:st?isoOf(st):today(),ende:en?isoOf(en):'',dealRef:i,
     beschreibung:'Übernommen aus Pipeline-Deal · Volumen '+fmtCHF(pVal(d))+(d.usp?' · '+d.usp:'')});
   Drawer.close(); toast('📁 Projekt angelegt'); Views.rerender('projekte'); Views.show('projekte'); projOpen(p.id);
 };
@@ -1193,11 +1198,11 @@ function collectEvents(){
     if(p.ende) items.push({d:p.ende,t:'■ Ende: '+p.name,s:'Projekt · '+(p.kunde||''),c:'#af52de',ref:{type:'pende',pid:p.id},fn:()=>projOpen(p.id)});
   });
   P.forEach(dl=>{ const f=ovGet('P',dl._i).fup??dl.fup; const dd=toDate(f);
-    if(dd&&!['WON','LOST'].includes(pStatus(dl))) items.push({d:dd.toISOString().slice(0,10),t:'Follow-up: '+dl.co,s:'Pipeline · '+fmtCHF(pVal(dl)),c:'#af52de',ref:{type:'dealfup',i:dl._i},fn:()=>openDeal(dl._i)}); });
+    if(dd&&!['WON','LOST'].includes(pStatus(dl))) items.push({d:isoOf(dd),t:'Follow-up: '+dl.co,s:'Pipeline · '+fmtCHF(pVal(dl)),c:'#af52de',ref:{type:'dealfup',i:dl._i},fn:()=>openDeal(dl._i)}); });
   AKQ.forEach(a=>{ const dd=toDate(a.deadline); if(dd&&!/erledigt|done/i.test(String(a.status)))
-    items.push({d:dd.toISOString().slice(0,10),t:a.aktion||a.co,s:'Akquise · '+(a.co||''),c:'#ff9500',fn:()=>Views.show('akquise')}); });
+    items.push({d:isoOf(dd),t:a.aktion||a.co,s:'Akquise · '+(a.co||''),c:'#ff9500',fn:()=>Views.show('akquise')}); });
   K.forEach(k=>{ const f=ovGet('K',k._i).fup??k.fup; const dd=toDate(f);
-    if(dd) items.push({d:dd.toISOString().slice(0,10),t:'Follow-up: '+k.co,s:'CRM · '+(k.status||''),c:'#5ac8fa',ref:{type:'kfup',i:k._i},fn:()=>openKunde(k._i)}); });
+    if(dd) items.push({d:isoOf(dd),t:'Follow-up: '+k.co,s:'CRM · '+(k.status||''),c:'#5ac8fa',ref:{type:'kfup',i:k._i},fn:()=>openKunde(k._i)}); });
   TERMINE.forEach(t=>{ if(t.datum) items.push({d:t.datum,t:(t.done?'✓ ':'')+t.zeit+' '+t.kunde,s:'Termin · '+(t.typ||''),c:t.done?'#8e8e93':'#ff2d55',done:t.done,ref:{type:'termin',id:t.id},fn:()=>termOpen(t.id)}); });
   return items.sort((a,b)=>a.d.localeCompare(b.d));
 }
@@ -1267,7 +1272,7 @@ function buildKalender(el){
     </div><div id="calBody"></div>`;
   const body=el.querySelector('#calBody');
   if(calMode==='agenda'){
-    const in7=new Date(Date.now()+7*864e5).toISOString().slice(0,10);
+    const in7=isoOf(new Date(Date.now()+7*864e5));
     const grp={'⚠ Überfällig':items.filter(x=>x.d<td&&!x.done),'📌 Heute':items.filter(x=>x.d===td),
       '📅 Diese Woche':items.filter(x=>x.d>td&&x.d<=in7),'🗓 Später':items.filter(x=>x.d>in7).slice(0,50)};
     body.innerHTML=Object.entries(grp).map(([g,its])=>its.length?`<div class="cal-day"><h4>${g} · ${its.length}</h4>
@@ -1423,7 +1428,7 @@ window.dealEdit=i=>{ const d=P.find(x=>x._i===i); if(!d)return; const o=ovGet('P
   Drawer.open('Deal bearbeiten — '+(d.co||''),`
     <div class="form-grid">
     <div class="fld"><label>Volumen CHF</label><input id="de-vol" type="number" value="${pVal(d)}"></div>
-    <div class="fld"><label>Follow-up</label><input id="de-fup" type="date" value="${(()=>{const x=toDate(o.fup??d.fup);return x?x.toISOString().slice(0,10):''})()}"></div></div>
+    <div class="fld"><label>Follow-up</label><input id="de-fup" type="date" value="${(()=>{const x=toDate(o.fup??d.fup);return x?isoOf(x):''})()}"></div></div>
     <div class="fld"><label>Nächster Schritt</label><input id="de-next" value="${esc(o.next??d.next??'')}"></div>
     <div class="fld"><label>Notiz</label><textarea id="de-notiz">${esc(o.notiz??d.notiz??'')}</textarea></div>
     <button class="tbtn primary" style="width:100%;justify-content:center;padding:10px" onclick="dealEditSave(${i})">✓ Speichern</button>`);
@@ -1455,7 +1460,7 @@ const colIdx=(hdr,...names)=>{ const h=_low(hdr);
   for(const n of names){ let i=h.indexOf(n); if(i>=0)return i; }
   for(const n of names){ let i=h.findIndex(c=>c.includes(n)); if(i>=0)return i; }
   return -1; };
-const cell=(r,i)=>i>=0&&r[i]!=null?(typeof r[i]==='object'&&r[i] instanceof Date?r[i].toISOString().slice(0,10):String(r[i]).trim()):'';
+const cell=(r,i)=>i>=0&&r[i]!=null?(typeof r[i]==='object'&&r[i] instanceof Date?isoOf(r[i]):String(r[i]).trim()):'';
 const ncell=(r,i)=>{ const v=cell(r,i).replace(/['’\s]/g,''); const n=parseFloat(v); return isNaN(n)?0:n; };
 /* ── Format-Detektoren: jedes Sheet wird klassifiziert und gemappt ── */
 function detectSheet(name,rows){
@@ -1830,18 +1835,18 @@ let BESUCHT=[]; try{BESUCHT=JSON.parse(localStorage.getItem(HIST_KEY)||'[]')}cat
 const histSave=()=>localStorage.setItem(HIST_KEY,JSON.stringify(BESUCHT));
 const histSet=()=>new Set(BESUCHT.map(b=>norm(b.kunde)));
 function histAdd(t){ if(!BESUCHT.some(b=>norm(b.kunde)===norm(t.kunde)))
-  BESUCHT.push({kunde:t.kunde,datum:t.datum,zeit:t.zeit,am:new Date().toISOString().slice(0,10)}); }
+  BESUCHT.push({kunde:t.kunde,datum:t.datum,zeit:t.zeit,am:isoOf(new Date())}); }
 window.histRemove=i=>{ BESUCHT.splice(i,1); histSave(); toast('Aus Sperrliste entfernt'); Views.rerender('termine'); };
 window.histClear=()=>{ if(!confirm(BESUCHT.length+' Einträge aus der Sperrliste löschen? Diese Kunden können danach wieder vorgeschlagen werden.'))return;
   BESUCHT=[]; histSave(); toast('Sperrliste geleert'); Views.rerender('termine'); };
 function markExported(list){ let n=0;
-  list.forEach(t=>{ if(!t.exported){t.exported=true;t.exportedAt=new Date().toISOString().slice(0,10);n++;} if(!t.buero) histAdd(t); });
+  list.forEach(t=>{ if(!t.exported){t.exported=true;t.exportedAt=isoOf(new Date());n++;} if(!t.buero) histAdd(t); });
   termSave(); histSave(); Views.rerender('termine'); Views.rerender('kalender'); return n; }
 const WOCHENZIEL_MIN=5, WOCHENZIEL_MAX=7;
 function weekStartOf(d){ const x=new Date(d.getFullYear(),d.getMonth(),d.getDate()); x.setDate(x.getDate()-((x.getDay()+6)%7)); return x; }
 function isoOf(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 
-function weekKeyOf(iso){ const d=toDate(iso); if(!d)return ''; const ws=weekStartOf(d); return ws.toISOString().slice(0,10); }
+function weekKeyOf(iso){ const d=toDate(iso); if(!d)return ''; return isoOf(weekStartOf(d)); }
 function termineOfWeek(wkStartIso){ return TERMINE.filter(t=>weekKeyOf(t.datum)===wkStartIso).sort((a,b)=>(a.datum+a.zeit).localeCompare(b.datum+b.zeit)); }
 /* Begründung: WARUM dieser Termin + Kurzinfo zum Kunden */
 function termBegruendung(k){
@@ -1899,30 +1904,59 @@ window.setKmLimit=v=>{ KM_LIMIT=Math.max(50,+v||300); localStorage.setItem(KM_LI
 const DOW_LANG=['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag','Sonntag'];
 const DOW_KURZ=['Mo','Di','Mi','Do','Fr','Sa','So'];
 function heute(){ const d=new Date(); return {d,iso:isoOf(d),dow:(d.getDay()+6)%7,
-  name:DOW_LANG[(d.getDay()+6)%7], wk:weekStartOf(d).toISOString().slice(0,10),
+  name:DOW_LANG[(d.getDay()+6)%7], wk:isoOf(weekStartOf(d)),
   kw:(()=>{const x=new Date(d);x.setDate(x.getDate()+3-((x.getDay()+6)%7));const j=new Date(x.getFullYear(),0,4);
     return 1+Math.round(((x-j)/864e5-3+((j.getDay()+6)%7))/7);})()}; }
 function heuteText(){ const h=heute();
   return h.name+', '+h.d.getDate()+'. '+['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'][h.d.getMonth()]+' '+h.d.getFullYear()+' · KW '+h.kw; }
 const isBuero=t=>!!t.buero;
+/* ── Planungsgrenzen: nie in der Vergangenheit, NIE Samstag/Sonntag ── */
+function istWerktag(iso){ const d=toDate(iso); if(!d) return false; return ((d.getDay()+6)%7)<=4; }
+function istWochenende(iso){ const d=toDate(iso); if(!d) return false; return ((d.getDay()+6)%7)>=5; }
+/* frühestes automatisch planbares Datum = heute (lokal, nicht UTC) */
+function planAb(){ return heute().iso; }
+function istPlanbar(iso,range){
+  if(!iso||!istWerktag(iso)) return false;              /* Sa/So niemals */
+  if(iso<planAb()) return false;                        /* Vergangenheit niemals */
+  if(range&&range.von&&iso<range.von) return false;
+  if(range&&range.bis&&iso>range.bis) return false;
+  return true;
+}
+/* nächster planbarer Kundentag (Mo–Mi, ab heute) — nie Sa/So, nie Vergangenheit */
+function naechsterKundentag(){ const n=new Date();
+  for(let i=0;i<28;i++){ const x=new Date(n.getFullYear(),n.getMonth(),n.getDate()+i); const iso=isoOf(x);
+    if(KUNDEN_TAGE.includes((x.getDay()+6)%7)&&istPlanbar(iso)) return iso; }
+  return heute().iso; }
+function naechsteWoche(){ return isoOf(weekStartOf(toDate(naechsterKundentag()))); }
+/* Planungsfenster eines Monats: erster Montag bis Freitag der letzten Monatswoche,
+   frühestens jedoch ab heute — es wird nie rückwärts geplant. */
+function monatRange(y,m){
+  const wks=weeksOfMonth(y,m);
+  if(!wks.length) return {von:planAb(),bis:planAb(),monatVon:planAb()};
+  const ersterMo=toDate(wks[0]), letzterMo=toDate(wks[wks.length-1]);
+  const monatVon=isoOf(ersterMo);
+  const bis=isoOf(new Date(letzterMo.getFullYear(),letzterMo.getMonth(),letzterMo.getDate()+4));
+  return {von:monatVon<planAb()?planAb():monatVon, bis, monatVon};
+}
 const kundenTermine=list=>list.filter(t=>!isBuero(t));
-function weeksOfMonth(y,m){ /* alle Montage, die im Monat einen Mo/Di haben */
-  const out=[]; const d=new Date(y,m,1);
-  d.setDate(d.getDate()-((d.getDay()+6)%7));      /* auf Montag zurück */
-  while(d.getMonth()<m||d.getFullYear()<y||(d.getMonth()===m&&d.getFullYear()===y)){
-    const mo=new Date(d);
-    if(mo.getMonth()===m||new Date(mo.getTime()+4*864e5).getMonth()===m) out.push(isoOf(mo));
-    d.setDate(d.getDate()+7);
-    if(d.getFullYear()>y||(d.getFullYear()===y&&d.getMonth()>m)) break;
-  }
+function weeksOfMonth(y,m){
+  /* Eine Arbeitswoche gehört zu dem Monat, in dem ihr Montag liegt.
+     So gibt es keine angeschnittenen Wochen und «Monatsplanung August»
+     beginnt wirklich im August — nicht am 27. Juli. */
+  const out=[]; const letzter=new Date(y,m+1,0);
+  const d=weekStartOf(new Date(y,m,1));
+  if(d.getMonth()!==m||d.getFullYear()!==y) d.setDate(d.getDate()+7);
+  let guard=0;
+  while(d<=letzter&&guard++<8){ out.push(isoOf(d)); d.setDate(d.getDate()+7); }
   return out;
 }
 /* Büro-Blocker für Do + Fr einer Woche */
-function planBuero(wk){
-  const ws=toDate(wk); let n=0;
+function planBuero(wk,range){
+  const ws=toDate(wk); if(!ws) return 0; let n=0;
   for(const dOff of BUERO_TAGE){
     const dt=new Date(ws.getFullYear(),ws.getMonth(),ws.getDate()+dOff);
     const iso=isoOf(dt);
+    if(!istPlanbar(iso,range)) continue;                /* kein Sa/So, keine Vergangenheit, im Fenster */
     if(TERMINE.some(t=>t.datum===iso&&t.buero)) continue;
     TERMINE.push({id:uid8(),kunde:'🏢 Bürotag',datum:iso,zeit:'08:00',dauer:480,typ:'Büro',
       betreff:'Büro — Innendienst, Offerten, Nachfassen',ort:'Büro',
@@ -1936,16 +1970,23 @@ function planBuero(wk){
 window.termPlanTag=(iso,forceKt)=>{
   const d=toDate(iso); if(!d){ toast('⚠ Kein gültiges Datum'); return 0; }
   const dow=(d.getDay()+6)%7;
-  if(BUERO_TAGE.includes(dow)){ planBuero(weekStartOf(d).toISOString().slice(0,10)); termSave();
+  if(istWochenende(iso)){ toast('⚠ '+DOW_LANG[dow]+' — Samstag und Sonntag werden nie geplant'); return 0; }
+  if(iso<planAb()){ toast('⚠ '+fmtD(iso)+' liegt in der Vergangenheit — es wird ab heute ('+fmtD(planAb())+') geplant'); return 0; }
+  if(BUERO_TAGE.includes(dow)){ planBuero(isoOf(weekStartOf(d))); termSave();
     toast('🏢 '+DOW_LANG[dow]+' ist Bürotag — eingetragen');
     Views.rerender('termine'); Views.rerender('kalender'); return 0; }
   if(!KUNDEN_TAGE.includes(dow)){ toast('⚠ '+DOW_LANG[dow]+' ist kein Besuchstag (Mo–Mi)'); return 0; }
   const belegt=TERMINE.filter(t=>t.datum===iso&&!t.buero).length;
-  const frei=KUNDEN_SLOTS.filter(z=>!TERMINE.some(t=>t.datum===iso&&t.zeit===z));
+  /* Wochen-Obergrenze: nie mehr als TERMINE_PRO_WOCHE Kundentermine pro Woche */
+  const wkTag=isoOf(weekStartOf(d));
+  const inWoche=kundenTermine(termineOfWeek(wkTag)).length;
+  const restWoche=Math.max(0,TERMINE_PRO_WOCHE-inWoche);
+  if(!restWoche){ toast('✓ Woche ist voll ('+inWoche+'/'+TERMINE_PRO_WOCHE+' Kundentermine)'); return 0; }
+  const frei=KUNDEN_SLOTS.filter(z=>!TERMINE.some(t=>t.datum===iso&&t.zeit===z)).slice(0,restWoche);
   if(!frei.length){ toast('✓ '+DOW_LANG[dow]+' ist voll ('+belegt+' Termine)'); return 0; }
   const gesperrt=new Set([...TERMINE.map(t=>norm(t.kunde)),...histSet()]);
   /* Kanton: bevorzugt derselbe wie an diesem Tag / in dieser Woche schon geplant */
-  const wk=weekStartOf(d).toISOString().slice(0,10);
+  const wk=isoOf(weekStartOf(d));
   const wkKt=[...new Set(termineOfWeek(wk).filter(t=>!t.buero&&t.kt).map(t=>t.kt))];
   let kt=forceKt||wkKt[0]||null;
   if(!kt){ const r=kantonRanking(); kt=r.length?r[Math.floor(Math.random()*Math.min(4,r.length))].kt:null; }
@@ -1970,13 +2011,21 @@ window.termPlanTag=(iso,forceKt)=>{
       notiz:termBegruendung(x.k),auto:true,done:false,created:new Date().toISOString()});
   });
   termSave();
+  zeigeWocheSetzen(wk);
   toast('📌 '+DOW_LANG[dow]+': '+picked.length+' Termine'+(kt?' in '+kt:'')+' geplant');
   Views.rerender('termine'); Views.rerender('kalender'); Views.rerender('dashboard');
   return picked.length;
 };
 /* Ganzer Monat: Kundentermine Mo–Mi + Bürotage Do/Fr */
 window.termPlanMonat=(y,m,reshuffle)=>{
-  const wks=weeksOfMonth(y,m);
+  const range=monatRange(y,m);
+  const alleWks=weeksOfMonth(y,m);
+  /* Wochen ohne planbaren Tag (komplett vergangen oder ausserhalb des Monats) überspringen */
+  const wks=alleWks.filter(wk=>{ const ws=toDate(wk);
+    return KUNDEN_TAGE.concat(BUERO_TAGE).some(o=>istPlanbar(isoOf(new Date(ws.getFullYear(),ws.getMonth(),ws.getDate()+o)),range)); });
+  const uebersprungen=alleWks.length-wks.length;
+  if(!wks.length){ toast('⚠ Im gewählten Monat liegt kein planbarer Tag mehr (ab heute, Mo–Fr)'); return; }
+  zeigeWocheSetzen(wks[0]);
   let kn=0,bn=0; const kts=[]; const used=new Set();
   wks.forEach(wk=>{
     /* pro Woche einen anderen Kanton: Ranking neu, bereits benutzte überspringen */
@@ -1987,12 +2036,13 @@ window.termPlanMonat=(y,m,reshuffle)=>{
       let r=Math.random()*w.reduce((a,b)=>a+b,0), idx=0;
       for(let i=0;i<w.length;i++){ r-=w[i]; if(r<=0){idx=i;break;} }
       pick=top[idx].kt; used.add(pick); }
-    kn+=termAutoPlan(wk,reshuffle,true,pick)||0;
+    kn+=termAutoPlan(wk,reshuffle,true,pick,range)||0;
     if(lastPlanKt) kts.push(lastPlanKt);
-    bn+=planBuero(wk); });
+    bn+=planBuero(wk,range); });
   termSave();
   const MON=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
-  toast('📅 '+MON[m]+': '+kn+' Termine (Mo/Di) + '+bn+' Bürotage'+(kts.length?' · Kantone: '+kts.join(' → '):''));
+  toast('📅 '+MON[m]+' '+y+': '+kn+' Kundentermine (Mo–Mi) + '+bn+' Bürotage (Do/Fr) in '+wks.length+' Wochen'+
+    (uebersprungen?' · '+uebersprungen+' vergangene Woche(n) übersprungen':'')+(kts.length?' · Kantone: '+kts.join(' → '):''));
   Views.rerender('termine'); Views.rerender('kalender'); Views.rerender('dashboard');
 };
 window.termClearMonat=(y,m)=>{
@@ -2074,7 +2124,7 @@ window.mapsRoute=(wk,tagIso)=>{
   window.open(url,'_blank','noopener');
   toast('🗺 Route mit '+list.length+' Stopps in Google Maps');
 };
-window.termAutoPlan=(wk,reshuffle,silent,forceKt)=>{
+window.termAutoPlan=(wk,reshuffle,silent,forceKt,range)=>{
   if(reshuffle){
     /* Nur automatisch geplante, offene und NICHT exportierte Termine neu würfeln */
     const before=TERMINE.length;
@@ -2115,8 +2165,10 @@ window.termAutoPlan=(wk,reshuffle,silent,forceKt)=>{
   for(const z of KUNDEN_SLOTS){ for(const d of KUNDEN_TAGE){
     const dt=new Date(ws.getFullYear(),ws.getMonth(),ws.getDate()+d);
     const iso=isoOf(dt);
+    if(!istPlanbar(iso,range)) continue;      /* nie Sa/So, nie Vergangenheit, nur im Monatsfenster */
     if(!TERMINE.some(t=>t.datum===iso&&t.zeit===z)) slots.push({iso,z});
   }}
+  if(!slots.length){ if(!silent) toast('⚠ Kein planbarer Tag in dieser Woche (Mo–Mi, ab heute)'); return 0; }
   /* ── Kompakte Auswahl unter km-Budget: greedy nächster Nachbar aus dem Kandidatenpool ── */
   const wanted=Math.min(need,slots.length);
   const pool=cands.map(x=>({k:x.k,c:x.c||coordOf(x.k),s:x.s})).filter(x=>x.c);
@@ -2166,6 +2218,7 @@ window.termAutoPlan=(wk,reshuffle,silent,forceKt)=>{
   }
   termSave();
   lastPlanKt=wochenKt||'';
+  if(created) zeigeWocheSetzen(wk);
   if(!silent){
     const kmT=routed.slice(0,created).reduce((a,x)=>a+(+x.km||0),0);
     toast('⚡ '+created+' Termine in '+(wochenKt?'Kanton '+wochenKt:'der ganzen CH')+' · ~'+kmT+' km'+
@@ -2195,6 +2248,7 @@ window.termNewDialog=(preDate)=>{
 window.termCreate=()=>{
   const g=x=>document.getElementById(x).value.trim();
   if(!g('tm-kunde')||!g('tm-datum')){ toast('⚠ Kunde und Datum sind Pflicht'); return; }
+  if(istWochenende(g('tm-datum'))){ toast('⚠ Samstag und Sonntag werden nie geplant — bitte Mo–Fr wählen'); return; }
   TERMINE.push({id:uid8(),kunde:g('tm-kunde'),datum:g('tm-datum'),zeit:g('tm-zeit')||'09:00',
     dauer:+document.getElementById('tm-dauer').value||60,typ:document.getElementById('tm-typ').value,
     betreff:g('tm-betreff')||('MiT Strom — '+g('tm-kunde')),ort:g('tm-ort'),notiz:g('tm-notiz'),done:false,created:new Date().toISOString()});
@@ -2270,7 +2324,8 @@ window.termICSweek=wk=>{ const list=termineOfWeek(wk).filter(t=>!t.done);
 window.termICSone=id=>{ const t=TERMINE.find(x=>x.id===id); if(t){icsForTermine([t],'Termin_'+norm(t.kunde).slice(0,18)); markExported([t]); toast('📆 Termin → Outlook · '+t.kunde+' gesperrt');} };
 /* ── Terminplanung-View ── */
 function buildTermine(el){
-  const thisWk=weekStartOf(new Date()).toISOString().slice(0,10);
+  const thisWk=isoOf(weekStartOf(new Date()));
+  const showWk=zeigeWoche();
   const wkLbl=w=>{ const d=toDate(w); const e=new Date(d.getTime()+4*864e5);
     return `${d.getDate()}.${d.getMonth()+1}. – ${e.getDate()}.${e.getMonth()+1}.${e.getFullYear()}`; };
   const weekBlock=(wk,title)=>{
@@ -2280,6 +2335,9 @@ function buildTermine(el){
     const zielOk=n>=TERMINE_PRO_WOCHE;
     const DAYS=['Mo','Di','Mi','Do','Fr','Sa','So'];
     return `<div class="card"><div class="card-h"><h3>${title}</h3><span class="sub">${wkLbl(wk)}</span>
+      <button class="tbtn" style="padding:4px 10px" onclick="wkNav(-1)" title="Woche zurück">‹</button>
+      <button class="tbtn" style="padding:4px 10px" onclick="wkHeute()" title="Zur aktuellen Woche springen">Heute</button>
+      <button class="tbtn" style="padding:4px 10px" onclick="wkNav(1)" title="Woche vor">›</button>
       <div style="flex:1"></div>
       <span class="badge ${n>=TERMINE_PRO_WOCHE?'b-green':n>0?'b-orange':'b-gray'}">${n} / ${TERMINE_PRO_WOCHE} Kundentermine</span>
       ${list.some(t=>t.buero)?'<span class="badge b-blue">🏢 Büro Do+Fr</span>':''}
@@ -2321,9 +2379,10 @@ function buildTermine(el){
       <div style="flex:1"></div>
       <select id="planMonat" style="background:var(--bg2);border:1px solid var(--line);border-radius:99px;padding:6px 14px;font-size:12.5px;font-weight:600;color:var(--tx);font-family:inherit;outline:none;cursor:pointer">
         ${(()=>{const MON=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
-          const n=new Date(); let o='';
-          for(let i=0;i<6;i++){ const d=new Date(n.getFullYear(),n.getMonth()+i,1);
-            o+=`<option value="${d.getFullYear()}-${d.getMonth()}" ${i===0?'selected':''}>${MON[d.getMonth()]} ${d.getFullYear()}</option>`; }
+          const n=new Date(); let o=''; const cur=PLAN_MONAT||(n.getFullYear()+'-'+n.getMonth());
+          for(let i=0;i<12;i++){ const d=new Date(n.getFullYear(),n.getMonth()+i,1);
+            const v=d.getFullYear()+'-'+d.getMonth();
+            o+=`<option value="${v}" ${v===cur?'selected':''}>${MON[d.getMonth()]} ${d.getFullYear()}</option>`; }
           return o;})()}
       </select>
       <button class="tbtn" onclick="planMonatICS()">📆 Monat → Outlook</button>
@@ -2336,19 +2395,20 @@ function buildTermine(el){
           <button class="tbtn primary" onclick="planMonatBtn()" title="Alle Wochen des Monats, jede Woche ein anderer Kanton">🗓 Monatsplanung</button>
           <button class="tbtn" onclick="planRandomBtn()" title="Zufälligen Kanton wählen und die Woche neu planen">🎲 Random-Kanton</button>
           <button class="tbtn" onclick="planMonatBtn(true)" title="Offene, nicht exportierte Termine des Monats neu würfeln">♻️ Monat neu würfeln</button>
+          <button class="tbtn" onclick="planBereinigen()" title="Wochenendtermine, Doppelte und Wochen über dem Ziel entfernen — exportierte und erledigte bleiben">🧹 Bereinigen</button>
           <div style="flex:1"></div>
           <label style="font-size:11.5px;color:var(--tx2);display:flex;align-items:center;gap:6px">🚗 max. km/Woche
             <input type="number" min="50" step="50" value="${KM_LIMIT}" onchange="setKmLimit(this.value)"
               style="width:76px;background:var(--bg2);border:1px solid var(--line);border-radius:99px;padding:5px 10px;font-size:12px;color:var(--tx);font-family:inherit;outline:none;text-align:center"></label>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--tx2)">
-          <span>Tag:</span><input type="date" id="planTagDatum" value="${heute().iso}"
+          <span>Tag:</span><input type="date" id="planTagDatum" value="${PLAN_TAG||naechsterKundentag()}"
             style="background:var(--bg2);border:1px solid var(--line);border-radius:99px;padding:5px 12px;font-size:12px;color:var(--tx);font-family:inherit;outline:none">
-          <span>Woche ab:</span><input type="date" id="planWocheDatum" value="${heute().wk}"
+          <span>Woche ab:</span><input type="date" id="planWocheDatum" value="${PLAN_WOCHE||naechsteWoche()}"
             style="background:var(--bg2);border:1px solid var(--line);border-radius:99px;padding:5px 12px;font-size:12px;color:var(--tx);font-family:inherit;outline:none">
           <span>Kanton:</span><select id="planKanton"
             style="background:var(--bg2);border:1px solid var(--line);border-radius:99px;padding:5px 12px;font-size:12px;font-weight:600;color:var(--tx);font-family:inherit;outline:none;cursor:pointer">
-            <option value="">🎲 automatisch</option>${kantonRanking().map(x=>`<option value="${x.kt}">${x.passt?'✓':'⚠'} ${x.kt} — ${x.n} offen · Tour ~${x.tour} km</option>`).join('')}</select>
+            <option value="" ${PLAN_KT?'':'selected'}>🎲 automatisch</option>${kantonRanking().map(x=>`<option value="${x.kt}" ${x.kt===PLAN_KT?'selected':''}>${x.passt?'✓':'⚠'} ${x.kt} — ${x.n} offen · Tour ~${x.tour} km</option>`).join('')}</select>
           <span style="margin-left:auto;color:var(--tx3)">📍 heute: ${heuteText()}</span>
         </div>
       </div>
@@ -2358,7 +2418,7 @@ function buildTermine(el){
         ${kantonRanking().slice(0,8).map(x=>`<span class="chip" style="${x.passt?'':'opacity:.55'}" title="${x.n} offene Kunden · ${x.a} Prio-A · Anfahrt ${x.km} km · geschätzte Wochentour ${x.tour} km">${x.passt?'✓':'⚠'} ${x.kt} · ${x.n} (${x.a}×A) · ~${x.tour}km</span>`).join('')||'<span style="font-size:12px;color:var(--tx2)">Alle Kantone abgearbeitet</span>'}
         </div></div>
       <div class="card-b" id="monatUebersicht"></div></div>
-    ${weekBlock(thisWk,'📌 Diese Woche')}
+    ${weekBlock(showWk,showWk===thisWk?'📌 Diese Woche':(showWk>thisWk?'📅 Kommende Woche':'🕓 Vergangene Woche'))}
     <div class="card"><div class="card-h"><h3>💡 Termin-Vorschläge</h3><span class="sub">${vsPool.length} Prio-A-Kunden ohne Termin — zufällige Auswahl</span>
       <div style="flex:1"></div><button class="tbtn" onclick="Views.rerender('termine')" title="Andere 6 Kandidaten anzeigen">🎲 Neu mischen</button></div>
       <div class="card-b" style="padding:8px 12px">
@@ -2384,31 +2444,88 @@ function buildTermine(el){
       :'<div class="empty" style="padding:14px">—</div>'}
       </div></div>`;
   const selEl=el.querySelector('#planMonat');
-  if(selEl) selEl.onchange=()=>renderMonatUebersicht();
+  if(selEl) selEl.onchange=()=>{ PLAN_MONAT=selEl.value; renderMonatUebersicht(); };
+  /* Auswahl von Tag / Woche / Kanton bleibt über Re-Renders hinweg bestehen */
+  const bind=(id,setter)=>{ const e=el.querySelector('#'+id); if(e) e.onchange=()=>setter(e.value); };
+  bind('planTagDatum',v=>PLAN_TAG=v);
+  bind('planWocheDatum',v=>PLAN_WOCHE=v);
+  bind('planKanton',v=>PLAN_KT=v||null);
   renderMonatUebersicht();
 }
 /* Monatsplanungs-Buttons */
+/* Auswahl der Planungs-Zentrale — bleibt über Re-Renders hinweg erhalten */
+let PLAN_MONAT=null, PLAN_TAG=null, PLAN_WOCHE=null, PLAN_KT=null;
+/* Woche, die die Wochenkarte zeigt — folgt automatisch der zuletzt geplanten Woche */
+let ANZEIGE_WK=null;
+function zeigeWoche(){ return ANZEIGE_WK||isoOf(weekStartOf(new Date())); }
+window.wkNav=off=>{ const d=toDate(zeigeWoche()); d.setDate(d.getDate()+off*7);
+  ANZEIGE_WK=isoOf(d); Views.rerender('termine'); };
+window.wkHeute=()=>{ ANZEIGE_WK=null; Views.rerender('termine'); };
+function zeigeWocheSetzen(wk){ if(!wk) return; ANZEIGE_WK=wk;
+  /* Kalender folgt der geplanten Woche mit, damit die Termine sofort sichtbar sind */
+  const d=toDate(wk); if(d){ calWeekStart=new Date(d.getFullYear(),d.getMonth(),d.getDate());
+    calYM=[d.getFullYear(),d.getMonth()]; } }
 function selMonat(){ const el=document.getElementById('planMonat');
-  const [y,m]=(el?el.value:'').split('-').map(Number);
-  return isNaN(y)?[new Date().getFullYear(),new Date().getMonth()]:[y,m]; }
+  const raw=(el&&el.value)||PLAN_MONAT||'';
+  const [y,m]=String(raw).split('-').map(Number);
+  if(isNaN(y)||isNaN(m)) return [new Date().getFullYear(),new Date().getMonth()];
+  PLAN_MONAT=y+'-'+m;
+  return [y,m]; }
 window.planMonatBtn=re=>{ const [y,m]=selMonat(); termPlanMonat(y,m,!!re); };
-function selKanton(){ const e=document.getElementById('planKanton'); return e&&e.value?e.value:null; }
+function selKanton(){ const e=document.getElementById('planKanton');
+  const v=(e&&e.value)||PLAN_KT||''; PLAN_KT=v||null; return v||null; }
 window.planTagBtn=()=>{ const e=document.getElementById('planTagDatum');
-  termPlanTag(e&&e.value?e.value:heute().iso,selKanton()); };
+  const iso=(e&&e.value)||PLAN_TAG||naechsterKundentag(); PLAN_TAG=iso;
+  termPlanTag(iso,selKanton()); };
 window.planWocheBtn=()=>{ const e=document.getElementById('planWocheDatum');
-  const d=toDate(e&&e.value?e.value:heute().iso)||new Date();
-  const wk=weekStartOf(d).toISOString().slice(0,10);
+  const raw=(e&&e.value)||PLAN_WOCHE||naechsteWoche(); PLAN_WOCHE=raw;
+  const d=toDate(raw)||new Date();
+  const wk=isoOf(weekStartOf(d));
+  if(wk<isoOf(weekStartOf(new Date()))){ toast('⚠ Diese Woche liegt in der Vergangenheit — bitte eine Woche ab heute wählen'); return; }
   termAutoPlan(wk,false,false,selKanton()); planBuero(wk); termSave();
   Views.rerender('termine'); Views.rerender('kalender'); Views.rerender('dashboard'); };
 window.planRandomBtn=()=>{ const e=document.getElementById('planWocheDatum');
-  const d=toDate(e&&e.value?e.value:heute().iso)||new Date();
-  const wk=weekStartOf(d).toISOString().slice(0,10);
+  const raw=(e&&e.value)||PLAN_WOCHE||naechsteWoche(); PLAN_WOCHE=raw;
+  const d=toDate(raw)||new Date();
+  const wk=isoOf(weekStartOf(d));
   const r=kantonRanking();
   if(!r.length){ toast('⚠ Keine offenen Kantone mehr'); return; }
   const kt=r[Math.floor(Math.random()*Math.min(8,r.length))].kt;
+  if(wk<isoOf(weekStartOf(new Date()))){ toast('⚠ Diese Woche liegt in der Vergangenheit — bitte eine Woche ab heute wählen'); return; }
   termAutoPlan(wk,true,false,kt); planBuero(wk); termSave();
   toast('🎲 Zufalls-Kanton: '+kt);
   Views.rerender('termine'); Views.rerender('kalender'); Views.rerender('dashboard'); };
+/* 🧹 Altlasten bereinigen: Wochenendtermine, Doppelte und Wochen über dem Ziel.
+   Exportierte und erledigte Termine bleiben IMMER unangetastet. */
+window.planBereinigen=()=>{
+  const raus=new Set(); const grund={};
+  const merk=(t,g)=>{ if(t.exported||t.done) return false; raus.add(t.id); grund[g]=(grund[g]||0)+1; return true; };
+  const sortiert=[...TERMINE].sort((a,b)=>(a.datum+(a.zeit||'')).localeCompare(b.datum+(b.zeit||'')));
+  /* 1) Samstag/Sonntag */
+  sortiert.forEach(t=>{ if(istWochenende(t.datum)) merk(t,'Wochenende'); });
+  /* 2) Doppelte: gleicher Kunde am gleichen Tag · doppelte Bürotage */
+  const gesehen=new Set();
+  sortiert.forEach(t=>{ if(raus.has(t.id)) return;
+    const key=(t.buero?'BUERO':norm(t.kunde))+'|'+t.datum;
+    if(gesehen.has(key)) merk(t,'Doppelt'); else gesehen.add(key); });
+  /* 3) gleicher Kunde mehrfach in derselben Woche */
+  const inWoche=new Set();
+  sortiert.forEach(t=>{ if(raus.has(t.id)||t.buero) return;
+    const key=norm(t.kunde)+'|'+weekKeyOf(t.datum);
+    if(inWoche.has(key)) merk(t,'Kunde doppelt in der Woche'); else inWoche.add(key); });
+  /* 4) mehr als TERMINE_PRO_WOCHE Kundentermine pro Woche */
+  const zaehler={};
+  sortiert.forEach(t=>{ if(raus.has(t.id)||t.buero) return;
+    const w=weekKeyOf(t.datum); zaehler[w]=(zaehler[w]||0)+1;
+    /* nur herunterzählen, wenn wirklich entfernt wurde — exportierte bleiben und zählen mit */
+    if(zaehler[w]>TERMINE_PRO_WOCHE&&merk(t,'über Wochenziel')) zaehler[w]--; });
+  if(!raus.size){ toast('✓ Nichts zu bereinigen — alle Termine sind sauber'); return; }
+  const liste=Object.entries(grund).map(([g,n])=>n+'× '+g).join(' · ');
+  if(!confirm(raus.size+' Termine bereinigen?\n\n'+liste+'\n\nExportierte und erledigte Termine bleiben erhalten.')) return;
+  TERMINE=TERMINE.filter(t=>!raus.has(t.id));
+  termSave(); toast('🧹 '+raus.size+' Termine bereinigt — '+liste);
+  Views.rerender('termine'); Views.rerender('kalender'); Views.rerender('dashboard');
+};
 window.planMonatICS=()=>{ const [y,m]=selMonat(); termICSmonat(y,m); };
 window.planMonatClear=()=>{ const [y,m]=selMonat(); termClearMonat(y,m); };
 /* Monatsübersicht: Woche für Woche */
@@ -2416,13 +2533,19 @@ function renderMonatUebersicht(){
   const el=document.getElementById('monatUebersicht'); if(!el) return;
   const [y,m]=selMonat();
   const wks=weeksOfMonth(y,m);
+  const range=monatRange(y,m);
+  const MONL=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
   const DAYS=['Mo','Di','Mi','Do','Fr'];
   const totalK=wks.reduce((s2,wk)=>s2+kundenTermine(termineOfWeek(wk)).length,0);
   const totalB=wks.reduce((s2,wk)=>s2+termineOfWeek(wk).filter(t=>t.buero).length,0);
-  el.innerHTML=`<div style="display:flex;gap:18px;flex-wrap:wrap;margin-bottom:14px;font-size:13px">
+  const planbar=wks.filter(wk=>{ const ws=toDate(wk);
+    return KUNDEN_TAGE.some(o=>istPlanbar(isoOf(new Date(ws.getFullYear(),ws.getMonth(),ws.getDate()+o)),range)); }).length;
+  el.innerHTML=`<div style="display:flex;gap:18px;flex-wrap:wrap;margin-bottom:14px;font-size:13px;align-items:baseline">
+      <span style="font-weight:700;font-size:14px">${MONL[m]} ${y}</span>
       <span><b style="font-size:19px">${totalK}</b> <span style="color:var(--tx2)">Kundentermine</span></span>
       <span><b style="font-size:19px">${totalB}</b> <span style="color:var(--tx2)">Bürotage</span></span>
-      <span><b style="font-size:19px">${wks.length}</b> <span style="color:var(--tx2)">Wochen</span></span></div>
+      <span><b style="font-size:19px">${planbar}</b> <span style="color:var(--tx2)">von ${wks.length} Wochen planbar</span></span>
+      <span style="color:var(--tx3);font-size:11.5px">Planung ab ${fmtD(range.von)} · Sa/So nie</span></div>
     ${wks.map(wk=>{ const ws=toDate(wk); const list=termineOfWeek(wk);
       const kn=kundenTermine(list).length;
       const isoW=(()=>{const d=new Date(ws);d.setDate(d.getDate()+3);const j=new Date(d.getFullYear(),0,4);return 1+Math.round(((d-j)/864e5-3+((j.getDay()+6)%7))/7);})();
@@ -2433,9 +2556,11 @@ function renderMonatUebersicht(){
         ${DAYS.map((dn,di)=>{ const dt=new Date(ws.getFullYear(),ws.getMonth(),ws.getDate()+di); const iso=isoOf(dt);
           const day=list.filter(t=>t.datum===iso);
           const buero=day.some(t=>t.buero); const kc=day.filter(t=>!t.buero).length;
+          const frei=istPlanbar(iso,range);
           const bg=buero?'rgba(0,113,227,.14)':kc?'rgba(255,45,85,.14)':'var(--bg2)';
           const col=buero?'var(--blue)':kc?'#d70036':'var(--tx3)';
-          return `<span style="background:${bg};color:${col};border-radius:7px;padding:3px 9px;font-weight:600;font-size:11px">${dn} ${buero?'🏢':kc?kc+'×':'—'}</span>`;
+          const tip=frei?'planbar':(iso<planAb()?'vergangen':'ausserhalb '+MONL[m]);
+          return `<span title="${fmtD(iso)} — ${tip}" style="background:${bg};color:${col};border-radius:7px;padding:3px 9px;font-weight:600;font-size:11px${frei?'':';opacity:.38'}">${dn} ${buero?'🏢':kc?kc+'×':'—'}</span>`;
         }).join('')}
         </div>
         ${(()=>{const k2=[...new Set(kundenTermine(list).map(t=>t.kt).filter(Boolean))];
