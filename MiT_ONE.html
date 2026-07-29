@@ -2271,7 +2271,6 @@ window.termICSone=id=>{ const t=TERMINE.find(x=>x.id===id); if(t){icsForTermine(
 /* ── Terminplanung-View ── */
 function buildTermine(el){
   const thisWk=weekStartOf(new Date()).toISOString().slice(0,10);
-  const nextWk=new Date(weekStartOf(new Date()).getTime()+7*864e5).toISOString().slice(0,10);
   const wkLbl=w=>{ const d=toDate(w); const e=new Date(d.getTime()+4*864e5);
     return `${d.getDate()}.${d.getMonth()+1}. – ${e.getDate()}.${e.getMonth()+1}.${e.getFullYear()}`; };
   const weekBlock=(wk,title)=>{
@@ -2359,7 +2358,7 @@ function buildTermine(el){
         ${kantonRanking().slice(0,8).map(x=>`<span class="chip" style="${x.passt?'':'opacity:.55'}" title="${x.n} offene Kunden · ${x.a} Prio-A · Anfahrt ${x.km} km · geschätzte Wochentour ${x.tour} km">${x.passt?'✓':'⚠'} ${x.kt} · ${x.n} (${x.a}×A) · ~${x.tour}km</span>`).join('')||'<span style="font-size:12px;color:var(--tx2)">Alle Kantone abgearbeitet</span>'}
         </div></div>
       <div class="card-b" id="monatUebersicht"></div></div>
-    <div class="grid2">${weekBlock(thisWk,'📌 Diese Woche')}${weekBlock(nextWk,'📅 Nächste Woche')}</div>
+    ${weekBlock(thisWk,'📌 Diese Woche')}
     <div class="card"><div class="card-h"><h3>💡 Termin-Vorschläge</h3><span class="sub">${vsPool.length} Prio-A-Kunden ohne Termin — zufällige Auswahl</span>
       <div style="flex:1"></div><button class="tbtn" onclick="Views.rerender('termine')" title="Andere 6 Kandidaten anzeigen">🎲 Neu mischen</button></div>
       <div class="card-b" style="padding:8px 12px">
