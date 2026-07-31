@@ -623,6 +623,8 @@ window.openKunde=i=>{ const k=K.find(x=>x._i===i); if(!k)return;
     ${kv('Status',esc(k.status))}${kv('Nächster Schritt',esc(k.next))}${kv('Bedarf',esc(k.kva))}
     ${kv('Hauptprodukt',esc(k.prod))}${kv('Follow-up',esc(fmtD(k.fup)))}${kv('Wahrscheinlichkeit',fmtP(k.wahr))}
     ${kv('Wert',fmtCHF(k.wert))}${kv('Gew. Forecast',fmtCHF(k.fc))}${kv('Notizen',esc(k.notiz))}
+    <div class="dr-sec">Aktionen</div>
+    <button class="tbtn primary" style="width:100%;justify-content:center;padding:11px" onclick="mailFuerKunde(${k._i})">✉️ Akquise-Mail schreiben</button>
     ${relatedHTML(k.co,'kunde')}
   `);
 };
@@ -1840,7 +1842,7 @@ window.histRemove=i=>{ BESUCHT.splice(i,1); histSave(); toast('Aus Sperrliste en
 window.histClear=()=>{ if(!confirm(BESUCHT.length+' Einträge aus der Sperrliste löschen? Diese Kunden können danach wieder vorgeschlagen werden.'))return;
   BESUCHT=[]; histSave(); toast('Sperrliste geleert'); Views.rerender('termine'); };
 function markExported(list){ let n=0;
-  list.forEach(t=>{ if(!t.exported){t.exported=true;t.exportedAt=isoOf(new Date());n++;} if(!t.buero) histAdd(t); });
+  list.forEach(t=>{ if(!t.exported){t.exported=true;t.exportedAt=isoOf(new Date());n++;} if(!t.buero&&!t.mail) histAdd(t); });
   termSave(); histSave(); Views.rerender('termine'); Views.rerender('kalender'); return n; }
 const WOCHENZIEL_MIN=5, WOCHENZIEL_MAX=7;
 function weekStartOf(d){ const x=new Date(d.getFullYear(),d.getMonth(),d.getDate()); x.setDate(x.getDate()-((x.getDay()+6)%7)); return x; }
@@ -1938,7 +1940,8 @@ function monatRange(y,m){
   const bis=isoOf(new Date(letzterMo.getFullYear(),letzterMo.getMonth(),letzterMo.getDate()+4));
   return {von:monatVon<planAb()?planAb():monatVon, bis, monatVon};
 }
-const kundenTermine=list=>list.filter(t=>!isBuero(t));
+/* Kundenbesuche = weder Bürotag noch Mail-Follow-up (die zählen nicht aufs Wochenziel) */
+const kundenTermine=list=>list.filter(t=>!isBuero(t)&&!t.mail);
 function weeksOfMonth(y,m){
   /* Eine Arbeitswoche gehört zu dem Monat, in dem ihr Montag liegt.
      So gibt es keine angeschnittenen Wochen und «Monatsplanung August»
@@ -2645,6 +2648,857 @@ function buildKarte(el){
   },60);
 }
 Views.add('karte','Kundenkarte','Vertrieb','◍',null,buildKarte);
+
+/* ═══════════════ MAIL-STUDIO: Kaltakquise · Follow-up · Beratung ═══════════════ */
+const MAIL_KEY='one_mails_v1', ABS_KEY='one_absender_v1';
+let MAILS=(()=>{try{return JSON.parse(localStorage.getItem(MAIL_KEY))||[]}catch(e){return[]}})();
+function mailSave(){ try{localStorage.setItem(MAIL_KEY,JSON.stringify(MAILS))}catch(e){} }
+const ABS_STD={name:'Burak Ücöz',rolle:'Sales Engineer',firma:'Mobil in Time AG',
+  tel:'',mail:'',web:'www.mobilintime.ch',ort:'Schaffhausen'};
+let ABS=(()=>{try{return Object.assign({},ABS_STD,JSON.parse(localStorage.getItem(ABS_KEY))||{})}catch(e){return Object.assign({},ABS_STD)}})();
+function absSave(){ try{localStorage.setItem(ABS_KEY,JSON.stringify(ABS))}catch(e){} }
+window.setAbs=(f,v)=>{ ABS[f]=String(v||'').trim(); absSave(); mailRender(); };
+
+/* ── Produktportfolio: ein Satz, der beim Kunden ankommt ── */
+const PRODUKTE={
+  NEA:{ic:'⚡',name:'Mobile Stromerzeuger 20–1250 kVA',
+    satz:'Mobile Stromerzeuger von 20 bis 1250 kVA — parallelschaltbar bis in den Megawatt-Bereich, innert Stunden vor Ort',
+    bullet:'Netzersatz bei Revision, Ausfall oder fehlendem Anschluss — inkl. Kabel, Verteilung und Betankung'},
+  BESS:{ic:'🔋',name:'Batteriespeicher (BESS) & Hybrid',
+    satz:'Batteriespeicher als Hybrid zum Generator — nachts lautlos, tagsüber volle Leistung, deutlich weniger Diesel',
+    bullet:'Lärmarm und emissionsarm dort, wo ein Diesel allein nicht bewilligt würde'},
+  USV:{ic:'🔌',name:'Mobile USV-Anlagen',
+    satz:'Mobile USV-Anlagen, die den Umschaltmoment überbrücken — keine Millisekunde ohne Spannung',
+    bullet:'Für Batterietausch, USV-Revision oder als temporäre Redundanz'},
+  KAELTE:{ic:'❄️',name:'Mobile Kälte & Chiller',
+    satz:'Mobile Kälteanlagen und Chiller für Prozess-, Raum- und Serverkühlung',
+    bullet:'Redundanz bei Chiller-Revision oder Hitzeperiode — Kühlkette bleibt geschlossen'},
+  WAERME:{ic:'🔥',name:'Mobile Heizzentralen',
+    satz:'Mobile Heizzentralen für Trocknung, Prozesswärme und Ausfall der Heizung',
+    bullet:'Von der Bautrocknung bis zur Überbrückung der Heizzentrale im Winter'},
+  TRAFO:{ic:'🔁',name:'Transformatoren & MS-Technik',
+    satz:'Transformatoren und Mittelspannungstechnik für den Unterhalt am Netz',
+    bullet:'Trafo-Ersatz und MS-Verteilung, damit die Versorgung während des Umbaus steht'},
+  LAST:{ic:'📊',name:'Lastbänke für den Volllasttest',
+    satz:'Lastbänke bis in den MW-Bereich für den ehrlichen Volllasttest Ihrer Notstromanlage',
+    bullet:'Der Test, der zeigt, ob die Anlage im Ernstfall wirklich trägt — inklusive Protokoll'},
+  PQ:{ic:'📈',name:'Netzqualitäts-Analyse (PQ)',
+    satz:'Netzqualitäts-Messung, die Oberschwingungen, Flicker und Spannungseinbrüche sichtbar macht',
+    bullet:'Messen statt raten — mit Bericht nach EN 50160 als Entscheidungsgrundlage'},
+  MSV:{ic:'🏗',name:'Kabel & Verteiltechnik',
+    satz:'Kabel, Verteiler und Anschlusstechnik als komplettes Paket',
+    bullet:'Vom Generator bis zur letzten Steckdose aus einer Hand'},
+  SERVICE:{ic:'🛠',name:'24/7-Service in der ganzen Schweiz',
+    satz:'24/7-Pikett in der ganzen Schweiz — Aufbau, Betrieb, Betankung und Rückbau inklusive',
+    bullet:'Ein Ansprechpartner, ein Vertrag, keine Schnittstellen'}
+};
+
+/* ── Branchen-Wissensbasis: Schmerz, Nutzen, Beweis, Aufhänger ── */
+const BRANCHEN={
+'Pharma/Chemie':{ic:'🧪',kurz:'Pharma & Chemie',prod:['NEA','USV','KAELTE','LAST','PQ'],
+  schmerz:['ein Spannungseinbruch von wenigen Millisekunden eine ganze Charge kostet',
+    'die Kühlkette bei einem Netzunterbruch keine zweite Chance gibt',
+    'ein Revisionsfenster in der Produktion praktisch nie lang genug ist'],
+  nutzen:['die Produktion während der Trafo- oder USV-Revision einfach weiterläuft',
+    'die Chargen unabhängig davon sind, was am Netz gerade passiert',
+    'die Revision nicht mehr am Kalender scheitert, sondern planbar wird'],
+  proof:['temporäre Einspeisungen bei laufender Produktion','Kälteredundanz während der Chiller-Revision',
+    'Volllasttests der Notstromanlage mit Protokoll'],
+  norm:['GMP-Anforderungen an die Versorgungssicherheit','EN 50160 für die Netzqualität'],
+  hook:['Wenn bei Ihnen eine Anlagenrevision ansteht, ist meistens die Frage: Wohin mit der Last?',
+    'In der Pharmaproduktion ist Strom kein Nebenschauplatz, sondern Teil der Qualität.',
+    'Die teuerste Stunde in der Produktion ist die, in der nichts läuft.'],
+  betreff:['Revision ohne Produktionsstopp — {firma}','Wenn die Charge nicht warten kann',
+    'Temporärstrom für {firma}','Kurze Frage zur Notstromversorgung bei {firma}'],
+  frage:['Wie lösen Sie das heute bei einer Revision?','Steht bei Ihnen dieses Jahr eine Umstellung an?',
+    'Wäre ein kurzer Austausch dazu interessant?']},
+
+'Spital/Klinik':{ic:'🏥',kurz:'Spital & Klinik',prod:['NEA','USV','LAST','KAELTE'],
+  schmerz:['der OP-Betrieb keinen Unterbruch verzeiht','die jährliche Prüfung der Sicherheitsstromversorgung im laufenden Betrieb stattfinden muss',
+    'Bildgebung und Labor bei einer Spannungsschwankung sofort stillstehen'],
+  nutzen:['die Sicherheitsstromversorgung geprüft wird, ohne einen einzigen Eingriff zu verschieben',
+    'die Redundanz auch während der Revision der eigenen Anlage steht',
+    'niemand auf der Station merkt, dass an der Technik gearbeitet wird'],
+  proof:['temporäre Netzersatzanlagen während Trafo-Revisionen','Volllasttests der Sicherheitsstromversorgung',
+    'mobile Kälte für Bildgebung und Serverräume'],
+  norm:['SN EN 50171 für zentrale Stromversorgungssysteme','IEC 60364-7-710 für medizinisch genutzte Bereiche'],
+  hook:['Die Sicherheitsstromversorgung muss geprüft werden — der Betrieb läuft trotzdem weiter.',
+    'Im Spital gibt es kein Wartungsfenster, in dem einmal nichts passiert.',
+    'Ein Notstromtest ist nur dann etwas wert, wenn er unter Volllast stattfindet.'],
+  betreff:['Notstromtest ohne Betriebsunterbruch — {firma}','Sicherheitsstromversorgung {firma}',
+    'Kurze Frage zur Jahresprüfung bei {firma}','Wenn die Revision nicht warten kann'],
+  frage:['Wie planen Sie die Prüfung dieses Jahr?','Wer koordiniert das bei Ihnen im Haus?',
+    'Darf ich Ihnen dazu kurz zwei Sätze schicken?']},
+
+'Rechenzentrum/IT':{ic:'🖥',kurz:'Rechenzentrum & IT',prod:['NEA','USV','KAELTE','LAST','PQ'],
+  schmerz:['jede Minute Downtime direkt im SLA landet','der Batterietausch der USV ohne Redundanz ein echtes Risiko ist',
+    'die Kälte im Hochsommer zur eigentlichen Engstelle wird'],
+  nutzen:['der USV-Batterietausch mit voller Redundanz stattfindet',
+    'die Kälteredundanz auch bei 35 Grad im Schatten steht',
+    'der Lasttest die Anlage wirklich fordert — und nicht nur den Leerlauf misst'],
+  proof:['temporäre USV während des Batterietauschs','mobile Chiller als Kälteredundanz',
+    'Volllasttests mit Lastbänken bis in den MW-Bereich'],
+  norm:['EN 50600 für Rechenzentrumsinfrastruktur','Uptime-Tier-Anforderungen an die Redundanz'],
+  hook:['Redundanz ist erst dann Redundanz, wenn sie auch während der Wartung steht.',
+    'Der unangenehmste Moment im RZ ist der, in dem die USV im Bypass läuft.',
+    'Ein Lasttest ohne Last ist eine Bestätigung, kein Beweis.'],
+  betreff:['Redundanz während des USV-Tauschs — {firma}','Kälte- und Notstromredundanz {firma}',
+    'Kurze Frage zur Wartung bei {firma}','Wenn die USV in den Bypass geht'],
+  frage:['Wie halten Sie die Redundanz während der Wartung?','Ist der nächste Batterietausch schon terminiert?',
+    'Lohnt sich dazu ein kurzer Austausch?']},
+
+'EVU/Netzbetreiber':{ic:'⚡',kurz:'EVU & Netzbetrieb',prod:['TRAFO','MSV','NEA','LAST','PQ'],
+  schmerz:['jede Unterwerk-Revision einen Versorgungsunterbruch bedeutet',
+    'die Kunden von einem Trafo-Ersatz möglichst nichts merken sollen',
+    'Umbauten im Netz sich schlecht auf ein Wochenende quetschen lassen'],
+  nutzen:['die Versorgung während der Revision einfach weiterläuft',
+    'der Trafo-Ersatz ohne Abschaltung der Endkunden möglich wird',
+    'das Revisionsfenster nicht mehr das Nadelöhr ist'],
+  proof:['mobile Transformatoren und MS-Verteilungen bei Unterwerk-Revisionen',
+    'temporäre Einspeisungen während Netzumbauten','Netzqualitäts-Messungen nach EN 50160'],
+  norm:['EN 50160 für die Spannungsqualität','die Vorgaben aus dem StromVG zur Versorgungssicherheit'],
+  hook:['Eine Unterwerk-Revision ist planbar — der Unterbruch für die Kunden muss es nicht sein.',
+    'Der beste Netzumbau ist der, von dem niemand etwas mitbekommt.',
+    'Mobile MS-Technik verwandelt ein Wochenendfenster in einen normalen Arbeitstag.'],
+  betreff:['Revision ohne Versorgungsunterbruch — {firma}','Mobiler Trafo für {firma}',
+    'Kurze Frage zum Revisionskalender bei {firma}','Wenn das Unterwerk trotzdem liefern soll'],
+  frage:['Wie ist Ihr Revisionskalender für dieses Jahr?','Wer plant bei Ihnen die Umbauten im Netz?',
+    'Wäre ein kurzer fachlicher Austausch interessant?']},
+
+'Gemeinde/Öffentlich':{ic:'🏛',kurz:'Gemeinde & öffentliche Hand',prod:['NEA','BESS','WAERME','MSV'],
+  schmerz:['ein Blackout-Konzept ohne getestete Technik nur Papier ist',
+    'ARA und Wasserversorgung auch dann laufen müssen, wenn sonst nichts läuft',
+    'die Beschaffung Zeit braucht, der Ernstfall aber nicht'],
+  nutzen:['der Notfalltreffpunkt im Ernstfall wirklich mit Strom versorgt ist',
+    'ARA, Pumpwerk und Verwaltung im Ereignisfall weiterlaufen',
+    'Sie die Technik mieten statt kaufen — ohne Kapitalbindung und ohne Unterhalt'],
+  proof:['Notstromversorgung für Notfalltreffpunkte','temporäre Versorgung von ARA und Pumpwerken',
+    'Übungen und Ernstfalltests mit realer Last'],
+  norm:['die kantonalen Vorgaben zur Notfallvorsorge','die Empfehlungen des Bundes zur Strommangellage'],
+  hook:['Ein Notfallkonzept ist erst dann eines, wenn die Technik im Ernstfall auch anspringt.',
+    'Die Frage ist selten ob, sondern wie schnell Sie im Ereignisfall Strom haben.',
+    'Mieten statt kaufen heisst: immer aktuelle Technik, kein Unterhalt, kein Kapital gebunden.'],
+  betreff:['Notstromvorsorge für {firma}','Wenn der Ernstfall nicht auf die Beschaffung wartet',
+    'Kurze Frage zur Notfallplanung in {ort}','Strom für den Notfalltreffpunkt {ort}'],
+  frage:['Wie ist das bei Ihnen heute geregelt?','Wer betreut bei Ihnen das Notfallkonzept?',
+    'Darf ich Ihnen dazu Unterlagen schicken?']},
+
+'Bau/Infrastruktur':{ic:'🏗',kurz:'Bau & Infrastruktur',prod:['NEA','BESS','MSV','TRAFO','WAERME'],
+  schmerz:['der Netzanschluss fast immer später kommt als der Baustart',
+    'Nachtbetrieb mit einem Diesel schnell an der Lärmgrenze scheitert',
+    'jeder Stillstand auf der Baustelle direkt Geld kostet'],
+  nutzen:['Sie ab Tag eins Strom haben, auch ohne definitiven Anschluss',
+    'nachts der Speicher übernimmt und der Generator schweigt',
+    'Sie die Leistung anpassen, wenn die Baustelle wächst'],
+  proof:['Baustromversorgung ohne Netzanschluss','Hybridlösungen aus Generator und Batteriespeicher',
+    'temporäre MS-Verteilungen auf Grossbaustellen'],
+  norm:['die Lärmschutz-Verordnung bei Nachtbetrieb','die Anforderungen an Baustrominstallationen'],
+  hook:['Der Netzanschluss kommt oft Monate nach dem Baustart — der Bagger wartet ungern.',
+    'Nachtbetrieb und Dieselgenerator sind selten gute Nachbarn.',
+    'Eine Baustelle wächst — die Stromversorgung sollte mitwachsen können.'],
+  betreff:['Baustrom für {firma}','Wenn der Netzanschluss auf sich warten lässt',
+    'Hybrid statt Diesel — {firma}','Kurze Frage zur Baustelle in {ort}'],
+  frage:['Wie decken Sie den Strombedarf bis zum Anschluss?','Steht ein Projekt an, bei dem das Thema ist?',
+    'Wäre ein kurzes Gespräch dazu sinnvoll?']},
+
+'Industrie/Maschinenbau':{ic:'🏭',kurz:'Industrie & Maschinenbau',prod:['NEA','TRAFO','PQ','USV','LAST'],
+  schmerz:['ein Produktionsstillstand pro Stunde mehr kostet als die ganze Absicherung',
+    'die Werksrevision im engen Zeitfenster stattfinden muss',
+    'Anlaufströme und Oberschwingungen im Netz für Ärger sorgen'],
+  nutzen:['die Produktion während des Trafo-Umbaus weiterläuft',
+    'die Werksrevision nicht mehr am Stromausfall hängt',
+    'Sie schwarz auf weiss sehen, was im Netz wirklich passiert'],
+  proof:['temporäre Einspeisung während der Werksrevision','Trafo-Ersatz im laufenden Betrieb',
+    'PQ-Messungen bei Störungen in der Fertigung'],
+  norm:['EN 50160 für die Spannungsqualität','die Vorgaben Ihres Netzbetreibers zu Rückwirkungen'],
+  hook:['Eine Stunde Stillstand kostet meist mehr als die Absicherung für die ganze Revision.',
+    'Bei Netzstörungen ist die schwierigste Frage: Liegt es an uns oder am Netz?',
+    'Eine Werksrevision ist gut geplant — bis die Stromversorgung zum Engpass wird.'],
+  betreff:['Werksrevision ohne Stillstand — {firma}','Temporärstrom für {firma}',
+    'Kurze Frage zur Netzqualität bei {firma}','Wenn die Produktion weiterlaufen muss'],
+  frage:['Wann steht bei Ihnen die nächste Revision an?','Kennen Sie das Thema aus Ihrer Fertigung?',
+    'Lohnt sich dazu ein kurzer Austausch?']},
+
+'Bergbahn/Tourismus':{ic:'🚡',kurz:'Bergbahn & Tourismus',prod:['NEA','BESS','WAERME','MSV'],
+  schmerz:['der Saisonstart keinen Tag Verzögerung verträgt',
+    'die Beschneiung genau dann Leistung braucht, wenn es kalt wird',
+    'exponierte Anlagen bei Sturm als Erste vom Netz sind'],
+  nutzen:['der Saisonstart auch dann klappt, wenn die Technik noch nicht fertig ist',
+    'die Beschneiung die Leistung bekommt, die sie braucht',
+    'der Betrieb weiterläuft, wenn das Netz oben am Berg ausfällt'],
+  proof:['Notstrom für Bergbahnen und Bergrestaurants','temporäre Versorgung während des Umbaus in der Zwischensaison',
+    'Heizzentralen für Bauten auf über 2000 Metern'],
+  norm:['die Vorgaben des BAV zur Seilbahnsicherheit','die Anforderungen an die Notstromversorgung von Seilbahnen'],
+  hook:['Der Saisonstart ist ein fixes Datum — die Bauarbeiten halten sich selten daran.',
+    'Oben am Berg ist der Netzausfall keine Theorie, sondern Wetterbericht.',
+    'Zwischensaison heisst: wenig Zeit, viel Umbau, und der Betrieb muss trotzdem stehen.'],
+  betreff:['Saisonstart absichern — {firma}','Notstrom für {firma}',
+    'Kurze Frage zur Zwischensaison bei {firma}','Wenn das Netz am Berg ausfällt'],
+  frage:['Wie sichern Sie den Saisonstart ab?','Steht in der Zwischensaison ein Umbau an?',
+    'Darf ich mich dazu kurz bei Ihnen melden?']},
+
+'Events/Messen':{ic:'🎪',kurz:'Events & Messen',prod:['NEA','BESS','MSV','WAERME'],
+  schmerz:['bei einem Anlass die Show nicht ein zweites Mal stattfindet',
+    'Nachtbetrieb und Generatorlärm sich schlecht vertragen',
+    'die Leistung erst dann feststeht, wenn der Aufbau längst läuft'],
+  nutzen:['die Bühne redundant versorgt ist und niemand ins Dunkle blickt',
+    'der Speicher nachts lautlos übernimmt',
+    'kurzfristige Änderungen kein Drama mehr sind'],
+  proof:['redundante Bühnen- und Produktionsstromversorgung','Hybridbetrieb mit Batteriespeicher für Nachtanlässe',
+    'Zeltheizungen und Verteiltechnik aus einer Hand'],
+  norm:['die Vorgaben der Veranstaltungssicherheit','die kommunalen Lärmschutzauflagen bei Nachtanlässen'],
+  hook:['Bei einem Anlass gibt es keine zweite Vorstellung — deshalb baut man redundant.',
+    'Nachts stört nicht die Musik, sondern der Generator.',
+    'Der Strombedarf eines Anlasses steht meist erst fest, wenn der Aufbau schon läuft.'],
+  betreff:['Eventstrom für {firma}','Redundanz für Ihren Anlass',
+    'Kurze Frage zu Ihrem Anlass in {ort}','Wenn nachts der Generator stören würde'],
+  frage:['Welche Anlässe stehen bei Ihnen dieses Jahr an?','Wer plant bei Ihnen die Technik?',
+    'Wäre ein kurzer Austausch interessant?']},
+
+'Elektroplaner/Engineering':{ic:'📐',kurz:'Elektroplanung & Engineering',prod:['NEA','BESS','TRAFO','LAST','PQ'],
+  schmerz:['die Temporärversorgung im Konzept oft erst ganz am Schluss auftaucht',
+    'Bauherren die Kosten für die Bauphase gerne unterschätzen',
+    'Ausschreibungstexte für Mietlösungen selten sauber vorliegen'],
+  nutzen:['Sie die Temporärphase schon in der Konzeptphase sauber abbilden',
+    'Sie belastbare Zahlen für die Bauherrschaft haben',
+    'Sie Auslegung und Ausschreibungstext nicht selbst zusammensuchen müssen'],
+  proof:['Auslegung und Konzepte für Temporärversorgungen','Unterlagen und Textbausteine für Ausschreibungen',
+    'Lastberechnungen und Bemusterung vor Ort'],
+  norm:['NIN 2020 für die Installationen','EN 50160 für die Spannungsqualität'],
+  hook:['Die Temporärversorgung landet im Projekt meistens ganz am Schluss — und dann wird es teuer.',
+    'Wenn die Bauphase im Konzept fehlt, zahlt sie am Ende die Bauherrschaft.',
+    'Für Mietlösungen gibt es selten fertige Ausschreibungstexte. Wir liefern sie.'],
+  betreff:['Temporärversorgung schon im Konzept — {firma}','Auslegungshilfe für Ihre Projekte',
+    'Kurze Frage zu Ihren laufenden Projekten','Ausschreibungstexte für Mietlösungen'],
+  frage:['Haben Sie ein Projekt, bei dem das gerade Thema ist?','Wäre eine Auslegungshilfe für Sie nützlich?',
+    'Darf ich Ihnen unsere Planungsunterlagen schicken?']},
+
+'Forschung/Bildung':{ic:'🔬',kurz:'Forschung & Bildung',prod:['NEA','USV','KAELTE'],
+  schmerz:['ein Langzeitversuch nach einem Unterbruch von vorne beginnt',
+    'Klimakammern und Tieflagerung keine Pause vertragen',
+    'Campus-Umbauten im laufenden Semester stattfinden'],
+  nutzen:['Versuche und Kühlung auch während der Bauphase durchlaufen',
+    'die kritischen Labore unabhängig vom Netz sind',
+    'der Umbau nicht zum Risiko für die Forschung wird'],
+  proof:['temporäre Versorgung von Laborgebäuden','Kälteredundanz für Klimakammern und Tiefkühlung',
+    'USV-Überbrückung bei Umbauten im laufenden Betrieb'],
+  norm:['die Vorgaben zur Probenlagerung','die internen Anforderungen an die Versorgungssicherheit'],
+  hook:['Ein Langzeitversuch kennt keine Wartungsfenster.',
+    'Der teuerste Stromausfall ist der, der drei Jahre Forschung löscht.',
+    'Campus-Umbauten finden im laufenden Semester statt — die Labore laufen mit.'],
+  betreff:['Versorgungssicherheit für {firma}','Wenn der Versuch nicht unterbrochen werden darf',
+    'Kurze Frage zu Ihren Umbauten','Kälteredundanz für Ihre Labore'],
+  frage:['Wie sichern Sie kritische Versuche heute ab?','Steht bei Ihnen ein Umbau an?',
+    'Wäre ein kurzer Austausch interessant?']},
+
+'Lebensmittel/Food':{ic:'🥛',kurz:'Lebensmittel & Getränke',prod:['NEA','KAELTE','USV','LAST'],
+  schmerz:['die Kühlkette keinen Unterbruch verzeiht',
+    'eine verlorene Charge direkt ins Ergebnis durchschlägt',
+    'die Revision zwischen zwei Produktionsspitzen stattfinden muss'],
+  nutzen:['die Kühlkette auch bei einem Netzausfall geschlossen bleibt',
+    'die Produktion während der Revision weiterläuft',
+    'Sie im Ereignisfall innert Stunden Kälte und Strom vor Ort haben'],
+  proof:['mobile Kälte für Kühl- und Tiefkühllager','Notstrom für Produktionsbetriebe',
+    'temporäre Versorgung während Revisionen'],
+  norm:['die HACCP-Anforderungen an die Kühlkette','die Rückverfolgbarkeit bei Temperaturabweichungen'],
+  hook:['Eine unterbrochene Kühlkette lässt sich nicht nachträglich reparieren.',
+    'Die Revision liegt immer zwischen zwei Produktionsspitzen — und ist immer zu kurz.',
+    'Im Ereignisfall zählt nicht der Plan, sondern wie schnell die Kälte vor Ort ist.'],
+  betreff:['Kühlkette absichern — {firma}','Notstrom und Kälte für {firma}',
+    'Kurze Frage zur Revision bei {firma}','Wenn die Kühlung ausfällt'],
+  frage:['Wie ist das bei Ihnen heute abgesichert?','Wann steht die nächste Revision an?',
+    'Darf ich Ihnen dazu kurz etwas schicken?']},
+
+'Allgemein':{ic:'🔷',kurz:'Allgemein',prod:['NEA','BESS','USV','KAELTE','SERVICE'],
+  schmerz:['ein Stromausfall selten zu einem passenden Zeitpunkt kommt',
+    'Revisionen an der Versorgung oft am Zeitfenster scheitern',
+    'kurzfristiger Mehrbedarf schwer planbar ist'],
+  nutzen:['der Betrieb weiterläuft, auch wenn an der Technik gearbeitet wird',
+    'Sie Leistung mieten statt kaufen — ohne Kapitalbindung',
+    'Sie innert Stunden eine Lösung vor Ort haben'],
+  proof:['temporäre Stromversorgungen in der ganzen Schweiz','Notstrom bei Ausfall und Revision',
+    'Hybridlösungen aus Generator und Batteriespeicher'],
+  norm:['EN 50160 für die Spannungsqualität','die branchenüblichen Anforderungen an die Versorgungssicherheit'],
+  hook:['Strom fällt selten dann aus, wenn es gerade passt.',
+    'Mieten statt kaufen heisst: aktuelle Technik, kein Unterhalt, kein gebundenes Kapital.',
+    'Die meisten Engpässe entstehen nicht im Ernstfall, sondern bei der Revision.'],
+  betreff:['Temporäre Stromversorgung für {firma}','Kurze Frage zur Versorgungssicherheit bei {firma}',
+    'Notstrom für {firma}','Wenn der Strom kurz nicht da ist'],
+  frage:['Ist das bei Ihnen ein Thema?','Wie lösen Sie das heute?','Wäre ein kurzer Austausch interessant?']}
+};
+/* Schreibvarianten aus den Daten auf die Wissensbasis mappen */
+const BRANCHEN_ALIAS={'Bildung / Forschung':'Forschung/Bildung','Events & Kultur':'Events/Messen',
+  'Vermietung / Handel':'Allgemein','Notstrom/USV':'Allgemein'};
+function branche(seg){ const s=String(seg||'').trim();
+  return BRANCHEN[s]||BRANCHEN[BRANCHEN_ALIAS[s]]||BRANCHEN['Allgemein']; }
+function brancheKey(seg){ const s=String(seg||'').trim();
+  return BRANCHEN[s]?s:(BRANCHEN[BRANCHEN_ALIAS[s]]?BRANCHEN_ALIAS[s]:'Allgemein'); }
+
+/* ── deterministischer Zufall: gleicher Kunde = gleicher Text, 🎲 mischt neu ── */
+let MAIL_WUERFEL=0;
+function hash32(s){ let h=2166136261; s=String(s);
+  for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); } return h>>>0; }
+function pick(arr,seed){ return arr.length?arr[hash32(seed)%arr.length]:''; }
+
+/* ── Mailtypen der Sequenz ── */
+const MAILTYPEN=[
+  {id:'erst',ic:'✉️',t:'Erstkontakt',s:'Kalte Ansprache — kurz, konkret, ohne Verkaufsdruck',tage:0},
+  {id:'fu1',ic:'↩️',t:'Follow-up 1',s:'Freundlich nachfassen mit einem neuen Gedanken',tage:4},
+  {id:'fu2',ic:'📎',t:'Follow-up 2',s:'Mehrwert liefern — konkreter Anwendungsfall',tage:11},
+  {id:'fu3',ic:'👋',t:'Follow-up 3',s:'Elegant abschliessen und die Tür offen lassen',tage:21},
+  {id:'beratung',ic:'🧭',t:'Beratungsmail',s:'Fachlich beraten, nichts verkaufen',tage:0},
+  {id:'termin',ic:'📅',t:'Terminvorschlag',s:'Konkreten Besuch vorschlagen',tage:0},
+  {id:'danke',ic:'🤝',t:'Nach dem Termin',s:'Zusammenfassen und den nächsten Schritt setzen',tage:1},
+  {id:'angebot',ic:'📄',t:'Offert-Begleitmail',s:'Angebot einordnen statt nur anhängen',tage:0}
+];
+const TONALITAET={locker:'locker & direkt',partner:'partnerschaftlich',sachlich:'sachlich & knapp'};
+
+/* ── Anrede ohne Geschlechtsraten (CH-Standard) ──
+   Achtung: das CRM-Feld «Ansprechpartner» enthält bei den meisten Kunden eine
+   FUNKTION («Leiter TGM», «Betriebsleiter Technik») und keinen Personennamen.
+   Wer «Guten Tag TGM» schreibt, ist als Serienmail sofort entlarvt. */
+const ROLLEN_WORT=/leit|chef|verantw|head|manager|direkt|abteil|technik|einkauf|facility|tgm|betrieb|energie|instandhalt|unterhalt|projekt|geschäftsführ|inhaber|ceo|cto|coo|cfo|ingenieur|meister|verwalt|gemeinde|präsident|sekretariat|dispo|planer|beschaffung|infrastruktur|gebäude|haustechnik|elektro|ict|rechenzentr|labor|produktion|qualität|sicherheit|umwelt|operations|maintenance|asset|supply|service/i;
+function personName(ap){
+  const s=String(ap||'').trim();
+  if(!s||ROLLEN_WORT.test(s)) return '';
+  const tok=s.split(/\s+/).filter(x=>x.length>1);
+  if(tok.length<2||tok.length>3) return '';
+  if(!tok.every(x=>/^[A-ZÄÖÜ][a-zäöüéèàçA-ZÄÖÜ.'-]+$/.test(x))) return '';
+  return tok[tok.length-1];
+}
+function rolleVon(k){ const s=String(k.ap||'').trim();
+  return (s&&!personName(s))?s:''; }
+function anrede(k,ton){
+  const nachname=personName(k.ap);
+  if(!nachname) return ton==='locker'?'Grüezi mitenand':'Guten Tag';
+  return (ton==='locker'?'Grüezi ':'Guten Tag ')+nachname;
+}
+function em(sym,level,ab){ return level>= (ab||1) ? sym+' ' : ''; }
+function absSig(level){
+  const z=['Freundliche Grüsse',ABS.name];
+  const rolle=[ABS.rolle,ABS.firma].filter(Boolean).join(' · ');
+  if(rolle) z.push(rolle);
+  const k=[ABS.tel&&('📞 '+ABS.tel),ABS.mail&&('✉️ '+ABS.mail),ABS.web&&('🌐 '+ABS.web)].filter(Boolean);
+  if(k.length) z.push(level>0?k.join('  '):k.join('  ').replace(/[📞✉️🌐]\s?/g,''));
+  return z.join('\n');
+}
+/* Bedarf/Leistung des Kunden lesbar machen */
+function bedarfText(k){
+  const b=String(k.kva||'').trim();
+  if(!b) return '';
+  return b.length>120?b.slice(0,117)+'…':b;
+}
+function produktZeilen(br,k,max,level){
+  const eigen=String(k.prod||'').trim();
+  let keys=br.prod.slice();
+  /* Hauptprodukt des Kunden nach vorne ziehen */
+  const map={'USV':'USV','Generator':'NEA','BESS':'BESS','Kälte':'KAELTE','Wärme':'WAERME',
+    'PQ-Analyse':'PQ','Mobile MS-Verteilung':'MSV','Notstrom/USV':'USV','BESS + Generator':'BESS'};
+  const first=map[eigen];
+  if(first&&keys.includes(first)) keys=[first,...keys.filter(x=>x!==first)];
+  else if(first) keys=[first,...keys];
+  return keys.slice(0,max).map(key=>{ const p=PRODUKTE[key]; if(!p) return '';
+    return (level>0?p.ic+' ':'• ')+p.name+' — '+p.bullet; }).filter(Boolean).join('\n');
+}
+
+/* ═══ Der Generator ═══ */
+function mailBauen(k,typ,opt){
+  opt=opt||{};
+  const ton=opt.ton||'partner', level=opt.emoji==null?1:+opt.emoji, laenge=opt.laenge||'mittel';
+  const seed=(k.co||'')+'|'+typ+'|'+MAIL_WUERFEL;
+  const br=branche(k.seg);
+  const firma=String(k.co||'Ihr Unternehmen').trim();
+  const ort=String(k.ort||'').trim();
+  const schmerz=pick(br.schmerz,seed+'s');
+  const nutzen=pick(br.nutzen,seed+'n');
+  const proof=pick(br.proof,seed+'p');
+  const hook=pick(br.hook,seed+'h');
+  const frage=pick(br.frage,seed+'f');
+  const norm=pick(br.norm,seed+'r');
+  const an=anrede(k,ton);
+  const rolle=rolleVon(k);
+  const bed=bedarfText(k);
+  const maxProd=laenge==='kurz'?2:laenge==='lang'?5:3;
+  const prod=produktZeilen(br,k,maxProd,level);
+  const wir=ABS.firma||'Mobil in Time';
+  const betreff=pick(br.betreff,seed+'b').replace(/\{firma\}/g,firma).replace(/\{ort\}/g,ort||'Ihrer Region');
+  let t=[];
+
+  if(typ==='erst'){
+    t.push(an+',');t.push('');
+    t.push(hook);
+    t.push('');
+    t.push('Ich melde mich bei '+firma+', weil '+schmerz+'. Genau da setzen wir an: '+
+      'Wir stellen die Technik temporär bereit, damit '+nutzen+'.');
+    if(laenge!=='kurz'){ t.push(''); t.push(em('🔧',level)+'Das setzen wir bei Betrieben wie Ihnen regelmässig um — '+proof+'.'); }
+    if(prod&&laenge!=='kurz'){ t.push(''); t.push('Was wir dafür bereitstellen:'); t.push(prod); }
+    if(bed&&laenge==='lang'){ t.push(''); t.push('Aus unseren Unterlagen zu '+firma+': '+bed+'. Falls sich das geändert hat, korrigieren Sie mich gerne.'); }
+    t.push('');
+    t.push(frage+' Ein Telefonat von zehn Minuten reicht, um zu klären, ob das für Sie überhaupt relevant ist. '+
+      'Wenn nicht, ist das auch völlig in Ordnung.');
+    if(rolle&&!personName(k.ap)){ t.push('');
+      t.push('Diese Mail geht an die Funktion «'+rolle+'» — falls das bei Ihnen jemand anderes verantwortet, leiten Sie sie gerne weiter.'); }
+    t.push('');t.push(absSig(level));
+  }
+  else if(typ==='fu1'){
+    t.push(an+',');t.push('');
+    t.push('ich hatte Ihnen vor ein paar Tagen geschrieben — vermutlich ist die Mail im Tagesgeschäft untergegangen. '+
+      'Das kenne ich gut, deshalb nur kurz nochmals der Kern:');
+    t.push('');
+    t.push(em('👉',level)+'Wir stellen temporär Strom, Kälte und Wärme bereit, damit '+nutzen+'.');
+    t.push('');
+    t.push('Ein Gedanke, den ich beim ersten Mal weggelassen hatte: '+
+      (level>0?'📌 ':'')+'Mietlösungen bedeuten keine Investition und keinen Unterhalt — Sie zahlen genau für die Zeit, in der Sie die Leistung brauchen.');
+    t.push('');
+    t.push(frage);
+    t.push('');t.push(absSig(level));
+  }
+  else if(typ==='fu2'){
+    t.push(an+',');t.push('');
+    t.push('ich lasse Ihnen heute etwas Konkretes da statt einer weiteren Erinnerung '+(level>0?'🙂':''));
+    t.push('');
+    t.push('Ein typischer Fall aus Ihrer Branche: '+proof+'. Der Ablauf ist dabei fast immer derselbe — '+
+      'wir schauen uns die Anschlusssituation an, legen die Leistung aus, liefern und bauen auf, und Sie haben während der ganzen Zeit einen Ansprechpartner.');
+    if(prod){ t.push(''); t.push('Das steht dafür bereit:'); t.push(prod); }
+    t.push('');
+    t.push('Falls das Thema bei '+firma+' aktuell keine Rolle spielt, sagen Sie mir kurz Bescheid — dann melde ich mich nicht weiter. '+
+      'Und falls doch: '+frage);
+    t.push('');t.push(absSig(level));
+  }
+  else if(typ==='fu3'){
+    t.push(an+',');t.push('');
+    t.push('ich schliesse das Thema von meiner Seite ab und will Ihr Postfach nicht weiter belasten '+(level>0?'👋':''));
+    t.push('');
+    t.push('Falls bei '+firma+' irgendwann eine Revision ansteht, ein Netzausfall überbrückt werden muss oder kurzfristig Leistung fehlt: '+
+      'Sie haben meine Nummer, und wir sind rund um die Uhr erreichbar.');
+    t.push('');
+    t.push('Passt es Ihnen, wenn ich mich in ein paar Monaten nochmals melde? '+
+      'Ein kurzes Nein genügt, dann lasse ich es — auch das ist eine klare Antwort und völlig in Ordnung.');
+    t.push('');t.push(absSig(level));
+  }
+  else if(typ==='beratung'){
+    t.push(an+',');t.push('');
+    t.push('Sie hatten nach einer Einschätzung gefragt — hier meine Sicht, ohne Angebot und ohne Haken.');
+    t.push('');
+    t.push(em('🧭',level)+'Ausgangslage: '+(bed?bed:'Bei '+firma+' geht es darum, dass '+schmerz+'.'));
+    t.push('');
+    t.push(em('💡',level)+'Was ich empfehlen würde: dafür sorgen, dass '+nutzen+
+      '. Wichtig ist dabei vor allem die Auslegung — zu klein wird im Ernstfall zum Problem, zu gross kostet unnötig.');
+    if(prod){ t.push(''); t.push('Konkret passt dazu:'); t.push(prod); }
+    t.push('');
+    t.push(em('📐',level)+'Zu beachten: '+norm.charAt(0).toUpperCase()+norm.slice(1)+
+      '. Das nehmen wir bei der Auslegung mit auf, damit hinterher keine Diskussion entsteht.');
+    t.push('');
+    t.push('Wenn Sie mir die Anschlussleistung und das Zeitfenster nennen, rechne ich Ihnen das unverbindlich durch. '+frage);
+    t.push('');t.push(absSig(level));
+  }
+  else if(typ==='termin'){
+    t.push(an+',');t.push('');
+    t.push('ich bin in den nächsten Wochen regelmässig in der Region '+(ort||String(k.kt||'')||'bei Ihnen')+
+      ' unterwegs und würde gerne kurz bei Ihnen vorbeikommen.');
+    t.push('');
+    t.push(em('📅',level)+'Rund 30 Minuten reichen: Ich schaue mir die Situation vor Ort an und sage Ihnen ehrlich, '+
+      'ob und wie wir helfen können. Sie bekommen eine Einschätzung, auch wenn daraus kein Auftrag wird.');
+    if(laenge!=='kurz'){ t.push(''); t.push('Themen, die dabei meistens aufkommen: '+proof+'.'); }
+    t.push('');
+    t.push('Passt Ihnen ein Termin am Vormittag oder ist Nachmittag besser? Ich richte mich nach Ihnen.');
+    t.push('');t.push(absSig(level));
+  }
+  else if(typ==='danke'){
+    t.push(an+',');t.push('');
+    t.push('danke für Ihre Zeit '+(level>0?'🤝':'')+' — der Austausch war für mich sehr aufschlussreich.');
+    t.push('');
+    t.push('Kurz zusammengefasst, was ich mitgenommen habe:');
+    t.push((level>0?'• ':'- ')+(bed?bed:'Ihr Bedarf rund um die temporäre Versorgung'));
+    t.push((level>0?'• ':'- ')+'Wichtig für Sie: dass '+nutzen);
+    t.push((level>0?'• ':'- ')+'Offen: Zeitfenster und genaue Anschlussleistung');
+    t.push('');
+    t.push('Mein Vorschlag für den nächsten Schritt: Ich stelle Ihnen eine unverbindliche Auslegung samt Richtpreis zusammen. '+
+      'Wenn Sie mir die offenen Punkte noch zukommen lassen, haben Sie das innert weniger Tage.');
+    t.push('');
+    t.push('Falls ich etwas falsch notiert habe, korrigieren Sie mich bitte — lieber jetzt als in der Offerte. '+
+      'Passt Ihnen der Vorschlag so?');
+    t.push('');t.push(absSig(level));
+  }
+  else if(typ==='angebot'){
+    t.push(an+',');t.push('');
+    t.push('anbei die Offerte für '+firma+' '+(level>0?'📄':''));
+    t.push('');
+    t.push('Damit Sie nicht durch alle Positionen müssen, hier die drei Punkte, auf die es ankommt:');
+    t.push((level>0?'1️⃣ ':'1. ')+'Die Auslegung ist so gewählt, dass '+nutzen+'.');
+    t.push((level>0?'2️⃣ ':'2. ')+'Aufbau, Betrieb und Rückbau sind enthalten — es kommt nichts nach.');
+    t.push((level>0?'3️⃣ ':'3. ')+'Die Miete läuft nur für den Zeitraum, den Sie wirklich brauchen.');
+    t.push('');
+    t.push('Falls sich am Zeitfenster oder an der Leistung etwas ändert, ist das kein Problem — wir passen die Offerte an.');
+    t.push('');
+    t.push('Wann darf ich bei Ihnen nachfragen?');
+    t.push('');t.push(absSig(level));
+  }
+  const text=t.join('\n');
+  const betr=(typ==='fu1'?'Re: ':typ==='fu2'?'Re: ':typ==='fu3'?'Re: ':
+    typ==='danke'?'Danke für das Gespräch — ':typ==='angebot'?'Ihre Offerte — ':
+    typ==='beratung'?'Ihre Frage zu ':typ==='termin'?'Besuch bei ':'')+
+    (typ==='beratung'||typ==='termin'?firma:betreff);
+  return {betreff:betr,text,typ,kunde:firma,mail:String(k.mail||'').trim(),
+    ap:String(k.ap||'').trim(),seg:k.seg||'',kt:k.kt||'',_i:k._i};
+}
+
+/* ═══ Menschlichkeits-Check ═══ */
+const FLOSKELN=['bezugnehmend auf','hiermit möchte ich','wir freuen uns, ihnen mitteilen','diesbezüglich',
+  'in anbetracht dessen','wie bereits erwähnt','anbei übersende ich ihnen','sehr geehrte damen und herren',
+  'nicht zuletzt deshalb','im rahmen unserer bestrebungen'];
+const SPAMWOERTER=['gratis','100% garantiert','einmalige chance','jetzt zuschlagen','nur heute',
+  'unschlagbar','risikofrei','!!!','klicken sie hier'];
+function menschCheck(m){
+  const txt=String(m.text||''); const low=txt.toLowerCase();
+  const woerter=txt.split(/\s+/).filter(Boolean).length;
+  const saetze=txt.split(/[.!?]+/).map(s=>s.trim()).filter(s=>s.length>3);
+  const schnitt=saetze.length?Math.round(woerter/saetze.length):0;
+  const fragen=(txt.match(/\?/g)||[]).length;
+  const emojis=(txt.match(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu)||[]).length;
+  const rufe=(txt.match(/!/g)||[]).length;
+  const floskeln=FLOSKELN.filter(f=>low.includes(f));
+  const spam=SPAMWOERTER.filter(f=>low.includes(f));
+  const punkte=[]; let score=100;
+  const ab=(n,grund)=>{ score-=n; punkte.push('− '+grund); };
+  if(woerter>230) ab(15,'Zu lang ('+woerter+' Wörter) — unter 200 wird eher gelesen');
+  else if(woerter<45) ab(10,'Sehr kurz ('+woerter+' Wörter) — wirkt schnell beliebig');
+  if(schnitt>22) ab(12,'Lange Sätze (Ø '+schnitt+' Wörter) — kürzer klingt natürlicher');
+  if(!fragen) ab(15,'Keine einzige Frage — eine Frage lädt zur Antwort ein');
+  if(emojis>6) ab(12,emojis+' Emojis — im B2B wirken mehr als 5 schnell aufdringlich');
+  if(rufe>2) ab(10,rufe+' Ausrufezeichen — wirkt gedrängt');
+  floskeln.forEach(f=>ab(8,'Floskel: «'+f+'»'));
+  spam.forEach(f=>ab(14,'Spam-Signal: «'+f+'»'));
+  if(!low.includes(String(m.kunde||'').toLowerCase().split(/\s+/)[0]||'§')) ab(12,'Firmenname kommt nicht vor — wirkt wie ein Serienbrief');
+  if(low.includes('sehr geehrte damen und herren')) ab(6,'Unpersönliche Anrede');
+  score=Math.max(0,Math.min(100,score));
+  const gut=[];
+  if(fragen) gut.push('+ '+fragen+' Frage'+(fragen>1?'n':'')+' — lädt zur Antwort ein');
+  if(woerter>=45&&woerter<=230) gut.push('+ Gute Länge ('+woerter+' Wörter)');
+  if(schnitt<=22&&schnitt>0) gut.push('+ Kurze Sätze (Ø '+schnitt+')');
+  if(emojis>0&&emojis<=6) gut.push('+ '+emojis+' Emoji'+(emojis>1?'s':'')+' — freundlich, nicht überladen');
+  if(!floskeln.length) gut.push('+ Keine Floskeln');
+  if(!spam.length) gut.push('+ Keine Spam-Signale');
+  return {score,woerter,saetze:saetze.length,schnitt,fragen,emojis,minus:punkte,plus:gut,
+    stufe:score>=85?'sehr menschlich':score>=70?'menschlich':score>=50?'geht besser':'klingt nach Vorlage'};
+}
+
+/* ═══ Versand & Export ═══ */
+function b64(s){ try{ return btoa(unescape(encodeURIComponent(s))); }catch(e){ return ''; } }
+function emlText(m){
+  const betr=b64(m.betreff);
+  return ['To: '+(m.mail||''),'Subject: =?UTF-8?B?'+betr+'?=','X-Unsent: 1',
+    'MIME-Version: 1.0','Content-Type: text/plain; charset=utf-8',
+    'Content-Transfer-Encoding: 8bit','',m.text].join('\r\n');
+}
+window.mailEml=i=>{ const m=MAIL_AKT[i]; if(!m) return;
+  const b=new Blob([emlText(m)],{type:'message/rfc822'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(b);
+  a.download='Mail_'+String(m.kunde||'Kunde').replace(/[^\wÄÖÜäöü]+/g,'_').slice(0,40)+'.eml';
+  a.click(); URL.revokeObjectURL(a.href);
+  mailHistorie(m,'eml'); toast('💾 .eml erstellt — in Outlook öffnen und senden'); };
+window.mailOutlook=i=>{ const m=MAIL_AKT[i]; if(!m) return;
+  const url='mailto:'+encodeURIComponent(m.mail||'')+'?subject='+encodeURIComponent(m.betreff)+
+    '&body='+encodeURIComponent(m.text);
+  if(url.length>1900){ mailEml(i); return; }
+  window.open(url,'_self'); mailHistorie(m,'outlook'); toast('📧 Mail-Programm geöffnet'); };
+window.mailKopieren=(i,was)=>{ const m=MAIL_AKT[i]; if(!m) return;
+  const txt=was==='betreff'?m.betreff:was==='text'?m.text:(m.betreff+'\n\n'+m.text);
+  const label=was==='betreff'?'Betreff':was==='text'?'Text':'Betreff + Text';
+  mailHistorie(m,'kopiert');
+  const ok=()=>toast('📋 '+label+' kopiert');
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    try{ navigator.clipboard.writeText(txt).then(ok,fallback); return; }catch(e){}
+  }
+  fallback();
+  function fallback(){
+    try{ const ta=document.createElement('textarea'); ta.value=txt;
+      ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select();
+      const g=document.execCommand&&document.execCommand('copy');
+      document.body.removeChild(ta);
+      if(g){ ok(); return; }
+    }catch(e){}
+    /* letzter Ausweg: Text zum Markieren anzeigen, statt den Nutzer im Regen stehen zu lassen */
+    Drawer.open('📋 '+label+' — zum Kopieren markieren',
+      '<div class="fld"><label>Mit Strg/Cmd + C kopieren</label><textarea readonly style="min-height:340px">'+esc(txt)+'</textarea></div>');
+    setTimeout(()=>{ const t2=document.querySelector('#drBody textarea'); if(t2){t2.focus();t2.select();} },60);
+    toast('📋 Zwischenablage gesperrt — Text zum Markieren geöffnet');
+  }
+};
+function mailHistorie(m,aktion){
+  MAILS.unshift({id:uid8(),kunde:m.kunde,mail:m.mail,typ:m.typ,betreff:m.betreff,
+    aktion,datum:isoOf(new Date()),zeit:new Date().toTimeString().slice(0,5)});
+  if(MAILS.length>400) MAILS.length=400;
+  mailSave();
+}
+/* Follow-up-Termine aus der Sequenz in den Kalender legen */
+function werktagPlus(startIso,tage){
+  const d=toDate(startIso)||new Date(); let n=0;
+  while(n<tage){ d.setDate(d.getDate()+1); if(((d.getDay()+6)%7)<=4) n++; }
+  while(((d.getDay()+6)%7)>4) d.setDate(d.getDate()+1);
+  return isoOf(d);
+}
+window.mailFupPlanen=i=>{
+  const m=MAIL_AKT[i]; if(!m) return;
+  const k=K.find(x=>x._i===m._i)||{co:m.kunde};
+  const start=isoOf(new Date());
+  let n=0;
+  MAILTYPEN.filter(t=>['fu1','fu2','fu3'].includes(t.id)).forEach(t=>{
+    const datum=werktagPlus(start,t.tage);
+    if(TERMINE.some(x=>x.mail&&x.kunde===m.kunde&&x.fupTyp===t.id)) return;
+    TERMINE.push({id:uid8(),kunde:m.kunde,datum,zeit:'07:30',dauer:15,typ:'Follow-up-Mail',
+      betreff:t.ic+' '+t.t+' — '+m.kunde,ort:'Schreibtisch',
+      notiz:'MAIL-SEQUENZ: '+t.t+' ('+t.s+') · Betreff der Erstmail: '+m.betreff,
+      mail:true,fupTyp:t.id,done:false,created:new Date().toISOString()});
+    n++;
+  });
+  if(!n){ toast('✓ Follow-up-Sequenz ist bereits geplant'); return; }
+  termSave(); toast('📅 '+n+' Follow-ups eingeplant (Mo–Fr, 07:30) — zählen nicht aufs Besuchsziel');
+  Views.rerender('kalender'); Views.rerender('termine'); mailRender();
+};
+
+/* ═══ Serienmail für eine gefilterte Gruppe ═══ */
+function serienPool(){
+  const f=MAIL_FILTER;
+  return K.filter(k=>k.co)
+    .filter(k=>!f.seg||brancheKey(k.seg)===f.seg)
+    .filter(k=>!f.kt||String(k.kt||'').trim().toUpperCase()===f.kt)
+    .filter(k=>!f.prio||String(k.prio||'').trim()===f.prio)
+    .filter(k=>!f.nurMail||/@/.test(String(k.mail||'')));
+}
+window.serienExport=()=>{
+  const pool=serienPool().slice(0,MAIL_FILTER.limit||50);
+  if(!pool.length){ toast('⚠ Keine Kunden im Filter'); return; }
+  const opt=mailOpt();
+  const rows=pool.map(k=>{ const m=mailBauen(k,MAIL_TYP,opt); const c=menschCheck(m);
+    return [m.kunde,m.ap,m.mail,k.ort||'',k.kt||'',k.seg||'',m.betreff,m.text,c.score]; });
+  exportRows('Serienmails_'+MAIL_TYP,
+    ['Firma','Ansprechpartner','E-Mail','Ort','Kanton','Segment','Betreff','Mailtext','Menschlichkeit'],rows);
+  rows.forEach((r,i)=>mailHistorie({kunde:r[0],mail:r[2],typ:MAIL_TYP,betreff:r[6]},'serie'));
+  toast('📤 '+rows.length+' Mails exportiert — bereit für Serienversand');
+};
+window.serienVorschau=()=>{
+  const pool=serienPool();
+  toast('👥 '+pool.length+' Kunden im Filter'+(pool.length>(MAIL_FILTER.limit||50)?' — es werden '+(MAIL_FILTER.limit||50)+' exportiert':''));
+  mailRender();
+};
+
+/* ═══ View ═══ */
+let MAIL_TYP='erst', MAIL_KUNDE=null, MAIL_AKT=[];
+let MAIL_OPT={ton:'partner',emoji:1,laenge:'mittel'};
+let MAIL_FILTER={seg:'',kt:'',prio:'A',nurMail:false,limit:50};
+function mailOpt(){ return Object.assign({},MAIL_OPT); }
+window.mailSetTyp=t=>{ MAIL_TYP=t; mailRender(); };
+window.mailSetOpt=(f,v)=>{ MAIL_OPT[f]=f==='emoji'?+v:v; mailRender(); };
+window.mailSetFilter=(f,v)=>{ MAIL_FILTER[f]=f==='limit'?(+v||50):(f==='nurMail'?!!v:v); mailRender(); };
+window.mailWuerfeln=()=>{ MAIL_WUERFEL++; mailRender(); toast('🎲 Neue Formulierung gewürfelt'); };
+window.mailKunde=i=>{ MAIL_KUNDE=+i; mailRender(); };
+window.mailKundeSuche=v=>{
+  const s=String(v||'').trim().toLowerCase();
+  if(!s) return;
+  const tr=K.find(k=>String(k.co||'').toLowerCase()===s)||K.find(k=>String(k.co||'').toLowerCase().includes(s));
+  if(tr){ MAIL_KUNDE=tr._i; mailRender(); }
+};
+/* aus dem Kundendetail heraus direkt eine Mail schreiben */
+window.mailFuerKunde=i=>{ MAIL_KUNDE=+i; Drawer.close(); Views.show('mails'); };
+
+function mailAktKunde(){
+  if(MAIL_KUNDE!=null){ const t=K.find(k=>k._i===MAIL_KUNDE); if(t) return t; }
+  const a=K.find(k=>k.co&&String(k.prio).trim()==='A'&&/@/.test(String(k.mail||'')));
+  return a||K.find(k=>k.co)||{co:'Musterkunde AG',seg:'Allgemein',ort:'',kt:''};
+}
+function buildMails(el){
+  el.innerHTML='<div id="mailWrap"></div>';
+  mailRender();
+}
+function mailRender(){
+  const wrap=document.getElementById('mailWrap'); if(!wrap) return;
+  const k=mailAktKunde();
+  const br=branche(k.seg), bk=brancheKey(k.seg);
+  const opt=mailOpt();
+  const m=mailBauen(k,MAIL_TYP,opt);
+  MAIL_AKT=[m];
+  const c=menschCheck(m);
+  const farbe=c.score>=85?'var(--green)':c.score>=70?'var(--blue)':c.score>=50?'var(--orange)':'var(--red)';
+  const kantone=[...new Set(K.map(x=>String(x.kt||'').trim().toUpperCase()).filter(Boolean))].sort();
+  const pool=serienPool();
+  const geplant=TERMINE.filter(t=>t.mail&&t.kunde===m.kunde).length;
+  wrap.innerHTML=`
+  <div class="hero" style="display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap">
+    <div style="flex:1"><h1>Mail-Studio</h1>
+      <p>Kaltakquise, Follow-up und Beratung — pro Branche zugeschnitten, menschlich formuliert und direkt versandfertig</p></div>
+    <button class="tbtn" onclick="mailWuerfeln()" title="Andere Formulierung für denselben Kunden">🎲 Neu formulieren</button>
+    <button class="tbtn" onclick="absDialog()" title="Absender und Signatur bearbeiten">✍️ Signatur</button>
+  </div>
+
+  <div class="card"><div class="card-h"><h3>👤 Empfänger</h3>
+    <span class="sub">${esc(br.ic+' '+bk)}${k.ort?' · '+esc(k.ort):''}${k.kt?' '+esc(k.kt):''}</span>
+    <div style="flex:1"></div>
+    <input id="mailSuche" list="mailKL" placeholder="Kunde suchen…" value="${esc(k.co||'')}"
+      onchange="mailKundeSuche(this.value)"
+      style="background:var(--bg2);border:1px solid var(--line);border-radius:99px;padding:7px 16px;font-size:12.5px;color:var(--tx);font-family:inherit;outline:none;min-width:240px">
+    <datalist id="mailKL">${K.slice(0,600).map(x=>`<option value="${esc(x.co)}">`).join('')}</datalist>
+    <button class="tbtn" onclick="mailZufallKunde()" title="Zufälligen Prio-A-Kunden laden">🎲 Kunde</button>
+    </div>
+    <div class="card-b" style="padding-top:10px;display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--tx2)">
+      ${k.ap?`<span class="chip">👤 ${esc(k.ap)}${k.funk?' · '+esc(k.funk):''}</span>`:'<span class="chip" style="opacity:.6">👤 kein Ansprechpartner hinterlegt</span>'}
+      ${k.mail?`<span class="chip">✉️ ${esc(k.mail)}</span>`:'<span class="chip" style="opacity:.6">✉️ keine Adresse — .eml oder Kopieren nutzen</span>'}
+      ${k.tel?`<span class="chip">📞 ${esc(k.tel)}</span>`:''}
+      ${k.prio?`<span class="badge ${String(k.prio).trim()==='A'?'b-green':'b-gray'}">Prio ${esc(k.prio)}</span>`:''}
+      ${k.status?`<span class="chip">📍 ${esc(k.status)}</span>`:''}
+      ${k.kva?`<span class="chip" title="${esc(k.kva)}">⚙️ ${esc(String(k.kva).slice(0,60))}</span>`:''}
+    </div>
+  </div>
+
+  <div class="card"><div class="card-h"><h3>✉️ Art der Mail</h3>
+    <span class="sub">Sequenz von der ersten Ansprache bis zum sauberen Abschluss</span></div>
+    <div class="card-b" style="padding-top:10px;display:flex;gap:7px;flex-wrap:wrap">
+    ${MAILTYPEN.map(t=>`<button class="tbtn ${t.id===MAIL_TYP?'primary':''}" onclick="mailSetTyp('${t.id}')"
+      title="${esc(t.s)}${t.tage?' · Vorschlag: +'+t.tage+' Arbeitstage':''}">${t.ic} ${t.t}</button>`).join('')}
+    </div>
+    <div class="card-b" style="padding-top:4px;display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--tx2)">
+      <span>Tonalität:</span>
+      <select onchange="mailSetOpt('ton',this.value)" style="background:var(--bg2);border:1px solid var(--line);border-radius:99px;padding:5px 12px;font-size:12px;font-weight:600;color:var(--tx);font-family:inherit;outline:none;cursor:pointer">
+        ${Object.entries(TONALITAET).map(([v,t])=>`<option value="${v}" ${MAIL_OPT.ton===v?'selected':''}>${t}</option>`).join('')}
+      </select>
+      <span>Emojis:</span>
+      <select onchange="mailSetOpt('emoji',this.value)" style="background:var(--bg2);border:1px solid var(--line);border-radius:99px;padding:5px 12px;font-size:12px;font-weight:600;color:var(--tx);font-family:inherit;outline:none;cursor:pointer">
+        <option value="0" ${MAIL_OPT.emoji===0?'selected':''}>keine</option>
+        <option value="1" ${MAIL_OPT.emoji===1?'selected':''}>dezent</option>
+        <option value="2" ${MAIL_OPT.emoji===2?'selected':''}>viele</option>
+      </select>
+      <span>Länge:</span>
+      <select onchange="mailSetOpt('laenge',this.value)" style="background:var(--bg2);border:1px solid var(--line);border-radius:99px;padding:5px 12px;font-size:12px;font-weight:600;color:var(--tx);font-family:inherit;outline:none;cursor:pointer">
+        <option value="kurz" ${MAIL_OPT.laenge==='kurz'?'selected':''}>kurz (mobil)</option>
+        <option value="mittel" ${MAIL_OPT.laenge==='mittel'?'selected':''}>mittel</option>
+        <option value="lang" ${MAIL_OPT.laenge==='lang'?'selected':''}>ausführlich</option>
+      </select>
+      <span style="margin-left:auto">${esc(MAILTYPEN.find(t=>t.id===MAIL_TYP).s)}</span>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="card"><div class="card-h"><h3>📨 Fertige Mail</h3>
+      <div style="flex:1"></div>
+      <button class="tbtn" onclick="mailKopieren(0,'betreff')">Betreff</button>
+      <button class="tbtn" onclick="mailKopieren(0,'text')">Text</button>
+      <button class="tbtn primary" onclick="mailKopieren(0,'alles')">📋 Kopieren</button>
+      </div>
+      <div class="card-b" style="padding-top:12px">
+        <div style="font-size:11px;color:var(--tx3);font-weight:700;letter-spacing:.4px;margin-bottom:4px">BETREFF</div>
+        <div id="mailBetreff" style="font-weight:700;font-size:14.5px;margin-bottom:14px;padding:9px 12px;background:var(--bg2);border-radius:9px">${esc(m.betreff)}</div>
+        <div style="font-size:11px;color:var(--tx3);font-weight:700;letter-spacing:.4px;margin-bottom:4px">NACHRICHT</div>
+        <textarea id="mailText" style="width:100%;min-height:380px;background:var(--bg2);border:1px solid var(--line);border-radius:11px;padding:14px 15px;font-size:13px;line-height:1.62;color:var(--tx);font-family:inherit;outline:none;resize:vertical;white-space:pre-wrap">${esc(m.text)}</textarea>
+      </div>
+      <div class="card-b" style="padding-top:4px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="tbtn primary" onclick="mailOutlook(0)" title="Öffnet die Mail im Standard-Mailprogramm">📧 In Outlook öffnen</button>
+        <button class="tbtn" onclick="mailEml(0)" title="Speichert eine .eml — per Doppelklick als Entwurf in Outlook">💾 Als .eml speichern</button>
+        <button class="tbtn" onclick="mailFupPlanen(0)" title="Follow-up 1–3 als Kalendereinträge anlegen (Mo–Fr, 07:30)">📅 Follow-ups einplanen${geplant?' ✓':''}</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="card"><div class="card-h"><h3>🫱 Menschlichkeits-Check</h3>
+        <div style="flex:1"></div>
+        <span class="badge" style="background:${farbe};color:#fff">${c.score} / 100 · ${c.stufe}</span></div>
+        <div class="card-b" style="padding-top:12px">
+          <div class="prow" style="margin-bottom:12px"><div class="pbar" style="height:9px"><div style="width:${c.score}%;background:${farbe}"></div></div></div>
+          <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--tx2);margin-bottom:10px">
+            <span><b>${c.woerter}</b> Wörter</span><span><b>${c.saetze}</b> Sätze</span>
+            <span>Ø <b>${c.schnitt}</b> Wörter/Satz</span><span><b>${c.fragen}</b> Fragen</span><span><b>${c.emojis}</b> Emojis</span>
+          </div>
+          ${c.plus.map(p=>`<div style="font-size:12px;color:var(--green);padding:2px 0">${esc(p)}</div>`).join('')}
+          ${c.minus.map(p=>`<div style="font-size:12px;color:var(--orange);padding:2px 0">${esc(p)}</div>`).join('')}
+          ${!c.minus.length?'<div style="font-size:12px;color:var(--tx2);margin-top:6px">Nichts zu beanstanden — so kann die Mail raus.</div>':''}
+        </div>
+      </div>
+
+      <div class="card"><div class="card-h"><h3>${br.ic} Portfolio für ${esc(bk)}</h3>
+        <span class="sub">automatisch auf die Branche zugeschnitten</span></div>
+        <div class="card-b" style="padding-top:10px">
+        ${br.prod.map(key=>{ const p=PRODUKTE[key]; return p?`<div class="kvrow"><span class="k">${p.ic} ${esc(p.name)}</span><span class="v" style="font-weight:400;color:var(--tx2)">${esc(p.bullet)}</span></div>`:''; }).join('')}
+        </div>
+        <div class="card-b" style="padding-top:6px;font-size:12px;color:var(--tx2)">
+          <div style="margin-bottom:5px"><b>Aufhänger:</b> ${esc(pick(br.hook,(k.co||'')+'|'+MAIL_TYP+'|'+MAIL_WUERFEL+'h'))}</div>
+          <div><b>Fachlicher Bezug:</b> ${esc(br.norm.join(' · '))}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card"><div class="card-h"><h3>👥 Serienmail</h3>
+    <span class="sub">${pool.length} Kunden im Filter — als Excel für den Serienversand</span>
+    <div style="flex:1"></div>
+    <button class="tbtn" onclick="serienVorschau()">🔍 Anzahl prüfen</button>
+    <button class="tbtn primary" onclick="serienExport()">📤 ${Math.min(pool.length,MAIL_FILTER.limit)} Mails exportieren</button>
+    </div>
+    <div class="card-b" style="padding-top:10px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--tx2)">
+      <span>Branche:</span>
+      <select id="serSeg" onchange="mailSetFilter('seg',this.value)" style="background:var(--bg2);border:1px solid var(--line);border-radius:99px;padding:5px 12px;font-size:12px;font-weight:600;color:var(--tx);font-family:inherit;outline:none;cursor:pointer">
+        <option value="">alle</option>
+        ${Object.keys(BRANCHEN).map(b=>`<option value="${b}" ${MAIL_FILTER.seg===b?'selected':''}>${BRANCHEN[b].ic} ${b}</option>`).join('')}
+      </select>
+      <span>Kanton:</span>
+      <select id="serKt" onchange="mailSetFilter('kt',this.value)" style="background:var(--bg2);border:1px solid var(--line);border-radius:99px;padding:5px 12px;font-size:12px;font-weight:600;color:var(--tx);font-family:inherit;outline:none;cursor:pointer">
+        <option value="">alle</option>${kantone.map(x=>`<option value="${x}" ${MAIL_FILTER.kt===x?'selected':''}>${x}</option>`).join('')}
+      </select>
+      <span>Prio:</span>
+      <select id="serPrio" onchange="mailSetFilter('prio',this.value)" style="background:var(--bg2);border:1px solid var(--line);border-radius:99px;padding:5px 12px;font-size:12px;font-weight:600;color:var(--tx);font-family:inherit;outline:none;cursor:pointer">
+        <option value="" ${MAIL_FILTER.prio===''?'selected':''}>alle</option>
+        <option value="A" ${MAIL_FILTER.prio==='A'?'selected':''}>nur A</option>
+        <option value="B" ${MAIL_FILTER.prio==='B'?'selected':''}>nur B</option>
+      </select>
+      <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="serNurMail" ${MAIL_FILTER.nurMail?'checked':''} onchange="mailSetFilter('nurMail',this.checked)"> nur mit E-Mail-Adresse</label>
+      <span>max.</span><input type="number" id="serLimit" min="1" max="500" value="${MAIL_FILTER.limit}" onchange="mailSetFilter('limit',this.value)"
+        style="width:74px;background:var(--bg2);border:1px solid var(--line);border-radius:99px;padding:5px 10px;font-size:12px;color:var(--tx);font-family:inherit;outline:none;text-align:center">
+    </div>
+  </div>
+
+  <div class="card"><div class="card-h"><h3>🗂 Mail-Historie (${MAILS.length})</h3>
+    <span class="sub">was wann an wen rausging</span>
+    <div style="flex:1"></div>
+    ${MAILS.length?`<button class="tbtn" onclick="mailHistExport()">📤 Export</button><button class="tbtn" style="color:var(--red)" onclick="mailHistClear()">🗑</button>`:''}
+    </div>
+    <div class="card-b" style="padding-top:6px;max-height:260px;overflow-y:auto">
+    ${MAILS.length?MAILS.slice(0,80).map(h=>`<div class="kvrow"><span class="k">${fmtD(h.datum)} ${esc(h.zeit||'')}</span>
+      <span class="v">${esc(h.kunde)} <span style="color:var(--tx2);font-weight:400">· ${esc((MAILTYPEN.find(t=>t.id===h.typ)||{t:h.typ}).t)} · ${esc(h.aktion)}</span></span></div>`).join('')
+    :'<div class="empty" style="padding:16px">Noch keine Mail versendet</div>'}
+    </div>
+  </div>`;
+}
+window.mailZufallKunde=()=>{
+  const pool=K.filter(k=>k.co&&String(k.prio).trim()==='A');
+  const p=pool.length?pool:K.filter(k=>k.co);
+  if(!p.length) return;
+  MAIL_KUNDE=p[Math.floor(Math.random()*p.length)]._i; mailRender();
+  toast('🎲 Neuer Kunde geladen');
+};
+window.mailHistExport=()=>{ if(!MAILS.length){toast('⚠ Historie ist leer');return;}
+  exportRows('Mail_Historie',['Datum','Zeit','Kunde','E-Mail','Typ','Betreff','Aktion'],
+    MAILS.map(h=>[h.datum,h.zeit||'',h.kunde,h.mail||'',(MAILTYPEN.find(t=>t.id===h.typ)||{t:h.typ}).t,h.betreff,h.aktion])); };
+window.mailHistClear=()=>{ if(!confirm('Mail-Historie komplett löschen?')) return;
+  MAILS=[]; mailSave(); mailRender(); toast('🗑 Historie geleert'); };
+window.absDialog=()=>{
+  Drawer.open('✍️ Absender & Signatur',`
+    <div class="form-grid">
+      <div class="fld"><label>Name</label><input id="ab-name" value="${esc(ABS.name)}"></div>
+      <div class="fld"><label>Funktion</label><input id="ab-rolle" value="${esc(ABS.rolle)}"></div>
+      <div class="fld"><label>Firma</label><input id="ab-firma" value="${esc(ABS.firma)}"></div>
+      <div class="fld"><label>Standort</label><input id="ab-ort" value="${esc(ABS.ort)}"></div>
+      <div class="fld"><label>Telefon</label><input id="ab-tel" value="${esc(ABS.tel)}" placeholder="+41 …"></div>
+      <div class="fld"><label>E-Mail</label><input id="ab-mail" value="${esc(ABS.mail)}" placeholder="vorname.name@…"></div>
+    </div>
+    <div class="fld"><label>Website</label><input id="ab-web" value="${esc(ABS.web)}"></div>
+    <div class="fld"><label>Vorschau</label><textarea readonly style="min-height:120px">${esc(absSig(1))}</textarea></div>
+    <button class="tbtn primary" style="width:100%;justify-content:center;padding:11px" onclick="absSpeichern()">✓ Signatur speichern</button>`);
+};
+window.absSpeichern=()=>{
+  const g=id=>{const e=document.getElementById(id);return e?e.value.trim():'';};
+  ABS={name:g('ab-name'),rolle:g('ab-rolle'),firma:g('ab-firma'),ort:g('ab-ort'),
+    tel:g('ab-tel'),mail:g('ab-mail'),web:g('ab-web')};
+  absSave(); Drawer.close(); toast('✓ Signatur gespeichert'); mailRender();
+};
+Views.add('mails','Mail-Studio','Vertrieb','✉',null,buildMails);
 
 /* ═══════════════ SIDEBAR BUILD ═══════════════ */
 (function(){
