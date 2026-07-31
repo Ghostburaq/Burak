@@ -1,6 +1,5 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import SineDivider from '../components/SineDivider.astro';
 import { site } from '../lib/site';
 
 const services = [
@@ -78,7 +77,9 @@ const jsonLd = {
     </div>
   </section>
 
-  <SineDivider />
+  <div class="mt-12 flex justify-center">
+    <img src="/logo/signet.svg" alt="" width="512" height="200" class="h-auto w-full max-w-xl opacity-95" decoding="async" />
+  </div>
 
   <section class="mt-16">
     <h2 class="text-2xl font-semibold text-anthrazit">Fuer wen</h2>

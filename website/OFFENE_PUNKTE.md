@@ -12,14 +12,20 @@ Deployment auf Netlify. Sprache Schweizer Schreibweise (ss).
 
 - [ ] **Domain festlegen** und im Netlify-Dashboard sowie in `astro.config.mjs`
       (`SITE_URL`) und `src/lib/site.ts` (`domain`) eintragen.
-- [ ] **SVG-Logo erstellen lassen.** Aktuell liegt unter `public/logo/signet.svg`
-      ein Uebergangs-Signet (Sechseck-Rahmen + drei Signalkurven in den Logo-Farben).
-      Die im Brief genannten PNGs (`kabuu-signet-1024/512/256.png` und
-      `kabuu-signet-flat-512.png`) sind bei der Session nicht mitgeliefert worden.
-      Sobald das echte SVG oder die PNGs vorliegen: unter `public/logo/` ablegen
-      und Header/Footer/Favicon entsprechend anpassen.
+- [ ] **Logo-Assets.** Aktuell im Einsatz sind zwei selbst gezeichnete
+      Vektor-Fassungen des Motivs:
+      - `public/logo/signet.svg` (breit, waveform ueber alle drei Zonen &mdash;
+        rot transient, magenta einschwingend, blau/violett stabil, Stahl-Balken
+        als Messreferenz). Wird auf der Startseite als Motiv verwendet.
+      - `public/logo/mark.svg` (kompakt, quadratisch). Wird in Header, Footer
+        und Favicon verwendet.
+      Die im Brief genannten 3D-Renderings (`kabuu-signet-1024/512/256.png`
+      und `kabuu-signet-flat-512.png`) wurden zwar visuell im Chat gezeigt,
+      liegen in der Session aber nicht als Dateien vor. Wenn die Original-PNGs
+      oder das offizielle Vektor-Logo vorliegen, unter `public/logo/` ablegen
+      und Header/Footer/Favicon-Referenzen entsprechend austauschen.
 - [ ] Favicon-Set generieren (`favicon.ico`, `apple-touch-icon.png`,
-      `site.webmanifest`), sobald das echte Logo verfuegbar ist. Aktuell nur SVG-Favicon.
+      `site.webmanifest`) fuer aeltere Browser. Aktuell nur SVG-Favicon.
 - [ ] **GLB (3D-Version) NICHT einbinden** &mdash; bewusst nicht integrieren
       (Bundle-Groesse, Lighthouse). Statische Renderings genuegen.
 

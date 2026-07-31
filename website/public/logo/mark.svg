@@ -1,5 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
-  <rect width="128" height="128" rx="18" fill="#FFFFFF"/>
+<!-- Kompakte quadratische Bildmarke fuer Favicon und sehr kleine Groessen.
+     Reduzierte Fassung des Signets: nur je ein Zyklus je Zone plus Stahl-Balken. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Engineering.Kabuu">
+  <title>Engineering.Kabuu</title>
   <rect x="60" y="18" width="8" height="92" rx="2" fill="#959AAF"/>
   <path d="M 8 64 L 20 64 C 26 30, 36 30, 42 52 C 50 92, 58 96, 64 70"
         fill="none" stroke="#E2081B" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
