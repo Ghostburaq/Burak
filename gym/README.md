@@ -18,7 +18,7 @@ von selbst.
 | `Progression` | Erste gegen letzte Einheit, Abstand zum Bestwert, Trend | A4 quer |
 | `Rekorde` | Bestwerte je Übung inkl. Einheit, in der sie fielen | A4 quer |
 | `Trainingsblatt` | Leere Vorlage zum Ausdrucken und Mitnehmen | A4 hoch, 2 Seiten |
-| `Übungen` | Stammdaten; speist Dropdowns und alle Auswertungen | A4 hoch |
+| `Übungen` | Stammdaten und Planvorgaben; speist Dropdowns, Trainingsblatt und alle Auswertungen | A4 quer |
 
 ## Was drucken?
 
@@ -47,8 +47,17 @@ Satztypen: `W` Warmup · `A` Arbeitssatz (Basis aller Kennzahlen) ·
 
 Neue Übungen im Blatt `Übungen` ergänzen — sie erscheinen dann automatisch im
 Dropdown und in Auswertung, Progression und Rekorden. Das `Trainingsblatt`
-enthält die neun Übungen des aktuellen Plans; für spontane Zusatzübungen sind
-die Notizzeilen am Seitenende gedacht.
+enthält die aktiven Übungen des Plans; für spontane Zusatzübungen sind die
+Notizzeilen am Seitenende gedacht.
+
+### Planvorgaben im Blatt `Übungen`
+
+| Feld | Wirkung |
+|---|---|
+| `Ziel-Wdh`, `Ziel-Sätze`, `Ziel-RPE` | erscheinen als Vorgabe-Zeile auf dem Trainingsblatt |
+| `Start (kg)` | Einstiegsgewicht für Übungen ohne Historie; speist die Plan-Spalte, bis die erste Einheit erfasst ist |
+| `Max (kg)` | deckelt den Zielvorschlag, z. B. am Ende des Steckgewichts; das Trainingsblatt weist dann auf Tempo-Progression hin |
+| `Aktiv = nein` | Archiv: raus aus dem Trainingsblatt, Historie bleibt in Log, Auswertung, Progression und Rekorden — dort grau und kursiv |
 
 ## Kennzahlen
 
@@ -56,8 +65,23 @@ die Notizzeilen am Seitenende gedacht.
 - **e1RM (Epley)** = Gewicht × (1 + Wdh / 30). An Maschinen kein echtes 1RM,
   aber ein sauberer Vergleich zwischen Einheiten mit unterschiedlichen
   Wiederholungszahlen.
-- **Nächstes Ziel** = letztes Top-Gewicht + 2.5 %, gerundet auf 0.5 kg.
-  Richtwert, kein Dogma — an Maschinen bestimmt die Steckplatte den Sprung.
+- **Nächstes Ziel** = letztes Top-Gewicht + 2.5 %, gerundet auf 0.5 kg und
+  begrenzt durch `Max (kg)`. Ohne Historie greift `Start (kg)`. Richtwert,
+  kein Dogma — an Maschinen bestimmt die Steckplatte den Sprung.
+
+## Plan
+
+Neun aktive Übungen in zwei Blöcken, schwere Grundübung zuerst:
+
+- **Beine vorne:** Hackenschmidt-Kniebeuge · Split Squat · Beinstrecker · Adduktion
+- **Beine hinten:** Rumänisches Kreuzheben · Hip Thrust · Beinbeuger · Seitliche Kickbacks · Waden
+
+Lunges und Kickback sind archiviert (redundant zu Split Squat bzw. Hip Thrust
+und RDL); ihre Historie bleibt in allen Auswertungen sichtbar.
+
+Hackenschmidt-Kniebeuge und Rumänisches Kreuzheben sind neu und haben noch
+keine Historie — bis ein `Start (kg)` eingetragen ist, bleibt ihre Plan-Spalte
+auf dem Trainingsblatt leer.
 
 ## Datenstand
 

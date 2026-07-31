@@ -42,23 +42,71 @@ REK_FIRST, REK_LAST = 4, 3 + EX_SLOTS
 
 UEB = "'Übungen'"       # Blattname mit Umlaut -> in Formeln immer quoten
 
+# Aktueller Plan. Reihenfolge = Reihenfolge in allen Auswertungen und auf dem
+# Trainingsblatt: schwere Grundübung zuerst, Isolation danach.
+# letzter: Satztyp des letzten Arbeitssatzes ("A" oder "R" = Reduktionssatz).
+# start:   Startgewicht für Übungen ohne Historie. None = im Blatt 'Übungen'
+#          einzutragen; ohne Wert bleibt die Plan-Spalte leer.
+# max:     Lastobergrenze, z.B. das Ende des Steckgewichts. Der
+#          Zielvorschlag steigt nie darüber hinaus. None = keine Grenze.
 UEBUNGEN = [
-    # (Übung, Block, Gerät/Variante, Ziel-Wdh)
-    ("Adduktion",           "Beine vorne",  "Maschine",              "15-20"),
-    ("Beinstrecker",        "Beine vorne",  "Maschine",              "8-12"),
-    ("Split Squat",         "Beine vorne",  "Multipresse / Hantel",  "5-8"),
-    ("Lunges",              "Beine vorne",  "Kurzhantel",            "10-12"),
-    ("Kickback",            "Beine hinten", "Maschine / Kabel",      "10-15"),
-    ("Seitliche Kickbacks", "Beine hinten", "Kabel",                 "12-15"),
-    ("Beinbeuger",          "Beine hinten", "Maschine",              "10-15"),
-    ("Hip Thrust",          "Beine hinten", "Langhantel",            "6-12"),
-    ("Waden",               "Beine hinten", "Maschine",              "12-15"),
+    dict(name="Hackenschmidt-Kniebeuge", maxlast=None, block="Beine vorne",
+         geraet="Hackenschmidt / Pendel", wdh="6-10", saetze=3, rpe="8-9",
+         start=None, letzter="A", aktiv=True,
+         notiz="Ersetzt Lunges. Schwere Grundübung zuerst, Quadrizeps unter "
+               "Last in der gedehnten Position, Rücken gestützt. Ohne "
+               "Maschine: Pendelkniebeuge, sonst Beinpresse mit tiefer "
+               "Fussposition."),
+    dict(name="Split Squat", maxlast=None, block="Beine vorne",
+         geraet="Multipresse / Hantel", wdh="8-10", saetze=3, rpe="8",
+         start=None, letzter="A", aktiv=True,
+         notiz="Wdh-Bereich von 5-8 auf 8-10 je Bein. Limiter soll der "
+               "Muskel sein, nicht die Stabilität."),
+    dict(name="Beinstrecker", maxlast=None, block="Beine vorne", geraet="Maschine",
+         wdh="12-15", saetze=3, rpe="9", start=None, letzter="R", aktiv=True,
+         notiz="Dritter Arbeitssatz läuft als Reduktionssatz aus."),
+    dict(name="Adduktion", maxlast=152.5, block="Beine vorne", geraet="Maschine",
+         wdh="15-20", saetze=3, rpe="9", start=None, letzter="R", aktiv=True,
+         notiz="152.5 kg ist Stackende. Progression ab jetzt über 3 s "
+               "Exzentrik und 1 s Pause in der gedehnten Position, nicht "
+               "über Last."),
+    dict(name="Rumänisches Kreuzheben", maxlast=None, block="Beine hinten",
+         geraet="Langhantel", wdh="8-10", saetze=3, rpe="8", start=None,
+         letzter="A", aktiv=True,
+         notiz="Ersetzt Kickback. Schliesst die Lücke Hüftstreckung bei "
+               "gestrecktem Knie, Ischiokrurale und Gluteus in der Dehnung."),
+    dict(name="Hip Thrust", maxlast=None, block="Beine hinten", geraet="Langhantel",
+         wdh="8-12", saetze=3, rpe="8-9", start=None, letzter="A",
+         aktiv=True,
+         notiz="Gesamtgewicht inkl. Stange notieren, auch bei "
+               "Reduktionssätzen."),
+    dict(name="Beinbeuger", maxlast=None, block="Beine hinten", geraet="Maschine, sitzend",
+         wdh="10-12", saetze=3, rpe="9", start=None, letzter="R", aktiv=True,
+         notiz="Sitzend statt liegend: Hüfte gebeugt, Ischiokrurale "
+               "vorgedehnt, mehr Reiz pro Satz. Dritter Satz als "
+               "Reduktionssatz."),
+    dict(name="Seitliche Kickbacks", maxlast=None, block="Beine hinten", geraet="Kabel",
+         wdh="15-20", saetze=3, rpe="9", start=None, letzter="A", aktiv=True,
+         notiz="Gluteus medius, relevant für die Silhouette von vorne."),
+    dict(name="Waden", maxlast=None, block="Beine hinten", geraet="Maschine", wdh="10-15",
+         saetze=3, rpe="9", start=None, letzter="A", aktiv=True,
+         notiz="In jede Beineinheit, bisher nur in jeder zweiten."),
+    # Archiv: raus aus der Planung, Historie bleibt in Log und Auswertung.
+    dict(name="Lunges", maxlast=None, block="Beine vorne", geraet="Kurzhantel",
+         wdh="10-12", saetze=None, rpe=None, start=None, letzter="A",
+         aktiv=False,
+         notiz="Archiv. Redundant zum Split Squat, Historie bleibt in den "
+               "Auswertungen sichtbar."),
+    dict(name="Kickback", maxlast=None, block="Beine hinten", geraet="Maschine / Kabel",
+         wdh="10-15", saetze=None, rpe=None, start=None, letzter="A",
+         aktiv=False,
+         notiz="Archiv. Von Hip Thrust und RDL abgedeckt, Historie bleibt "
+               "erhalten."),
 ]
 BLOCKS = ["Beine vorne", "Beine hinten"]
 
-# Aufwärm-Rampe für das Trainingsblatt: Anteil vom Zielgewicht je Satz
-PLAN_FAKTOR = [0.45, 0.70, 1.00, 1.00, None]
-SATZ_MUSTER = ["W", "W", "A", "A", "R"]
+# Aufwärm-Rampe für das Trainingsblatt: Anteil vom Zielgewicht je Warmup
+WARMUP_FAKTOR = [0.45, 0.70]
 
 # --------------------------------------------------------------------------
 # Design
@@ -178,6 +226,30 @@ def druck(ws, area, landscape=False, titles=None, fit_h=0, margins=None,
     ws.oddFooter.right.size, ws.oddFooter.right.color = 8, "808080"
 
 
+def zeilenhoehe(text, breite=92, zeile=12.5, minimum=16):
+    """Zeilenhöhe aus der Textlänge schätzen, damit nichts abgeschnitten wird.
+
+    breite = Zeichen pro Zeile im umbrochenen Bereich, grosszügig geschätzt.
+    """
+    zeilen = max(1, -(-len(text) // breite))
+    return max(minimum, zeilen * zeile + 5)
+
+
+def archiv_grau(ws, first_col, last_col, first_row, last_row):
+    """Archivierte Übungen (Aktiv = nein) grau und kursiv darstellen.
+
+    Die Zeilen der Auswertungsblätter liegen deckungsgleich zu den Zeilen im
+    Blatt 'Übungen', deshalb genügt der Zeilenversatz als Bezug.
+    """
+    versatz = UEB_FIRST - first_row
+    ws.conditional_formatting.add(
+        "%s%d:%s%d" % (get_column_letter(first_col), first_row,
+                       get_column_letter(last_col), last_row),
+        FormulaRule(formula=['%s!$I%d="nein"' % (UEB, first_row + versatz)],
+                    font=Font(name=FONT, size=10, italic=True,
+                              color="8A94A0")))
+
+
 # Begrenzte Bereichsreferenzen - SUMPRODUCT verträgt keine ganzen Spalten
 def LR(col):
     return "Log!$%s$%d:$%s$%d" % (col, LOG_FIRST, col, LOG_LAST)
@@ -240,34 +312,36 @@ for lab, formel, nf in [
 r += 1
 abschnitt(ws, r, 2, 5, "So arbeitest du damit")
 r += 1
-for lab, txt, hoehe in [
+for lab, txt in [
     ("Blatt 'Einheiten'",
      "Zuerst hier die Einheit anlegen: Nummer, Datum, Körpergewicht, Dauer, "
      "Schlaf, Gefühl. Das Datum zieht sich automatisch ins Log, du trägst es "
-     "nur einmal ein.", 30),
+     "nur einmal ein."),
     ("Blatt 'Log'",
      "Eine Zeile pro Satz. Nur die gelben Spalten ausfüllen: Einheit, Übung, "
      "Satztyp, Gewicht, Wdh, optional RPE und Notiz. Block, Volumen und "
-     "e1RM rechnen sich selbst.", 30),
+     "e1RM rechnen sich selbst."),
     ("Blatt 'Trainingsblatt'",
      "Ausdrucken und mitnehmen. Zeigt je Übung, was du zuletzt gemacht hast, "
      "dazu einen Zielvorschlag inklusive Aufwärm-Rampe und leere Felder zum "
      "Eintragen mit Stift. Enthält die neun Übungen des Plans - für spontane "
-     "Zusatzübungen sind die Notizzeilen am Seitenende da.", 38),
+     "Zusatzübungen sind die Notizzeilen am Seitenende da."),
     ("Blatt 'Auswertung'",
      "Volumen, Top-Gewicht und bester e1RM je Übung und Einheit. Drei "
-     "Tabellen, jede auf einer eigenen Druckseite.", 24),
+     "Tabellen, jede auf einer eigenen Druckseite."),
     ("Blatt 'Progression'",
      "Erste gegen letzte Einheit: Veränderung in kg und Prozent, Abstand zum "
-     "eigenen Bestwert, Trendbewertung.", 24),
+     "eigenen Bestwert, Trendbewertung."),
     ("Blatt 'Rekorde'",
      "Bestwerte je Übung über alle Einheiten, inklusive der Einheit, in der "
-     "der Rekord gefallen ist.", 24),
+     "der Rekord gefallen ist."),
     ("Blatt 'Dashboard'",
-     "Kennzahlen und vier Diagramme auf einer Seite. Gut zum Aufhängen.", 20),
+     "Kennzahlen und vier Diagramme auf einer Seite. Gut zum Aufhängen."),
     ("Blatt 'Übungen'",
-     "Stammdaten. Hier neue Übungen ergänzen - sie erscheinen automatisch in "
-     "den Dropdowns und in allen Auswertungen.", 24),
+     "Stammdaten und Planvorgaben: Ziel-Wdh, Ziel-Sätze, Ziel-RPE und "
+     "Startgewicht je Übung. Neue Übung hier ergänzen - sie erscheint "
+     "automatisch in den Dropdowns und in allen Auswertungen. 'Aktiv = "
+     "nein' archiviert eine Übung: raus aus der Planung, Historie bleibt."),
 ]:
     ws.cell(r, 2, lab).font = F_BOLD
     ws.cell(r, 2).alignment = Alignment(horizontal="left", vertical="top")
@@ -276,33 +350,38 @@ for lab, txt, hoehe in [
     c.font, c.alignment = F_BODY, LW
     for col in range(2, 6):
         ws.cell(r, col).border = B_ALL
-    ws.row_dimensions[r].height = hoehe
+    ws.row_dimensions[r].height = zeilenhoehe(txt)
     r += 1
 
 r += 1
 abschnitt(ws, r, 2, 5, "Legende")
 r += 1
 gelb_zeile = r
-for lab, txt, hoehe in [
-    ("Gelbe Zellen", "Deine Eingabe. Nur hier tippen.", 16),
-    ("Weisse / graue Zellen", "Formeln. Nicht überschreiben.", 16),
-    ("Satztyp W", "Warmup. Zählt nicht ins Arbeitsvolumen.", 16),
+for lab, txt in [
+    ("Gelbe Zellen", "Deine Eingabe. Nur hier tippen."),
+    ("Weisse / graue Zellen", "Formeln. Nicht überschreiben."),
+    ("Satztyp W", "Warmup. Zählt nicht ins Arbeitsvolumen."),
     ("Satztyp A",
-     "Arbeitssatz. Basis für Volumen, Top-Gewicht und e1RM.", 16),
+     "Arbeitssatz. Basis für Volumen, Top-Gewicht und e1RM."),
     ("Satztyp R",
      "Reduktions- bzw. Dropsatz. Kette in der Spalte 'Drop-Kette' notieren, "
      "z.B. 110 / 72.5 / 35. Zählt nicht ins Arbeitsvolumen, weil die Wdh je "
-     "Stufe fehlen.", 30),
+     "Stufe fehlen."),
     ("Volumen",
      "Gewicht × Wdh je Satz. Der ehrlichste Fortschrittswert an "
-     "Maschinen.", 16),
+     "Maschinen."),
     ("e1RM (Epley)",
      "Gewicht × (1 + Wdh / 30). An Maschinen kein echtes 1RM, aber ein "
      "sauberer Vergleich zwischen Einheiten mit unterschiedlichen "
-     "Wiederholungszahlen.", 30),
+     "Wiederholungszahlen."),
     ("RPE",
      "Anstrengung 6 bis 10. 10 = keine Wiederholung mehr möglich. Optional, "
-     "aber sehr hilfreich für die Steuerung.", 24),
+     "aber sehr hilfreich für die Steuerung. Die Zielwerte je Übung stehen "
+     "im Blatt 'Übungen'."),
+    ("Archiv",
+     "Übung im Blatt 'Übungen' auf Aktiv = nein setzen. Sie verschwindet aus "
+     "dem Trainingsblatt, bleibt in Log, Auswertung, Progression und "
+     "Rekorden aber sichtbar - dort grau und kursiv."),
 ]:
     ws.cell(r, 2, lab).font = F_BOLD
     ws.cell(r, 2).alignment = Alignment(horizontal="left", vertical="top")
@@ -311,7 +390,7 @@ for lab, txt, hoehe in [
     c.font, c.alignment = F_BODY, LW
     for col in range(2, 6):
         ws.cell(r, col).border = B_ALL
-    ws.row_dimensions[r].height = hoehe
+    ws.row_dimensions[r].height = zeilenhoehe(txt)
     r += 1
 ws.cell(gelb_zeile, 2).fill = FILL_INPUT
 
@@ -333,10 +412,22 @@ for lab, txt in [
      "Gesamtgewicht eintragen, sonst ist der Satz nicht vergleichbar."),
     ("Lunges",
      "Nur Gewichte, keine Wdh und keine Satzstruktur. Als je ein Arbeitssatz "
-     "in Einheit 1 bis 3 erfasst - deshalb bleibt das Volumen dort leer."),
+     "in Einheit 1 bis 3 erfasst - deshalb bleibt das Volumen dort leer. "
+     "Übung ist inzwischen archiviert."),
     ("Datum",
      "In der Quelle nicht enthalten. Im Blatt 'Einheiten' nachtragen, falls "
      "du die Termine noch weisst."),
+    ("Stackende Adduktion",
+     "152.5 kg ist das Ende des Steckgewichts. Im Blatt 'Übungen' als 'Max "
+     "(kg)' hinterlegt, damit der Zielvorschlag dort stehen bleibt statt "
+     "eine Last zu fordern, die die Maschine nicht hergibt. Weitersteigern "
+     "über Tempo und Pausen."),
+    ("Startgewichte fehlen",
+     "Hackenschmidt-Kniebeuge und Rumänisches Kreuzheben sind neu im Plan "
+     "und haben keine Historie. Trag im Blatt 'Übungen' unter 'Start (kg)' "
+     "ein Einstiegsgewicht ein, dann füllt sich die Plan-Spalte des "
+     "Trainingsblatts. Aus den bisherigen Daten lässt sich dafür kein "
+     "seriöser Wert ableiten - das entscheidest du im ersten Satz."),
 ]:
     ws.cell(r, 2, lab).font = Font(name=FONT, size=10, bold=True, color=AMBER)
     ws.cell(r, 2).alignment = Alignment(horizontal="left", vertical="top")
@@ -345,7 +436,7 @@ for lab, txt in [
     c.font, c.alignment = F_BODY, LW
     for col in range(2, 6):
         ws.cell(r, col).border = B_ALL
-    ws.row_dimensions[r].height = 26
+    ws.row_dimensions[r].height = zeilenhoehe(txt)
     r += 1
 
 r += 1
@@ -359,35 +450,71 @@ druck(ws, "B1:E%d" % r)
 # ÜBUNGEN (Stammdaten)
 # ==========================================================================
 wsu = sheet("Übungen")
-titelbalken(wsu, 1, 6, "ÜBUNGEN  |  STAMMDATEN",
-            "Neue Übung hier ergänzen - Dropdowns und Auswertungen ziehen "
-            "automatisch nach.")
+titelbalken(wsu, 1, 10, "ÜBUNGEN  |  STAMMDATEN UND PLANVORGABEN",
+            "Neue Übung hier ergänzen - Dropdowns, Trainingsblatt und "
+            "Auswertungen ziehen automatisch nach. Aktiv = nein heisst "
+            "Archiv: die Übung verschwindet aus der Planung, ihre Historie "
+            "bleibt in Log und Auswertung erhalten.")
 kopfzeile(wsu, 3, 1,
-          ["Übung", "Block", "Gerät / Variante", "Ziel-Wdh", "Aktiv",
-           "Notiz"], [26, 16, 26, 12, 9, 40])
+          ["Übung", "Block", "Gerät / Variante", "Ziel-Wdh", "Ziel-\nSätze",
+           "Ziel-\nRPE", "Start (kg)", "Max (kg)", "Aktiv", "Notiz"],
+          [26, 15, 22, 10, 8, 8, 10, 10, 8, 46], height=30)
+
 for i in range(EX_SLOTS):
     row = UEB_FIRST + i
-    vals = UEBUNGEN[i] if i < len(UEBUNGEN) else ("", "", "", "")
-    for j in range(6):
-        c = wsu.cell(row, 1 + j)
-        if j < 4:
-            c.value = vals[j] or None
-        elif j == 4:
-            c.value = "ja" if i < len(UEBUNGEN) else None
+    u = UEBUNGEN[i] if i < len(UEBUNGEN) else None
+    werte = [None] * 10
+    if u:
+        werte = [u["name"], u["block"], u["geraet"], u["wdh"], u["saetze"],
+                 u["rpe"], u["start"], u["maxlast"],
+                 "ja" if u["aktiv"] else "nein", u["notiz"]]
+    for j, v in enumerate(werte):
+        c = wsu.cell(row, 1 + j, v)
         c.font, c.fill, c.border = F_BODY, FILL_INPUT, B_ALL
-        c.alignment = C if j in (3, 4) else L
-    wsu.row_dimensions[row].height = 18
+        if j == 9:
+            c.alignment = LW
+        elif j in (0, 1, 2):
+            c.alignment = L
+        else:
+            c.alignment = C
+        if j in (6, 7):
+            c.number_format = NF_KG
+    if u and not u["aktiv"]:
+        for j in range(10):
+            wsu.cell(row, 1 + j).font = Font(name=FONT, size=10,
+                                             color="8A94A0", italic=True)
+    wsu.row_dimensions[row].height = 46 if u else 18
 
 dv_block = DataValidation(type="list", formula1='"%s"' % ",".join(BLOCKS),
                           allow_blank=True)
 wsu.add_data_validation(dv_block)
 dv_block.add("B%d:B%d" % (UEB_FIRST, UEB_LAST))
 
-wsu.cell(UEB_LAST + 2, 1,
-         "Die Reihenfolge hier ist die Reihenfolge in allen Auswertungen und "
-         "auf dem Trainingsblatt.").font = F_SMALL
-wsu.freeze_panes = "A4"
-druck(wsu, "A1:F%d" % (UEB_LAST + 2), titles="1:3")
+dv_aktiv = DataValidation(type="list", formula1='"ja,nein"', allow_blank=True)
+dv_aktiv.errorTitle = "Aktiv"
+dv_aktiv.error = ("ja = Teil der Planung, nein = Archiv. Die Historie bleibt "
+                  "in beiden Fällen erhalten.")
+wsu.add_data_validation(dv_aktiv)
+dv_aktiv.add("I%d:I%d" % (UEB_FIRST, UEB_LAST))
+
+hinweis = UEB_LAST + 2
+wsu.merge_cells(start_row=hinweis, start_column=1, end_row=hinweis,
+                end_column=10)
+c = wsu.cell(hinweis, 1,
+             "Reihenfolge hier = Reihenfolge in allen Auswertungen und auf "
+             "dem Trainingsblatt.   ·   'Start (kg)' braucht nur eine Übung "
+             "ohne Historie: solange keine Arbeitssätze im Log stehen, "
+             "speist dieser Wert die Plan-Spalte des Trainingsblatts. Sobald "
+             "die erste Einheit erfasst ist, rechnet das Logbuch aus den "
+             "echten Werten weiter.   ·   'Max (kg)' begrenzt den "
+             "Zielvorschlag nach oben, etwa am Ende des Steckgewichts - "
+             "darüber steigerst du über Tempo, Pausen und Wiederholungen "
+             "statt über Last.   ·   Archivierte Übungen erscheinen grau und "
+             "tauchen im Trainingsblatt nicht mehr auf.")
+c.font, c.alignment = F_SMALL, LW
+wsu.row_dimensions[hinweis].height = 40
+wsu.freeze_panes = "B4"
+druck(wsu, "A1:J%d" % hinweis, landscape=True, titles="1:3")
 
 # ==========================================================================
 # EINHEITEN
@@ -425,6 +552,12 @@ for i in range(SESSION_SLOTS):
         c.font, c.alignment, c.fill, c.border = F_BODY, C, FILL_CALC, B_ALL
         c.number_format = NF_INT
     wse.row_dimensions[row].height = 18
+
+dv_fokus = DataValidation(
+    type="list",
+    formula1='"%s,Beine komplett"' % ",".join(BLOCKS), allow_blank=True)
+wse.add_data_validation(dv_fokus)
+dv_fokus.add("C%d:C%d" % (EINH_FIRST, EINH_LAST))
 
 srow = EINH_LAST + 1
 wse.cell(srow, 1, "Summe").font = F_BOLD
@@ -585,6 +718,7 @@ def auswertungstabelle(start, titel, formelbau, nf, spaltentitel, aggregat):
         cc.number_format, cc.fill = nf, FILL_CALC
         wsa.row_dimensions[row].height = 17
     last = first + EX_SLOTS - 1
+    archiv_grau(wsa, 1, 1, first, last)
     wsa.conditional_formatting.add(
         "B%d:%s%d" % (first, get_column_letter(LASTCOL - 1), last),
         ColorScaleRule(start_type="min", start_color="FFFFFF",
@@ -688,6 +822,8 @@ for bereich, bedingung, farbe in (
                              font=Font(name=FONT, size=10, bold=True,
                                        color=farbe)))
 
+archiv_grau(wsp, 1, 11, PROG_FIRST, PROG_LAST)
+
 hin = PROG_LAST + 2
 wsp.merge_cells(start_row=hin, start_column=1, end_row=hin, end_column=11)
 c = wsp.cell(hin, 1,
@@ -760,8 +896,14 @@ for k in range(EX_SLOTS):
            % (D_, ex, B_, row, E_, F_, row, G_))
     wsr.cell(row, 13, "=IF($L%d=\"\",\"\",IF(%s=0,\"\",%s))"
              % (row, wdh, wdh))
-    wsr.cell(row, 14, "=IF($L%d=\"\",\"\",ROUND($L%d*1.025*2,0)/2)"
-             % (row, row))
+    # Mit Historie: letztes Top-Gewicht plus 2.5 %, gedeckelt durch die
+    # Lastobergrenze. Ohne Historie greift das Startgewicht.
+    ueb_row = UEB_FIRST + k
+    steig = "ROUND($L%d*1.025*2,0)/2" % row
+    wsr.cell(row, 14, "=IF($L%d<>\"\",IF(%s!$H%d=\"\",%s,"
+                      "MIN(%s,%s!$H%d)),IF(%s!$G%d=\"\",\"\",%s!$G%d))"
+             % (row, UEB, ueb_row, steig, steig, UEB, ueb_row, UEB, ueb_row,
+                UEB, ueb_row))
     fmts = {3: NF_INT, 4: NF_INT, 5: NF_INT, 6: NF_KG, 7: NF_INT, 8: NF_KG,
             9: NF_INT, 10: NF_INT, 11: NF_INT, 12: NF_KG, 13: NF_INT,
             14: NF_KG}
@@ -779,14 +921,19 @@ for k in range(EX_SLOTS):
                                        color=AMBER)
     wsr.row_dimensions[row].height = 18
 
+archiv_grau(wsr, 1, 14, REK_FIRST, REK_LAST)
+
 note = REK_LAST + 2
 wsr.merge_cells(start_row=note, start_column=1, end_row=note, end_column=14)
 c = wsr.cell(note, 1,
              "Nächstes Ziel = letztes Top-Gewicht plus 2.5 Prozent, gerundet "
-             "auf 0.5 kg. Richtwert, keine Vorgabe - an Maschinen bestimmt "
-             "die Steckplatte den Sprung.")
+             "auf 0.5 kg, begrenzt durch 'Max (kg)' aus dem Blatt 'Übungen'. "
+             "Ohne Historie greift stattdessen das Startgewicht. Richtwert, "
+             "keine Vorgabe - an Maschinen bestimmt die Steckplatte den "
+             "Sprung.   ·   Graue, kursive Zeilen sind archivierte Übungen: "
+             "nicht mehr im Plan, Historie bleibt.")
 c.font, c.alignment = F_SMALL, LW
-wsr.row_dimensions[note].height = 24
+wsr.row_dimensions[note].height = 30
 wsr.freeze_panes = "C4"
 druck(wsr, "A1:N%d" % note, landscape=True, titles="1:3")
 
@@ -834,10 +981,19 @@ for bi, block in enumerate(BLOCKS):
     wst.row_dimensions[row + 1].height = 20
     row += 3
 
-    for i, u in [(i, u) for i, u in enumerate(UEBUNGEN) if u[1] == block]:
+    # Nur aktive Übungen aufs Blatt - Archiv bleibt aussen vor.
+    aktive = [(i, u) for i, u in enumerate(UEBUNGEN)
+              if u["block"] == block and u["aktiv"]]
+    for i, u in aktive:
         exref = "%s!$A$%d" % (UEB, UEB_FIRST + i)
         wdhref = "%s!$D$%d" % (UEB, UEB_FIRST + i)
+        saetzeref = "%s!$E$%d" % (UEB, UEB_FIRST + i)
+        rperef = "%s!$F$%d" % (UEB, UEB_FIRST + i)
         ziel = rek("N", exref)
+        # Satzschema aus den Planvorgaben: zwei Warmups, dann die
+        # Ziel-Arbeitssätze, der letzte optional als Reduktionssatz.
+        satzmuster = (["W"] * len(WARMUP_FAKTOR)
+                      + ["A"] * (u["saetze"] - 1) + [u["letzter"]])
 
         wst.merge_cells(start_row=row, start_column=1, end_row=row,
                         end_column=8)
@@ -851,15 +1007,28 @@ for bi, block in enumerate(BLOCKS):
 
         wst.merge_cells(start_row=row, start_column=1, end_row=row,
                         end_column=8)
+        # Vorgabe-Teil steht immer, der Historien-Teil nur wenn es ihn gibt.
+        vorgabe = ("\"Vorgabe: \"&%s&\" × \"&%s&\" Wdh @ RPE \"&%s"
+                   % (saetzeref, wdhref, rperef))
+        historie = ("\"Zuletzt: \"&TEXT(%s,\"0.#\")&\" kg × \"&"
+                    "IF(%s=\"\",\"?\",TEXT(%s,\"0\"))&\" Wdh     ·     "
+                    "Bestwert: \"&TEXT(%s,\"0.#\")&\" kg     ·     \""
+                    % (rek("L", exref), rek("M", exref), rek("M", exref),
+                       rek("F", exref)))
+        neu = ("IF(%s=\"\",\"Neu im Plan - Startgewicht im Blatt 'Übungen' "
+               "eintragen     ·     \",\"Neu im Plan     ·     Start: \"&"
+               "TEXT(%s,\"0.#\")&\" kg     ·     \")" % (ziel, ziel))
+        maxref = "%s!$H$%d" % (UEB, UEB_FIRST + i)
+        # Am Stackende steht der Zielwert still - das gehoert aufs Blatt,
+        # sonst widerspricht der Vorschlag der Planvorgabe.
+        deckel = ("IF(AND(%s<>\"\",%s<>\"\",%s>=%s),\"Stackende, über "
+                  "Tempo und Pausen steigern     ·     \",\"\")"
+                  % (maxref, ziel, ziel, maxref))
+        ziel_teil = ("IF(%s=\"\",\"\",\"Ziel heute: \"&TEXT(%s,\"0.#\")&"
+                     "\" kg     ·     \")&%s" % (ziel, ziel, deckel))
         c = wst.cell(row, 1,
-                     "=IF(%s=\"\",\"noch keine Werte erfasst\","
-                     "\"Zuletzt: \"&TEXT(%s,\"0.#\")&\" kg × \"&"
-                     "IF(%s=\"\",\"?\",TEXT(%s,\"0\"))&\" Wdh     ·     "
-                     "Bestwert: \"&"
-                     "TEXT(%s,\"0.#\")&\" kg     ·     Ziel heute: \"&"
-                     "TEXT(%s,\"0.#\")&\" kg     ·     Ziel-Wdh: \"&%s)"
-                     % (rek("L", exref), rek("L", exref), rek("M", exref),
-                        rek("M", exref), rek("F", exref), ziel, wdhref))
+                     "=IF(%s=\"\",%s,%s&%s)&%s"
+                     % (rek("L", exref), neu, historie, ziel_teil, vorgabe))
         c.font = Font(name=FONT, size=9, color=NAVY)
         c.fill, c.alignment = FILL_LIGHT, L_IND
         for col in range(1, 9):
@@ -876,14 +1045,17 @@ for bi, block in enumerate(BLOCKS):
         wst.row_dimensions[row].height = 14
         row += 1
 
-        for s, typ in enumerate(SATZ_MUSTER):
+        for s, typ in enumerate(satzmuster):
             c = wst.cell(row, 1, s + 1)
             c.font, c.alignment = F_SMALL, C
             c = wst.cell(row, 2, typ)
             c.font, c.alignment = F_BOLD, C
             if typ == "A":
                 c.fill = FILL_WORK
-            fak = PLAN_FAKTOR[s]
+            # Warmups nach Rampe, Arbeitssätze auf Zielgewicht,
+            # Reduktionssatz bleibt offen.
+            fak = (WARMUP_FAKTOR[s] if s < len(WARMUP_FAKTOR)
+                   else (1.0 if typ == "A" else None))
             if fak is not None:
                 c = wst.cell(row, 3, "=IF(%s=\"\",\"\",ROUND(%s*%s*2,0)/2)"
                              % (ziel, ziel, fak))
@@ -917,8 +1089,8 @@ for bi, block in enumerate(BLOCKS):
         row += 1
 
 druck(wst, "A1:H%d" % (row - 1), margins=(0.5, 0.4, 0.5, 0.5),
-      fussnote="Plan (kg) = Aufwärm-Rampe 45 % / 70 % auf das Ziel aus dem "
-               "Blatt 'Rekorde'")
+      fussnote="Plan (kg) = Aufwärm-Rampe 45 % / 70 %, dann Zielgewicht aus "
+               "dem Blatt 'Rekorde'")
 
 # ==========================================================================
 # DASHBOARD
