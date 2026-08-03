@@ -27,7 +27,7 @@ const FONT_H = "Calibri";
 
 // ---------- Assets ----------
 const BRAND = "/home/user/Burak/assets/brand";
-const LOCKUP = fs.readFileSync(path.join(BRAND, "kabuu_logo.png"));
+const LOCKUP = fs.readFileSync(path.join(BRAND, "kabuu_logo_mono.png"));
 const MARK   = fs.readFileSync(path.join(BRAND, "kabuu_mark.png"));
 
 // ---------- Helpers ----------
