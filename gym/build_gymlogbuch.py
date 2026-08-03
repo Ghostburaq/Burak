@@ -18,10 +18,11 @@ from openpyxl.worksheet.properties import PageSetupProperties
 from openpyxl.worksheet.datavalidation import DataValidation
 from openpyxl.worksheet.pagebreak import Break
 from openpyxl.formatting.rule import ColorScaleRule, FormulaRule
-from openpyxl.chart import BarChart, Reference
+from openpyxl.chart import BarChart, LineChart, Reference
 from openpyxl.comments import Comment
 
 from daten import ROWS
+import reha_daten as RD
 
 # --------------------------------------------------------------------------
 # Konfiguration
@@ -29,10 +30,12 @@ from daten import ROWS
 QUELLE = "Löwin_Training_260727.pdf"
 STAND = "31.07.2026"
 
-SESSIONS = 16          # ausgewertete Einheiten in der Auswertung
-EX_SLOTS = 14          # Übungs-Slots im Stammblatt (9 belegt)
-SESSION_SLOTS = 24     # vorbereitete Zeilen im Blatt 'Einheiten'
-LOG_ROWS = 500         # vorbereitete Satzzeilen im Log
+SESSIONS = 16          # gleichzeitig angezeigte Einheiten (rollendes Fenster)
+EX_SLOTS = 14          # Übungs-Slots im Stammblatt (11 belegt)
+SESSION_SLOTS = 60     # vorbereitete Zeilen im Blatt 'Einheiten'
+LOG_ROWS = 1200        # vorbereitete Satzzeilen im Log
+BLATT_KOPIEN = 4       # Trainingsblätter je Block auf Vorrat
+REHALOG_ROWS = 240     # Zeilen im Reha-Log (rund 8 Monate täglich)
 
 # Alle Blätter: Zeile 1/2 Titelbalken, Zeile 3 Spaltenkopf, ab Zeile 4 Daten
 LOG_FIRST, LOG_LAST = 4, 3 + LOG_ROWS
@@ -49,6 +52,8 @@ UEB = "'Übungen'"       # Blattname mit Umlaut -> in Formeln immer quoten
 #          einzutragen; ohne Wert bleibt die Plan-Spalte leer.
 # max:     Lastobergrenze, z.B. das Ende des Steckgewichts. Der
 #          Zielvorschlag steigt nie darüber hinaus. None = keine Grenze.
+# Die Reha-Felder (Freigabewoche, Ersatzübung, Hinweis) stehen in
+# reha_daten.py und werden unten anhand des Übungsnamens zugeordnet.
 UEBUNGEN = [
     dict(name="Hackenschmidt-Kniebeuge", maxlast=None, block="Beine vorne",
          geraet="Hackenschmidt / Pendel", wdh="6-10", saetze=3, rpe="8-9",
@@ -103,6 +108,13 @@ UEBUNGEN = [
          notiz="Archiv. Von Hip Thrust und RDL abgedeckt, Historie bleibt "
                "erhalten."),
 ]
+for _u in UEBUNGEN:
+    _woche, _ersatz, _hinweis = RD.REHA_UEBUNGEN.get(_u["name"],
+                                                     (None, "", ""))
+    _u["reha_ab"] = _woche
+    _u["ersatz"] = _ersatz
+    _u["reha_hinweis"] = _hinweis
+
 BLOCKS = ["Beine vorne", "Beine hinten"]
 
 # Aufwärm-Rampe für das Trainingsblatt: Anteil vom Zielgewicht je Warmup
@@ -149,6 +161,7 @@ L = Alignment(horizontal="left", vertical="center")
 LW = Alignment(horizontal="left", vertical="top", wrap_text=True)
 CW = Alignment(horizontal="center", vertical="center", wrap_text=True)
 L_IND = Alignment(horizontal="left", vertical="center", indent=1)
+RE = Alignment(horizontal="right", vertical="center")
 
 NF_KG = '#,##0.0;-#,##0.0;"–"'
 NF_INT = '#,##0;-#,##0;"–"'
@@ -201,16 +214,27 @@ def abschnitt(ws, row, first_col, last_col, text):
 
 
 def druck(ws, area, landscape=False, titles=None, fit_h=0, margins=None,
-          fussnote=None):
-    """A4-Druckeinrichtung: Breite fixieren, Kopf- und Fusszeile setzen."""
+          fussnote=None, skalierung=None, titel_spalten=None):
+    """A4-Druckeinrichtung: Breite fixieren, Kopf- und Fusszeile setzen.
+
+    skalierung setzt einen festen Zoom statt der Breitenanpassung. Das ist
+    für sehr breite Blätter besser: die Seite darf dann umbrechen, und mit
+    titel_spalten wandert die Übungsspalte auf jede Folgeseite mit.
+    """
     ws.page_setup.paperSize = ws.PAPERSIZE_A4
     ws.page_setup.orientation = "landscape" if landscape else "portrait"
-    ws.page_setup.fitToWidth = 1
-    ws.page_setup.fitToHeight = fit_h
-    ws.sheet_properties.pageSetUpPr = PageSetupProperties(fitToPage=True)
+    if skalierung:
+        ws.page_setup.scale = skalierung
+        ws.sheet_properties.pageSetUpPr = PageSetupProperties(fitToPage=False)
+    else:
+        ws.page_setup.fitToWidth = 1
+        ws.page_setup.fitToHeight = fit_h
+        ws.sheet_properties.pageSetUpPr = PageSetupProperties(fitToPage=True)
     ws.print_area = area
     if titles:
         ws.print_title_rows = titles
+    if titel_spalten:
+        ws.print_title_cols = titel_spalten
     ws.print_options.horizontalCentered = True
     m = margins or (0.5, 0.4, 0.7, 0.6)
     ws.page_margins.left, ws.page_margins.right = m[0], m[1]
@@ -310,6 +334,23 @@ for lab, formel, nf in [
     r += 1
 
 r += 1
+ws.merge_cells(start_row=r, start_column=2, end_row=r, end_column=5)
+c = ws.cell(r, 2,
+            "Nach der Schulteroperation: Die Reha-Blätter sind eine "
+            "Gedächtnisstütze für den Alltag, keine ärztliche Anweisung. Das "
+            "schriftliche Nachbehandlungsschema des Operateurs und die "
+            "Ansagen der Physiotherapie haben in jedem Punkt Vorrang. Bei "
+            "Warnzeichen gilt die Liste 'Sofort zum Arzt' im Blatt "
+            "'Reha-Fahrplan'.")
+c.font = Font(name=FONT, size=10, bold=True, color=AMBER)
+c.alignment = LW
+c.fill = PatternFill("solid", fgColor="FEF6E7")
+for col in range(2, 6):
+    ws.cell(r, col).fill = PatternFill("solid", fgColor="FEF6E7")
+    ws.cell(r, col).border = B_ALL
+ws.row_dimensions[r].height = zeilenhoehe(c.value, breite=105)
+r += 2
+
 abschnitt(ws, r, 2, 5, "So arbeitest du damit")
 r += 1
 for lab, txt in [
@@ -323,12 +364,16 @@ for lab, txt in [
      "e1RM rechnen sich selbst."),
     ("Blatt 'Trainingsblatt'",
      "Ausdrucken und mitnehmen. Zeigt je Übung, was du zuletzt gemacht hast, "
-     "dazu einen Zielvorschlag inklusive Aufwärm-Rampe und leere Felder zum "
-     "Eintragen mit Stift. Enthält die neun Übungen des Plans - für spontane "
+     "dazu Zielvorschlag, Aufwärm-Rampe und leere Felder zum Eintragen mit "
+     "Stift. In der Reha-Sperrzeit steht statt des Zielgewichts der "
+     "Sperrvermerk mit der Ersatzübung. Ein Ausdruck liefert vier Blätter "
+     "je Block, also rund vier Trainingswochen am Stück - für spontane "
      "Zusatzübungen sind die Notizzeilen am Seitenende da."),
     ("Blatt 'Auswertung'",
      "Volumen, Top-Gewicht und bester e1RM je Übung und Einheit. Drei "
-     "Tabellen, jede auf einer eigenen Druckseite."),
+     "Tabellen, jede auf einer eigenen Druckseite. Zeigt 16 Einheiten "
+     "nebeneinander; mit der Zahl in B3 blätterst du weiter, die "
+     "Gesamtspalte rechnet immer über alles."),
     ("Blatt 'Progression'",
      "Erste gegen letzte Einheit: Veränderung in kg und Prozent, Abstand zum "
      "eigenen Bestwert, Trendbewertung."),
@@ -337,6 +382,19 @@ for lab, txt in [
      "der Rekord gefallen ist."),
     ("Blatt 'Dashboard'",
      "Kennzahlen und vier Diagramme auf einer Seite. Gut zum Aufhängen."),
+    ("Blatt 'Reha-Fahrplan'",
+     "Phasenplan nach der Schulteroperation: was erlaubt ist, was verboten "
+     "ist, welcher Meilenstein die nächste Phase freigibt. Nachschlagewerk, "
+     "nicht zum täglichen Gebrauch."),
+    ("Blatt 'Reha-Modus'",
+     "Woche nach OP oben eintragen - die Ampel zeigt je Übung FREI oder "
+     "GESPERRT und nennt in der Sperrzeit die Ersatzübung. Steuert auch den "
+     "Sperrvermerk auf dem Trainingsblatt."),
+    ("Blatt 'Reha-Log'",
+     "Täglich 60 Sekunden: Schmerz, Beweglichkeit in Grad, Schlinge, "
+     "Übungen. Der Statusblock oben und die zwei Verlaufskurven zeigen, ob "
+     "es vorwärts geht - das ist die Grundlage für das Gespräch mit "
+     "Physiotherapie und Arzt."),
     ("Blatt 'Übungen'",
      "Stammdaten und Planvorgaben: Ziel-Wdh, Ziel-Sätze, Ziel-RPE und "
      "Startgewicht je Übung. Neue Übung hier ergänzen - sie erscheint "
@@ -443,35 +501,42 @@ r += 1
 ws.merge_cells(start_row=r, start_column=2, end_row=r, end_column=5)
 ws.cell(r, 2, "Alle Kennzahlen sind Formeln. Sobald du im Log Zeilen "
               "ergänzt, aktualisieren sich Auswertung, Progression, Rekorde "
-              "und Dashboard von selbst.").font = F_SMALL
-druck(ws, "B1:E%d" % r)
+              "und Dashboard von selbst.   ·   Vorbereitet sind %d Sätze im "
+              "Log, %d Einheiten und %d Tage Reha-Log - das reicht für rund "
+              "ein Jahr Training."
+         % (LOG_ROWS, SESSION_SLOTS, REHALOG_ROWS)).font = F_SMALL
+druck(ws, "B1:E%d" % r, titles="1:2")
 
 # ==========================================================================
 # ÜBUNGEN (Stammdaten)
 # ==========================================================================
 wsu = sheet("Übungen")
-titelbalken(wsu, 1, 10, "ÜBUNGEN  |  STAMMDATEN UND PLANVORGABEN",
-            "Neue Übung hier ergänzen - Dropdowns, Trainingsblatt und "
-            "Auswertungen ziehen automatisch nach. Aktiv = nein heisst "
-            "Archiv: die Übung verschwindet aus der Planung, ihre Historie "
-            "bleibt in Log und Auswertung erhalten.")
+titelbalken(wsu, 1, 13, "ÜBUNGEN  |  STAMMDATEN, PLANVORGABEN UND "
+            "REHA-FREIGABEN",
+            "Die eine Stelle, an der alles hängt. Neue Übung hier ergänzen - "
+            "Dropdowns, Trainingsblatt, Reha-Modus und Auswertungen ziehen "
+            "automatisch nach. Aktiv = nein heisst Archiv: raus aus der "
+            "Planung, Historie bleibt in Log und Auswertung erhalten.")
 kopfzeile(wsu, 3, 1,
           ["Übung", "Block", "Gerät / Variante", "Ziel-Wdh", "Ziel-\nSätze",
-           "Ziel-\nRPE", "Start (kg)", "Max (kg)", "Aktiv", "Notiz"],
-          [26, 15, 22, 10, 8, 8, 10, 10, 8, 46], height=30)
+           "Ziel-\nRPE", "Start\n(kg)", "Max\n(kg)", "Aktiv",
+           "Reha frei\nab Woche", "Notiz", "Ersatz in der Sperrzeit",
+           "Reha-Hinweis"],
+          [24, 14, 20, 9, 7, 7, 8, 8, 7, 9, 34, 32, 36], height=32)
 
 for i in range(EX_SLOTS):
     row = UEB_FIRST + i
     u = UEBUNGEN[i] if i < len(UEBUNGEN) else None
-    werte = [None] * 10
+    werte = [None] * 13
     if u:
         werte = [u["name"], u["block"], u["geraet"], u["wdh"], u["saetze"],
                  u["rpe"], u["start"], u["maxlast"],
-                 "ja" if u["aktiv"] else "nein", u["notiz"]]
+                 "ja" if u["aktiv"] else "nein", u["reha_ab"], u["notiz"],
+                 u["ersatz"], u["reha_hinweis"]]
     for j, v in enumerate(werte):
         c = wsu.cell(row, 1 + j, v)
         c.font, c.fill, c.border = F_BODY, FILL_INPUT, B_ALL
-        if j == 9:
+        if j in (10, 11, 12):
             c.alignment = LW
         elif j in (0, 1, 2):
             c.alignment = L
@@ -480,10 +545,10 @@ for i in range(EX_SLOTS):
         if j in (6, 7):
             c.number_format = NF_KG
     if u and not u["aktiv"]:
-        for j in range(10):
+        for j in range(13):
             wsu.cell(row, 1 + j).font = Font(name=FONT, size=10,
                                              color="8A94A0", italic=True)
-    wsu.row_dimensions[row].height = 46 if u else 18
+    wsu.row_dimensions[row].height = 58 if u else 18
 
 dv_block = DataValidation(type="list", formula1='"%s"' % ",".join(BLOCKS),
                           allow_blank=True)
@@ -499,7 +564,7 @@ dv_aktiv.add("I%d:I%d" % (UEB_FIRST, UEB_LAST))
 
 hinweis = UEB_LAST + 2
 wsu.merge_cells(start_row=hinweis, start_column=1, end_row=hinweis,
-                end_column=10)
+                end_column=13)
 c = wsu.cell(hinweis, 1,
              "Reihenfolge hier = Reihenfolge in allen Auswertungen und auf "
              "dem Trainingsblatt.   ·   'Start (kg)' braucht nur eine Übung "
@@ -510,11 +575,15 @@ c = wsu.cell(hinweis, 1,
              "Zielvorschlag nach oben, etwa am Ende des Steckgewichts - "
              "darüber steigerst du über Tempo, Pausen und Wiederholungen "
              "statt über Last.   ·   Archivierte Übungen erscheinen grau und "
-             "tauchen im Trainingsblatt nicht mehr auf.")
+             "tauchen im Trainingsblatt nicht mehr auf.   ·   'Reha frei "
+             "ab Woche' steuert die Ampel im Blatt 'Reha-Modus' und den "
+             "Sperrvermerk auf dem Trainingsblatt.")
 c.font, c.alignment = F_SMALL, LW
 wsu.row_dimensions[hinweis].height = 40
 wsu.freeze_panes = "B4"
-druck(wsu, "A1:J%d" % hinweis, landscape=True, titles="1:3")
+# Gedruckt wird bis Spalte K. Ersatzübung und Reha-Hinweis stehen ohnehin
+# im Blatt 'Reha-Modus'; so bleibt dieses Blatt eine saubere Seite.
+druck(wsu, "A1:K%d" % hinweis, landscape=True, titles="1:3")
 
 # ==========================================================================
 # EINHEITEN
@@ -686,16 +755,42 @@ for i in range(SESSIONS):
     wsa.column_dimensions[get_column_letter(2 + i)].width = 8.5
 wsa.column_dimensions[get_column_letter(LASTCOL)].width = 12
 
+# Rollendes Fenster: hier steht, ab welcher Einheit die Tabellen anzeigen.
+FENSTER = "$B$3"
+wsa.cell(3, 1, "Ab Einheit").font = F_BOLD
+wsa.cell(3, 1).alignment = RE
+c = wsa.cell(3, 2, 1)
+c.font = Font(name=FONT, size=11, bold=True, color=NAVY)
+c.fill, c.alignment, c.border, c.number_format = FILL_INPUT, C, B_ALL, "0"
+wsa.merge_cells(start_row=3, start_column=3, end_row=3, end_column=LASTCOL)
+c = wsa.cell(3, 3,
+             "=\"zeigt Einheit \"&%s&\" bis \"&(%s+%d)&\".  Zahl links "
+             "ändern, um weiter zu blättern - die Spalte ganz rechts rechnet "
+             "immer über alle Einheiten.\"" % (FENSTER, FENSTER,
+                                               SESSIONS - 1))
+c.font, c.alignment, c.fill = F_SMALL, L_IND, FILL_CALC
+wsa.row_dimensions[3].height = 18
 
-def auswertungstabelle(start, titel, formelbau, nf, spaltentitel, aggregat):
+
+def auswertungstabelle(start, titel, formelbau, nf, spaltentitel,
+                       gesamtformel):
     abschnitt(wsa, start, 1, LASTCOL, titel)
     hrow = start + 1
-    # Einheit-Nummern als Zahl, nicht als Text - sonst greifen die Vergleiche
-    # gegen die numerische Log-Spalte B in SUMPRODUCT nicht.
-    labels = ["Übung"] + list(range(1, SESSIONS + 1)) + [spaltentitel]
-    for i, lab in enumerate(labels):
-        c = wsa.cell(hrow, 1 + i, lab)
+    # Die Einheit-Nummern wandern mit dem Fenster: die erste Spalte greift
+    # die Startnummer aus B3 ab, jede weitere zählt eins hoch. Numerisch,
+    # sonst greifen die Vergleiche gegen die Log-Spalte B nicht.
+    wsa.cell(hrow, 1, "Übung").font = F_H1
+    wsa.cell(hrow, 1).fill = FILL_HEAD
+    wsa.cell(hrow, 1).alignment = CW
+    wsa.cell(hrow, 1).border = B_ALL
+    for i in range(SESSIONS):
+        c = wsa.cell(hrow, 2 + i,
+                     "=%s" % FENSTER if i == 0
+                     else "=%s%d+1" % (get_column_letter(1 + i), hrow))
         c.font, c.fill, c.alignment, c.border = F_H1, FILL_HEAD, CW, B_ALL
+        c.number_format = "0"
+    c = wsa.cell(hrow, LASTCOL, spaltentitel)
+    c.font, c.fill, c.alignment, c.border = F_H1, FILL_HEAD, CW, B_ALL
     wsa.row_dimensions[hrow].height = 22
     first = hrow + 1
     for k in range(EX_SLOTS):
@@ -711,9 +806,9 @@ def auswertungstabelle(start, titel, formelbau, nf, spaltentitel, aggregat):
                                     "%s$%d" % (get_column_letter(col), hrow)))
             cc.font, cc.alignment, cc.border = F_BODY, C, B_ALL
             cc.number_format, cc.fill = nf, zebra
-        span = "B%d:%s%d" % (row, get_column_letter(LASTCOL - 1), row)
-        cc = wsa.cell(row, LASTCOL,
-                      "=IF(COUNT(%s)=0,\"\",%s(%s))" % (span, aggregat, span))
+        # Gesamtspalte rechnet über alle Einheiten, nicht nur über das
+        # sichtbare Fenster - sonst wandert der Bestwert mit dem Ausschnitt.
+        cc = wsa.cell(row, LASTCOL, gesamtformel("$A%d" % row))
         cc.font, cc.alignment, cc.border = F_BOLD, C, B_ALL
         cc.number_format, cc.fill = nf, FILL_CALC
         wsa.row_dimensions[row].height = 17
@@ -726,23 +821,40 @@ def auswertungstabelle(start, titel, formelbau, nf, spaltentitel, aggregat):
     return last
 
 
+def g_volumen(ex):
+    f = "SUMIFS(%s,%s,%s,%s,\"A\")" % (I_, D_, ex, E_)
+    return "=IF(%s=\"\",\"\",IF(%s=0,\"\",%s))" % (ex, f, f)
+
+
+def g_top(ex):
+    f = ("SUMPRODUCT(MAX((%s=%s)*(%s=\"A\")*(%s<>\"\")*%s))"
+         % (D_, ex, E_, F_, F_))
+    return "=IF(%s=\"\",\"\",IF(%s=0,\"\",%s))" % (ex, f, f)
+
+
+def g_e1rm(ex):
+    f = ("SUMPRODUCT(MAX((%s=%s)*(%s=\"A\")*(%s<>\"\")*(%s<>\"\")*%s*"
+         "(1+%s/30)))" % (D_, ex, E_, F_, G_, F_, G_))
+    return "=IF(%s=\"\",\"\",IF(%s=0,\"\",%s))" % (ex, f, f)
+
+
 e1 = auswertungstabelle(
     4, "1  Arbeitsvolumen (kg)  ·  Gewicht × Wdh, nur Arbeitssätze",
-    f_volumen, NF_INT, "Summe", "SUM")
+    f_volumen, NF_INT, "Gesamt", g_volumen)
 start2 = e1 + 3
 e2 = auswertungstabelle(
     start2, "2  Top-Gewicht (kg)  ·  schwerster Arbeitssatz der Einheit",
-    f_topgewicht, NF_KG, "Bestwert", "MAX")
+    f_topgewicht, NF_KG, "Bestwert", g_top)
 start3 = e2 + 3
 e3 = auswertungstabelle(
     start3, "3  Bester e1RM (kg)  ·  Epley: Gewicht × (1 + Wdh / 30)",
-    f_e1rm, NF_KG, "Bestwert", "MAX")
+    f_e1rm, NF_KG, "Bestwert", g_e1rm)
 
 wsa.row_breaks.append(Break(id=start2 - 1))
 wsa.row_breaks.append(Break(id=start3 - 1))
 wsa.freeze_panes = "B5"
 druck(wsa, "A1:%s%d" % (get_column_letter(LASTCOL), e3 + 1), landscape=True,
-      titles="1:2")
+      titles="1:3")
 
 # ==========================================================================
 # PROGRESSION
@@ -938,6 +1050,342 @@ wsr.freeze_panes = "C4"
 druck(wsr, "A1:N%d" % note, landscape=True, titles="1:3")
 
 # ==========================================================================
+# REHA-FAHRPLAN
+# ==========================================================================
+wsf = sheet("Reha-Fahrplan")
+for col, w in zip("ABCDEFG", [22, 11, 30, 38, 34, 38, 32]):
+    wsf.column_dimensions[col].width = w
+titelbalken(wsf, 1, 7, RD.FAHRPLAN_TITEL, RD.FAHRPLAN_SUB)
+wsf.row_dimensions[2].height = 26
+wsf.cell(2, 1).alignment = LW
+
+r = 4
+abschnitt(wsf, r, 1, 7, "Grundregeln über die gesamte Zeit")
+r += 1
+for lab, txt in RD.GRUNDREGELN:
+    wsf.cell(r, 1, lab).font = F_BOLD
+    wsf.cell(r, 1).alignment = Alignment(horizontal="left", vertical="top",
+                                         wrap_text=True)
+    wsf.merge_cells(start_row=r, start_column=2, end_row=r, end_column=7)
+    c = wsf.cell(r, 2, txt)
+    c.font, c.alignment = F_BODY, LW
+    for col in range(1, 8):
+        wsf.cell(r, col).border = B_ALL
+    wsf.row_dimensions[r].height = zeilenhoehe(txt, breite=150)
+    r += 1
+
+r += 1
+abschnitt(wsf, r, 1, 7, "Phasenplan")
+r += 1
+for i, lab in enumerate(RD.PHASEN_KOPF):
+    c = wsf.cell(r, 1 + i, lab)
+    c.font, c.fill, c.alignment, c.border = F_H1, FILL_HEAD, CW, B_ALL
+wsf.row_dimensions[r].height = 30
+r += 1
+for k, phase in enumerate(RD.PHASEN):
+    for i, txt in enumerate(phase):
+        c = wsf.cell(r, 1 + i, txt)
+        c.font = F_BOLD if i == 0 else F_BODY
+        c.alignment = CW if i in (0, 1) else LW
+        c.border = B_ALL
+        if k % 2 == 0:
+            c.fill = FILL_LIGHT
+    wsf.row_dimensions[r].height = max(
+        zeilenhoehe(str(t), breite=42) for t in phase[2:])
+    r += 1
+
+r += 1
+abschnitt(wsf, r, 1, 7, RD.NOTFALL_TITEL)
+r += 1
+wsf.merge_cells(start_row=r, start_column=1, end_row=r, end_column=7)
+c = wsf.cell(r, 1, RD.NOTFALL)
+c.font = Font(name=FONT, size=10, bold=True, color=RED)
+c.alignment, c.fill = LW, PatternFill("solid", fgColor="FDEAEA")
+for col in range(1, 8):
+    wsf.cell(r, col).fill = PatternFill("solid", fgColor="FDEAEA")
+    wsf.cell(r, col).border = B_ALL
+wsf.row_dimensions[r].height = zeilenhoehe(RD.NOTFALL, breite=150)
+r += 2
+
+abschnitt(wsf, r, 1, 7, RD.HEILUNG_TITEL)
+r += 1
+for lab, wirkung, txt in RD.HEILUNG:
+    wsf.cell(r, 1, lab).font = F_BOLD
+    wsf.cell(r, 1).alignment = Alignment(horizontal="left", vertical="top",
+                                         wrap_text=True)
+    c = wsf.cell(r, 2, wirkung)
+    c.alignment = CW
+    farbe = RED if "bremst" in str(wirkung) or "Risiko" in str(wirkung) \
+        else GREEN
+    c.font = Font(name=FONT, size=9, bold=True, color=farbe)
+    wsf.merge_cells(start_row=r, start_column=3, end_row=r, end_column=7)
+    c = wsf.cell(r, 3, txt)
+    c.font, c.alignment = F_BODY, LW
+    for col in range(1, 8):
+        wsf.cell(r, col).border = B_ALL
+    wsf.row_dimensions[r].height = zeilenhoehe(txt, breite=130)
+    r += 1
+
+r += 1
+wsf.merge_cells(start_row=r, start_column=1, end_row=r, end_column=7)
+c = wsf.cell(r, 1,
+             "Diese Seite ist eine Gedächtnisstütze, keine ärztliche "
+             "Anweisung. Bei jedem Widerspruch zum Nachbehandlungsschema "
+             "des Operateurs oder zur Ansage der Physiotherapie gilt deren "
+             "Vorgabe.")
+c.font, c.alignment = Font(name=FONT, size=9, bold=True, color=AMBER), LW
+wsf.row_dimensions[r].height = 26
+druck(wsf, "A1:G%d" % r, landscape=True, titles="1:2", fit_h=0)
+
+# ==========================================================================
+# REHA-MODUS  (Wochen-Ampel je Übung)
+# ==========================================================================
+wsm = sheet("Reha-Modus")
+for col, w in zip("ABCDEFG", [24, 10, 13, 8, 10, 34, 40]):
+    wsm.column_dimensions[col].width = w
+titelbalken(wsm, 1, 7, RD.MODUS_TITEL, RD.MODUS_SUB)
+
+wsm.cell(4, 1, "Woche nach OP").font = F_BOLD
+wsm.cell(4, 1).alignment = L
+c = wsm.cell(4, 2, 1)
+c.font = Font(name=FONT, size=14, bold=True, color=NAVY)
+c.fill, c.alignment, c.border = FILL_INPUT, C, B_ALL
+c.number_format = NF_INT
+WOCHE = "$B$4"
+phase_f = ("=IF({w}=\"\",\"\",IF({w}<=2,\"Phase 1 Schutz\","
+           "IF({w}<=6,\"Phase 2 Beweglichkeit\",IF({w}<=12,"
+           "\"Phase 3 erste Last\",IF({w}<=16,\"Phase 4 Aufbau\","
+           "\"Phase 5 Rückkehr\")))))").format(w=WOCHE)
+c = wsm.cell(4, 3, phase_f)
+c.font = Font(name=FONT, size=11, bold=True, color="FFFFFF")
+c.fill, c.alignment = FILL_SUB, C
+wsm.merge_cells(start_row=4, start_column=4, end_row=4, end_column=7)
+c = wsm.cell(4, 4,
+             ("=IF({w}=\"\",\"\",IF({w}<=2,\"Alles im Sitzen, Arm in der "
+              "Schlinge. Frühestens ab Tag 7 bis 10 und erst nach Freigabe "
+              "der Wunde.\",IF({w}<=6,\"Kein Zug und kein Stützen über den "
+              "Arm. Hebelast maximal 1 kg.\",IF({w}<=12,\"Griffbelastung "
+              "vorsichtig aufbauen, kein schweres Hängen am Arm.\","
+              "IF({w}<=16,\"Aufbau läuft, weiterhin keine Maximallast über "
+              "den Arm.\",\"Keine Einschränkung mehr aus der Reha.\"))))"
+              ")").format(w=WOCHE))
+c.font, c.alignment, c.fill = F_BODY, LW, FILL_CALC
+wsm.row_dimensions[4].height = 34
+
+kopfzeile(wsm, 6, 1, RD.MODUS_KOPF, None, height=28)
+MOD_FIRST = 7
+for k in range(EX_SLOTS):
+    row = MOD_FIRST + k
+    ur = UEB_FIRST + k
+    aktiv = "%s!$I%d" % (UEB, ur)
+    wsm.cell(row, 1, "=IF(%s<>\"ja\",\"\",%s!$A%d)" % (aktiv, UEB, ur))
+    wsm.cell(row, 2, "=IF(%s<>\"ja\",\"\",%s!$J%d)" % (aktiv, UEB, ur))
+    wsm.cell(row, 3, "=IF($A%d=\"\",\"\",IF($B%d=\"\",\"offen\","
+                     "IF(%s>=$B%d,\"FREI\",\"GESPERRT\")))"
+             % (row, row, WOCHE, row))
+    wsm.cell(row, 4, "=IF(%s<>\"ja\",\"\",%s!$E%d)" % (aktiv, UEB, ur))
+    wsm.cell(row, 5, "=IF(%s<>\"ja\",\"\",%s!$D%d)" % (aktiv, UEB, ur))
+    wsm.cell(row, 6, "=IF($C%d=\"GESPERRT\",%s!$L%d,\"\")" % (row, UEB, ur))
+    wsm.cell(row, 7, "=IF(%s<>\"ja\",\"\",%s!$M%d)" % (aktiv, UEB, ur))
+    for col in range(1, 8):
+        c = wsm.cell(row, col)
+        c.border = B_ALL
+        c.font = F_BOLD if col in (1, 3) else F_BODY
+        c.alignment = LW if col in (6, 7) else (L if col == 1 else C)
+        if k % 2 == 0:
+            c.fill = FILL_LIGHT
+    wsm.row_dimensions[row].height = 34
+MOD_LAST = MOD_FIRST + EX_SLOTS - 1
+
+wsm.conditional_formatting.add(
+    "A%d:G%d" % (MOD_FIRST, MOD_LAST),
+    FormulaRule(formula=['$C%d="GESPERRT"' % MOD_FIRST],
+                fill=PatternFill("solid", bgColor="FDEAEA")))
+wsm.conditional_formatting.add(
+    "A%d:G%d" % (MOD_FIRST, MOD_LAST),
+    FormulaRule(formula=['$C%d="FREI"' % MOD_FIRST],
+                fill=PatternFill("solid", bgColor="E7F2EA")))
+wsm.conditional_formatting.add(
+    "C%d:C%d" % (MOD_FIRST, MOD_LAST),
+    FormulaRule(formula=['$C%d="GESPERRT"' % MOD_FIRST],
+                font=Font(name=FONT, size=10, bold=True, color=RED)))
+wsm.conditional_formatting.add(
+    "C%d:C%d" % (MOD_FIRST, MOD_LAST),
+    FormulaRule(formula=['$C%d="FREI"' % MOD_FIRST],
+                font=Font(name=FONT, size=10, bold=True, color=GREEN)))
+
+r = MOD_LAST + 2
+abschnitt(wsm, r, 1, 7, RD.MODUS_REGELN_TITEL)
+r += 1
+for lab, txt in RD.MODUS_REGELN:
+    wsm.cell(r, 1, lab).font = F_BOLD
+    wsm.cell(r, 1).alignment = Alignment(horizontal="left", vertical="top",
+                                         wrap_text=True)
+    wsm.merge_cells(start_row=r, start_column=2, end_row=r, end_column=7)
+    c = wsm.cell(r, 2, txt)
+    c.font, c.alignment = F_BODY, LW
+    for col in range(1, 8):
+        wsm.cell(r, col).border = B_ALL
+    wsm.row_dimensions[r].height = zeilenhoehe(txt, breite=130)
+    r += 1
+druck(wsm, "A1:G%d" % r, landscape=True, titles="1:6", fit_h=0)
+
+# ==========================================================================
+# REHA-LOG  (täglich Schulter)
+# ==========================================================================
+wsrl = sheet("Reha-Log")
+for col, w in zip("ABCDEFGHIJKL",
+                  [12, 8, 15, 9, 10, 9, 10, 10, 9, 11, 8, 34]):
+    wsrl.column_dimensions[col].width = w
+titelbalken(wsrl, 1, 12, RD.REHALOG_TITEL, RD.REHALOG_SUB)
+
+wsrl.cell(4, 1, "OP-Datum").font = F_BOLD
+wsrl.cell(4, 1).alignment = L
+c = wsrl.cell(4, 2)
+c.fill, c.border, c.alignment = FILL_INPUT, B_ALL, C
+c.number_format, c.font = NF_DATE, F_BOLD
+OP = "$B$4"
+wsrl.merge_cells(start_row=4, start_column=3, end_row=4, end_column=12)
+c = wsrl.cell(4, 3,
+              "=IF(%s=\"\",\"OP-Datum eintragen, dann rechnen Woche und "
+              "Phase automatisch.\",\"Heute ist Woche \"&"
+              "ROUNDDOWN((TODAY()-%s)/7,0)+1&\" nach OP.\")" % (OP, OP))
+c.font, c.alignment, c.fill = F_BODY, L_IND, FILL_CALC
+wsrl.row_dimensions[4].height = 20
+
+# Statusblock: greift den jüngsten Eintrag ab und mittelt die letzten
+# 14 Tage. Die Datumsspalte steigt an, deshalb genügt MAX als "zuletzt".
+RL_FIRST = 10 + 18
+RL_LAST = RL_FIRST + REHALOG_ROWS - 1
+RA = "$A$%d:$A$%d" % (RL_FIRST, RL_LAST)
+
+
+def rl_spalte(buchstabe):
+    return "$%s$%d:$%s$%d" % (buchstabe, RL_FIRST, buchstabe, RL_LAST)
+
+
+def rl_aktuell(buchstabe):
+    return ("=IF(COUNT(%s)=0,\"\",IFERROR(INDEX(%s,MATCH(MAX(%s),%s,0)),"
+            "\"\"))" % (RA, rl_spalte(buchstabe), RA, RA))
+
+
+def rl_best(buchstabe):
+    return ("=IF(COUNT(%s)=0,\"\",MAX(%s))"
+            % (rl_spalte(buchstabe), rl_spalte(buchstabe)))
+
+
+def rl_schnitt(buchstabe):
+    return ("=IF(COUNT(%s)=0,\"\",IFERROR(AVERAGEIFS(%s,%s,\">=\"&"
+            "MAX(%s)-13),\"\"))" % (RA, rl_spalte(buchstabe), RA, RA))
+
+
+abschnitt(wsrl, 6, 1, 12, "Status")
+kacheln_rl = [
+    ("Einträge", "=COUNT(%s)" % RA, NF_INT),
+    ("Letzter Eintrag", "=IF(COUNT(%s)=0,\"\",MAX(%s))" % (RA, RA), NF_DATE),
+    ("Woche nach OP", rl_aktuell("B"), NF_INT),
+    ("Flexion aktuell", rl_aktuell("F"), NF_INT),
+    ("Flexion Bestwert", rl_best("F"), NF_INT),
+    ("Abduktion aktuell", rl_aktuell("G"), NF_INT),
+    ("Aussenrotation akt.", rl_aktuell("H"), NF_INT),
+    ("Schmerz Ruhe Ø 14 T.", rl_schnitt("D"), NF_KG),
+    ("Schmerz Last Ø 14 T.", rl_schnitt("E"), NF_KG),
+]
+for n, (lab, formel, nf) in enumerate(kacheln_rl):
+    bc = 1 + (n % 3) * 4
+    br = 7 + (n // 3)
+    wsrl.merge_cells(start_row=br, start_column=bc, end_row=br,
+                     end_column=bc + 1)
+    c = wsrl.cell(br, bc, lab)
+    c.font, c.alignment, c.fill = F_BODY, L_IND, FILL_LIGHT
+    wsrl.cell(br, bc + 1).fill = FILL_LIGHT
+    wsrl.merge_cells(start_row=br, start_column=bc + 2, end_row=br,
+                     end_column=bc + 3)
+    c = wsrl.cell(br, bc + 2, formel)
+    c.font = Font(name=FONT, size=12, bold=True, color=NAVY)
+    c.alignment, c.number_format, c.fill = C, nf, FILL_CALC
+    wsrl.cell(br, bc + 3).fill = FILL_CALC
+    for col in range(bc, bc + 4):
+        wsrl.cell(br, col).border = B_ALL
+    wsrl.row_dimensions[br].height = 20
+
+abschnitt(wsrl, 11, 1, 12, "Verlauf")
+
+kopfzeile(wsrl, RL_FIRST - 1, 1, RD.REHALOG_KOPF, None, height=34)
+for row in range(RL_FIRST, RL_LAST + 1):
+    c = wsrl.cell(row, 1)
+    c.fill, c.number_format, c.alignment = FILL_INPUT, NF_DATE, C
+    wsrl.cell(row, 2, "=IF(OR($A%d=\"\",%s=\"\"),\"\","
+                      "ROUNDDOWN(($A%d-%s)/7,0)+1)" % (row, OP, row, OP))
+    wsrl.cell(row, 3, "=IF($B%d=\"\",\"\",IF($B%d<=2,\"1 Schutz\","
+                      "IF($B%d<=6,\"2 Beweglichkeit\",IF($B%d<=12,"
+                      "\"3 erste Last\",IF($B%d<=16,\"4 Aufbau\","
+                      "\"5 Rückkehr\")))))"
+              % (row, row, row, row, row))
+    for col in (2, 3):
+        wsrl.cell(row, col).fill = FILL_CALC
+    for col in range(4, 13):
+        wsrl.cell(row, col).fill = FILL_INPUT
+    for col in range(1, 13):
+        c = wsrl.cell(row, col)
+        c.border, c.font = B_ALL, F_BODY
+        c.alignment = L if col == 12 else C
+        if col in (4, 5, 6, 7, 8, 11):
+            c.number_format = NF_KG
+    wsrl.row_dimensions[row].height = 16
+
+dv_ja = DataValidation(type="list", formula1='"ja,teilweise,nein"',
+                       allow_blank=True)
+wsrl.add_data_validation(dv_ja)
+dv_ja.add("I%d:J%d" % (RL_FIRST, RL_LAST))
+dv_schmerz = DataValidation(type="decimal", operator="between", formula1=0,
+                            formula2=10, allow_blank=True)
+dv_schmerz.errorTitle = "Schmerz"
+dv_schmerz.error = "Skala 0 bis 10."
+wsrl.add_data_validation(dv_schmerz)
+dv_schmerz.add("D%d:E%d" % (RL_FIRST, RL_LAST))
+
+wsrl.conditional_formatting.add(
+    "D%d:E%d" % (RL_FIRST, RL_LAST),
+    FormulaRule(formula=['AND($D%d<>"",$D%d>=6)' % (RL_FIRST, RL_FIRST)],
+                fill=PatternFill("solid", bgColor="FDEAEA"),
+                font=Font(name=FONT, size=10, bold=True, color=RED)))
+
+# Diagramme über dem Tabellenblock, damit Seite 1 die Übersicht ist
+ch_rom = LineChart()
+ch_rom.title = "Beweglichkeit (Grad)"
+ch_rom.y_axis.title = "Grad"
+ch_rom.y_axis.scaling.min = 0
+for col in (6, 7, 8):
+    ch_rom.add_data(Reference(wsrl, min_col=col, min_row=RL_FIRST - 1,
+                              max_row=RL_LAST), titles_from_data=True)
+ch_rom.set_categories(Reference(wsrl, min_col=1, min_row=RL_FIRST,
+                                max_row=RL_LAST))
+ch_rom.height, ch_rom.width = 7.5, 12.5
+ch_rom.legend.position = "b"
+wsrl.add_chart(ch_rom, "A12")
+
+ch_schmerz = LineChart()
+ch_schmerz.title = "Schmerz (0-10)"
+ch_schmerz.y_axis.scaling.min = 0
+ch_schmerz.y_axis.scaling.max = 10
+for col in (4, 5):
+    ch_schmerz.add_data(Reference(wsrl, min_col=col, min_row=RL_FIRST - 1,
+                                  max_row=RL_LAST), titles_from_data=True)
+ch_schmerz.set_categories(Reference(wsrl, min_col=1, min_row=RL_FIRST,
+                                    max_row=RL_LAST))
+ch_schmerz.height, ch_schmerz.width = 7.5, 12.5
+ch_schmerz.legend.position = "b"
+wsrl.add_chart(ch_schmerz, "G12")
+
+wsrl.row_breaks.append(Break(id=RL_FIRST - 2))
+wsrl.freeze_panes = "D%d" % RL_FIRST
+wsrl.auto_filter.ref = "A%d:L%d" % (RL_FIRST - 1, RL_LAST)
+druck(wsrl, "A1:L%d" % (RL_FIRST + 28), landscape=True, titles="1:1",
+      fussnote="Bewegungsgrade immer gleich messen: gleiche Position, "
+               "gleiche Tageszeit")
+
+# ==========================================================================
 # TRAININGSBLATT (Druckvorlage zum Mitnehmen)
 # ==========================================================================
 wst = sheet("Trainingsblatt")
@@ -952,10 +1400,17 @@ def rek(spalte, exref):
                                  REK_FIRST, REK_LAST))
 
 
+# Jeder Block wird mehrfach ausgegeben: ein Ausdruck deckt damit mehrere
+# Wochen ab, statt dass nach der ersten Einheit kein Blatt mehr da ist.
+blaetter = [(bi, block, kopie)
+            for kopie in range(1, BLATT_KOPIEN + 1)
+            for bi, block in enumerate(BLOCKS)]
+
 row = 1
-for bi, block in enumerate(BLOCKS):
+for nr, (bi, block, kopie) in enumerate(blaetter):
     wst.merge_cells(start_row=row, start_column=1, end_row=row, end_column=8)
-    c = wst.cell(row, 1, "TRAININGSBLATT  |  %s" % block.upper())
+    c = wst.cell(row, 1, "TRAININGSBLATT  |  %s        Blatt %d von %d"
+                 % (block.upper(), kopie, BLATT_KOPIEN))
     c.font, c.fill, c.alignment = F_TITLE, FILL_TITLE, L_IND
     for col in range(1, 9):
         wst.cell(row, col).fill = FILL_TITLE
@@ -1019,6 +1474,15 @@ for bi, block in enumerate(BLOCKS):
                "eintragen     ·     \",\"Neu im Plan     ·     Start: \"&"
                "TEXT(%s,\"0.#\")&\" kg     ·     \")" % (ziel, ziel))
         maxref = "%s!$H$%d" % (UEB, UEB_FIRST + i)
+        rehaab = "%s!$J$%d" % (UEB, UEB_FIRST + i)
+        ersatzref = "%s!$L$%d" % (UEB, UEB_FIRST + i)
+        woche = "'Reha-Modus'!$B$4"
+        # Sperrvermerk kommt vor allem anderen: er entscheidet, ob die
+        # Übung heute überhaupt stattfindet.
+        gesperrt = ("AND(%s<>\"\",%s<>\"\",%s<%s)"
+                    % (rehaab, woche, woche, rehaab))
+        sperrtext = ("\"GESPERRT bis Woche \"&%s&\" nach OP     ·     "
+                     "Ersatz: \"&%s&\"     ·     \"" % (rehaab, ersatzref))
         # Am Stackende steht der Zielwert still - das gehoert aufs Blatt,
         # sonst widerspricht der Vorschlag der Planvorgabe.
         deckel = ("IF(AND(%s<>\"\",%s<>\"\",%s>=%s),\"Stackende, über "
@@ -1027,8 +1491,9 @@ for bi, block in enumerate(BLOCKS):
         ziel_teil = ("IF(%s=\"\",\"\",\"Ziel heute: \"&TEXT(%s,\"0.#\")&"
                      "\" kg     ·     \")&%s" % (ziel, ziel, deckel))
         c = wst.cell(row, 1,
-                     "=IF(%s=\"\",%s,%s&%s)&%s"
-                     % (rek("L", exref), neu, historie, ziel_teil, vorgabe))
+                     "=IF(%s,%s,IF(%s=\"\",%s,%s&%s))&%s"
+                     % (gesperrt, sperrtext, rek("L", exref), neu, historie,
+                        ziel_teil, vorgabe))
         c.font = Font(name=FONT, size=9, color=NAVY)
         c.fill, c.alignment = FILL_LIGHT, L_IND
         for col in range(1, 9):
@@ -1057,8 +1522,10 @@ for bi, block in enumerate(BLOCKS):
             fak = (WARMUP_FAKTOR[s] if s < len(WARMUP_FAKTOR)
                    else (1.0 if typ == "A" else None))
             if fak is not None:
-                c = wst.cell(row, 3, "=IF(%s=\"\",\"\",ROUND(%s*%s*2,0)/2)"
-                             % (ziel, ziel, fak))
+                c = wst.cell(row, 3,
+                             "=IF(%s,\"\",IF(%s=\"\",\"\","
+                             "ROUND(%s*%s*2,0)/2))"
+                             % (gesperrt, ziel, ziel, fak))
                 c.font = Font(name=FONT, size=10, color="4A5568")
                 c.alignment, c.number_format = C, NF_KG
             for col in range(4, 9):
@@ -1084,9 +1551,17 @@ for bi, block in enumerate(BLOCKS):
         wst.row_dimensions[row].height = 18
         row += 1
 
-    if bi < len(BLOCKS) - 1:
+    if nr < len(blaetter) - 1:
         wst.row_breaks.append(Break(id=row - 1))
         row += 1
+
+# Gesperrte Übungen rot hinterlegen - die Infozeile trägt den Vermerk,
+# die Regel prüft deshalb Spalte A der jeweiligen Zeile.
+wst.conditional_formatting.add(
+    "A1:H%d" % (row - 1),
+    FormulaRule(formula=['LEFT($A1,8)="GESPERRT"'],
+                fill=PatternFill("solid", bgColor="FDEAEA"),
+                font=Font(name=FONT, size=9, bold=True, color=RED)))
 
 druck(wst, "A1:H%d" % (row - 1), margins=(0.5, 0.4, 0.5, 0.5),
       fussnote="Plan (kg) = Aufwärm-Rampe 45 % / 70 %, dann Zielgewicht aus "
@@ -1116,7 +1591,15 @@ kacheln = [
     ("Bester e1RM (kg)",
      "=MAX(Rekorde!$H$%d:$H$%d)" % (REK_FIRST, REK_LAST), NF_KG),
     ("Übungen im Plan",
-     "=COUNTA(%s!$A$%d:$A$%d)" % (UEB, UEB_FIRST, UEB_LAST), NF_INT),
+     "=COUNTIF(%s!$I$%d:$I$%d,\"ja\")" % (UEB, UEB_FIRST, UEB_LAST),
+     NF_INT),
+    ("Woche nach OP", "='Reha-Modus'!$B$4", NF_INT),
+    ("heute freigegeben",
+     "=COUNTIF('Reha-Modus'!$C$%d:$C$%d,\"FREI\")" % (MOD_FIRST, MOD_LAST),
+     NF_INT),
+    ("Reha gesperrt",
+     "=COUNTIF('Reha-Modus'!$C$%d:$C$%d,\"GESPERRT\")"
+     % (MOD_FIRST, MOD_LAST), NF_INT),
 ]
 r0 = 4
 for n, (lab, formel, nf) in enumerate(kacheln):
@@ -1193,8 +1676,9 @@ druck(wsd, "A1:J%d" % ende)
 # --------------------------------------------------------------------------
 # Blattreihenfolge und Speichern
 # --------------------------------------------------------------------------
-ORDER = ["Start", "Dashboard", "Einheiten", "Log", "Auswertung",
-         "Progression", "Rekorde", "Trainingsblatt", "Übungen"]
+ORDER = ["Start", "Dashboard", "Reha-Fahrplan", "Reha-Modus", "Reha-Log",
+         "Einheiten", "Log", "Auswertung", "Progression", "Rekorde",
+         "Trainingsblatt", "Übungen"]
 wb._sheets = [wb[n] for n in ORDER]
 wb.active = 0
 for s in wb.worksheets:
