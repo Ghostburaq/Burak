@@ -6,51 +6,51 @@ const services = [
   {
     id: 'pq-messung',
     title: 'PQ-Messkampagne nach IEC 61000-4-30 Klasse A',
-    when: 'Wenn eine belastbare Aussage ueber die Spannungsqualitaet am Uebergabepunkt oder an einer Unterverteilung noetig ist &mdash; typischerweise ueber sieben Tage.',
-    what: 'Kontinuierliche Messung der Spannungsmerkmale (Frequenz, Spannungshoehe, Flicker, Unsymmetrie, Oberschwingungen, Ereignisse). Bewertung im Bezugsrahmen EN 50160, ueblicherweise mittels 95-Perzentil-Betrachtung.',
-    outcome: 'Nachvollziehbarer Bericht mit Messkurven, Bewertung gegen den gewaehlten Bezugsrahmen und einer klaren Aussage: auffaellig, unauffaellig oder grenzwertig.',
+    when: 'Wenn eine belastbare Aussage über die Spannungsqualität am Übergabepunkt oder an einer Unterverteilung nötig ist &mdash; typischerweise über sieben Tage.',
+    what: 'Kontinuierliche Messung der Spannungsmerkmale (Frequenz, Spannungshöhe, Flicker, Unsymmetrie, Oberschwingungen, Ereignisse). Bewertung im Bezugsrahmen EN 50160, üblicherweise mittels 95-Perzentil-Betrachtung.',
+    outcome: 'Nachvollziehbarer Bericht mit Messkurven, Bewertung gegen den gewählten Bezugsrahmen und einer klaren Aussage: auffällig, unauffällig oder grenzwertig.',
   },
   {
     id: 'en50160',
-    title: 'EN-50160-Konformitaetsbewertung',
-    when: 'Wenn zwischen Anschlussnehmer und Netzbetreiber Klaerungsbedarf ueber die Einhaltung der Spannungsmerkmale am Uebergabepunkt besteht.',
+    title: 'EN-50160-Konformitätsbewertung',
+    when: 'Wenn zwischen Anschlussnehmer und Netzbetreiber Klärungsbedarf über die Einhaltung der Spannungsmerkmale am Übergabepunkt besteht.',
     what: 'Auswertung einer normkonformen Messung gegen die Merkmale der EN 50160, inklusive Einordnung von Ereignissen und Perzentil-Betrachtung.',
-    outcome: 'Konkrete Aussage zur Norm-Referenz. Grundlage fuer Gespraeche mit dem Netzbetreiber.',
+    outcome: 'Konkrete Aussage zur Norm-Referenz. Grundlage für Gespräche mit dem Netzbetreiber.',
   },
   {
     id: 'stoerungsanalyse',
-    title: 'Stoerungs- und Ursachenanalyse',
-    when: 'Bei wiederkehrenden Symptomen wie Flicker, unerklaerten Ausloesungen von Schutzeinrichtungen, IT-Aussetzern, Antriebsstoerungen oder Verdacht auf Oberschwingungs- oder Resonanzprobleme.',
-    what: 'Systematische Suche nach der Ursache: Symptomaufnahme, Messplan, gezielte Messung an mehreren Punkten wenn noetig, Auswertung nach dem Prinzip der Differentialdiagnose &mdash; erst Fakten trennen, dann Hypothesen ausschliessen.',
-    outcome: 'Begruendete Aussage zur wahrscheinlichsten Ursache mit klarer Angabe der Sicherheit und Empfehlungen fuer die naechsten Schritte. Keine Ursache wird behauptet, wo nur eine Korrelation belegt ist.',
+    title: 'Störungs- und Ursachenanalyse',
+    when: 'Bei wiederkehrenden Symptomen wie Flicker, unerklärten Auslösungen von Schutzeinrichtungen, IT-Aussetzern, Antriebsstörungen oder Verdacht auf Oberschwingungs- oder Resonanzprobleme.',
+    what: 'Systematische Suche nach der Ursache: Symptomaufnahme, Messplan, gezielte Messung an mehreren Punkten wenn nötig, Auswertung nach dem Prinzip der Differentialdiagnose &mdash; erst Fakten trennen, dann Hypothesen ausschliessen.',
+    outcome: 'Begründete Aussage zur wahrscheinlichsten Ursache mit klarer Angabe der Sicherheit und Empfehlungen für die nächsten Schritte. Keine Ursache wird behauptet, wo nur eine Korrelation belegt ist.',
   },
   {
     id: 'emv-beratung',
     title: 'EMV- und Installationsberatung',
-    when: 'Vor Beschaffung, Umbau oder Erweiterung, oder wenn EMV-Symptome (Datenfehler, Stoerungen in benachbarter Elektronik, Erdungsprobleme) auftreten.',
+    when: 'Vor Beschaffung, Umbau oder Erweiterung, oder wenn EMV-Symptome (Datenfehler, Störungen in benachbarter Elektronik, Erdungsprobleme) auftreten.',
     what: 'Beurteilung von Aufbau, Verkabelung, Schirmung, Erdung und Filterkonzept im Kontext der geplanten oder bestehenden Anlage.',
     outcome: 'Priorisierte Empfehlungen. Was muss gemacht werden, was hilft, was ist Zusatzaufwand ohne Nutzen.',
   },
   {
     id: 'netzrueckwirkung',
-    title: 'Netzrueckwirkungs-Beurteilung',
+    title: 'Netzrückwirkungs-Beurteilung',
     when: 'Bei Anschluss oder Erweiterung nicht-linearer Verbraucher, Umrichter-Antriebe, Ladestationen, PV oder BESS &mdash; oder wenn der Netzbetreiber eine Beurteilung verlangt.',
-    what: 'Beurteilung auf technischer Basis nach dem Rahmen D-A-CH-CZ. Massgebend sind im Einzelfall stets die Werkvorschriften des zustaendigen Netzbetreibers.',
-    outcome: 'Aussagefaehige Grundlage fuer die Anmeldung beim Netzbetreiber und fuer die Auswahl von Filter- oder Kompensationsmassnahmen.',
+    what: 'Beurteilung auf technischer Basis nach dem Rahmen D-A-CH-CZ. Massgebend sind im Einzelfall stets die Werkvorschriften des zuständigen Netzbetreibers.',
+    outcome: 'Aussagefähige Grundlage für die Anmeldung beim Netzbetreiber und für die Auswahl von Filter- oder Kompensationsmassnahmen.',
   },
   {
     id: 'gutachten',
     title: 'Gutachten und Beweissicherung',
-    when: 'Wenn eine Messung als Beweismittel dienen soll, etwa im Streitfall, fuer die Versicherung oder fuer Verhandlungen mit Netzbetreiber oder Hersteller.',
-    what: 'Rechtsfest dokumentierte Messung: Messaufbau, Geraetekonfiguration, Rohdaten, Auswertung, Fotos, Zeitachse. Formale Dokumentation, damit die Messung Bestand hat.',
-    outcome: 'Nachvollziehbares Gutachten. Trennt sauber zwischen gemessenem Befund und fachlicher Wuerdigung.',
+    when: 'Wenn eine Messung als Beweismittel dienen soll, etwa im Streitfall, für die Versicherung oder für Verhandlungen mit Netzbetreiber oder Hersteller.',
+    what: 'Rechtsfest dokumentierte Messung: Messaufbau, Gerätekonfiguration, Rohdaten, Auswertung, Fotos, Zeitachse. Formale Dokumentation, damit die Messung Bestand hat.',
+    outcome: 'Nachvollziehbares Gutachten. Trennt sauber zwischen gemessenem Befund und fachlicher Würdigung.',
   },
 ];
 ---
 
 <BaseLayout
   title="Leistungen"
-  description="PQ-Messungen nach IEC 61000-4-30 Klasse A, EN-50160-Bewertung, Stoerungs- und Ursachenanalyse, EMV-Beratung, Netzrueckwirkung, Gutachten."
+  description="PQ-Messungen nach IEC 61000-4-30 Klasse A, EN-50160-Bewertung, Störungs- und Ursachenanalyse, EMV-Beratung, Netzrückwirkung, Gutachten."
   path="/leistungen"
   current="/leistungen"
 >
@@ -92,7 +92,7 @@ const services = [
   <aside class="mt-12 rounded-lg border border-ink-200 bg-ink-100 p-6 text-sm leading-relaxed text-ink-700">
     <p>
       <strong class="text-anthrazit">Zu Zahlen und Grenzwerten:</strong> Konkrete Grenz- oder Perzentil-Werte werden im
-      Bericht immer gegen die im Einzelfall geltende Normfassung geprueft und dort ausgewiesen. Auf der Website
+      Bericht immer gegen die im Einzelfall geltende Normfassung geprüft und dort ausgewiesen. Auf der Website
       werden Normen nur als Bezugsrahmen genannt.
     </p>
   </aside>

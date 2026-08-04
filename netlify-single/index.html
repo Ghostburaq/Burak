@@ -4,17 +4,17 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#12151A">
-<title>Engineering.Kabuu — Netzqualitaet und EMV messen, bevor investiert wird</title>
-<meta name="description" content="Unabhaengige Messungen und Beratung zu Netzqualitaet (Power Quality) und EMV. Messgeraet nach IEC 61000-4-30 Klasse A, Bewertung nach EN 50160. Sitz Schweiz.">
-<meta name="author" content="Burak Uecoez">
+<title>Engineering.Kabuu — Netzqualität und EMV messen, bevor investiert wird</title>
+<meta name="description" content="Unabhängige Messungen und Beratung zu Netzqualität (Power Quality) und EMV. Messgerät nach IEC 61000-4-30 Klasse A, Bewertung nach EN 50160. Sitz Schweiz.">
+<meta name="author" content="Burak Ücöz">
 
 <!-- TODO: Nach Festlegung der Domain hier die produktive URL eintragen (nicht die netlify.app-Subdomain). -->
 <link rel="canonical" href="https://TODO-domain.ch/">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="de_CH">
 <meta property="og:site_name" content="Engineering.Kabuu">
-<meta property="og:title" content="Engineering.Kabuu — Netzqualitaet und EMV">
-<meta property="og:description" content="Unabhaengige Messungen und Beratung zu Netzqualitaet und EMV. Sitz Schweiz.">
+<meta property="og:title" content="Engineering.Kabuu — Netzqualität und EMV">
+<meta property="og:description" content="Unabhängige Messungen und Beratung zu Netzqualität und EMV. Sitz Schweiz.">
 <meta property="og:url" content="https://TODO-domain.ch/">
 <meta name="twitter:card" content="summary">
 
@@ -25,8 +25,8 @@
   "@context": "https://schema.org",
   "@type": "ProfessionalService",
   "name": "Engineering.Kabuu",
-  "description": "Unabhaengige Messungen und Beratung zu Netzqualitaet (Power Quality) und EMV in der Schweiz.",
-  "founder": { "@type": "Person", "name": "Burak Uecoez" },
+  "description": "Unabhängige Messungen und Beratung zu Netzqualität (Power Quality) und EMV in der Schweiz.",
+  "founder": { "@type": "Person", "name": "Burak Ücöz" },
   "areaServed": "CH",
   "address": {
     "@type": "PostalAddress",
@@ -161,7 +161,7 @@ section+section{border-top:1px solid var(--ink-200)}
 .logo-rule .line{flex:1;height:1px;background:var(--ink-200)}
 .logo-rule svg{width:50px;height:auto;flex:none}
 
-/* Leistungsbloecke */
+/* Leistungsblöcke */
 .service{background:var(--surface);border:1px solid var(--ink-200);border-radius:var(--radius-lg);
   padding:1.5rem;margin-top:1rem;scroll-margin-top:96px}
 @media(min-width:768px){.service{padding:1.9rem}}
@@ -203,12 +203,13 @@ ol.steps p{margin:0;font-size:.91rem;color:var(--ink-700);max-width:62ch}
 .form-card h2{font-size:1.15rem}
 .field{display:block;margin-bottom:1.1rem}
 .field>span{display:block;font-size:.86rem;font-weight:500;color:var(--anthrazit);margin-bottom:.35rem}
-.field input,.field textarea{width:100%;padding:.65rem .8rem;border:1px solid var(--ink-300);
+.field input,.field textarea,.field select{width:100%;padding:.65rem .8rem;border:1px solid var(--ink-300);
   border-radius:var(--radius);background:#fff;color:var(--anthrazit);font:inherit;font-size:.93rem}
-.field input:focus,.field textarea:focus{outline:2px solid var(--violett);outline-offset:0;border-color:var(--violett)}
+.field input:focus,.field textarea:focus,.field select:focus{outline:2px solid var(--violett);outline-offset:0;border-color:var(--violett)}
 .field ::placeholder{color:var(--ink-500)}
 .row{display:grid;gap:0}
 @media(min-width:600px){.row{grid-template-columns:1fr 1fr;gap:1rem}}
+@media(min-width:600px){.row-3{grid-template-columns:repeat(3,1fr)}}
 .req{color:var(--violett)}
 .consent{display:flex;gap:.65rem;align-items:flex-start;font-size:.88rem;color:var(--ink-700);
   line-height:1.55;margin:.25rem 0 1.4rem}
@@ -304,20 +305,22 @@ footer address{font-style:normal;font-size:.9rem;color:var(--ink-700);margin-top
         <li><a href="#start">Start</a></li>
         <li><a href="#leistungen">Leistungen</a></li>
         <li><a href="#ablauf">Ablauf</a></li>
-        <li><a href="#ueber">Ueber mich</a></li>
+        <li><a href="#faq">Häufige Fragen</a></li>
+        <li><a href="#ueber">Über mich</a></li>
         <li><a href="#kontakt">Kontakt</a></li>
       </ul>
     </nav>
-    <a class="btn btn-primary" href="#kontakt">Erstgespraech anfragen</a>
+    <a class="btn btn-primary" href="#kontakt">Erstgespräch anfragen</a>
   </div>
   <details class="menu">
     <div class="wrap">
-      <summary>Menue</summary>
+      <summary>Menü</summary>
       <ul>
         <li><a href="#start">Start</a></li>
         <li><a href="#leistungen">Leistungen</a></li>
         <li><a href="#ablauf">Ablauf</a></li>
-        <li><a href="#ueber">Ueber mich</a></li>
+        <li><a href="#faq">Häufige Fragen</a></li>
+        <li><a href="#ueber">Über mich</a></li>
         <li><a href="#kontakt">Kontakt</a></li>
         <li><a href="#impressum">Kontakt / Impressum</a></li>
         <li><a href="#datenschutz">Datenschutz</a></li>
@@ -335,22 +338,22 @@ footer address{font-style:normal;font-size:.9rem;color:var(--ink-700);margin-top
     <p class="kicker">Power Quality &amp; EMV</p>
     <div class="grid split">
       <div>
-        <h1 id="h-start">Netzqualitaet und EMV messen, bevor investiert wird.</h1>
+        <h1 id="h-start">Netzqualität und EMV messen, bevor investiert wird.</h1>
         <p class="lead" style="margin-top:1.25rem">
-          Unabhaengige Messungen, verstaendliche Berichte, klare Empfehlungen. Damit Entscheidungen ueber
+          Unabhängige Messungen, verständliche Berichte, klare Empfehlungen. Damit Entscheidungen über
           Filter, Kompensation, Netzausbau oder EMV-Massnahmen auf Messwerten stehen, nicht auf Vermutung.
         </p>
         <div class="btn-row">
-          <a class="btn btn-primary" href="#kontakt">Erstgespraech anfragen</a>
-          <a class="btn btn-outline" href="#ablauf">So laeuft eine Messung ab</a>
+          <a class="btn btn-primary" href="#kontakt">Erstgespräch anfragen</a>
+          <a class="btn btn-outline" href="#ablauf">So läuft eine Messung ab</a>
         </div>
       </div>
       <aside class="facts">
         <h2>Grundlage</h2>
         <ul>
-          <li><strong>Messgeraet Klasse A</strong>Camille Bauer Metrawatt PQMobile5000. Das Messgeraet erfuellt die Genauigkeitsklasse A nach IEC 61000-4-30.</li>
-          <li><strong>Bezugsrahmen EN 50160</strong>Bewertung der Spannungsmerkmale am Uebergabepunkt.</li>
-          <li><strong>Unabhaengig</strong>Kein Geraeteverkauf, keine Provisionsbindung. Herstellerneutral.</li>
+          <li><strong>Messgerät Klasse A</strong>Eingesetzt werden Messgeräte, welche die Genauigkeitsklasse A nach IEC 61000-4-30 erfüllen.</li>
+          <li><strong>Bezugsrahmen EN 50160</strong>Bewertung der Spannungsmerkmale am Übergabepunkt.</li>
+          <li><strong>Unabhängig</strong>Kein Geräteverkauf, keine Provisionsbindung. Herstellerneutral.</li>
         </ul>
       </aside>
     </div>
@@ -362,36 +365,46 @@ footer address{font-style:normal;font-size:.9rem;color:var(--ink-700);margin-top
     </div>
 
     <div style="margin-top:3rem">
-      <h2>Fuer wen</h2>
+      <h2>Für wen</h2>
       <p style="margin-top:.6rem;max-width:62ch;color:var(--ink-700)">
-        Wer eine belastbare Aussage ueber sein Netz braucht, bekommt sie hier, ohne Verkaufsdruck.
+        Wer eine belastbare Aussage über sein Netz braucht, bekommt sie hier, ohne Verkaufsdruck.
       </p>
       <ul class="pills">
         <li>Industrie und produzierendes Gewerbe</li>
         <li>KMU mit sensiblen Prozessen</li>
         <li>Immobilienverwaltungen</li>
-        <li>Gemeinden und oeffentliche Betriebe</li>
+        <li>Gemeinden und öffentliche Betriebe</li>
         <li>Netzbetreiber und Elektroinstallateure</li>
-        <li>Anwaelte und Sachverstaendige (Beweissicherung)</li>
+        <li>Anwälte und Sachverständige (Beweissicherung)</li>
       </ul>
     </div>
 
     <div style="margin-top:3rem">
-      <h2>Leistungen im Ueberblick</h2>
+      <h2>Woher die Einschätzung kommt</h2>
+      <p style="margin-top:.75rem;max-width:62ch;color:var(--ink-700)">
+        Über fünfzehn Jahre Messpraxis in EMV und Netzqualität, von Kleinelektronik bis zu grossen Systemen.
+        Eigene Messmittel der Genauigkeitsklasse A nach IEC 61000-4-30, alle zwei Jahre kalibriert.
+        Berufshaftpflichtversicherung vorhanden. Kein Gerätehandel, keine Provisionsbindung.
+      </p>
+    </div>
+
+    <div style="margin-top:3rem">
+      <h2>Leistungen im Überblick</h2>
       <p style="margin-top:.6rem;max-width:62ch;color:var(--ink-700)">Vier Kernleistungen. Alle Details weiter unten.</p>
       <ul class="tiles">
-        <li><a href="#svc-pq"><h3>PQ-Messkampagne</h3><p>Siebentaegige Messung mit Klasse-A-Geraet, Auswertung nach EN 50160.</p><span class="more">Mehr erfahren &rarr;</span></a></li>
-        <li><a href="#svc-stoerung"><h3>Stoerungs- und Ursachenanalyse</h3><p>Flicker, Oberschwingungen, Spannungseinbrueche, Resonanzen nach dem Prinzip der Differentialdiagnose.</p><span class="more">Mehr erfahren &rarr;</span></a></li>
+        <li><a href="#svc-pq"><h3>PQ-Messkampagne</h3><p>Siebentägige Messung mit Klasse-A-Gerät, Auswertung nach EN 50160.</p><span class="more">Mehr erfahren &rarr;</span></a></li>
+        <li><a href="#svc-stoerung"><h3>Störungs- und Ursachenanalyse</h3><p>Flicker, Oberschwingungen, Spannungseinbrüche, Resonanzen nach dem Prinzip der Differentialdiagnose.</p><span class="more">Mehr erfahren &rarr;</span></a></li>
         <li><a href="#svc-emv"><h3>EMV- und Installationsberatung</h3><p>Vor der Beschaffung. Vor dem Umbau. Vor der Eskalation.</p><span class="more">Mehr erfahren &rarr;</span></a></li>
-        <li><a href="#svc-gutachten"><h3>Gutachten und Beweissicherung</h3><p>Rechtsfest dokumentierte Messungen als Grundlage fuer Klaerung und Entscheidung.</p><span class="more">Mehr erfahren &rarr;</span></a></li>
+        <li><a href="#svc-gutachten"><h3>Gutachten und Beweissicherung</h3><p>Rechtsfest dokumentierte Messungen als Grundlage für Klärung und Entscheidung.</p><span class="more">Mehr erfahren &rarr;</span></a></li>
       </ul>
     </div>
 
     <div class="band">
       <h2>Erst messen, dann dimensionieren.</h2>
-      <p>Nennen Sie das Symptom: Flicker, ausgeloeste Schutzeinrichtungen, Prozessstoerungen, EMV-Verdacht.
-         Wir vereinbaren einen Messplan und geben eine Einschaetzung, ob eine Messung ueberhaupt lohnt.</p>
-      <div class="btn-row"><a class="btn btn-primary" href="#kontakt">Erstgespraech anfragen</a></div>
+      <p>Nennen Sie das Symptom: Flicker, ausgelöste Schutzeinrichtungen, Prozessstörungen, EMV-Verdacht.
+         Gemeinsam legen wir einen Messplan fest, und Sie erhalten eine Einschätzung, ob eine Messung
+         überhaupt lohnt.</p>
+      <div class="btn-row"><a class="btn btn-primary" href="#kontakt">Erstgespräch anfragen</a></div>
     </div>
   </section>
 
@@ -407,60 +420,60 @@ footer address{font-style:normal;font-size:.9rem;color:var(--ink-700);margin-top
     <article class="service" id="svc-pq">
       <h3>PQ-Messkampagne nach IEC 61000-4-30 Klasse A</h3>
       <dl class="dl">
-        <div><dt>Wann sinnvoll</dt><dd>Wenn eine belastbare Aussage ueber die Spannungsqualitaet am Uebergabepunkt oder an einer Unterverteilung noetig ist, typischerweise ueber sieben Tage.</dd></div>
-        <div><dt>Was gemacht wird</dt><dd>Kontinuierliche Messung der Spannungsmerkmale (Frequenz, Spannungshoehe, Flicker, Unsymmetrie, Oberschwingungen, Ereignisse). Bewertung im Bezugsrahmen EN 50160, ueblicherweise mittels 95-Perzentil-Betrachtung.</dd></div>
-        <div><dt>Was Sie erhalten</dt><dd>Nachvollziehbarer Bericht mit Messkurven, Bewertung gegen den gewaehlten Bezugsrahmen und einer klaren Aussage: auffaellig, unauffaellig oder grenzwertig.</dd></div>
+        <div><dt>Wann sinnvoll</dt><dd>Wenn eine belastbare Aussage über die Spannungsqualität am Übergabepunkt oder an einer Unterverteilung nötig ist, typischerweise über sieben Tage.</dd></div>
+        <div><dt>Was gemacht wird</dt><dd>Kontinuierliche Messung der Spannungsmerkmale (Frequenz, Spannungshöhe, Flicker, Unsymmetrie, Oberschwingungen, Ereignisse). Bewertung im Bezugsrahmen EN 50160, üblicherweise mittels 95-Perzentil-Betrachtung.</dd></div>
+        <div><dt>Was Sie erhalten</dt><dd>Nachvollziehbarer Bericht mit Messkurven, Bewertung gegen den gewählten Bezugsrahmen und einer klaren Aussage: auffällig, unauffällig oder grenzwertig.</dd></div>
       </dl>
     </article>
 
     <article class="service" id="svc-en50160">
-      <h3>EN-50160-Konformitaetsbewertung am Uebergabepunkt</h3>
+      <h3>EN-50160-Konformitätsbewertung am Übergabepunkt</h3>
       <dl class="dl">
-        <div><dt>Wann sinnvoll</dt><dd>Wenn zwischen Anschlussnehmer und Netzbetreiber Klaerungsbedarf ueber die Einhaltung der Spannungsmerkmale am Uebergabepunkt besteht.</dd></div>
+        <div><dt>Wann sinnvoll</dt><dd>Wenn zwischen Anschlussnehmer und Netzbetreiber Klärungsbedarf über die Einhaltung der Spannungsmerkmale am Übergabepunkt besteht.</dd></div>
         <div><dt>Was gemacht wird</dt><dd>Auswertung einer normkonformen Messung gegen die Merkmale der EN 50160, inklusive Einordnung von Ereignissen und Perzentil-Betrachtung.</dd></div>
-        <div><dt>Was Sie erhalten</dt><dd>Konkrete Aussage zur Norm-Referenz. Grundlage fuer Gespraeche mit dem Netzbetreiber.</dd></div>
+        <div><dt>Was Sie erhalten</dt><dd>Konkrete Aussage zur Norm-Referenz. Grundlage für Gespräche mit dem Netzbetreiber.</dd></div>
       </dl>
     </article>
 
     <article class="service" id="svc-stoerung">
-      <h3>Stoerungs- und Ursachenanalyse</h3>
+      <h3>Störungs- und Ursachenanalyse</h3>
       <dl class="dl">
-        <div><dt>Wann sinnvoll</dt><dd>Bei wiederkehrenden Symptomen wie Flicker, unerklaerten Ausloesungen von Schutzeinrichtungen, IT-Aussetzern, Antriebsstoerungen oder Verdacht auf Oberschwingungs- oder Resonanzprobleme.</dd></div>
-        <div><dt>Was gemacht wird</dt><dd>Systematische Suche nach der Ursache: Symptomaufnahme, Messplan, gezielte Messung an mehreren Punkten wenn noetig, Auswertung nach dem Prinzip der Differentialdiagnose. Erst Fakten trennen, dann Hypothesen ausschliessen.</dd></div>
-        <div><dt>Was Sie erhalten</dt><dd>Begruendete Aussage zur wahrscheinlichsten Ursache mit klarer Angabe der Sicherheit und Empfehlungen fuer die naechsten Schritte. Keine Ursache wird behauptet, wo nur eine Korrelation belegt ist.</dd></div>
+        <div><dt>Wann sinnvoll</dt><dd>Bei wiederkehrenden Symptomen wie Flicker, unerklärten Auslösungen von Schutzeinrichtungen, IT-Aussetzern, Antriebsstörungen oder Verdacht auf Oberschwingungs- oder Resonanzprobleme.</dd></div>
+        <div><dt>Was gemacht wird</dt><dd>Systematische Suche nach der Ursache: Symptomaufnahme, Messplan, gezielte Messung an mehreren Punkten wenn nötig, Auswertung nach dem Prinzip der Differentialdiagnose. Erst Fakten trennen, dann Hypothesen ausschliessen.</dd></div>
+        <div><dt>Was Sie erhalten</dt><dd>Begründete Aussage zur wahrscheinlichsten Ursache mit klarer Angabe der Sicherheit und Empfehlungen für die nächsten Schritte. Keine Ursache wird behauptet, wo nur eine Korrelation belegt ist.</dd></div>
       </dl>
     </article>
 
     <article class="service" id="svc-emv">
       <h3>EMV-Beratung und Installationsberatung</h3>
       <dl class="dl">
-        <div><dt>Wann sinnvoll</dt><dd>Vor Beschaffung, Umbau oder Erweiterung, oder wenn EMV-Symptome auftreten: Datenfehler, Stoerungen in benachbarter Elektronik, Erdungsprobleme.</dd></div>
+        <div><dt>Wann sinnvoll</dt><dd>Vor Beschaffung, Umbau oder Erweiterung, oder wenn EMV-Symptome auftreten: Datenfehler, Störungen in benachbarter Elektronik, Erdungsprobleme.</dd></div>
         <div><dt>Was gemacht wird</dt><dd>Beurteilung von Aufbau, Verkabelung, Schirmung, Erdung und Filterkonzept im Kontext der geplanten oder bestehenden Anlage.</dd></div>
         <div><dt>Was Sie erhalten</dt><dd>Priorisierte Empfehlungen. Was muss gemacht werden, was hilft, was ist Zusatzaufwand ohne Nutzen.</dd></div>
       </dl>
     </article>
 
     <article class="service" id="svc-nrw">
-      <h3>Netzrueckwirkungs-Beurteilung</h3>
+      <h3>Netzrückwirkungs-Beurteilung</h3>
       <dl class="dl">
         <div><dt>Wann sinnvoll</dt><dd>Bei Anschluss oder Erweiterung nicht-linearer Verbraucher, Umrichter-Antriebe, Ladestationen, PV oder BESS, oder wenn der Netzbetreiber eine Beurteilung verlangt.</dd></div>
-        <div><dt>Was gemacht wird</dt><dd>Beurteilung auf technischer Basis nach dem Rahmen D-A-CH-CZ. Massgebend sind im Einzelfall stets die Werkvorschriften des zustaendigen Netzbetreibers.</dd></div>
-        <div><dt>Was Sie erhalten</dt><dd>Aussagefaehige Grundlage fuer die Anmeldung beim Netzbetreiber und fuer die Auswahl von Filter- oder Kompensationsmassnahmen.</dd></div>
+        <div><dt>Was gemacht wird</dt><dd>Beurteilung auf technischer Basis nach dem Rahmen D-A-CH-CZ. Massgebend sind im Einzelfall stets die Werkvorschriften des zuständigen Netzbetreibers.</dd></div>
+        <div><dt>Was Sie erhalten</dt><dd>Aussagefähige Grundlage für die Anmeldung beim Netzbetreiber und für die Auswahl von Filter- oder Kompensationsmassnahmen.</dd></div>
       </dl>
     </article>
 
     <article class="service" id="svc-gutachten">
       <h3>Gutachten und Beweissicherung</h3>
       <dl class="dl">
-        <div><dt>Wann sinnvoll</dt><dd>Wenn eine Messung als Beweismittel dienen soll, etwa im Streitfall, fuer die Versicherung oder fuer Verhandlungen mit Netzbetreiber oder Hersteller.</dd></div>
-        <div><dt>Was gemacht wird</dt><dd>Rechtsfest dokumentierte Messung: Messaufbau, Geraetekonfiguration, Rohdaten, Auswertung, Fotos, Zeitachse. Formale Dokumentation, damit die Messung Bestand hat.</dd></div>
-        <div><dt>Was Sie erhalten</dt><dd>Nachvollziehbares Gutachten. Trennt sauber zwischen gemessenem Befund und fachlicher Wuerdigung.</dd></div>
+        <div><dt>Wann sinnvoll</dt><dd>Wenn eine Messung als Beweismittel dienen soll, etwa im Streitfall, für die Versicherung oder für Verhandlungen mit Netzbetreiber oder Hersteller.</dd></div>
+        <div><dt>Was gemacht wird</dt><dd>Rechtsfest dokumentierte Messung: Messaufbau, Gerätekonfiguration, Rohdaten, Auswertung, Fotos, Zeitachse. Formale Dokumentation, damit die Messung Bestand hat.</dd></div>
+        <div><dt>Was Sie erhalten</dt><dd>Nachvollziehbares Gutachten. Trennt sauber zwischen gemessenem Befund und fachlicher Würdigung.</dd></div>
       </dl>
     </article>
 
     <p class="note">
       <strong>Zu Zahlen und Grenzwerten:</strong> Konkrete Grenz- oder Perzentil-Werte werden im Bericht immer
-      gegen die im Einzelfall geltende Normfassung geprueft und dort ausgewiesen. Auf dieser Seite werden Normen
+      gegen die im Einzelfall geltende Normfassung geprüft und dort ausgewiesen. Auf dieser Seite werden Normen
       nur als Bezugsrahmen genannt.
     </p>
   </section>
@@ -471,68 +484,158 @@ footer address{font-style:normal;font-size:.9rem;color:var(--ink-700);margin-top
     <h2 id="h-ablauf">Messen bevor dimensionieren.</h2>
     <p class="lead" style="margin-top:.85rem">
       Ein einfaches Prinzip: erst Augenschein, dann Messung, dann Auslegung. In sechs Schritten von der ersten
-      Symptomaufnahme bis zum belastbaren Bericht. Nachvollziehbar, unabhaengig, dokumentiert.
+      Symptomaufnahme bis zum belastbaren Bericht. Nachvollziehbar, unabhängig, dokumentiert.
     </p>
     <ol class="steps">
-      <li><span class="num">01</span><div><h3>Erstgespraech und Symptomaufnahme</h3><p>Kurzes Gespraech per Telefon oder Video. Was ist das Symptom, seit wann tritt es auf, was wurde bereits versucht. Ergebnis: Einschaetzung, ob eine Messung ueberhaupt lohnt.</p></div></li>
-      <li><span class="num">02</span><div><h3>Messplan</h3><p>Klaerung von Messort, Dauer, benoetigten Zugaengen, Sicherheitsanforderungen und dem Bezugsrahmen, zum Beispiel EN 50160. Fixierung des Berichtsformats.</p></div></li>
-      <li><span class="num">03</span><div><h3>Messung vor Ort</h3><p>Aufbau und Inbetriebnahme des Messgeraets, das die Genauigkeitsklasse A nach IEC 61000-4-30 erfuellt. Dokumentation von Ort, Anschlusspunkt und Konfiguration. Betrieb ueblicherweise sieben Tage.</p></div></li>
+      <li><span class="num">01</span><div><h3>Erstgespräch und Symptomaufnahme</h3><p>Kurzes Gespräch per Telefon oder Video. Was ist das Symptom, seit wann tritt es auf, was wurde bereits versucht. Ergebnis: Einschätzung, ob eine Messung überhaupt lohnt.</p></div></li>
+      <li><span class="num">02</span><div><h3>Messplan</h3><p>Klärung von Messort, Dauer, benötigten Zugängen, Sicherheitsanforderungen und dem Bezugsrahmen, zum Beispiel EN 50160. Fixierung des Berichtsformats.</p></div></li>
+      <li><span class="num">03</span><div><h3>Messung vor Ort</h3><p>Aufbau und Inbetriebnahme des Messgeräts, das die Genauigkeitsklasse A nach IEC 61000-4-30 erfüllt. Dokumentation von Ort, Anschlusspunkt und Konfiguration. Betrieb üblicherweise sieben Tage.</p></div></li>
       <li><span class="num">04</span><div><h3>Auswertung und Normvergleich</h3><p>Auswertung der Rohdaten. Perzentil-Betrachtung, Ereignis-Auszug, Vergleich gegen den vereinbarten Bezugsrahmen. Trennung von Befund und Interpretation.</p></div></li>
-      <li><span class="num">05</span><div><h3>Bericht mit Befund und Empfehlung</h3><p>Nachvollziehbarer Bericht in deutscher Sprache. Was wurde gemessen, wie wurde bewertet, was ist die begruendete Empfehlung. Kein Bericht ohne Klartext.</p></div></li>
-      <li><span class="num">06</span><div><h3>Optional: Massnahmenbegleitung</h3><p>Begleitung bei Auswahl, Auslegung und Wirksamkeitspruefung, zum Beispiel Filter, Kompensation oder EMV-Massnahmen. Herstellerneutral.</p></div></li>
+      <li><span class="num">05</span><div><h3>Bericht mit Befund und Empfehlung</h3><p>Nachvollziehbarer Bericht in deutscher Sprache. Was wurde gemessen, wie wurde bewertet, was ist die begründete Empfehlung. Kein Bericht ohne Klartext.</p></div></li>
+      <li><span class="num">06</span><div><h3>Optional: Massnahmenbegleitung</h3><p>Begleitung bei Auswahl, Auslegung und Wirksamkeitsprüfung, zum Beispiel Filter, Kompensation oder EMV-Massnahmen. Herstellerneutral.</p></div></li>
     </ol>
 
     <div class="grid two" style="margin-top:2rem">
-      <div class="card"><h3>Unabhaengigkeit</h3><p>Kein Geraeteverkauf, keine Provisionsbindung, kein Erfolgshonorar an bestimmte Massnahmen. Empfehlungen richten sich nach dem Messergebnis, nicht nach dem Katalog.</p></div>
-      <div class="card"><h3>Nachvollziehbarkeit</h3><p>Rohdaten, Geraetekonfiguration und Auswertelogik werden dokumentiert. Eine Zweitmeinung kann auf den gleichen Daten aufsetzen. Gemessen statt behauptet.</p></div>
+      <div class="card"><h3>Unabhängigkeit</h3><p>Kein Geräteverkauf, keine Provisionsbindung, kein Erfolgshonorar an bestimmte Massnahmen. Empfehlungen richten sich nach dem Messergebnis, nicht nach dem Katalog.</p></div>
+      <div class="card"><h3>Nachvollziehbarkeit</h3><p>Rohdaten, Gerätekonfiguration und Auswertelogik werden dokumentiert. Eine Zweitmeinung kann auf den gleichen Daten aufsetzen. Gemessen statt behauptet.</p></div>
     </div>
+  </section>
+
+  <!-- ===================== HAEUFIGE FRAGEN ===================== -->
+  <!--
+    Fragen ohne fertige Antwort stehen bewusst nicht auf der Seite, damit kein
+    sichtbarer Platzhalter erscheint. Offene Antworten siehe OFFENE_PUNKTE.md:
+      - Muss die Anlage dafür abgeschaltet werden?
+      - Was kostet eine Messung?
+      - Wie schnell ist ein Messtermin möglich?
+      - In welchem Gebiet sind Sie im Einsatz?
+  -->
+  <section id="faq" aria-labelledby="h-faq">
+    <p class="kicker">Häufige Fragen</p>
+    <h2 id="h-faq">Was vor einer Anfrage meistens noch offen ist.</h2>
+    <p class="lead" style="margin-top:.85rem">
+      Wenn Ihre Frage hier nicht steht, stellen Sie sie einfach direkt. Eine kurze Nachricht genügt.
+    </p>
+    <dl style="margin:1.75rem 0 0;display:grid;gap:.8rem">
+      <div class="card">
+        <dt style="font-size:1.05rem;font-weight:600;color:var(--anthrazit)">Wie lange dauert eine Messung?</dt>
+        <dd style="margin:.5rem 0 0;font-size:.93rem;color:var(--ink-700);max-width:62ch">
+          Für eine Bewertung im Bezugsrahmen EN 50160 ist eine zusammenhängende Messung über
+          sieben Tage üblich. Für eine gezielte Störungssuche kann eine kürzere, dafür
+          engmaschigere Messung sinnvoller sein. Was passt, wird im Messplan festgelegt.
+        </dd>
+      </div>
+      <div class="card">
+        <dt style="font-size:1.05rem;font-weight:600;color:var(--anthrazit)">Was passiert mit meinen Messdaten?</dt>
+        <dd style="margin:.5rem 0 0;font-size:.93rem;color:var(--ink-700);max-width:62ch">
+          Rohdaten und Bericht werden vertraulich behandelt und ausschliesslich für den
+          vereinbarten Auftrag verwendet. Sie werden für eine festgelegte Frist aufbewahrt,
+          damit Rückfragen und Zweitmeinungen auf derselben Datenbasis möglich bleiben.
+          Eine Weitergabe an Dritte erfolgt nur mit Ihrer schriftlichen Zustimmung.
+        </dd>
+      </div>
+    </dl>
   </section>
 
   <!-- ===================== UEBER MICH ===================== -->
   <section id="ueber" aria-labelledby="h-ueber">
-    <p class="kicker">Ueber mich</p>
-    <h2 id="h-ueber">Burak Uecoez</h2>
+    <p class="kicker">Über mich</p>
+    <h2 id="h-ueber">Burak Ücöz</h2>
     <p class="lead" style="margin-top:.85rem">
-      Elektrotechnik, Netzqualitaet und EMV mit Fokus auf Feldpraxis. Messung als Werkzeug, um zwischen Symptom
-      und Ursache eine belastbare Bruecke zu bauen.
+      Elektrotechnik, Netzqualität und EMV mit Fokus auf Feldpraxis. Messung als Werkzeug, um zwischen Symptom
+      und Ursache eine belastbare Brücke zu bauen.
     </p>
 
     <div class="grid split" style="margin-top:2rem">
       <div style="max-width:62ch;color:var(--ink-800)">
-        <h3 style="margin-bottom:.5rem">Warum unabhaengig</h3>
-        <p>Wer Filter, Kompensation oder EMV-Massnahmen verkauft, hat einen Interessenkonflikt. Wer nur misst und bewertet, kann ohne Rueckwirkung auf den eigenen Katalog empfehlen, oder abraten.</p>
+        <h3 style="margin-bottom:.5rem">Warum unabhängig</h3>
+        <p>Wer Filter, Kompensation oder EMV-Massnahmen verkauft, hat einen Interessenkonflikt. Wer nur misst und bewertet, kann ohne Rückwirkung auf den eigenen Katalog empfehlen, oder abraten.</p>
 
         <h3 style="margin:1.7rem 0 .5rem">Wie ich arbeite</h3>
         <ul style="padding-left:1.2rem;margin:0 0 1rem">
           <li>Erst das Symptom sauber aufnehmen, dann den Messplan bauen.</li>
           <li>Nur Messmittel einsetzen, die dem Zweck entsprechen, hier Klasse A nach IEC 61000-4-30.</li>
-          <li>Zwischen gemessenem Befund und fachlicher Wuerdigung sauber trennen.</li>
+          <li>Zwischen gemessenem Befund und fachlicher Würdigung sauber trennen.</li>
           <li>Keine Ursache behaupten, wo nur eine Korrelation belegt ist.</li>
         </ul>
 
         <h3 style="margin:1.7rem 0 .5rem">Sprachen und Region</h3>
         <p>Deutsch (CH und DE), Englisch. Sitz und Einsatz Schweiz. Anreise auf Absprache.</p>
 
+        <!--
+          TODO: Prüfen, ob die Nennung wehrtechnischer Anwendungen einer Geheimhaltungspflicht
+          gegenüber früheren Auftraggebern oder Arbeitgebern unterliegt. Die Formulierung nennt
+          bewusst keine Projekte, Typen oder Auftraggeber. Im Zweifel den Halbsatz streichen.
+        -->
         <h3 style="margin:1.7rem 0 .5rem">Hintergrund</h3>
-        <p class="todo">TODO: Ausbildung, berufliche Stationen und Praxisschwerpunkt in ein bis zwei Absaetzen. Nur belegbare Angaben, frueherer Arbeitgeber nur nach ausdruecklicher Freigabe.</p>
+        <p>Über fünfzehn Jahre Praxis in EMV und Netzqualität. Der Schwerpunkt lag von Anfang an
+          auf der Messung: nicht auf der Theorie, sondern auf dem, was am Prüfplatz und in der
+          Anlage tatsächlich messbar ist.</p>
+        <p>Die Bandbreite reicht von Kleinelektronik bis zu grossen, komplexen Systemen, von
+          Baugruppen über Geräte und Anlagen bis hin zu Fahrzeugtechnik und wehrtechnischem
+          Gerät. Dazu kommt Erfahrung mit Funk- und Radioanwendungen, also mit genau den
+          Fällen, in denen Störaussendung und Empfangsqualität direkt aufeinandertreffen.</p>
+        <p>Aus dieser Breite folgt die Arbeitsweise: Ein Symptom wird zuerst messbar gemacht,
+          dann eingeordnet. Erst danach wird über Massnahmen gesprochen.</p>
 
-        <h3 style="margin:1.7rem 0 .5rem">Berufsbezeichnung</h3>
-        <p class="todo">TODO: Klaeren, ob die Berufsbezeichnung &laquo;Ingenieur&raquo; gefuehrt werden darf und wie sie geschrieben wird, bevor sie auf der Seite verwendet wird.</p>
+        <!--
+          TODO: Bestätigen, dass mit den genannten Kürzeln EMI (Störaussendung) und EMS
+          (Störfestigkeit) gemeint waren. Falls stattdessen ESD oder andere Prüfungen gemeint
+          sind, Liste entsprechend korrigieren.
+          TODO: Falls konkrete Prüfnormen genannt werden sollen, diese erst gegen die
+          tatsächlich angewendeten Fassungen prüfen. Bis dahin keine Normnummern hier.
+        -->
+        <h3 style="margin:1.7rem 0 .5rem">EMV im Detail</h3>
+        <p>EMV ist kein einzelner Messwert, sondern ein Bündel von Disziplinen. Abgedeckt sind:</p>
+        <ul style="padding-left:1.2rem;margin:0 0 1rem">
+          <li>Leitungsgebundene Störaussendung</li>
+          <li>Gestrahlte Störaussendung</li>
+          <li>Störfestigkeit gegen leitungsgebundene und gestrahlte Einwirkungen</li>
+          <li>Prüfungen an Baugruppen, Geräten, Anlagen und Systemen</li>
+          <li>Fahrzeug- und wehrtechnische Anwendungen</li>
+          <li>Funk- und Radioanwendungen, inklusive der Wechselwirkung zwischen Störaussendung und Empfangsqualität</li>
+        </ul>
+        <p>Diese Breite ist der Grund, warum eine EMV-Frage hier nicht auf ein einzelnes
+          Prüfverfahren reduziert wird. Zuerst wird geklärt, welche Kopplung überhaupt
+          in Frage kommt. Danach wird gemessen.</p>
       </div>
 
       <div style="display:grid;gap:1rem">
+        <!--
+          TODO: Falls für Gutachten oder Beweissicherung ein Kalibrierzertifikat einer
+          akkreditierten Stelle vorliegt, hier ergänzen. Nur eintragen, was vorhanden ist.
+        -->
         <div class="facts">
           <h2>Ausstattung</h2>
           <ul>
-            <li>Camille Bauer Metrawatt PQMobile5000. Das Messgeraet erfuellt die Genauigkeitsklasse A nach IEC 61000-4-30.</li>
-            <li>Stromwandler, Adapter und Sicherheits-Zubehoer fuer NS- und typische Anwendungen.</li>
-            <li class="todo">TODO: Zusaetzliche Messmittel (Thermografie, Oszilloskop, EMV-Nahfeldsonden) auflisten, sofern vorhanden.</li>
+            <li>Für Netzqualitätsmessungen stehen eigene Messgeräte zur Verfügung, welche die Genauigkeitsklasse A nach IEC 61000-4-30 erfüllen. Dazu kommt das benötigte Zubehör: Stromwandler, Adapter und Sicherheitsausrüstung für Messungen im Niederspannungsbereich.</li>
+            <li>Alle Messmittel werden alle zwei Jahre kalibriert. Das Kalibrierdatum wird in jedem Bericht ausgewiesen, damit die Messung auch Jahre später nachvollziehbar bleibt.</li>
+            <li>Fabrikate und Typenbezeichnungen werden bewusst nicht genannt. Massgebend ist die Eignung des Messmittels für den Zweck, nicht die Marke.</li>
           </ul>
         </div>
+        <!--
+          TODO: Prüfen, ob Versicherer und Deckungssumme genannt werden sollen. Viele
+          Auftraggeber aus Industrie und Recht fragen danach; eine konkrete Deckungssumme
+          wirkt dort stärker als die blosse Erwähnung. Angabe erst nach Abgleich mit der Police.
+        -->
         <div class="facts">
-          <h2>Zertifikate und Mitgliedschaften</h2>
-          <ul><li class="todo">TODO: Nur eintragen, was tatsaechlich vorhanden ist. Nichts erfinden, nichts andeuten.</li></ul>
+          <h2>Absicherung</h2>
+          <ul><li>Für die Beratungs- und Gutachtertätigkeit besteht eine Berufshaftpflichtversicherung. Details zu Deckungssumme und Umfang werden auf Anfrage bekannt gegeben.</li></ul>
         </div>
+        <!--
+          Zertifikate und Mitgliedschaften: bleibt ausgeblendet, bis echte Angaben vorliegen.
+          Nichts erfinden, nichts andeuten. Struktur je Eintrag:
+            - Bezeichnung des Zertifikats oder der Qualifikation
+            - Ausstellende Stelle
+            - Jahr bzw. Gültigkeit
+          TODO: Vorhandene Zertifikate, Qualifikationen und Mitgliedschaften eintragen und den
+          Block wieder einkommentieren. Solange nichts eingetragen ist, bleibt er unsichtbar.
+
+          <div class="facts">
+            <h2>Zertifikate und Mitgliedschaften</h2>
+            <ul><li><strong>Bezeichnung</strong> Ausstellende Stelle, Jahr bzw. Gültigkeit</li></ul>
+          </div>
+        -->
         <div class="facts">
           <h2>Referenzen</h2>
           <ul><li>Bis zur schriftlichen Freigabe werden Referenzen ausschliesslich anonymisiert genannt, zum Beispiel &laquo;Industriebetrieb Ostschweiz&raquo;.</li></ul>
@@ -544,20 +647,27 @@ footer address{font-style:normal;font-size:.9rem;color:var(--ink-700);margin-top
   <!-- ===================== KONTAKT ===================== -->
   <section id="kontakt" aria-labelledby="h-kontakt">
     <p class="kicker">Kontakt</p>
-    <h2 id="h-kontakt">Kurz beschreiben, was das Symptom ist. Der Rest ergibt sich im Gespraech.</h2>
+    <h2 id="h-kontakt">Kurz beschreiben, was das Symptom ist. Der Rest ergibt sich im Gespräch.</h2>
+    <div class="lead" style="margin-top:1.1rem">
+      <p>Beschreiben Sie kurz, was Sie beobachten. Ein Symptom, ein Zeitpunkt, eine betroffene
+        Anlage genügen für den Anfang. Alles Weitere klären wir im Gespräch.</p>
+      <p style="margin-bottom:0">Sie erhalten in der Regel innert zwei Werktagen eine Rückmeldung, entweder mit einer
+        ersten Einschätzung oder mit den Fragen, die für eine Einschätzung noch fehlen. Wenn
+        eine Messung aus meiner Sicht nichts bringt, sage ich Ihnen das ebenfalls.</p>
+    </div>
 
     <div class="grid split" style="margin-top:2rem">
       <div class="form-card">
         <h2 id="form-h" style="font-size:1.15rem;letter-spacing:-0.015em;text-transform:none;color:var(--anthrazit)">Anfrage</h2>
         <p style="font-size:.9rem;color:var(--ink-700);margin-top:.4rem">
-          Pflichtfelder mit <span class="req" aria-hidden="true">*</span> markiert. Rueckmeldung in der Regel innert zwei Werktagen.
+          Pflichtfelder mit <span class="req" aria-hidden="true">*</span> markiert. Rückmeldung in der Regel innert zwei Werktagen.
         </p>
 
         <!--
           Netlify Forms: statisches HTML, damit Netlify das Formular beim Deploy erkennt.
           name="kontakt" + data-netlify="true" + verstecktes form-name-Feld sind Pflicht.
           Honeypot bot-field ist per CSS versteckt (nicht type="hidden"), mit tabindex=-1.
-          action="/#danke" fuehrt zurueck auf diese Seite; die Danke-Sektion wird per :target sichtbar.
+          action="/#danke" führt zurück auf diese Seite; die Danke-Sektion wird per :target sichtbar.
         -->
         <form name="kontakt" method="POST" data-netlify="true" netlify-honeypot="bot-field"
               action="/#danke" style="margin-top:1.4rem">
@@ -581,18 +691,38 @@ footer address{font-style:normal;font-size:.9rem;color:var(--ink-700);margin-top
             <label class="field" for="f-tel"><span>Telefon</span>
               <input id="f-tel" name="telefon" type="tel" autocomplete="tel" placeholder="optional"></label>
           </div>
+          <!-- Freiwillige Zusatzangaben. Bewusst optional, damit die Hemmschwelle niedrig bleibt. -->
+          <div class="row row-3">
+            <label class="field" for="f-ort"><span>Standort der Anlage</span>
+              <input id="f-ort" name="standort" autocomplete="postal-code" placeholder="PLZ und Ort"></label>
+            <label class="field" for="f-spg"><span>Spannungsebene</span>
+              <select id="f-spg" name="spannungsebene">
+                <option value="">Keine Angabe</option>
+                <option value="Niederspannung">Niederspannung</option>
+                <option value="Mittelspannung">Mittelspannung</option>
+                <option value="unbekannt">unbekannt</option>
+              </select></label>
+            <label class="field" for="f-drg"><span>Dringlichkeit</span>
+              <select id="f-drg" name="dringlichkeit">
+                <option value="">Keine Angabe</option>
+                <option value="laufende Störung">laufende Störung</option>
+                <option value="geplantes Vorhaben">geplantes Vorhaben</option>
+                <option value="allgemeine Anfrage">allgemeine Anfrage</option>
+              </select></label>
+          </div>
+
           <label class="field" for="f-msg"><span>Nachricht <span class="req" aria-hidden="true">*</span></span>
             <textarea id="f-msg" name="nachricht" rows="6" required placeholder="Kurz: Symptom, Standort, seit wann, was bereits versucht wurde."></textarea></label>
 
           <label class="consent" for="f-ok">
             <input id="f-ok" type="checkbox" name="einwilligung" value="ja" required>
             <span>Ich willige ein, dass meine Angaben zur Bearbeitung meiner Anfrage bearbeitet werden. Details in der
-              <a href="#datenschutz">Datenschutzerklaerung</a>. Die Einwilligung kann jederzeit widerrufen werden.
+              <a href="#datenschutz">Datenschutzerklärung</a>. Die Einwilligung kann jederzeit widerrufen werden.
               <span class="req" aria-hidden="true">*</span></span>
           </label>
 
           <button type="submit" class="btn btn-primary">Anfrage senden</button>
-          <p class="form-foot">Keine Newsletter. Keine Weitergabe an Dritte ausser den zur Bearbeitung noetigen Auftragsbearbeitern.</p>
+          <p class="form-foot">Keine Newsletter. Keine Weitergabe an Dritte ausser den zur Bearbeitung nötigen Auftragsbearbeitern.</p>
         </form>
       </div>
 
@@ -606,7 +736,7 @@ footer address{font-style:normal;font-size:.9rem;color:var(--ink-700);margin-top
             <dd><a href="tel:+41795129807">079 512 98 07</a></dd>
             <dt>Anschrift</dt>
             <dd><address>
-              Burak Uecoez<br>
+              Burak Ücöz<br>
               Engineering.Kabuu<br>
               Im Abt 9 A<br>
               8240 Thayngen<br>
@@ -616,7 +746,7 @@ footer address{font-style:normal;font-size:.9rem;color:var(--ink-700);margin-top
         </div>
         <div class="contact-card dark-card">
           <h2>Antwortzeit</h2>
-          <p>Antwort in der Regel innert zwei Werktagen. Bei akuten Prozessstoerungen kurz per Telefon melden.</p>
+          <p>Antwort in der Regel innert zwei Werktagen. Bei akuten Prozessstörungen kurz per Telefon melden.</p>
         </div>
       </aside>
     </div>
@@ -628,10 +758,10 @@ footer address{font-style:normal;font-size:.9rem;color:var(--ink-700);margin-top
       <svg viewBox="0 0 200 210" aria-hidden="true"><use href="#ekMark"/></svg>
       <div class="brandline">kabuu</div>
       <div class="brandsub">Engineering</div>
-      <h2 id="h-danke" style="margin-top:1.5rem">Danke fuer Ihre Anfrage.</h2>
+      <h2 id="h-danke" style="margin-top:1.5rem">Danke für Ihre Anfrage.</h2>
       <p style="margin-top:.85rem;color:var(--ink-700)">
-        Ihre Nachricht ist eingegangen. Rueckmeldung in der Regel innert zwei Werktagen.
-        Bei akuten Prozessstoerungen bitte kurz per Telefon melden:
+        Ihre Nachricht ist eingegangen. Rückmeldung in der Regel innert zwei Werktagen.
+        Bei akuten Prozessstörungen bitte kurz per Telefon melden:
         <a href="tel:+41795129807">079 512 98 07</a>.
       </p>
       <div class="btn-row" style="justify-content:center">
@@ -646,14 +776,14 @@ footer address{font-style:normal;font-size:.9rem;color:var(--ink-700);margin-top
     <p class="kicker">Rechtliches</p>
     <h2 id="h-impressum">Kontakt und Anbieterangaben</h2>
     <div class="legal" style="margin-top:1.5rem">
-      <p class="draft"><strong>Hinweis:</strong> Entwurf. Vor Live-Gang durch Anwalt bzw. Treuhaender pruefen lassen.</p>
+      <p class="draft"><strong>Hinweis:</strong> Entwurf. Vor Live-Gang durch Anwalt bzw. Treuhänder prüfen lassen.</p>
 
-      <p>In der Schweiz besteht keine allgemeine Impressumspflicht. Fuer Anbieter im elektronischen
-        Geschaeftsverkehr verlangt das Bundesgesetz gegen den unlauteren Wettbewerb (UWG) jedoch klare Angaben
-        zur Identitaet und zur Kontaktaufnahme. Diese Angaben finden Sie hier.</p>
+      <p>In der Schweiz besteht keine allgemeine Impressumspflicht. Für Anbieter im elektronischen
+        Geschäftsverkehr verlangt das Bundesgesetz gegen den unlauteren Wettbewerb (UWG) jedoch klare Angaben
+        zur Identität und zur Kontaktaufnahme. Diese Angaben finden Sie hier.</p>
 
       <h3>Anbieterin</h3>
-      <p>Engineering.Kabuu<br>Inhaber: Burak Uecoez<br>Rechtsform: Einzelunternehmen</p>
+      <p>Engineering.Kabuu<br>Inhaber: Burak Ücöz<br>Rechtsform: Einzelunternehmen</p>
 
       <h3>Anschrift</h3>
       <p>Im Abt 9 A<br>8240 Thayngen<br>Schweiz</p>
@@ -662,26 +792,26 @@ footer address{font-style:normal;font-size:.9rem;color:var(--ink-700);margin-top
       <p>Telefon: <a href="tel:+41795129807">079 512 98 07</a><br>
          E-Mail: <a href="mailto:engineering.kabuu@gmail.com">engineering.kabuu@gmail.com</a></p>
 
-      <h3>Verantwortlich fuer den Inhalt</h3>
-      <p>Burak Uecoez, Anschrift wie oben.</p>
+      <h3>Verantwortlich für den Inhalt</h3>
+      <p>Burak Ücöz, Anschrift wie oben.</p>
 
       <h3>Firmenname und Handelsregister</h3>
-      <p class="todo">TODO: Firmenrechtlich pruefen. Bei einer Einzelfirma muss nach Art. 945 OR der Familienname
+      <p class="todo">TODO: Firmenrechtlich prüfen. Bei einer Einzelfirma muss nach Art. 945 OR der Familienname
         wesentlicher Bestandteil der Firma sein. &laquo;Engineering.Kabuu&raquo; ist damit eher
-        Geschaeftsbezeichnung bzw. Marke als eingetragene Firma. Mit Treuhaender klaeren, ob und wie die Firma
-        im Handelsregister gefuehrt wird, und diesen Abschnitt entsprechend anpassen oder streichen.</p>
+        Geschäftsbezeichnung bzw. Marke als eingetragene Firma. Mit Treuhänder klären, ob und wie die Firma
+        im Handelsregister geführt wird, und diesen Abschnitt entsprechend anpassen oder streichen.</p>
 
-      <h3>Haftung fuer Inhalte</h3>
-      <p>Die Inhalte dieser Website werden mit Sorgfalt erstellt. Fuer Richtigkeit, Vollstaendigkeit und
-        Aktualitaet wird jedoch keine Gewaehr uebernommen. Die Nutzung erfolgt auf eigene Verantwortung.</p>
+      <h3>Haftung für Inhalte</h3>
+      <p>Die Inhalte dieser Website werden mit Sorgfalt erstellt. Für Richtigkeit, Vollständigkeit und
+        Aktualität wird jedoch keine Gewähr übernommen. Die Nutzung erfolgt auf eigene Verantwortung.</p>
 
-      <h3>Haftung fuer Links</h3>
+      <h3>Haftung für Links</h3>
       <p>Verweise und Links auf Websites Dritter liegen ausserhalb des Verantwortungsbereichs der Anbieterin.
-        Fuer deren Inhalte lehnen wir jede Verantwortung ab.</p>
+        Für deren Inhalte lehnt die Anbieterin jede Verantwortung ab.</p>
 
       <h3>Urheberrecht</h3>
       <p>Die Urheber- und alle anderen Rechte an Inhalten, Bildern und weiteren Dateien auf dieser Website
-        gehoeren ausschliesslich der Anbieterin oder den namentlich genannten Rechteinhabern. Fuer die
+        gehören ausschliesslich der Anbieterin oder den namentlich genannten Rechteinhabern. Für die
         Reproduktion jeglicher Elemente ist die schriftliche Zustimmung im Voraus einzuholen.</p>
     </div>
   </section>
@@ -689,51 +819,51 @@ footer address{font-style:normal;font-size:.9rem;color:var(--ink-700);margin-top
   <!-- ===================== DATENSCHUTZ ===================== -->
   <section id="datenschutz" aria-labelledby="h-datenschutz">
     <p class="kicker">Rechtliches</p>
-    <h2 id="h-datenschutz">Datenschutzerklaerung</h2>
+    <h2 id="h-datenschutz">Datenschutzerklärung</h2>
     <div class="legal" style="margin-top:1.5rem">
-      <p class="draft"><strong>Hinweis:</strong> Entwurf. Vor Live-Gang durch Anwalt bzw. Treuhaender pruefen lassen.</p>
+      <p class="draft"><strong>Hinweis:</strong> Entwurf. Vor Live-Gang durch Anwalt bzw. Treuhänder prüfen lassen.</p>
 
-      <p>Der Schutz Ihrer Personendaten ist der Anbieterin ein wichtiges Anliegen. Diese Erklaerung informiert
-        Sie ueber die Bearbeitung von Personendaten im Zusammenhang mit dem Besuch dieser Website und der
-        Nutzung des Kontaktformulars. Die Bearbeitung erfolgt in Uebereinstimmung mit dem revidierten
+      <p>Der Schutz Ihrer Personendaten ist der Anbieterin ein wichtiges Anliegen. Diese Erklärung informiert
+        Sie über die Bearbeitung von Personendaten im Zusammenhang mit dem Besuch dieser Website und der
+        Nutzung des Kontaktformulars. Die Bearbeitung erfolgt in Übereinstimmung mit dem revidierten
         Schweizer Datenschutzgesetz (revDSG, in Kraft seit 1. September 2023).</p>
 
       <h3>1. Verantwortliche Stelle</h3>
-      <p>Engineering.Kabuu<br>Burak Uecoez<br>Im Abt 9 A, 8240 Thayngen, Schweiz<br>
+      <p>Engineering.Kabuu<br>Burak Ücöz<br>Im Abt 9 A, 8240 Thayngen, Schweiz<br>
         E-Mail: <a href="mailto:engineering.kabuu@gmail.com">engineering.kabuu@gmail.com</a><br>
         Telefon: <a href="tel:+41795129807">079 512 98 07</a></p>
 
       <h3>2. Bearbeitete Personendaten</h3>
       <ul>
         <li><strong>Kontaktformular:</strong> Name, Firma (fakultativ), E-Mail-Adresse, Telefonnummer (fakultativ), Nachricht, Einwilligung.</li>
-        <li><strong>Server-Logdaten:</strong> Beim Aufruf der Website werden vom Hosting-Anbieter automatisch technische Angaben erfasst, unter anderem Datum und Uhrzeit, aufgerufene Ressource, uebertragene Datenmenge, Referrer, User-Agent, IP-Adresse.</li>
+        <li><strong>Server-Logdaten:</strong> Beim Aufruf der Website werden vom Hosting-Anbieter automatisch technische Angaben erfasst, unter anderem Datum und Uhrzeit, aufgerufene Ressource, übertragene Datenmenge, Referrer, User-Agent, IP-Adresse.</li>
       </ul>
 
       <h3>3. Zwecke der Bearbeitung</h3>
       <ul>
-        <li>Beantwortung Ihrer Anfrage sowie Anbahnung und Abwicklung von Auftraegen.</li>
-        <li>Sicherstellung eines stoerungsfreien und sicheren Betriebs der Website.</li>
-        <li>Erfuellung gesetzlicher Aufbewahrungspflichten.</li>
+        <li>Beantwortung Ihrer Anfrage sowie Anbahnung und Abwicklung von Aufträgen.</li>
+        <li>Sicherstellung eines störungsfreien und sicheren Betriebs der Website.</li>
+        <li>Erfüllung gesetzlicher Aufbewahrungspflichten.</li>
       </ul>
 
       <h3>4. Auftragsbearbeiter</h3>
-      <p>Fuer Hosting und Formularverarbeitung wird <strong>Netlify, Inc.</strong> eingesetzt (Sitz USA).
-        Netlify betreibt die Infrastruktur, auf der diese Website ausgeliefert wird, und verarbeitet die ueber
+      <p>Für Hosting und Formularverarbeitung wird <strong>Netlify, Inc.</strong> eingesetzt (Sitz USA).
+        Netlify betreibt die Infrastruktur, auf der diese Website ausgeliefert wird, und verarbeitet die über
         das Kontaktformular eingehenden Daten.</p>
       <p class="todo">TODO: Auftragsbearbeitungsvertrag (Data Processing Addendum) mit Netlify abschliessen bzw.
-        dessen Annahme dokumentieren. Grundlage der Bekanntgabe ins Ausland in Uebereinstimmung mit revDSG
-        pruefen und hier konkret nennen. Aktuellen Stand abklaeren, keine Behauptung ohne Pruefung.</p>
+        dessen Annahme dokumentieren. Grundlage der Bekanntgabe ins Ausland in Übereinstimmung mit revDSG
+        prüfen und hier konkret nennen. Aktuellen Stand abklären, keine Behauptung ohne Prüfung.</p>
 
       <h3>5. Bekanntgabe ins Ausland</h3>
-      <p>Durch die Nutzung von Netlify koennen Personendaten in die USA und allenfalls weitere Laender bekannt
-        gegeben werden. Die Bekanntgabe erfolgt auf einer nach revDSG zulaessigen Grundlage.
-        <span class="todo">TODO: konkrete Grundlage nach Pruefung eintragen.</span></p>
+      <p>Durch die Nutzung von Netlify können Personendaten in die USA und allenfalls weitere Länder bekannt
+        gegeben werden. Die Bekanntgabe erfolgt auf einer nach revDSG zulässigen Grundlage.
+        <span class="todo">TODO: konkrete Grundlage nach Prüfung eintragen.</span></p>
 
       <h3>6. Aufbewahrungsdauer</h3>
-      <p>Anfragen ueber das Kontaktformular werden bis zur endgueltigen Erledigung Ihrer Angelegenheit
-        aufbewahrt, danach nach den gesetzlichen Vorgaben und anschliessend geloescht.
+      <p>Anfragen über das Kontaktformular werden bis zur endgültigen Erledigung Ihrer Angelegenheit
+        aufbewahrt, danach nach den gesetzlichen Vorgaben und anschliessend gelöscht.
         <span class="todo">TODO: Konkrete Dauer festlegen.</span>
-        Server-Logdaten werden nach den Standardvorgaben des Hosters aufbewahrt und anschliessend geloescht
+        Server-Logdaten werden nach den Standardvorgaben des Hosters aufbewahrt und anschliessend gelöscht
         oder anonymisiert.</p>
 
       <h3>7. Cookies und Tracking</h3>
@@ -742,54 +872,54 @@ footer address{font-style:normal;font-size:.9rem;color:var(--ink-700);margin-top
 
       <h3>8. Ihre Rechte</h3>
       <ul>
-        <li>Auskunft ueber die bearbeiteten Personendaten</li>
+        <li>Auskunft über die bearbeiteten Personendaten</li>
         <li>Berichtigung unrichtiger Personendaten</li>
-        <li>Loeschung Ihrer Personendaten</li>
+        <li>Löschung Ihrer Personendaten</li>
         <li>Widerspruch gegen die Bearbeitung</li>
-        <li>Widerruf erteilter Einwilligungen mit Wirkung fuer die Zukunft</li>
+        <li>Widerruf erteilter Einwilligungen mit Wirkung für die Zukunft</li>
       </ul>
-      <p>Fuer die Ausuebung Ihrer Rechte genuegt eine formlose Mitteilung an die unter Ziffer 1 genannte Adresse.</p>
+      <p>Für die Ausübung Ihrer Rechte genügt eine formlose Mitteilung an die unter Ziffer 1 genannte Adresse.</p>
 
-      <h3>9. Aufsichtsbehoerde</h3>
-      <p>Zustaendige Aufsichtsbehoerde ist der Eidgenoessische Datenschutz- und Oeffentlichkeitsbeauftragte
+      <h3>9. Aufsichtsbehörde</h3>
+      <p>Zuständige Aufsichtsbehörde ist der Eidgenössische Datenschutz- und Öffentlichkeitsbeauftragte
         (EDOEB), Feldeggweg 1, 3003 Bern, Schweiz.</p>
 
       <h3>10. Datensicherheit</h3>
-      <p>Die Uebertragung dieser Website erfolgt verschluesselt ueber HTTPS. Die Anbieterin und ihre
+      <p>Die Übertragung dieser Website erfolgt verschlüsselt über HTTPS. Die Anbieterin und ihre
         Auftragsbearbeiter treffen angemessene technische und organisatorische Massnahmen zum Schutz der
         Personendaten.</p>
 
       <h3>11. Kundschaft und Besucher aus der EU</h3>
-      <p class="todo">TODO: Pruefen, ob durch Kunden oder Websitebesucher aus der EU zusaetzlich europaeisches
-        Datenschutzrecht greift und diese Erklaerung entsprechend zu ergaenzen ist. Mit Fachperson klaeren,
+      <p class="todo">TODO: Prüfen, ob durch Kunden oder Websitebesucher aus der EU zusätzlich europäisches
+        Datenschutzrecht greift und diese Erklärung entsprechend zu ergänzen ist. Mit Fachperson klären,
         nicht selbst entscheiden.</p>
 
-      <h3>12. Aenderungen dieser Erklaerung</h3>
-      <p>Die Anbieterin behaelt sich vor, diese Datenschutzerklaerung anzupassen. Fuer Ihren erneuten Besuch
+      <h3>12. Änderungen dieser Erklärung</h3>
+      <p>Die Anbieterin behält sich vor, diese Datenschutzerklärung anzupassen. Für Ihren erneuten Besuch
         gilt die jeweils aktuelle Fassung.</p>
 
-      <p class="todo" style="margin-top:1.75rem">Stand: TODO. Dieser Text ist ein Entwurf und vor Live-Gang durch eine Fachperson zu pruefen.</p>
+      <p class="todo" style="margin-top:1.75rem">Stand: TODO. Dieser Text ist ein Entwurf und vor Live-Gang durch eine Fachperson zu prüfen.</p>
     </div>
   </section>
 
   <!-- ===================== AGB ===================== -->
   <section id="agb" aria-labelledby="h-agb">
     <p class="kicker">Rechtliches</p>
-    <h2 id="h-agb">Allgemeine Geschaeftsbedingungen (Entwurf)</h2>
+    <h2 id="h-agb">Allgemeine Geschäftsbedingungen (Entwurf)</h2>
     <div class="legal" style="margin-top:1.5rem">
       <p class="draft"><strong>Hinweis:</strong> Entwurf. Rechtswahl, Gerichtsstand, Haftungsbegrenzung und
-        MWST-Formulierung vor Live-Gang zwingend mit Anwalt und Treuhaender abstimmen.</p>
+        MWST-Formulierung vor Live-Gang zwingend mit Anwalt und Treuhänder abstimmen.</p>
 
       <h3>1. Geltungsbereich</h3>
-      <p>Diese Allgemeinen Geschaeftsbedingungen (AGB) gelten fuer alle Vertraege zwischen Engineering.Kabuu,
-        Inhaber Burak Uecoez, Im Abt 9 A, 8240 Thayngen, Schweiz (nachfolgend &laquo;Anbieterin&raquo;), und
-        dem Auftraggeber ueber Leistungen im Bereich Netzqualitaets- und EMV-Messungen, -Analysen, -Beratung
-        und -Gutachten. Abweichende Bedingungen des Auftraggebers gelten nur, wenn sie ausdruecklich
+      <p>Diese Allgemeinen Geschäftsbedingungen (AGB) gelten für alle Verträge zwischen Engineering.Kabuu,
+        Inhaber Burak Ücöz, Im Abt 9 A, 8240 Thayngen, Schweiz (nachfolgend &laquo;Anbieterin&raquo;), und
+        dem Auftraggeber über Leistungen im Bereich Netzqualitäts- und EMV-Messungen, -Analysen, -Beratung
+        und -Gutachten. Abweichende Bedingungen des Auftraggebers gelten nur, wenn sie ausdrücklich
         schriftlich anerkannt wurden.</p>
 
       <h3>2. Vertragsgegenstand</h3>
-      <p>Gegenstand des Vertrages ist die im Angebot oder in der Auftragsbestaetigung konkret beschriebene
-        Leistung. Geschuldet werden die fachgerechte Durchfuehrung der Messung bzw. Analyse und ein
+      <p>Gegenstand des Vertrages ist die im Angebot oder in der Auftragsbestätigung konkret beschriebene
+        Leistung. Geschuldet werden die fachgerechte Durchführung der Messung bzw. Analyse und ein
         nachvollziehbar dokumentierter Bericht. Ein bestimmter wirtschaftlicher Erfolg oder ein bestimmter
         Anlagenzustand werden nicht geschuldet.</p>
 
@@ -797,65 +927,65 @@ footer address{font-style:normal;font-size:.9rem;color:var(--ink-700);margin-top
       <ul>
         <li>Rechtzeitige Bereitstellung aller erforderlichen Informationen wie Anlagenschema, Betriebsdaten, Zugangsdaten und Ansprechpersonen.</li>
         <li>Sicherer und ungehinderter Zugang zu den Messstellen sowie Einweisung in die Sicherheitsvorschriften vor Ort.</li>
-        <li>Benennung einer verantwortlichen Elektrofachkraft fuer Schalthandlungen, sofern erforderlich.</li>
-        <li>Bereitstellung geeigneter Anschlusspunkte fuer das Messgeraet.</li>
-        <li>Rechtzeitige Mitteilung sicherheits- oder ergebnisrelevanter Aenderungen am Untersuchungsobjekt.</li>
+        <li>Benennung einer verantwortlichen Elektrofachkraft für Schalthandlungen, sofern erforderlich.</li>
+        <li>Bereitstellung geeigneter Anschlusspunkte für das Messgerät.</li>
+        <li>Rechtzeitige Mitteilung sicherheits- oder ergebnisrelevanter Änderungen am Untersuchungsobjekt.</li>
       </ul>
 
       <h3>4. Termine, Verschiebung, Annullation</h3>
-      <p>Termine werden verbindlich vereinbart. Bei Verschiebung oder Annullation eines bestaetigten
-        Vor-Ort-Termins durch den Auftraggeber weniger als fuenf Arbeitstage vor Beginn kann der bereits
+      <p>Termine werden verbindlich vereinbart. Bei Verschiebung oder Annullation eines bestätigten
+        Vor-Ort-Termins durch den Auftraggeber weniger als fünf Arbeitstage vor Beginn kann der bereits
         entstandene Aufwand in Rechnung gestellt werden.
-        <span class="todo">TODO: Frist und allfaellige Pauschale mit Anwalt abstimmen.</span></p>
+        <span class="todo">TODO: Frist und allfällige Pauschale mit Anwalt abstimmen.</span></p>
 
-      <h3>5. Verguetung und Zahlungskonditionen</h3>
-      <p>Die Verguetung richtet sich nach dem Angebot oder der Auftragsbestaetigung. Alle Preise verstehen sich
+      <h3>5. Vergütung und Zahlungskonditionen</h3>
+      <p>Die Vergütung richtet sich nach dem Angebot oder der Auftragsbestätigung. Alle Preise verstehen sich
         in Schweizer Franken. <strong>Es wird keine Mehrwertsteuer erhoben; die Anbieterin ist von der
         Mehrwertsteuerpflicht befreit.</strong> Zahlungen sind, sofern nicht anders vereinbart, innerhalb von
-        30 Tagen nach Rechnungsstellung ohne Abzug faellig. Reisezeit und Reisekosten werden nach Vereinbarung
+        30 Tagen nach Rechnungsstellung ohne Abzug fällig. Reisezeit und Reisekosten werden nach Vereinbarung
         abgerechnet.</p>
 
       <h3>6. Haftung</h3>
-      <p>Die Anbieterin haftet fuer nachgewiesene Schaeden bei Vorsatz und Grobfahrlaessigkeit sowie bei
+      <p>Die Anbieterin haftet für nachgewiesene Schäden bei Vorsatz und Grobfahrlässigkeit sowie bei
         Verletzung wesentlicher Vertragspflichten nach den Bestimmungen des Schweizerischen
-        Obligationenrechts (OR). Bei leichter Fahrlaessigkeit ist die Haftung auf den bei Vertragsschluss
-        vorhersehbaren, typischerweise eintretenden Schaden begrenzt. Fuer entgangenen Gewinn, indirekte
-        Schaeden oder Folgeschaeden wird, soweit gesetzlich zulaessig, keine Haftung uebernommen.
-        <span class="todo">TODO: Konkrete Haftungshoechstsumme, Verjaehrung und Umgang mit Gutachten und
+        Obligationenrechts (OR). Bei leichter Fahrlässigkeit ist die Haftung auf den bei Vertragsschluss
+        vorhersehbaren, typischerweise eintretenden Schaden begrenzt. Für entgangenen Gewinn, indirekte
+        Schäden oder Folgeschäden wird, soweit gesetzlich zulässig, keine Haftung übernommen.
+        <span class="todo">TODO: Konkrete Haftungshöchstsumme, Verjährung und Umgang mit Gutachten und
         Beweissicherung mit einem Anwalt formulieren.</span></p>
 
       <h3>7. Abgrenzung</h3>
-      <p>Messungen, Analysen und Empfehlungen der Anbieterin stellen keine Garantie fuer einen bestimmten
-        Anlagenzustand oder Betriebserfolg dar. Die Anbieterin uebernimmt keine Betreiberpflichten und keine
+      <p>Messungen, Analysen und Empfehlungen der Anbieterin stellen keine Garantie für einen bestimmten
+        Anlagenzustand oder Betriebserfolg dar. Die Anbieterin übernimmt keine Betreiberpflichten und keine
         Pflichten einer vom Auftraggeber eingesetzten Elektrofachkraft.</p>
 
       <h3>8. Vertraulichkeit</h3>
       <p>Die Anbieterin behandelt alle im Rahmen des Auftrages erlangten Informationen vertraulich und
-        verwendet sie ausschliesslich zur Erfuellung des Vertrages. Eine Weitergabe an Dritte erfolgt nur mit
+        verwendet sie ausschliesslich zur Erfüllung des Vertrages. Eine Weitergabe an Dritte erfolgt nur mit
         schriftlicher Zustimmung des Auftraggebers oder aufgrund gesetzlicher Verpflichtung.</p>
 
       <h3>9. Nutzungsrechte an Berichten</h3>
-      <p>Berichte, Auswertungen und Gutachten duerfen vom Auftraggeber fuer die vereinbarten internen Zwecke
-        sowie zur Vorlage bei Netzbetreibern, Behoerden oder Versicherungen verwendet werden. Eine
-        Veroeffentlichung, insbesondere in gekuerzter oder veraenderter Form, bedarf der schriftlichen
+      <p>Berichte, Auswertungen und Gutachten dürfen vom Auftraggeber für die vereinbarten internen Zwecke
+        sowie zur Vorlage bei Netzbetreibern, Behörden oder Versicherungen verwendet werden. Eine
+        Veröffentlichung, insbesondere in gekürzter oder veränderter Form, bedarf der schriftlichen
         Zustimmung der Anbieterin.</p>
 
       <h3>10. Aufbewahrung von Messdaten</h3>
-      <p>Rohdaten und Berichte werden von der Anbieterin fuer eine angemessene Frist zur Nachvollziehbarkeit
-        und fuer allfaellige Rueckfragen aufbewahrt.
-        <span class="todo">TODO: Konkrete Frist mit Treuhaender abstimmen.</span></p>
+      <p>Rohdaten und Berichte werden von der Anbieterin für eine angemessene Frist zur Nachvollziehbarkeit
+        und für allfällige Rückfragen aufbewahrt.
+        <span class="todo">TODO: Konkrete Frist mit Treuhänder abstimmen.</span></p>
 
       <h3>11. Rechtswahl und Gerichtsstand</h3>
-      <p>Auf das Vertragsverhaeltnis findet ausschliesslich Schweizer Recht Anwendung; das UN-Kaufrecht ist
+      <p>Auf das Vertragsverhältnis findet ausschliesslich Schweizer Recht Anwendung; das UN-Kaufrecht ist
         ausgeschlossen. Gerichtsstand ist
-        <span class="todo">TODO: Gerichtsstand festlegen, ueblicherweise am Sitz der Anbieterin. Mit Anwalt
-        bestaetigen.</span></p>
+        <span class="todo">TODO: Gerichtsstand festlegen, üblicherweise am Sitz der Anbieterin. Mit Anwalt
+        bestätigen.</span></p>
 
       <h3>12. Salvatorische Klausel</h3>
       <p>Sollten einzelne Bestimmungen dieser AGB unwirksam sein oder werden, bleibt die Wirksamkeit der
-        uebrigen Bestimmungen davon unberuehrt.</p>
+        übrigen Bestimmungen davon unberührt.</p>
 
-      <p class="todo" style="margin-top:1.75rem">Stand: TODO. Diese AGB sind ein Entwurf und vor Live-Gang durch eine Fachperson zu pruefen.</p>
+      <p class="todo" style="margin-top:1.75rem">Stand: TODO. Diese AGB sind ein Entwurf und vor Live-Gang durch eine Fachperson zu prüfen.</p>
     </div>
   </section>
 
@@ -874,10 +1004,10 @@ footer address{font-style:normal;font-size:.9rem;color:var(--ink-700);margin-top
           </span>
         </a>
         <p style="margin-top:1rem;max-width:38ch;font-size:.9rem;color:var(--ink-500)">
-          Unabhaengige Messungen und Beratung fuer Netzqualitaet und EMV. Sitz Schweiz.
+          Unabhängige Messungen und Beratung für Netzqualität und EMV. Sitz Schweiz.
         </p>
         <address>
-          Burak Uecoez<br>Im Abt 9 A<br>8240 Thayngen
+          Burak Ücöz<br>Im Abt 9 A<br>8240 Thayngen
         </address>
       </div>
       <div>
@@ -886,7 +1016,8 @@ footer address{font-style:normal;font-size:.9rem;color:var(--ink-700);margin-top
           <li><a href="#start">Start</a></li>
           <li><a href="#leistungen">Leistungen</a></li>
           <li><a href="#ablauf">Ablauf</a></li>
-          <li><a href="#ueber">Ueber mich</a></li>
+          <li><a href="#faq">Häufige Fragen</a></li>
+          <li><a href="#ueber">Über mich</a></li>
           <li><a href="#kontakt">Kontakt</a></li>
         </ul>
       </div>
@@ -901,7 +1032,7 @@ footer address{font-style:normal;font-size:.9rem;color:var(--ink-700);margin-top
     </div>
     <div class="copy">
       <span>&copy; <span id="jahr">2026</span> Engineering.Kabuu. Alle Rechte vorbehalten.</span>
-      <span>Inhaber: Burak Uecoez</span>
+      <span>Inhaber: Burak Ücöz</span>
     </div>
   </div>
 </footer>

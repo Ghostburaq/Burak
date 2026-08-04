@@ -5,19 +5,19 @@ import { site } from '../lib/site';
 ---
 
 <BaseLayout
-  title="Danke fuer Ihre Anfrage"
-  description="Bestaetigung der Kontaktanfrage."
+  title="Danke für Ihre Anfrage"
+  description="Bestätigung der Kontaktanfrage."
   path="/danke"
   current=""
   noindex
 >
   <section class="mx-auto max-w-prose text-center">
     <Logo variant="stacked" size={64} withTagline class="mb-10" />
-    <p class="text-xs font-semibold uppercase tracking-widest text-violett">Bestaetigung</p>
-    <h1 class="mt-3 text-3xl font-semibold leading-tight text-anthrazit md:text-4xl">Danke fuer Ihre Anfrage.</h1>
+    <p class="text-xs font-semibold uppercase tracking-widest text-violett">Bestätigung</p>
+    <h1 class="mt-3 text-3xl font-semibold leading-tight text-anthrazit md:text-4xl">Danke für Ihre Anfrage.</h1>
     <p class="mt-5 text-lg text-ink-700">
-      Ihre Nachricht ist eingegangen. Rueckmeldung in der Regel innert zwei Werktagen.
-      Bei akuten Prozessstoerungen bitte kurz per Telefon melden: {' '}
+      Ihre Nachricht ist eingegangen. Rückmeldung in der Regel innert zwei Werktagen.
+      Bei akuten Prozessstörungen bitte kurz per Telefon melden: {' '}
       <a class="text-violett underline decoration-ink-300 underline-offset-4 hover:decoration-violett" href={`tel:${site.contact.phoneLink}`}>{site.contact.phoneDisplay}</a>.
     </p>
     <div class="mt-8 flex flex-wrap justify-center gap-3">

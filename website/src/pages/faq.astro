@@ -1,0 +1,58 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SineDivider from '../components/SineDivider.astro';
+
+// Fragen ohne fertige Antwort bleiben bewusst aus der Liste, damit auf der Seite
+// kein sichtbarer Platzhalter steht. Offene Antworten siehe OFFENE_PUNKTE.md:
+//   - Muss die Anlage dafür abgeschaltet werden?
+//   - Was kostet eine Messung?
+//   - Wie schnell ist ein Messtermin möglich?
+//   - In welchem Gebiet sind Sie im Einsatz?
+const faq = [
+  {
+    q: 'Wie lange dauert eine Messung?',
+    a: 'Für eine Bewertung im Bezugsrahmen EN 50160 ist eine zusammenhängende Messung über sieben Tage üblich. Für eine gezielte Störungssuche kann eine kürzere, dafür engmaschigere Messung sinnvoller sein. Was passt, wird im Messplan festgelegt.',
+  },
+  {
+    q: 'Was passiert mit meinen Messdaten?',
+    a: 'Rohdaten und Bericht werden vertraulich behandelt und ausschliesslich für den vereinbarten Auftrag verwendet. Sie werden für eine festgelegte Frist aufbewahrt, damit Rückfragen und Zweitmeinungen auf derselben Datenbasis möglich bleiben. Eine Weitergabe an Dritte erfolgt nur mit Ihrer schriftlichen Zustimmung.',
+  },
+];
+---
+
+<BaseLayout
+  title="Häufige Fragen"
+  description="Antworten zu Messdauer, Ablauf und Umgang mit Messdaten bei PQ- und EMV-Messungen."
+  path="/faq"
+  current="/faq"
+>
+  <header>
+    <p class="text-xs font-semibold uppercase tracking-widest text-violett">Häufige Fragen</p>
+    <h1 class="mt-2 text-3xl font-semibold leading-tight text-anthrazit md:text-4xl">
+      Was vor einer Anfrage meistens noch offen ist.
+    </h1>
+    <p class="mt-4 max-w-prose text-ink-700">
+      Wenn Ihre Frage hier nicht steht, stellen Sie sie einfach direkt. Eine kurze Nachricht genügt.
+    </p>
+  </header>
+
+  <SineDivider />
+
+  <dl class="mt-10 space-y-4">
+    {faq.map((item) => (
+      <div class="rounded-lg border border-ink-200 bg-white p-6 md:p-7">
+        <dt class="text-lg font-semibold text-anthrazit">{item.q}</dt>
+        <dd class="mt-2 max-w-prose text-sm leading-relaxed text-ink-700">{item.a}</dd>
+      </div>
+    ))}
+  </dl>
+
+  <div class="mt-10 flex flex-wrap gap-3">
+    <a href="/kontakt" class="inline-flex items-center rounded-md bg-violett px-4 py-2.5 text-sm font-medium text-white no-underline hover:bg-[#2611b8]">
+      Frage stellen
+    </a>
+    <a href="/ablauf" class="inline-flex items-center rounded-md border border-ink-300 bg-white px-4 py-2.5 text-sm font-medium text-anthrazit no-underline hover:border-anthrazit">
+      Ablauf einer Messung
+    </a>
+  </div>
+</BaseLayout>

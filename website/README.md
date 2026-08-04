@@ -82,7 +82,8 @@ Das Kontaktformular ist als statisches Netlify-Formular ausgezeichnet
 | Startseite (Hero, Teaser, CTA)  | `src/pages/index.astro`                                |
 | Leistungen (6 Bloecke)          | `src/pages/leistungen.astro`                           |
 | Ablauf/Methodik (6 Schritte)    | `src/pages/ablauf.astro`                               |
-| Ueber mich                      | `src/pages/ueber.astro`                                |
+| Häufige Fragen                  | `src/pages/faq.astro`                                  |
+| Über mich                       | `src/pages/ueber.astro`                                |
 | Kontaktseite + Netlify-Formular | `src/pages/kontakt.astro`                              |
 | Danke-Seite                     | `src/pages/danke.astro`                                |
 | Kontakt/Impressum               | `src/pages/impressum.astro`                            |

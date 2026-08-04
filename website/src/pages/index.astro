@@ -3,17 +3,17 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import { site } from '../lib/site';
 
 const services = [
-  { href: '/leistungen#pq-messung',   title: 'PQ-Messkampagne',            text: 'Siebentaegige Messung mit Klasse-A-Geraet, Auswertung nach EN 50160.' },
-  { href: '/leistungen#stoerungsanalyse', title: 'Stoerungs- und Ursachenanalyse', text: 'Flicker, Oberschwingungen, Spannungseinbrueche, Resonanzen nach dem Prinzip der Differentialdiagnose.' },
+  { href: '/leistungen#pq-messung',   title: 'PQ-Messkampagne',            text: 'Siebentägige Messung mit Klasse-A-Gerät, Auswertung nach EN 50160.' },
+  { href: '/leistungen#stoerungsanalyse', title: 'Störungs- und Ursachenanalyse', text: 'Flicker, Oberschwingungen, Spannungseinbrüche, Resonanzen nach dem Prinzip der Differentialdiagnose.' },
   { href: '/leistungen#emv-beratung', title: 'EMV- und Installationsberatung', text: 'Vor der Beschaffung. Vor dem Umbau. Vor der Eskalation.' },
-  { href: '/leistungen#gutachten',    title: 'Gutachten und Beweissicherung', text: 'Rechtsfest dokumentierte Messungen als Grundlage fuer Klaerung und Entscheidung.' },
+  { href: '/leistungen#gutachten',    title: 'Gutachten und Beweissicherung', text: 'Rechtsfest dokumentierte Messungen als Grundlage für Klärung und Entscheidung.' },
 ];
 
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'ProfessionalService',
   name: site.brand,
-  description: 'Unabhaengige Messungen und Beratung zu Netzqualitaet (Power Quality) und EMV in der Schweiz.',
+  description: 'Unabhängige Messungen und Beratung zu Netzqualität (Power Quality) und EMV in der Schweiz.',
   logo: `https://${site.domain}/logo/logo-lockup.svg`,
   image: `https://${site.domain}/logo/logo-lockup.svg`,
   founder: { '@type': 'Person', name: site.owner },
@@ -32,8 +32,8 @@ const jsonLd = {
 ---
 
 <BaseLayout
-  title="Netzqualitaet und EMV messen, bevor investiert wird"
-  description="Unabhaengige PQ- und EMV-Messungen mit Klasse-A-Geraet nach IEC 61000-4-30, Bewertung nach EN 50160. Sitz Schweiz."
+  title="Netzqualität und EMV messen, bevor investiert wird"
+  description="Unabhängige PQ- und EMV-Messungen mit Klasse-A-Gerät nach IEC 61000-4-30, Bewertung nach EN 50160. Sitz Schweiz."
   path="/"
   jsonLd={jsonLd}
   current="/"
@@ -46,15 +46,15 @@ const jsonLd = {
           {site.claim}
         </h1>
         <p class="mt-5 max-w-prose text-lg leading-relaxed text-ink-700">
-          Unabhaengige Messungen, verstaendliche Berichte, klare Empfehlungen. Damit Entscheidungen ueber
+          Unabhängige Messungen, verständliche Berichte, klare Empfehlungen. Damit Entscheidungen über
           Filter, Kompensation, Netzausbau oder EMV-Massnahmen auf Messwerten stehen, nicht auf Vermutung.
         </p>
         <div class="mt-8 flex flex-wrap gap-3">
           <a href="/kontakt" class="inline-flex items-center rounded-md bg-violett px-4 py-2.5 text-sm font-medium text-white no-underline transition hover:bg-[#2611b8]">
-            Erstgespraech anfragen
+            Erstgespräch anfragen
           </a>
           <a href="/ablauf" class="inline-flex items-center rounded-md border border-ink-300 bg-white px-4 py-2.5 text-sm font-medium text-anthrazit no-underline transition hover:border-anthrazit">
-            So laeuft eine Messung ab
+            So läuft eine Messung ab
           </a>
         </div>
       </div>
@@ -63,16 +63,16 @@ const jsonLd = {
         <h2 class="text-xs font-semibold uppercase tracking-wider text-ink-500">Grundlage</h2>
         <ul class="mt-3 space-y-3 text-sm leading-relaxed text-ink-700">
           <li>
-            <strong class="text-anthrazit">Messgeraet Klasse A.</strong>
-            Camille Bauer Metrawatt PQMobile5000 &mdash; erfuellt die Genauigkeitsklasse A nach IEC 61000-4-30.
+            <strong class="text-anthrazit">Messgerät Klasse A.</strong>
+            Eingesetzt werden Messgeräte, welche die Genauigkeitsklasse A nach IEC 61000-4-30 erfüllen.
           </li>
           <li>
             <strong class="text-anthrazit">Bezugsrahmen EN 50160.</strong>
-            Bewertung der Spannungsmerkmale am Uebergabepunkt.
+            Bewertung der Spannungsmerkmale am Übergabepunkt.
           </li>
           <li>
-            <strong class="text-anthrazit">Unabhaengig.</strong>
-            Kein Geraeteverkauf, keine Provisionsbindung. Herstellerneutral.
+            <strong class="text-anthrazit">Unabhängig.</strong>
+            Kein Geräteverkauf, keine Provisionsbindung. Herstellerneutral.
           </li>
         </ul>
       </aside>
@@ -86,24 +86,33 @@ const jsonLd = {
   </div>
 
   <section class="mt-16">
-    <h2 class="text-2xl font-semibold text-anthrazit">Fuer wen</h2>
+    <h2 class="text-2xl font-semibold text-anthrazit">Für wen</h2>
     <p class="mt-2 max-w-prose text-ink-700">
-      Wer eine belastbare Aussage ueber sein Netz braucht, bekommt sie hier &mdash; ohne Verkaufsdruck.
+      Wer eine belastbare Aussage über sein Netz braucht, bekommt sie hier &mdash; ohne Verkaufsdruck.
     </p>
     <ul class="mt-6 grid gap-3 text-sm text-ink-800 sm:grid-cols-2 md:grid-cols-3">
       <li class="rounded-md border border-ink-200 bg-white px-4 py-3">Industrie und produzierendes Gewerbe</li>
       <li class="rounded-md border border-ink-200 bg-white px-4 py-3">KMU mit sensiblen Prozessen</li>
       <li class="rounded-md border border-ink-200 bg-white px-4 py-3">Immobilienverwaltungen</li>
-      <li class="rounded-md border border-ink-200 bg-white px-4 py-3">Gemeinden und oeffentliche Betriebe</li>
+      <li class="rounded-md border border-ink-200 bg-white px-4 py-3">Gemeinden und öffentliche Betriebe</li>
       <li class="rounded-md border border-ink-200 bg-white px-4 py-3">Netzbetreiber und Elektroinstallateure</li>
-      <li class="rounded-md border border-ink-200 bg-white px-4 py-3">Anwaelte und Sachverstaendige (Beweissicherung)</li>
+      <li class="rounded-md border border-ink-200 bg-white px-4 py-3">Anwälte und Sachverständige (Beweissicherung)</li>
     </ul>
+  </section>
+
+  <section class="mt-16">
+    <h2 class="text-2xl font-semibold text-anthrazit">Woher die Einschätzung kommt</h2>
+    <p class="mt-3 max-w-prose text-ink-700">
+      Über fünfzehn Jahre Messpraxis in EMV und Netzqualität, von Kleinelektronik bis zu grossen Systemen.
+      Eigene Messmittel der Genauigkeitsklasse A nach IEC 61000-4-30, alle zwei Jahre kalibriert.
+      Berufshaftpflichtversicherung vorhanden. Kein Gerätehandel, keine Provisionsbindung.
+    </p>
   </section>
 
   <section class="mt-16">
     <div class="flex items-end justify-between gap-6">
       <div>
-        <h2 class="text-2xl font-semibold text-anthrazit">Leistungen im Ueberblick</h2>
+        <h2 class="text-2xl font-semibold text-anthrazit">Leistungen im Überblick</h2>
         <p class="mt-2 max-w-prose text-ink-700">Vier Kernleistungen. Details auf der Leistungsseite.</p>
       </div>
       <a href="/leistungen" class="hidden text-sm font-medium text-violett underline decoration-ink-300 underline-offset-4 hover:decoration-violett md:inline">Alle Leistungen</a>
@@ -126,13 +135,14 @@ const jsonLd = {
       <div>
         <h2 class="text-2xl font-semibold">Erst messen, dann dimensionieren.</h2>
         <p class="mt-3 max-w-prose text-ink-200">
-          Nennen Sie das Symptom &mdash; Flicker, ausgeloeste Schutzeinrichtungen, Prozessstoerungen, EMV-Verdacht.
-          Wir vereinbaren einen Messplan und geben eine Einschaetzung, ob eine Messung ueberhaupt lohnt.
+          Nennen Sie das Symptom &mdash; Flicker, ausgelöste Schutzeinrichtungen, Prozessstörungen, EMV-Verdacht.
+          Gemeinsam legen wir einen Messplan fest, und Sie erhalten eine Einschätzung, ob eine Messung
+          überhaupt lohnt.
         </p>
       </div>
       <div class="flex gap-3 md:justify-end">
         <a href="/kontakt" class="inline-flex items-center rounded-md bg-violett px-4 py-2.5 text-sm font-medium text-white no-underline transition hover:bg-[#2611b8]">
-          Erstgespraech anfragen
+          Erstgespräch anfragen
         </a>
       </div>
     </div>

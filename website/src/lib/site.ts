@@ -1,9 +1,9 @@
-// Zentrale Site-Konstanten. Fakten stammen aus BRIEF.md Abschnitt 1 und sind bestaetigt.
+// Zentrale Site-Konstanten. Fakten stammen aus BRIEF.md Abschnitt 1 und sind bestätigt.
 // Offene Punkte in OFFENE_PUNKTE.md.
 
 export const site = {
   brand: 'Engineering.Kabuu',
-  owner: 'Burak Uecoez',
+  owner: 'Burak Ücöz',
   rechtsform: 'Einzelunternehmen',
   address: {
     street: 'Im Abt 9 A',
@@ -18,14 +18,15 @@ export const site = {
   },
   // TODO: Domain festlegen. Bis dahin steht die Netlify-Subdomain als Fallback in astro.config.mjs.
   domain: 'engineering-kabuu.example',
-  claim: 'Netzqualitaet und EMV messen, bevor investiert wird.',
+  claim: 'Netzqualität und EMV messen, bevor investiert wird.',
 };
 
 export const nav = [
   { href: '/', label: 'Start' },
   { href: '/leistungen', label: 'Leistungen' },
   { href: '/ablauf', label: 'Ablauf' },
-  { href: '/ueber', label: 'Ueber mich' },
+  { href: '/faq', label: 'Häufige Fragen' },
+  { href: '/ueber', label: 'Über mich' },
   { href: '/kontakt', label: 'Kontakt' },
 ];
 

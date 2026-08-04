@@ -2,20 +2,30 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import SineDivider from '../components/SineDivider.astro';
 import { site } from '../lib/site';
+
+// EMV-Disziplinen. Bewusst ohne Normnummern, siehe OFFENE_PUNKTE.md.
+const emv = [
+  'Leitungsgebundene Störaussendung',
+  'Gestrahlte Störaussendung',
+  'Störfestigkeit gegen leitungsgebundene und gestrahlte Einwirkungen',
+  'Prüfungen an Baugruppen, Geräten, Anlagen und Systemen',
+  'Fahrzeug- und wehrtechnische Anwendungen',
+  'Funk- und Radioanwendungen, inklusive der Wechselwirkung zwischen Störaussendung und Empfangsqualität',
+];
 ---
 
 <BaseLayout
-  title="Ueber mich"
-  description="Burak Uecoez: Hintergrund Elektrotechnik, Netzqualitaet und EMV. Unabhaengige Messungen und Beratung."
+  title="Über mich"
+  description="Burak Ücöz: über fünfzehn Jahre Messpraxis in EMV und Netzqualität, von Kleinelektronik bis zu grossen Systemen."
   path="/ueber"
   current="/ueber"
 >
   <header>
-    <p class="text-xs font-semibold uppercase tracking-widest text-violett">Ueber mich</p>
+    <p class="text-xs font-semibold uppercase tracking-widest text-violett">Über mich</p>
     <h1 class="mt-2 text-3xl font-semibold leading-tight text-anthrazit md:text-4xl">{site.owner}</h1>
     <p class="mt-4 max-w-prose text-lg text-ink-700">
-      Elektrotechnik, Netzqualitaet und EMV mit Fokus auf Feldpraxis. Messung als Werkzeug, um zwischen
-      Symptom und Ursache eine belastbare Bruecke zu bauen.
+      Elektrotechnik, Netzqualität und EMV mit Fokus auf Feldpraxis. Messung als Werkzeug, um zwischen
+      Symptom und Ursache eine belastbare Brücke zu bauen.
     </p>
   </header>
 
@@ -23,17 +33,17 @@ import { site } from '../lib/site';
 
   <div class="mt-10 grid gap-10 md:grid-cols-[1.5fr_1fr]">
     <section class="prose-plain max-w-prose text-ink-800">
-      <h2>Warum unabhaengig</h2>
+      <h2>Warum unabhängig</h2>
       <p>
         Wer Filter, Kompensation oder EMV-Massnahmen verkauft, hat einen Interessenkonflikt. Wer nur misst und
-        bewertet, kann ohne Rueckwirkung auf den eigenen Katalog empfehlen &mdash; oder abraten.
+        bewertet, kann ohne Rückwirkung auf den eigenen Katalog empfehlen &mdash; oder abraten.
       </p>
 
       <h2>Wie ich arbeite</h2>
       <ul>
         <li>Erst das Symptom sauber aufnehmen, dann den Messplan bauen.</li>
         <li>Nur Messmittel einsetzen, die dem Zweck entsprechen (hier: Klasse A nach IEC 61000-4-30).</li>
-        <li>Zwischen gemessenem Befund und fachlicher Wuerdigung sauber trennen.</li>
+        <li>Zwischen gemessenem Befund und fachlicher Würdigung sauber trennen.</li>
         <li>Keine Ursache behaupten, wo nur eine Korrelation belegt ist.</li>
       </ul>
 
@@ -42,35 +52,105 @@ import { site } from '../lib/site';
         Deutsch (CH und DE), Englisch. Sitz und Einsatz Schweiz. Anreise auf Absprache.
       </p>
 
+      {/*
+        TODO: Prüfen, ob die Nennung wehrtechnischer Anwendungen einer Geheimhaltungspflicht
+        gegenüber früheren Auftraggebern oder Arbeitgebern unterliegt. Die Formulierung nennt
+        bewusst keine Projekte, Typen oder Auftraggeber. Im Zweifel den Halbsatz streichen.
+      */}
       <h2>Hintergrund</h2>
       <p>
-        <span class="italic">TODO: Ausbildung, berufliche Stationen und Praxisschwerpunkt in ein bis zwei Absaetzen.
-        Nur belegbare Angaben, frueherer Arbeitgeber nur nach ausdruecklicher Freigabe.</span>
+        Über fünfzehn Jahre Praxis in EMV und Netzqualität. Der Schwerpunkt lag von Anfang an
+        auf der Messung: nicht auf der Theorie, sondern auf dem, was am Prüfplatz und in der
+        Anlage tatsächlich messbar ist.
+      </p>
+      <p>
+        Die Bandbreite reicht von Kleinelektronik bis zu grossen, komplexen Systemen, von
+        Baugruppen über Geräte und Anlagen bis hin zu Fahrzeugtechnik und wehrtechnischem
+        Gerät. Dazu kommt Erfahrung mit Funk- und Radioanwendungen, also mit genau den
+        Fällen, in denen Störaussendung und Empfangsqualität direkt aufeinandertreffen.
+      </p>
+      <p>
+        Aus dieser Breite folgt die Arbeitsweise: Ein Symptom wird zuerst messbar gemacht,
+        dann eingeordnet. Erst danach wird über Massnahmen gesprochen.
       </p>
 
-      <h2>Berufsbezeichnung</h2>
+      {/*
+        TODO: Bestätigen, dass mit den genannten Kürzeln EMI (Störaussendung) und EMS
+        (Störfestigkeit) gemeint waren. Falls stattdessen ESD oder andere Prüfungen gemeint
+        sind, Liste entsprechend korrigieren.
+        TODO: Falls konkrete Prüfnormen genannt werden sollen, diese erst gegen die
+        tatsächlich angewendeten Fassungen prüfen. Bis dahin keine Normnummern hier.
+      */}
+      <h2>EMV im Detail</h2>
       <p>
-        <span class="italic">TODO: Klaeren, ob die Berufsbezeichnung &laquo;Ingenieur&raquo; gefuehrt werden darf
-        und wie sie geschrieben wird, bevor sie auf der Seite verwendet wird.</span>
+        EMV ist kein einzelner Messwert, sondern ein Bündel von Disziplinen. Abgedeckt sind:
+      </p>
+      <ul>
+        {emv.map((e) => <li>{e}</li>)}
+      </ul>
+      <p>
+        Diese Breite ist der Grund, warum eine EMV-Frage hier nicht auf ein einzelnes
+        Prüfverfahren reduziert wird. Zuerst wird geklärt, welche Kopplung überhaupt
+        in Frage kommt. Danach wird gemessen.
       </p>
     </section>
 
     <aside class="space-y-6">
       <div class="rounded-lg border border-ink-200 bg-white p-6">
         <h2 class="text-xs font-semibold uppercase tracking-wider text-ink-500">Ausstattung</h2>
-        <ul class="mt-3 space-y-2 text-sm text-ink-800">
-          <li>Camille Bauer Metrawatt PQMobile5000. Erfuellt die Genauigkeitsklasse A nach IEC 61000-4-30.</li>
-          <li>Stromwandler, Adapter und Sicherheits-Zubehoer fuer NS- und typische Anwendungen.</li>
-          <li><span class="italic">TODO: Zusaetzliche Messmittel (Thermografie, Oszilloskop, EMV-Nahfeldsonden) auflisten, sofern vorhanden.</span></li>
-        </ul>
+        {/*
+          TODO: Falls für Gutachten oder Beweissicherung ein Kalibrierzertifikat einer
+          akkreditierten Stelle vorliegt, hier ergänzen. Nur eintragen, was vorhanden ist.
+        */}
+        <div class="mt-3 space-y-3 text-sm leading-relaxed text-ink-700">
+          <p>
+            Für Netzqualitätsmessungen stehen eigene Messgeräte zur Verfügung, welche die
+            Genauigkeitsklasse A nach IEC 61000-4-30 erfüllen. Dazu kommt das benötigte Zubehör:
+            Stromwandler, Adapter und Sicherheitsausrüstung für Messungen im Niederspannungsbereich.
+          </p>
+          <p>
+            Alle Messmittel werden alle zwei Jahre kalibriert. Das Kalibrierdatum wird in jedem
+            Bericht ausgewiesen, damit die Messung auch Jahre später nachvollziehbar bleibt.
+          </p>
+          <p class="mb-0">
+            Fabrikate und Typenbezeichnungen werden bewusst nicht genannt. Massgebend ist die
+            Eignung des Messmittels für den Zweck, nicht die Marke.
+          </p>
+        </div>
       </div>
 
       <div class="rounded-lg border border-ink-200 bg-white p-6">
-        <h2 class="text-xs font-semibold uppercase tracking-wider text-ink-500">Zertifikate und Mitgliedschaften</h2>
-        <p class="mt-3 text-sm text-ink-700">
-          <span class="italic">TODO: Nur eintragen, was tatsaechlich vorhanden ist. Nichts erfinden, nichts andeuten.</span>
+        <h2 class="text-xs font-semibold uppercase tracking-wider text-ink-500">Absicherung</h2>
+        {/*
+          TODO: Prüfen, ob Versicherer und Deckungssumme genannt werden sollen. Viele
+          Auftraggeber aus Industrie und Recht fragen danach; eine konkrete Deckungssumme
+          wirkt dort stärker als die blosse Erwähnung. Angabe erst nach Abgleich mit der Police.
+        */}
+        <p class="mt-3 text-sm leading-relaxed text-ink-700">
+          Für die Beratungs- und Gutachtertätigkeit besteht eine Berufshaftpflichtversicherung.
+          Details zu Deckungssumme und Umfang werden auf Anfrage bekannt gegeben.
         </p>
       </div>
+
+      {/*
+        Zertifikate und Mitgliedschaften: bleibt ausgeblendet, bis echte Angaben vorliegen.
+        Nichts erfinden, nichts andeuten. Struktur je Eintrag:
+          - Bezeichnung des Zertifikats oder der Qualifikation
+          - Ausstellende Stelle
+          - Jahr bzw. Gültigkeit
+        TODO: Vorhandene Zertifikate, Qualifikationen und Mitgliedschaften eintragen und den
+        Block wieder einkommentieren. Solange nichts eingetragen ist, bleibt er unsichtbar.
+
+        <div class="rounded-lg border border-ink-200 bg-white p-6">
+          <h2 class="text-xs font-semibold uppercase tracking-wider text-ink-500">Zertifikate und Mitgliedschaften</h2>
+          <dl class="mt-3 space-y-3 text-sm text-ink-800">
+            <div>
+              <dt class="font-medium text-anthrazit">Bezeichnung</dt>
+              <dd class="text-ink-700">Ausstellende Stelle, Jahr bzw. Gültigkeit</dd>
+            </div>
+          </dl>
+        </div>
+      */}
 
       <div class="rounded-lg border border-ink-200 bg-white p-6">
         <h2 class="text-xs font-semibold uppercase tracking-wider text-ink-500">Referenzen</h2>

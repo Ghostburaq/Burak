@@ -5,28 +5,39 @@ import { site } from '../lib/site';
 
 <BaseLayout
   title="Kontakt"
-  description="Erstgespraech anfragen. Kontaktformular, E-Mail und Telefon direkt sichtbar."
+  description="Erstgespräch anfragen. Kontaktformular, E-Mail und Telefon direkt sichtbar."
   path="/kontakt"
   current="/kontakt"
 >
   <header>
     <p class="text-xs font-semibold uppercase tracking-widest text-violett">Kontakt</p>
     <h1 class="mt-2 text-3xl font-semibold leading-tight text-anthrazit md:text-4xl">
-      Kurz beschreiben, was das Symptom ist &mdash; der Rest ergibt sich im Gespraech.
+      Kurz beschreiben, was das Symptom ist &mdash; der Rest ergibt sich im Gespräch.
     </h1>
+    <div class="mt-5 max-w-prose space-y-4 text-ink-700">
+      <p>
+        Beschreiben Sie kurz, was Sie beobachten. Ein Symptom, ein Zeitpunkt, eine betroffene
+        Anlage genügen für den Anfang. Alles Weitere klären wir im Gespräch.
+      </p>
+      <p>
+        Sie erhalten in der Regel innert zwei Werktagen eine Rückmeldung, entweder mit einer
+        ersten Einschätzung oder mit den Fragen, die für eine Einschätzung noch fehlen. Wenn
+        eine Messung aus meiner Sicht nichts bringt, sage ich Ihnen das ebenfalls.
+      </p>
+    </div>
   </header>
 
   <div class="mt-10 grid gap-10 md:grid-cols-[1.4fr_1fr]">
     <section aria-labelledby="form-heading" class="rounded-lg border border-ink-200 bg-white p-6 md:p-8">
       <h2 id="form-heading" class="text-lg font-semibold text-anthrazit">Anfrage</h2>
       <p class="mt-2 text-sm text-ink-700">
-        Pflichtfelder mit <span aria-hidden="true" class="text-violett">*</span> markiert. Rueckmeldung in der Regel innert
+        Pflichtfelder mit <span aria-hidden="true" class="text-violett">*</span> markiert. Rückmeldung in der Regel innert
         zwei Werktagen.
       </p>
 
       <!--
         Netlify Forms: statisches HTML im Build, damit Netlify das Formular erkennt.
-        - name="kontakt" wird im Netlify-Dashboard als Formulartitel gefuehrt
+        - name="kontakt" wird im Netlify-Dashboard als Formulartitel geführt
         - data-netlify="true" aktiviert die Verarbeitung
         - netlify-honeypot="bot-field" verweist auf das versteckte Feld
         - action="/danke" leitet nach erfolgreichem Absenden auf die Danke-Seite
@@ -68,6 +79,32 @@ import { site } from '../lib/site';
           </label>
         </div>
 
+        <!-- Freiwillige Zusatzangaben. Bewusst optional, damit die Hemmschwelle niedrig bleibt. -->
+        <div class="grid gap-5 md:grid-cols-3">
+          <label class="block text-sm" for="k-standort">
+            <span class="mb-1 block font-medium text-anthrazit">Standort der Anlage</span>
+            <input id="k-standort" name="standort" autocomplete="postal-code" placeholder="PLZ und Ort" class="block w-full rounded-md border border-ink-300 bg-white px-3 py-2 text-sm text-anthrazit shadow-sm focus:border-violett" />
+          </label>
+          <label class="block text-sm" for="k-spannung">
+            <span class="mb-1 block font-medium text-anthrazit">Spannungsebene</span>
+            <select id="k-spannung" name="spannungsebene" class="block w-full rounded-md border border-ink-300 bg-white px-3 py-2 text-sm text-anthrazit shadow-sm focus:border-violett">
+              <option value="">Keine Angabe</option>
+              <option value="Niederspannung">Niederspannung</option>
+              <option value="Mittelspannung">Mittelspannung</option>
+              <option value="unbekannt">unbekannt</option>
+            </select>
+          </label>
+          <label class="block text-sm" for="k-dringlichkeit">
+            <span class="mb-1 block font-medium text-anthrazit">Dringlichkeit</span>
+            <select id="k-dringlichkeit" name="dringlichkeit" class="block w-full rounded-md border border-ink-300 bg-white px-3 py-2 text-sm text-anthrazit shadow-sm focus:border-violett">
+              <option value="">Keine Angabe</option>
+              <option value="laufende Störung">laufende Störung</option>
+              <option value="geplantes Vorhaben">geplantes Vorhaben</option>
+              <option value="allgemeine Anfrage">allgemeine Anfrage</option>
+            </select>
+          </label>
+        </div>
+
         <label class="block text-sm">
           <span class="mb-1 block font-medium text-anthrazit">Nachricht <span aria-hidden="true" class="text-violett">*</span></span>
           <textarea required name="nachricht" rows="6" class="block w-full rounded-md border border-ink-300 bg-white px-3 py-2 text-sm text-anthrazit shadow-sm focus:border-violett" placeholder="Kurz: Symptom, Standort, seit wann, was bereits versucht wurde."></textarea>
@@ -77,7 +114,7 @@ import { site } from '../lib/site';
           <input required type="checkbox" name="einwilligung" value="ja" class="mt-1 h-4 w-4 rounded border-ink-400 text-violett focus:ring-violett" />
           <span>
             Ich willige ein, dass meine Angaben zur Bearbeitung meiner Anfrage bearbeitet werden. Details in der
-            <a href="/datenschutz" class="text-violett underline decoration-ink-300 underline-offset-4 hover:decoration-violett">Datenschutzerklaerung</a>.
+            <a href="/datenschutz" class="text-violett underline decoration-ink-300 underline-offset-4 hover:decoration-violett">Datenschutzerklärung</a>.
             Die Einwilligung kann jederzeit widerrufen werden.
             <span aria-hidden="true" class="text-violett">*</span>
           </span>
@@ -87,7 +124,7 @@ import { site } from '../lib/site';
           <button type="submit" class="inline-flex items-center rounded-md bg-violett px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#2611b8]">
             Anfrage senden
           </button>
-          <span class="text-xs text-ink-500">Keine Newsletter. Keine Weitergabe an Dritte ausser den zur Bearbeitung noetigen Auftragsbearbeitern.</span>
+          <span class="text-xs text-ink-500">Keine Newsletter. Keine Weitergabe an Dritte ausser den zur Bearbeitung nötigen Auftragsbearbeitern.</span>
         </div>
       </form>
     </section>
@@ -119,7 +156,7 @@ import { site } from '../lib/site';
       <div class="rounded-lg border border-ink-200 bg-anthrazit p-6 text-ink-100">
         <h2 class="text-xs font-semibold uppercase tracking-wider text-ink-300">Antwortzeit</h2>
         <p class="mt-2 text-sm leading-relaxed">
-          Antwort in der Regel innert zwei Werktagen. Bei akuten Prozessstoerungen kurz per Telefon melden.
+          Antwort in der Regel innert zwei Werktagen. Bei akuten Prozessstörungen kurz per Telefon melden.
         </p>
       </div>
     </aside>
