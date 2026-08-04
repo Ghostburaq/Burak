@@ -12,20 +12,32 @@ Deployment auf Netlify. Sprache Schweizer Schreibweise (ss).
 
 - [ ] **Domain festlegen** und im Netlify-Dashboard sowie in `astro.config.mjs`
       (`SITE_URL`) und `src/lib/site.ts` (`domain`) eintragen.
-- [ ] **Logo-Assets.** Aktuell im Einsatz sind zwei selbst gezeichnete
-      Vektor-Fassungen des Motivs:
-      - `public/logo/signet.svg` (breit, waveform ueber alle drei Zonen &mdash;
-        rot transient, magenta einschwingend, blau/violett stabil, Stahl-Balken
-        als Messreferenz). Wird auf der Startseite als Motiv verwendet.
-      - `public/logo/mark.svg` (kompakt, quadratisch). Wird in Header, Footer
-        und Favicon verwendet.
-      Die im Brief genannten 3D-Renderings (`kabuu-signet-1024/512/256.png`
-      und `kabuu-signet-flat-512.png`) wurden zwar visuell im Chat gezeigt,
-      liegen in der Session aber nicht als Dateien vor. Wenn die Original-PNGs
-      oder das offizielle Vektor-Logo vorliegen, unter `public/logo/` ablegen
-      und Header/Footer/Favicon-Referenzen entsprechend austauschen.
+- [ ] **Logo-Assets pruefen und ggf. durch das Original ersetzen.**
+      Das gelieferte Logo-Rendering wurde als Vektor nachgezeichnet, weil die
+      Original-Dateien in dieser Session nicht als Datei-Upload vorlagen
+      (nur als Bild im Chat sichtbar). Aktuell im Einsatz:
+      - `public/logo/mark.svg` &mdash; Bildmarke: Sechseck-Rahmen mit
+        Metallverlauf, darin Signalkurve und diagonaler Blitz-Slash.
+        Verwendet in Header, Footer, Startseite, Danke-Seite, Favicon.
+      - `public/logo/logo-lockup.svg` &mdash; vollstaendiges Lockup mit
+        Wortmarke, Untertitel und ENGINEERING-Zeile. Verwendet als `og:image`
+        und fuer externe Zwecke (Offerten, Briefpapier).
+      - `src/components/Logo.astro` &mdash; setzt die Wortmarke auf der Website
+        als echten Text, damit sie in jeder Groesse scharf bleibt.
+      **Zu pruefen:** Die Nachzeichnung ist eine Annaeherung, keine exakte
+      Kopie. Sobald die Original-Vektordatei (oder die PNGs
+      `kabuu-signet-1024/512/256.png`, `kabuu-signet-flat-512.png`) vorliegt:
+      unter `public/logo/` ablegen und die Referenzen in `Logo.astro`,
+      `favicon.svg` und `SEO.astro` austauschen.
+- [ ] **Schriftart der Wortmarke klaeren.** Im Rendering ist eine bestimmte
+      Sans verwendet. Auf der Website laeuft die Wortmarke aktuell in der
+      System-Sans der Seite. Falls die Original-Schrift verbindlich ist,
+      Lizenz klaeren und selbst hosten (kein Google-Fonts-CDN, siehe Brief).
 - [ ] Favicon-Set generieren (`favicon.ico`, `apple-touch-icon.png`,
       `site.webmanifest`) fuer aeltere Browser. Aktuell nur SVG-Favicon.
+- [ ] **Social-Preview als PNG (1200x630)** erzeugen und in `SEO.astro` als
+      `og:image` eintragen. Aktuell zeigt `og:image` auf
+      `/logo/logo-lockup.svg`; viele Plattformen rendern SVG nicht.
 - [ ] **GLB (3D-Version) NICHT einbinden** &mdash; bewusst nicht integrieren
       (Bundle-Groesse, Lighthouse). Statische Renderings genuegen.
 

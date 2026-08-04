@@ -90,7 +90,8 @@ Das Kontaktformular ist als statisches Netlify-Formular ausgezeichnet
 | AGB (OR, CHF)                   | `src/pages/agb.astro`                                  |
 | Design-Tokens (Farben, Fonts)   | `src/styles/global.css`, `tailwind.config.mjs`         |
 | Layout / Header / Footer        | `src/layouts/BaseLayout.astro`, `src/components/`      |
-| Robots, Favicon, Logo           | `public/`                                              |
+| Logo-Komponente (Lockup)        | `src/components/Logo.astro`                            |
+| Robots, Favicon, Logo-Dateien   | `public/`, `public/logo/`                              |
 | Security-Header und CSP         | `netlify.toml`                                         |
 
 ## Farbtokens (aus dem Logo)

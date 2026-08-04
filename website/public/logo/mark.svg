@@ -1,12 +1,41 @@
-<!-- Kompakte quadratische Bildmarke fuer Favicon und sehr kleine Groessen.
-     Reduzierte Fassung des Signets: nur je ein Zyklus je Zone plus Stahl-Balken. -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Engineering.Kabuu">
+<!-- Engineering.Kabuu Bildmarke (Vektor-Nachzeichnung des gelieferten Renderings).
+     Sechseck-Rahmen in Stahl mit Metallverlauf, darin Signalkurve (Netzqualitaet)
+     und diagonaler Blitz-Slash (EMV). Monochrom, wie im Logo. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 210" role="img" aria-label="Engineering.Kabuu">
   <title>Engineering.Kabuu</title>
-  <rect x="60" y="18" width="8" height="92" rx="2" fill="#959AAF"/>
-  <path d="M 8 64 L 20 64 C 26 30, 36 30, 42 52 C 50 92, 58 96, 64 70"
-        fill="none" stroke="#E2081B" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M 64 70 C 72 56, 82 88, 92 70"
-        fill="none" stroke="#900B6F" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M 92 70 C 102 66, 112 70, 120 68"
-        fill="none" stroke="#3317E9" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <defs>
+    <linearGradient id="ekSteel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0"    stop-color="#C9CDD6"/>
+      <stop offset="0.28" stop-color="#8A90A0"/>
+      <stop offset="0.62" stop-color="#4A505E"/>
+      <stop offset="1"    stop-color="#20242D"/>
+    </linearGradient>
+    <linearGradient id="ekSteelBolt" x1="1" y1="0" x2="0" y2="1">
+      <stop offset="0"    stop-color="#D3D7DE"/>
+      <stop offset="0.45" stop-color="#6E7484"/>
+      <stop offset="1"    stop-color="#1A1E26"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Sechseck-Rahmen -->
+  <polygon points="100,14 176,58 176,152 100,196 24,152 24,58"
+           fill="none" stroke="url(#ekSteel)" stroke-width="11"
+           stroke-linejoin="round"/>
+
+  <!-- Signalkurve: flacher Einlauf, Ripple, Peak, abklingendes W -->
+  <path d="M 30 106 L 52 106
+           C 57 106 58 93 63 93
+           C 68 93 69 106 74 106
+           L 80 106
+           C 87 106 88 58 97 58
+           C 106 58 107 112 113 126
+           C 119 140 123 152 130 152
+           C 136 152 138 122 144 122
+           C 150 122 152 146 158 146"
+        fill="none" stroke="url(#ekSteel)" stroke-width="7.5"
+        stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Blitz-Slash, ueberlagert -->
+  <path d="M 157 40 L 116 116 L 131 121 L 84 184 L 103 118 L 90 113 Z"
+        fill="url(#ekSteelBolt)"/>
 </svg>

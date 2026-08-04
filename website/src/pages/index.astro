@@ -14,6 +14,8 @@ const jsonLd = {
   '@type': 'ProfessionalService',
   name: site.brand,
   description: 'Unabhaengige Messungen und Beratung zu Netzqualitaet (Power Quality) und EMV in der Schweiz.',
+  logo: `https://${site.domain}/logo/logo-lockup.svg`,
+  image: `https://${site.domain}/logo/logo-lockup.svg`,
   founder: { '@type': 'Person', name: site.owner },
   areaServed: 'CH',
   address: {
@@ -77,8 +79,10 @@ const jsonLd = {
     </div>
   </section>
 
-  <div class="mt-12 flex justify-center">
-    <img src="/logo/signet.svg" alt="" width="512" height="200" class="h-auto w-full max-w-xl opacity-95" decoding="async" />
+  <div class="mt-14 flex items-center gap-6" aria-hidden="true">
+    <span class="h-px flex-1 bg-gradient-to-r from-transparent to-ink-200"></span>
+    <img src="/logo/mark.svg" alt="" width="52" height="55" decoding="async" style="width:52px;height:auto" />
+    <span class="h-px flex-1 bg-gradient-to-l from-transparent to-ink-200"></span>
   </div>
 
   <section class="mt-16">

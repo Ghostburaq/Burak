@@ -1,0 +1,49 @@
+<!-- Vollstaendiges Logo-Lockup als eigenstaendige Datei (z.B. fuer Offerten,
+     Briefpapier, Social-Preview). Auf der Website wird stattdessen die
+     Komponente src/components/Logo.astro verwendet, damit die Wortmarke
+     die Systemschrift der Seite nutzt. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 420" role="img" aria-label="Engineering.Kabuu — Netzqualitaet und EMV Messungen">
+  <title>Engineering.Kabuu</title>
+  <defs>
+    <linearGradient id="lkSteel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0"    stop-color="#C9CDD6"/>
+      <stop offset="0.28" stop-color="#8A90A0"/>
+      <stop offset="0.62" stop-color="#4A505E"/>
+      <stop offset="1"    stop-color="#20242D"/>
+    </linearGradient>
+    <linearGradient id="lkBolt" x1="1" y1="0" x2="0" y2="1">
+      <stop offset="0"    stop-color="#D3D7DE"/>
+      <stop offset="0.45" stop-color="#6E7484"/>
+      <stop offset="1"    stop-color="#1A1E26"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="640" height="420" fill="#FFFFFF"/>
+
+  <g transform="translate(220 20) scale(1.0)">
+    <polygon points="100,14 176,58 176,152 100,196 24,152 24,58"
+             fill="none" stroke="url(#lkSteel)" stroke-width="11" stroke-linejoin="round"/>
+    <path d="M 30 106 L 52 106
+             C 57 106 58 93 63 93
+             C 68 93 69 106 74 106
+             L 80 106
+             C 87 106 88 58 97 58
+             C 106 58 107 112 113 126
+             C 119 140 123 152 130 152
+             C 136 152 138 122 144 122
+             C 150 122 152 146 158 146"
+          fill="none" stroke="url(#lkSteel)" stroke-width="7.5"
+          stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M 157 40 L 116 116 L 131 121 L 84 184 L 103 118 L 90 113 Z" fill="url(#lkBolt)"/>
+  </g>
+
+  <text x="320" y="310" text-anchor="middle"
+        font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+        font-size="76" font-weight="600" letter-spacing="-1.5" fill="#20242D">kabuu</text>
+  <text x="320" y="348" text-anchor="middle"
+        font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+        font-size="23" fill="#3A3F4B">Netzqualität &amp; EMV Messungen</text>
+  <text x="320" y="384" text-anchor="middle"
+        font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+        font-size="19" font-weight="700" letter-spacing="5.5" fill="#3A3F4B">ENGINEERING</text>
+</svg>

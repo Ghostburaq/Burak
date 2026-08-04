@@ -1,0 +1,42 @@
+---
+// Logo-Lockup: Bildmarke plus Wortmarke. Die Wortmarke wird als Text gesetzt,
+// damit sie in jeder Groesse scharf bleibt und vorlesbar ist.
+interface Props {
+  /** 'horizontal' fuer Header/Footer, 'stacked' fuer Hero */
+  variant?: 'horizontal' | 'stacked';
+  /** Bildmarke in px */
+  size?: number;
+  /** Untertitel und ENGINEERING-Zeile mitrendern */
+  withTagline?: boolean;
+  class?: string;
+}
+const {
+  variant = 'horizontal',
+  size = 36,
+  withTagline = false,
+  class: className = '',
+} = Astro.props;
+---
+
+{variant === 'stacked' ? (
+  <div class:list={['flex flex-col items-center text-center', className]}>
+    <img src="/logo/mark.svg" alt="" width={size} height={Math.round(size * 1.05)} decoding="async" style={`width:${size}px;height:auto`} />
+    <span class="mt-4 text-4xl font-semibold leading-none tracking-tight text-anthrazit md:text-5xl">kabuu</span>
+    {withTagline && (
+      <>
+        <span class="mt-2 text-sm text-ink-700 md:text-base">Netzqualitaet &amp; EMV Messungen</span>
+        <span class="mt-1.5 text-xs font-semibold uppercase tracking-[0.28em] text-ink-500">Engineering</span>
+      </>
+    )}
+  </div>
+) : (
+  <span class:list={['inline-flex items-center gap-2.5', className]}>
+    <img src="/logo/mark.svg" alt="" width={size} height={Math.round(size * 1.05)} decoding="async" style={`width:${size}px;height:auto`} />
+    <span class="flex flex-col leading-none">
+      <span class="text-[1.05rem] font-semibold tracking-tight text-anthrazit">kabuu</span>
+      {withTagline && (
+        <span class="mt-0.5 text-[0.62rem] font-semibold uppercase tracking-[0.2em] text-ink-500">Engineering</span>
+      )}
+    </span>
+  </span>
+)}

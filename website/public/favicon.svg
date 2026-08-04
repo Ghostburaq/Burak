@@ -1,10 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
-  <rect width="128" height="128" rx="18" fill="#FFFFFF"/>
-  <rect x="60" y="18" width="8" height="92" rx="2" fill="#959AAF"/>
-  <path d="M 8 64 L 20 64 C 26 30, 36 30, 42 52 C 50 92, 58 96, 64 70"
-        fill="none" stroke="#E2081B" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M 64 70 C 72 56, 82 88, 92 70"
-        fill="none" stroke="#900B6F" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M 92 70 C 102 66, 112 70, 120 68"
-        fill="none" stroke="#3317E9" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 210">
+  <defs>
+    <linearGradient id="fvSteel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0"    stop-color="#9AA0AE"/>
+      <stop offset="0.55" stop-color="#4A505E"/>
+      <stop offset="1"    stop-color="#20242D"/>
+    </linearGradient>
+  </defs>
+  <polygon points="100,14 176,58 176,152 100,196 24,152 24,58"
+           fill="none" stroke="url(#fvSteel)" stroke-width="13" stroke-linejoin="round"/>
+  <path d="M 34 106 L 78 106 C 87 106 88 58 97 58 C 106 58 107 112 113 126
+           C 119 140 123 152 130 152 C 136 152 138 122 144 122 C 150 122 152 146 158 146"
+        fill="none" stroke="url(#fvSteel)" stroke-width="9"
+        stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 157 40 L 116 116 L 131 121 L 84 184 L 103 118 L 90 113 Z" fill="#2A2F3A"/>
 </svg>
