@@ -359,7 +359,8 @@ table.getab input:focus{border-color:var(--blue)}
       <div class="tspacer"></div>
       <div id="searchTrigger" onclick="Spot.open()"><span>⌕</span><span>Suchen…</span><kbd>⌘K</kbd></div>
       <button class="tbtn" id="themeBtn" title="Theme">◐</button>
-      <button class="tbtn primary" id="exportBtn">↓ Export</button>
+      <button class="tbtn" id="wordBtn" title="Diese Ansicht als Word-Dokument (.docx)">📄 Word</button>
+      <button class="tbtn primary" id="exportBtn" title="Diese Ansicht als Excel bzw. CSV">↓ Export</button>
     </header>
     <div id="viewport"></div>
   </div>
@@ -3347,19 +3348,21 @@ const CRC_TAB=(()=>{ const t=new Uint32Array(256);
 function crc32(bytes){ let c=0xFFFFFFFF;
   for(let i=0;i<bytes.length;i++) c=CRC_TAB[(c^bytes[i])&0xFF]^(c>>>8);
   return (c^0xFFFFFFFF)>>>0; }
+/* DOS-Datum 1980-01-01: (Jahr-1980)<<9 | Monat<<5 | Tag — 0 wäre Monat 0/Tag 0 und ungültig */
+const DOS_DATUM=(1<<5)|1;
 function zipBauen(dateien){
   const lokal=[], zentral=[]; let offset=0, n=0;
   dateien.forEach(f=>{
     const nameB=utf8Bytes(f.name), datenB=utf8Bytes(f.text), crc=crc32(datenB);
     const lh=new Uint8Array(30+nameB.length), lv=new DataView(lh.buffer);
     lv.setUint32(0,0x04034b50,true); lv.setUint16(4,20,true); lv.setUint16(6,0x0800,true);
-    lv.setUint16(8,0,true); lv.setUint16(10,0,true); lv.setUint16(12,0,true);
+    lv.setUint16(8,0,true); lv.setUint16(10,0,true); lv.setUint16(12,DOS_DATUM,true);
     lv.setUint32(14,crc,true); lv.setUint32(18,datenB.length,true); lv.setUint32(22,datenB.length,true);
     lv.setUint16(26,nameB.length,true); lv.setUint16(28,0,true);
     lh.set(nameB,30);
     const ch=new Uint8Array(46+nameB.length), cv=new DataView(ch.buffer);
     cv.setUint32(0,0x02014b50,true); cv.setUint16(4,20,true); cv.setUint16(6,20,true);
-    cv.setUint16(8,0x0800,true); cv.setUint16(10,0,true); cv.setUint16(12,0,true); cv.setUint16(14,0,true);
+    cv.setUint16(8,0x0800,true); cv.setUint16(10,0,true); cv.setUint16(12,0,true); cv.setUint16(14,DOS_DATUM,true);
     cv.setUint32(16,crc,true); cv.setUint32(20,datenB.length,true); cv.setUint32(24,datenB.length,true);
     cv.setUint16(28,nameB.length,true); cv.setUint16(30,0,true); cv.setUint16(32,0,true);
     cv.setUint16(34,0,true); cv.setUint16(36,0,true); cv.setUint32(38,0,true); cv.setUint32(42,offset,true);
@@ -3633,6 +3636,7 @@ function mailRender(){
         <button class="tbtn" onclick="mqZip()" ${qOffen?'':'disabled style="opacity:.45"'} title="Alle offenen Mails als .eml-Entwürfe im ZIP — in Outlook in «Entwürfe» ziehen">📦 Alle als Outlook-Entwürfe (ZIP)</button>
         <button class="tbtn" onclick="mqAlleEml()" ${qOffen?'':'disabled style="opacity:.45"'} title="Jede Mail als einzelne .eml-Datei">💾 Einzeln als .eml</button>
         <button class="tbtn" onclick="mqXlsx()" ${MAILQ.length?'':'disabled style="opacity:.45"'} title="Ganze Liste als Excel für den Serienbrief">📤 Excel</button>
+        <button class="tbtn" onclick="mqWord()" ${MAILQ.length?'':'disabled style="opacity:.45"'} title="Alle Anschreiben als Word-Dokument, jedes auf eigener Seite">📄 Word-Serienbrief</button>
         <div style="flex:1"></div>
         <label style="font-size:11.5px;color:var(--tx2);display:flex;align-items:center;gap:6px" title="Pause zwischen den Mails — bei Outlook sind 1–2 Sekunden robust">⏱ Takt
           <input type="number" id="mqTempo" min="300" max="6000" step="100" value="${MQ_TEMPO}" onchange="mqSetTempo(this.value)"
@@ -3718,6 +3722,7 @@ function mailRender(){
       <div class="card-b" style="padding-top:4px;display:flex;gap:8px;flex-wrap:wrap">
         <button class="tbtn primary" onclick="mailOutlook(0)" title="Öffnet die Mail im Standard-Mailprogramm">📧 In Outlook öffnen</button>
         <button class="tbtn" onclick="mailEml(0)" title="Speichert eine .eml — per Doppelklick als Entwurf in Outlook">💾 Als .eml speichern</button>
+        <button class="tbtn" onclick="mailWord(0)" title="Diese Mail als Word-Dokument">📄 Als Word</button>
         <button class="tbtn" onclick="mailFupPlanen(0)" title="Follow-up 1–3 als Kalendereinträge anlegen (Mo–Fr, 07:30)">📅 Follow-ups einplanen${geplant?' ✓':''}</button>
       </div>
     </div>
@@ -3970,6 +3975,170 @@ window.exportAktuelleAnsicht=(vid)=>{
   return true;
 };
 $('exportBtn').onclick=()=>exportAktuelleAnsicht();
+$('wordBtn').onclick=()=>wordAktuelleAnsicht();
+/* ═══════════════ WORD-EXPORT (.docx) — ohne Fremdbibliothek ═══════════════
+   Ein .docx ist ein ZIP mit Office-Open-XML. Den ZIP-Schreiber gibt es schon
+   (zipBauen), hier kommt nur noch das XML dazu. */
+function xesc(s){ return String(s==null?'':s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+  .replace(/"/g,'&quot;').replace(/'/g,'&apos;')
+  .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g,''); }      /* in XML verbotene Steuerzeichen */
+/* Absatz: {text, stil:'titel'|'h1'|'h2'|'klein'|'normal', fett, seitenumbruch} */
+function docxAbsatz(a){
+  if(a.seitenumbruch) return '<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
+  const stil=a.stil||'normal';
+  const groesse={titel:36,h1:28,h2:24,normal:22,klein:18}[stil]||22;
+  const fett=a.fett||stil==='titel'||stil==='h1'||stil==='h2';
+  const farbe=stil==='klein'?'<w:color w:val="666666"/>':'';
+  const abstand=stil==='titel'?'<w:spacing w:before="0" w:after="240"/>':
+                stil==='h1'?'<w:spacing w:before="280" w:after="140"/>':
+                stil==='h2'?'<w:spacing w:before="220" w:after="110"/>':
+                '<w:spacing w:before="0" w:after="120"/>';
+  /* Reihenfolge in <w:rPr> ist im OOXML-Schema festgelegt: b → color → sz → szCs.
+     Word und LibreOffice weigern sich, eine Datei mit anderer Reihenfolge zu öffnen. */
+  const rpr='<w:rPr>'+(fett?'<w:b/>':'')+farbe+'<w:sz w:val="'+groesse+'"/><w:szCs w:val="'+groesse+'"/></w:rPr>';
+  /* Zeilenumbrüche innerhalb eines Absatzes erhalten */
+  const zeilen=String(a.text==null?'':a.text).split('\n');
+  const runs=zeilen.map((z,i)=>(i?'<w:br/>':'')+'<w:t xml:space="preserve">'+xesc(z)+'</w:t>').join('');
+  return '<w:p><w:pPr>'+abstand+rpr+'</w:pPr><w:r>'+rpr+runs+'</w:r></w:p>';
+}
+function docxTabelle(headers,rows,maxRows){
+  const grenze=n=>'<w:'+n+' w:val="single" w:sz="4" w:space="0" w:color="D0D0D0"/>';
+  const zelle=(txt,fett)=>'<w:tc><w:tcPr><w:tcW w:w="0" w:type="auto"/>'+
+    (fett?'<w:shd w:val="clear" w:color="auto" w:fill="F2F2F2"/>':'')+'</w:tcPr>'+
+    docxAbsatz({text:String(txt==null?'':txt).slice(0,900),stil:'klein',fett:!!fett})+'</w:tc>';
+  const kopf='<w:tr><w:trPr><w:tblHeader/></w:trPr>'+headers.map(h=>zelle(h,true)).join('')+'</w:tr>';
+  const body=rows.slice(0,maxRows||400).map(r=>'<w:tr>'+
+    headers.map((_,i)=>zelle(r[i])).join('')+'</w:tr>').join('');
+  return '<w:tbl><w:tblPr><w:tblStyle w:val="TableGrid"/><w:tblW w:w="5000" w:type="pct"/>'+
+    '<w:tblBorders>'+['top','left','bottom','right','insideH','insideV'].map(grenze).join('')+'</w:tblBorders>'+
+    '</w:tblPr>'+kopf+body+'</w:tbl>';
+}
+function docxBauen(bloecke){
+  const koerper=bloecke.map(b=>typeof b==='string'?b:docxAbsatz(b)).join('');
+  const doc='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+    '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'+
+    '<w:body>'+koerper+
+    '<w:sectPr><w:pgSz w:w="11906" w:h="16838"/>'+
+    '<w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="708" w:footer="708" w:gutter="0"/>'+
+    '</w:sectPr></w:body></w:document>';
+  const ct='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+    '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'+
+    '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'+
+    '<Default Extension="xml" ContentType="application/xml"/>'+
+    '<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>'+
+    '<Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>'+
+    '<Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>'+
+    '<Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>'+
+    '</Types>';
+  const rels='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+    '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+
+    '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>'+
+    '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/>'+
+    '<Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/>'+
+    '</Relationships>';
+  const docRels='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+    '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+
+    '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>'+
+    '</Relationships>';
+  const styles='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+    '<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'+
+    '<w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="Calibri"/>'+
+    '<w:sz w:val="22"/><w:szCs w:val="22"/><w:lang w:val="de-CH"/></w:rPr></w:rPrDefault></w:docDefaults>'+
+    '<w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style>'+
+    '<w:style w:type="table" w:styleId="TableGrid"><w:name w:val="Table Grid"/></w:style>'+
+    '</w:styles>';
+  const stamp=new Date().toISOString().replace(/\.\d+Z$/,'Z');
+  const core='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+    '<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" '+
+    'xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" '+
+    'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">'+
+    '<dc:creator>'+xesc(ABS.name||'MiT ONE')+'</dc:creator>'+
+    '<cp:lastModifiedBy>'+xesc(ABS.name||'MiT ONE')+'</cp:lastModifiedBy>'+
+    '<dcterms:created xsi:type="dcterms:W3CDTF">'+stamp+'</dcterms:created>'+
+    '<dcterms:modified xsi:type="dcterms:W3CDTF">'+stamp+'</dcterms:modified>'+
+    '</cp:coreProperties>';
+  const app='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+    '<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties">'+
+    '<Application>MiT ONE</Application><Company>'+xesc(ABS.firma||'')+'</Company></Properties>';
+  return zipBauen([
+    {name:'[Content_Types].xml',text:ct},
+    {name:'_rels/.rels',text:rels},
+    {name:'docProps/core.xml',text:core},
+    {name:'docProps/app.xml',text:app},
+    {name:'word/_rels/document.xml.rels',text:docRels},
+    {name:'word/styles.xml',text:styles},
+    {name:'word/document.xml',text:doc}
+  ]);
+}
+function docxSpeichern(bloecke,name){
+  const b=docxBauen(bloecke);
+  const a=document.createElement('a'); a.href=URL.createObjectURL(b);
+  a.download=String(name||'MiT_Dokument').replace(/[^\wÄÖÜäöü .-]+/g,'_')+'.docx';
+  a.click(); URL.revokeObjectURL(a.href);
+  return b;
+}
+/* ── Word: aktuelle Mail ── */
+window.mailWord=i=>{
+  const m=MAIL_AKT[i]; if(!m){ toast('⚠ Keine Mail vorhanden'); return; }
+  docxSpeichern([
+    {text:m.betreff,stil:'titel'},
+    {text:[m.kunde,m.ap,m.mail].filter(Boolean).join(' · '),stil:'klein'},
+    {text:m.text}
+  ],'Mail_'+String(m.kunde).slice(0,40));
+  mailHistorie(m,'word'); toast('📄 Word-Datei erstellt');
+};
+/* ── Word: ganze Serie, jede Mail auf eigener Seite ── */
+window.mqWord=()=>{
+  const list=MAILQ.length?MAILQ:[];
+  if(!list.length){ toast('⚠ Warteschlange ist leer — zuerst Mails generieren'); return 0; }
+  const art=(MAILTYPEN.find(t=>t.id===list[0].typ)||{t:list[0].typ}).t;
+  const bloecke=[
+    {text:'Serienbrief — '+art,stil:'titel'},
+    {text:list.length+' Anschreiben · erstellt am '+fmtD(isoOf(new Date()))+' · '+(ABS.firma||''),stil:'klein'},
+    {text:'Inhalt',stil:'h1'}
+  ];
+  bloecke.push(docxTabelle(['#','Firma','E-Mail','Betreff'],
+    list.map((m,i)=>[i+1,m.kunde,m.mail||'—',m.betreff]),500));
+  list.forEach((m,i)=>{
+    bloecke.push({seitenumbruch:true});
+    bloecke.push({text:m.betreff,stil:'h1'});
+    bloecke.push({text:[String(i+1)+'/'+list.length,m.kunde,m.mail,m.kt].filter(Boolean).join(' · '),stil:'klein'});
+    bloecke.push({text:m.text});
+  });
+  docxSpeichern(bloecke,'Serienbrief_'+list.length+'_'+isoOf(new Date()));
+  toast('📄 Serienbrief mit '+list.length+' Anschreiben als Word erstellt');
+  return list.length;
+};
+/* ── Word: die aktuelle Ansicht als Tabelle ── */
+const WORD_MAX=300;
+window.wordAktuelleAnsicht=vid=>{
+  const id=vid||Views.cur, fn=EXPORT_MAP[id];
+  if(!fn){ toast('⚠ Für diese Ansicht ist kein Word-Export hinterlegt'); return false; }
+  let daten=null;
+  const echt=window.exportRows;
+  window.exportRows=(name,headers,rows)=>{ daten={name,headers,rows}; };
+  try{ fn(); } catch(e){ console.warn(e); }
+  window.exportRows=echt;
+  if(!daten||!daten.rows.length){ toast('⚠ Keine Daten in dieser Ansicht'); return false; }
+  const v=Views.reg[id]||{title:id};
+  /* breite Tabellen im Querformat lesbar halten: nur die ersten Spalten */
+  const maxSp=daten.headers.length>10?10:daten.headers.length;
+  const headers=daten.headers.slice(0,maxSp);
+  const rows=daten.rows.map(r=>r.slice(0,maxSp));
+  const gekuerzt=daten.rows.length>WORD_MAX;
+  docxSpeichern([
+    {text:v.title||id,stil:'titel'},
+    {text:daten.rows.length+' Datensätze · Stand '+fmtD(isoOf(new Date()))+' · MiT ONE'+
+      (maxSp<daten.headers.length?' · erste '+maxSp+' von '+daten.headers.length+' Spalten':''),stil:'klein'},
+    docxTabelle(headers,rows,WORD_MAX),
+    gekuerzt?{text:'Hinweis: In Word sind die ersten '+WORD_MAX+' von '+daten.rows.length+
+      ' Datensätzen enthalten. Der vollständige Bestand steht im Excel-Export.',stil:'klein'}:{text:''}
+  ],daten.name);
+  toast('📄 '+(v.title||id)+' als Word erstellt'+(gekuerzt?' (erste '+WORD_MAX+' Zeilen)':''));
+  return true;
+};
+
 // Expose core objects for inline handlers (defensive across browsers)
 window.Views=Views; window.Drawer=Drawer; window.Spot=Spot; window.toast=toast; window.exportRows=exportRows;
 /* Live-Datum im Header: zeigt immer den echten heutigen Wochentag */
