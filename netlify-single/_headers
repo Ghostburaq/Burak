@@ -1,0 +1,15 @@
+# Optional. Diese Datei ist KEIN Pflichtbestandteil der Seite.
+# Die index.html funktioniert auch allein. Wenn du die im Brief geforderten
+# Security-Header willst, lade diese Datei zusammen mit der index.html hoch
+# (Netlify liest sie automatisch aus dem Wurzelverzeichnis der Site).
+#
+# TODO: Nach dem ersten Live-Deploy die CSP im Browser pruefen
+#       (DevTools -> Console) und bei Bedarf anpassen.
+
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: SAMEORIGIN
+  Referrer-Policy: strict-origin-when-cross-origin
+  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; form-action 'self'; base-uri 'self'; frame-ancestors 'self'; object-src 'none'
