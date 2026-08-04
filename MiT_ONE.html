@@ -2957,13 +2957,27 @@ const TONALITAET={locker:'locker & direkt',partner:'partnerschaftlich',sachlich:
    Achtung: das CRM-Feld «Ansprechpartner» enthält bei den meisten Kunden eine
    FUNKTION («Leiter TGM», «Betriebsleiter Technik») und keinen Personennamen.
    Wer «Guten Tag TGM» schreibt, ist als Serienmail sofort entlarvt. */
-const ROLLEN_WORT=/leit|chef|verantw|head|manager|direkt|abteil|technik|einkauf|facility|tgm|betrieb|energie|instandhalt|unterhalt|projekt|geschäftsführ|inhaber|ceo|cto|coo|cfo|ingenieur|meister|verwalt|gemeinde|präsident|sekretariat|dispo|planer|beschaffung|infrastruktur|gebäude|haustechnik|elektro|ict|rechenzentr|labor|produktion|qualität|sicherheit|umwelt|operations|maintenance|asset|supply|service/i;
+const ROLLEN_WORT=new RegExp([
+  /* Deutsch */ 'leit|chef|verantw|abteil|technik|einkauf|betrieb|energie|instandhalt|unterhalt|projekt|direkt',
+  'geschäftsführ|inhaber|ingenieur|meister|verwalt|gemeinde|präsident|sekretariat|dispo|planer|planung',
+  'beschaffung|infrastruktur|gebäude|haustechnik|rechenzentr|labor|produktion|qualität|sicherheit|umwelt',
+  'elektro|bauamt|amt$|werke?$|stab$|koordinator|beauftragt|fachstelle|stelle$',
+  /* Englisch */ 'head|manager|director|facilit|operations|maintenance|asset|supply|service|ict|officer|lead$',
+  'ceo|cto|coo|cfo|cio|tgm|owner|partner',
+  /* Französisch */ 'responsab|directeur|direction|technique|énerg|réseau|reseau|exploitation',
+  'adjoint|préposé|prepose|ingénieur|coordinat|bureau',
+  /* Italienisch */ 'responsabil|direttore|direzione|tecnic|rete$|ufficio|sezione|capo|energia|impianti',
+  /* Abkürzungen aus den Stammdaten */ 'step$|stap$|sipal|dcti|ara$|evu|it$|rz$|hlk|msr|vs$'
+].join('|'),'i');
 function personName(ap){
   const s=String(ap||'').trim();
-  if(!s||ROLLEN_WORT.test(s)) return '';
+  if(!s) return '';
+  if(/[0-9\/&(),;]/.test(s)) return '';            /* Abteilungen, Doppelnennungen, Zusätze */
   const tok=s.split(/\s+/).filter(x=>x.length>1);
-  if(tok.length<2||tok.length>3) return '';
-  if(!tok.every(x=>/^[A-ZÄÖÜ][a-zäöüéèàçA-ZÄÖÜ.'-]+$/.test(x))) return '';
+  if(tok.length<2||tok.length>3) return '';         /* «Directeur» allein ist kein Name */
+  if(tok.some(x=>ROLLEN_WORT.test(x))) return '';   /* «Responsable Réseau», «Capo Ufficio» */
+  if(ROLLEN_WORT.test(s)) return '';
+  if(!tok.every(x=>/^[A-ZÄÖÜÉÈÀ][a-zäöüéèàçA-ZÄÖÜ.'-]+$/.test(x))) return '';
   return tok[tok.length-1];
 }
 function rolleVon(k){ const s=String(k.ap||'').trim();
@@ -3196,12 +3210,14 @@ window.mailEml=i=>{ const m=MAIL_AKT[i]; if(!m) return;
   const a=document.createElement('a'); a.href=URL.createObjectURL(b);
   a.download='Mail_'+String(m.kunde||'Kunde').replace(/[^\wÄÖÜäöü]+/g,'_').slice(0,40)+'.eml';
   a.click(); URL.revokeObjectURL(a.href);
-  mailHistorie(m,'eml'); toast('💾 .eml erstellt — in Outlook öffnen und senden'); };
+  mailHistorie(m,'eml'); mblockAdd(m,'einzel-eml');
+  toast('💾 .eml erstellt — in Outlook öffnen und senden · '+m.kunde+' gesperrt'); mailRender(); };
 window.mailOutlook=i=>{ const m=MAIL_AKT[i]; if(!m) return;
   const url='mailto:'+encodeURIComponent(m.mail||'')+'?subject='+encodeURIComponent(m.betreff)+
     '&body='+encodeURIComponent(m.text);
   if(url.length>1900){ mailEml(i); return; }
-  window.open(url,'_self'); mailHistorie(m,'outlook'); toast('📧 Mail-Programm geöffnet'); };
+  window.open(url,'_self'); mailHistorie(m,'outlook'); mblockAdd(m,'einzel-outlook');
+  toast('📧 Mail-Programm geöffnet · '+m.kunde+' gesperrt'); mailRender(); };
 window.mailKopieren=(i,was)=>{ const m=MAIL_AKT[i]; if(!m) return;
   const txt=was==='betreff'?m.betreff:was==='text'?m.text:(m.betreff+'\n\n'+m.text);
   const label=was==='betreff'?'Betreff':was==='text'?'Text':'Betreff + Text';
@@ -3260,22 +3276,27 @@ window.mailFupPlanen=i=>{
 /* ═══ Serienmail für eine gefilterte Gruppe ═══ */
 function serienPool(){
   const f=MAIL_FILTER;
+  const g=f.ohneSperre?null:mblockSet();
   return K.filter(k=>k.co)
     .filter(k=>!f.seg||brancheKey(k.seg)===f.seg)
     .filter(k=>!f.kt||String(k.kt||'').trim().toUpperCase()===f.kt)
     .filter(k=>!f.prio||String(k.prio||'').trim()===f.prio)
-    .filter(k=>!f.nurMail||/@/.test(String(k.mail||'')));
+    .filter(k=>!f.nurMail||/@/.test(String(k.mail||'')))
+    .filter(k=>!g||!g.has(norm(k.co)));      /* bereits angeschriebene Kunden bleiben draussen */
 }
 window.serienExport=()=>{
   const pool=serienPool().slice(0,MAIL_FILTER.limit||50);
-  if(!pool.length){ toast('⚠ Keine Kunden im Filter'); return; }
+  if(!pool.length){ toast('⚠ Keine Kunden im Filter — evtl. stehen alle auf der Sperrliste'); return; }
   const opt=mailOpt();
-  const rows=pool.map(k=>{ const m=mailBauen(k,MAIL_TYP,opt); const c=menschCheck(m);
-    return [m.kunde,m.ap,m.mail,k.ort||'',k.kt||'',k.seg||'',m.betreff,m.text,c.score]; });
+  const mails=pool.map(k=>mailBauen(k,MAIL_TYP,opt));
+  const rows=mails.map(m=>{ const c=menschCheck(m);
+    return [m.kunde,m.ap,m.mail,(K.find(x=>x._i===m._i)||{}).ort||'',m.kt||'',m.seg||'',m.betreff,m.text,c.score]; });
   exportRows('Serienmails_'+MAIL_TYP,
     ['Firma','Ansprechpartner','E-Mail','Ort','Kanton','Segment','Betreff','Mailtext','Menschlichkeit'],rows);
-  rows.forEach((r,i)=>mailHistorie({kunde:r[0],mail:r[2],typ:MAIL_TYP,betreff:r[6]},'serie'));
-  toast('📤 '+rows.length+' Mails exportiert — bereit für Serienversand');
+  mails.forEach(m=>mailHistorie(m,'serie'));
+  const neu=mblockAddViele(mails,'excel-serie');
+  toast('📤 '+rows.length+' Mails exportiert · '+neu+' Kunden neu gesperrt');
+  mailRender();
 };
 window.serienVorschau=()=>{
   const pool=serienPool();
@@ -3283,14 +3304,190 @@ window.serienVorschau=()=>{
   mailRender();
 };
 
+/* ═══════════════ MAIL-SPERRLISTE: kein Kunde wird zweimal angeschrieben ═══════════════ */
+const MBLOCK_KEY='one_mailblock_v1', MQ_KEY='one_mailq_v1';
+let MBLOCK=(()=>{try{return JSON.parse(localStorage.getItem(MBLOCK_KEY))||[]}catch(e){return[]}})();
+function mblockSave(){ try{localStorage.setItem(MBLOCK_KEY,JSON.stringify(MBLOCK))}catch(e){} }
+function mblockSet(){ return new Set(MBLOCK.map(b=>norm(b.kunde))); }
+function istGesperrt(co){ return mblockSet().has(norm(co)); }
+function mblockInfo(co){ const n=norm(co); return MBLOCK.filter(b=>norm(b.kunde)===n); }
+/* Kunden nach dem Versand sperren — mehrfaches Anschreiben wird gezählt, nicht dupliziert */
+function mblockAdd(m,quelle){
+  if(!m||!m.kunde) return 0;
+  const n=norm(m.kunde);
+  const da=MBLOCK.find(b=>norm(b.kunde)===n);
+  if(da){ da.anzahl=(da.anzahl||1)+1; da.zuletzt=isoOf(new Date()); da.letzterTyp=m.typ; mblockSave(); return 0; }
+  MBLOCK.unshift({kunde:m.kunde,mail:m.mail||'',typ:m.typ,letzterTyp:m.typ,quelle:quelle||'versand',
+    anzahl:1,datum:isoOf(new Date()),zuletzt:isoOf(new Date())});
+  mblockSave(); return 1;
+}
+function mblockAddViele(list,quelle){ let n=0; list.forEach(m=>{n+=mblockAdd(m,quelle);}); return n; }
+window.mblockFrei=co=>{ const n=norm(co);
+  const v=MBLOCK.length; MBLOCK=MBLOCK.filter(b=>norm(b.kunde)!==n);
+  if(MBLOCK.length<v){ mblockSave(); toast('🔓 '+co+' wieder freigegeben'); mailRender(); } };
+window.mblockAlleFrei=()=>{ if(!MBLOCK.length){toast('Sperrliste ist leer');return;}
+  if(!confirm(MBLOCK.length+' gesperrte Kunden wieder freigeben?\n\nDanach können sie erneut in einer Serie angeschrieben werden.')) return;
+  MBLOCK=[]; mblockSave(); toast('🔓 Sperrliste geleert'); mailRender(); };
+window.mblockExport=()=>{ if(!MBLOCK.length){toast('⚠ Sperrliste ist leer');return;}
+  exportRows('Mail_Sperrliste',['Kunde','E-Mail','Erste Mail','Zuletzt','Anzahl','Letzte Mailart','Quelle'],
+    MBLOCK.map(b=>[b.kunde,b.mail||'',b.datum,b.zuletzt||b.datum,b.anzahl||1,
+      (MAILTYPEN.find(t=>t.id===b.letzterTyp)||{t:b.letzterTyp||''}).t,b.quelle||''])); };
+window.mblockSuche=v=>{ MBLOCK_SUCHE=String(v||'').trim().toLowerCase(); mailRender();
+  setTimeout(()=>{const e=document.getElementById('mbSuche'); if(e){e.focus();
+    e.setSelectionRange(e.value.length,e.value.length);}},20); };
+let MBLOCK_SUCHE='';
+
+/* ═══════════════ ZIP OHNE BIBLIOTHEK (Store-Verfahren) ═══════════════ */
+function utf8Bytes(s){ const bin=unescape(encodeURIComponent(String(s)));
+  const a=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) a[i]=bin.charCodeAt(i); return a; }
+const CRC_TAB=(()=>{ const t=new Uint32Array(256);
+  for(let n=0;n<256;n++){ let c=n; for(let k=0;k<8;k++) c=(c&1)?(0xEDB88320^(c>>>1)):(c>>>1); t[n]=c>>>0; }
+  return t; })();
+function crc32(bytes){ let c=0xFFFFFFFF;
+  for(let i=0;i<bytes.length;i++) c=CRC_TAB[(c^bytes[i])&0xFF]^(c>>>8);
+  return (c^0xFFFFFFFF)>>>0; }
+function zipBauen(dateien){
+  const lokal=[], zentral=[]; let offset=0, n=0;
+  dateien.forEach(f=>{
+    const nameB=utf8Bytes(f.name), datenB=utf8Bytes(f.text), crc=crc32(datenB);
+    const lh=new Uint8Array(30+nameB.length), lv=new DataView(lh.buffer);
+    lv.setUint32(0,0x04034b50,true); lv.setUint16(4,20,true); lv.setUint16(6,0x0800,true);
+    lv.setUint16(8,0,true); lv.setUint16(10,0,true); lv.setUint16(12,0,true);
+    lv.setUint32(14,crc,true); lv.setUint32(18,datenB.length,true); lv.setUint32(22,datenB.length,true);
+    lv.setUint16(26,nameB.length,true); lv.setUint16(28,0,true);
+    lh.set(nameB,30);
+    const ch=new Uint8Array(46+nameB.length), cv=new DataView(ch.buffer);
+    cv.setUint32(0,0x02014b50,true); cv.setUint16(4,20,true); cv.setUint16(6,20,true);
+    cv.setUint16(8,0x0800,true); cv.setUint16(10,0,true); cv.setUint16(12,0,true); cv.setUint16(14,0,true);
+    cv.setUint32(16,crc,true); cv.setUint32(20,datenB.length,true); cv.setUint32(24,datenB.length,true);
+    cv.setUint16(28,nameB.length,true); cv.setUint16(30,0,true); cv.setUint16(32,0,true);
+    cv.setUint16(34,0,true); cv.setUint16(36,0,true); cv.setUint32(38,0,true); cv.setUint32(42,offset,true);
+    ch.set(nameB,46);
+    lokal.push(lh,datenB); zentral.push(ch);
+    offset+=lh.length+datenB.length; n++;
+  });
+  const zGroesse=zentral.reduce((a,b)=>a+b.length,0);
+  const end=new Uint8Array(22), ev=new DataView(end.buffer);
+  ev.setUint32(0,0x06054b50,true); ev.setUint16(4,0,true); ev.setUint16(6,0,true);
+  ev.setUint16(8,n,true); ev.setUint16(10,n,true);
+  ev.setUint32(12,zGroesse,true); ev.setUint32(16,offset,true); ev.setUint16(20,0,true);
+  return new Blob([...lokal,...zentral,end],{type:'application/zip'});
+}
+function dateiName(co,i){
+  const s=String(co||'Kunde').replace(/[^\wÄÖÜäöüéèà -]+/g,'').trim().replace(/\s+/g,'_').slice(0,48);
+  return String(i+1).padStart(3,'0')+'_'+(s||'Kunde')+'.eml';
+}
+
+/* ═══════════════ SERIEN-WARTESCHLANGE FÜR OUTLOOK ═══════════════ */
+let MAILQ=(()=>{try{return JSON.parse(localStorage.getItem(MQ_KEY))||[]}catch(e){return[]}})();
+function mqSave(){ try{localStorage.setItem(MQ_KEY,JSON.stringify(MAILQ))}catch(e){} }
+let MQ_ANZAHL=50, MQ_SPERRE=true;
+window.mqSetAnzahl=v=>{ MQ_ANZAHL=Math.max(1,Math.min(500,+v||50)); mailRender(); };
+window.mqSetSperre=v=>{ MQ_SPERRE=!!v; mailRender(); };
+/* Kandidaten: gefilterter Pool, Gesperrte raus, gemischt damit nicht immer dieselben oben stehen */
+function mqKandidaten(){
+  let pool=serienPool();
+  if(MQ_SPERRE){ const g=mblockSet(); pool=pool.filter(k=>!g.has(norm(k.co))); }
+  const dabei=new Set(MAILQ.map(m=>norm(m.kunde)));
+  pool=pool.filter(k=>!dabei.has(norm(k.co)));
+  /* gewichtet mischen: Prio A zuerst, aber nicht immer dieselbe Reihenfolge */
+  return pool.map(k=>({k,s:scoreKunde(k)})).sort((a,b)=>(b.s-a.s)||(hash32(a.k.co)-hash32(b.k.co)))
+    .map(x=>x.k);
+}
+window.mqGenerieren=()=>{
+  const kand=mqKandidaten();
+  if(!kand.length){ toast('⚠ Keine freien Kunden im Filter — Sperrliste prüfen oder Filter weiten'); return 0; }
+  const opt=mailOpt(); const nehmen=kand.slice(0,MQ_ANZAHL);
+  const neu=nehmen.map(k=>{ const m=mailBauen(k,MAIL_TYP,opt);
+    return {id:uid8(),kunde:m.kunde,mail:m.mail,ap:m.ap,typ:m.typ,betreff:m.betreff,text:m.text,
+      kt:m.kt,seg:m.seg,_i:m._i,score:menschCheck(m).score,status:'offen'}; });
+  MAILQ=MAILQ.concat(neu); mqSave(); mailRender();
+  const fehlend=MQ_ANZAHL-neu.length;
+  toast('⚡ '+neu.length+' Mails generiert'+(fehlend>0?' (nur '+neu.length+' freie Kunden verfügbar)':'')+
+    ' · Ø Menschlichkeit '+Math.round(neu.reduce((a,m)=>a+m.score,0)/neu.length));
+  return neu.length;
+};
+window.mqLeeren=()=>{ if(!MAILQ.length){toast('Warteschlange ist leer');return;}
+  if(!confirm(MAILQ.length+' Mails aus der Warteschlange entfernen?\n\nBereits versendete Kunden bleiben gesperrt.')) return;
+  MAILQ=[]; mqSave(); mailRender(); toast('🗑 Warteschlange geleert'); };
+window.mqEntfernen=id=>{ MAILQ=MAILQ.filter(m=>m.id!==id); mqSave(); mailRender(); };
+window.mqOffen=()=>MAILQ.filter(m=>m.status==='offen');
+/* Nächste Mail in Outlook öffnen und den Kunden sofort sperren */
+window.mqNaechste=()=>{
+  const off=MAILQ.filter(m=>m.status==='offen');
+  if(!off.length){ toast('✓ Alle Mails der Warteschlange sind erledigt'); return null; }
+  const m=off[0];
+  const url='mailto:'+encodeURIComponent(m.mail||'')+'?subject='+encodeURIComponent(m.betreff)+
+    '&body='+encodeURIComponent(m.text);
+  if(url.length>1900) emlDatei(m); else window.open(url,'_self');
+  m.status='gesendet'; m.gesendet=isoOf(new Date());
+  mblockAdd(m,'outlook-serie'); mailHistorie(m,'outlook-serie'); mqSave(); mailRender();
+  const rest=MAILQ.filter(x=>x.status==='offen').length;
+  toast('📧 '+m.kunde+' geöffnet · gesperrt · noch '+rest+' offen');
+  return m;
+};
+function emlDatei(m,name){
+  const b=new Blob([emlText(m)],{type:'message/rfc822'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(b);
+  a.download=name||('Mail_'+String(m.kunde||'Kunde').replace(/[^\wÄÖÜäöü]+/g,'_').slice(0,40)+'.eml');
+  a.click(); URL.revokeObjectURL(a.href);
+}
+/* Alle offenen Mails als ZIP mit .eml-Entwürfen — in Outlook in «Entwürfe» ziehen */
+window.mqZip=()=>{
+  const off=MAILQ.filter(m=>m.status==='offen');
+  if(!off.length){ toast('⚠ Keine offenen Mails in der Warteschlange'); return 0; }
+  const dateien=off.map((m,i)=>({name:dateiName(m.kunde,i),text:emlText(m)}));
+  dateien.push({name:'000_UEBERSICHT.txt',text:
+    ['MiT ONE — Outlook-Serienversand','Erstellt: '+isoOf(new Date()),
+     'Mailart: '+((MAILTYPEN.find(t=>t.id===off[0].typ)||{t:off[0].typ}).t),
+     'Anzahl: '+off.length,'',
+     'So geht es weiter:',
+     '1. ZIP entpacken',
+     '2. Die .eml-Dateien in Outlook in den Ordner «Entwürfe» ziehen',
+     '3. Dort prüfen und einzeln oder gesammelt versenden','',
+     'Alle Empfänger stehen ab sofort auf der Sperrliste und kommen in keiner',
+     'weiteren Serie mehr vor.','',
+     off.map((m,i)=>String(i+1).padStart(3,'0')+'  '+m.kunde+'  '+(m.mail||'(keine Adresse)')+'  '+m.betreff).join('\n')
+    ].join('\n')});
+  const blob=zipBauen(dateien);
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='MiT_Outlook_Mails_'+off.length+'_'+isoOf(new Date())+'.zip';
+  a.click(); URL.revokeObjectURL(a.href);
+  off.forEach(m=>{ m.status='gesendet'; m.gesendet=isoOf(new Date()); });
+  const neu=mblockAddViele(off,'zip-serie');
+  off.forEach(m=>mailHistorie(m,'zip'));
+  mqSave(); mailRender();
+  toast('📦 '+off.length+' Outlook-Entwürfe im ZIP · '+neu+' Kunden neu gesperrt');
+  return off.length;
+};
+window.mqXlsx=()=>{
+  const list=MAILQ.length?MAILQ:[];
+  if(!list.length){ toast('⚠ Warteschlange ist leer'); return; }
+  exportRows('Outlook_Serie_'+list.length,
+    ['Firma','Ansprechpartner','E-Mail','Kanton','Segment','Betreff','Mailtext','Menschlichkeit','Status'],
+    list.map(m=>[m.kunde,m.ap||'',m.mail||'',m.kt||'',m.seg||'',m.betreff,m.text,m.score,m.status]));
+  toast('📤 '+list.length+' Mails als Excel exportiert');
+};
+window.mqAlleEml=()=>{
+  const off=MAILQ.filter(m=>m.status==='offen');
+  if(!off.length){ toast('⚠ Keine offenen Mails'); return 0; }
+  if(off.length>15&&!confirm(off.length+' einzelne .eml-Dateien herunterladen?\n\nBei mehr als 15 Dateien ist das ZIP der bequemere Weg.')) return 0;
+  off.forEach((m,i)=>setTimeout(()=>emlDatei(m,dateiName(m.kunde,i)),i*120));
+  off.forEach(m=>{ m.status='gesendet'; m.gesendet=isoOf(new Date()); });
+  mblockAddViele(off,'eml-serie'); off.forEach(m=>mailHistorie(m,'eml'));
+  mqSave(); mailRender();
+  toast('💾 '+off.length+' .eml-Dateien werden gespeichert · Kunden gesperrt');
+  return off.length;
+};
+
 /* ═══ View ═══ */
 let MAIL_TYP='erst', MAIL_KUNDE=null, MAIL_AKT=[];
 let MAIL_OPT={ton:'partner',emoji:1,laenge:'mittel'};
-let MAIL_FILTER={seg:'',kt:'',prio:'A',nurMail:false,limit:50};
+let MAIL_FILTER={seg:'',kt:'',prio:'A',nurMail:false,limit:50,ohneSperre:false};
 function mailOpt(){ return Object.assign({},MAIL_OPT); }
 window.mailSetTyp=t=>{ MAIL_TYP=t; mailRender(); };
 window.mailSetOpt=(f,v)=>{ MAIL_OPT[f]=f==='emoji'?+v:v; mailRender(); };
-window.mailSetFilter=(f,v)=>{ MAIL_FILTER[f]=f==='limit'?(+v||50):(f==='nurMail'?!!v:v); mailRender(); };
+window.mailSetFilter=(f,v)=>{ MAIL_FILTER[f]=f==='limit'?(+v||50):((f==='nurMail'||f==='ohneSperre')?!!v:v); mailRender(); };
 window.mailWuerfeln=()=>{ MAIL_WUERFEL++; mailRender(); toast('🎲 Neue Formulierung gewürfelt'); };
 window.mailKunde=i=>{ MAIL_KUNDE=+i; mailRender(); };
 window.mailKundeSuche=v=>{
@@ -3322,6 +3519,9 @@ function mailRender(){
   const farbe=c.score>=85?'var(--green)':c.score>=70?'var(--blue)':c.score>=50?'var(--orange)':'var(--red)';
   const kantone=[...new Set(K.map(x=>String(x.kt||'').trim().toUpperCase()).filter(Boolean))].sort();
   const pool=serienPool();
+  const qOffen=MAILQ.filter(x=>x.status==='offen').length;
+  const qFertig=MAILQ.filter(x=>x.status==='gesendet').length;
+  const freie=mqKandidaten().length;
   const geplant=TERMINE.filter(t=>t.mail&&t.kunde===m.kunde).length;
   wrap.innerHTML=`
   <div class="hero" style="display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap">
@@ -3347,6 +3547,51 @@ function mailRender(){
       ${k.prio?`<span class="badge ${String(k.prio).trim()==='A'?'b-green':'b-gray'}">Prio ${esc(k.prio)}</span>`:''}
       ${k.status?`<span class="chip">📍 ${esc(k.status)}</span>`:''}
       ${k.kva?`<span class="chip" title="${esc(k.kva)}">⚙️ ${esc(String(k.kva).slice(0,60))}</span>`:''}
+      ${(()=>{const b=mblockInfo(k.co)[0]; return b?`<span class="badge b-orange" title="Steht auf der Sperrliste — in Serien wird er übersprungen">🚫 schon angeschrieben · ${b.anzahl||1}× · zuletzt ${fmtD(b.zuletzt||b.datum)}</span>
+        <button class="tbtn" style="padding:3px 10px;font-size:11px" onclick="mblockFrei(${JSON.stringify(k.co).replace(/"/g,'&quot;')})">🔓 freigeben</button>`:''; })()}
+    </div>
+  </div>
+
+  <div class="card" style="border-color:var(--line2)"><div class="card-h">
+    <h3>📧 Outlook-Serienversand</h3>
+    <span class="sub">Mails im Block erzeugen und als Entwürfe an Outlook übergeben — jeder Kunde nur einmal</span>
+    <div style="flex:1"></div>
+    <label style="font-size:11.5px;color:var(--tx2);display:flex;align-items:center;gap:6px">Anzahl
+      <input type="number" id="mqAnzahl" min="1" max="500" value="${MQ_ANZAHL}" onchange="mqSetAnzahl(this.value)"
+        style="width:74px;background:var(--bg2);border:1px solid var(--line);border-radius:99px;padding:5px 10px;font-size:12px;color:var(--tx);font-family:inherit;outline:none;text-align:center"></label>
+    <button class="tbtn primary" onclick="mqGenerieren()" title="Erzeugt ${MQ_ANZAHL} Mails der gewählten Art für freie Kunden aus dem Filter">⚡ ${MQ_ANZAHL} Mails generieren</button>
+    </div>
+    <div class="card-b" style="padding-top:10px">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+        <button class="tbtn primary" onclick="mqNaechste()" ${qOffen?'':'disabled style="opacity:.45"'} title="Öffnet die nächste Mail im Mailprogramm und sperrt den Kunden">📧 Nächste in Outlook öffnen</button>
+        <button class="tbtn" onclick="mqZip()" ${qOffen?'':'disabled style="opacity:.45"'} title="Alle offenen Mails als .eml-Entwürfe im ZIP — in Outlook in «Entwürfe» ziehen">📦 Alle als Outlook-Entwürfe (ZIP)</button>
+        <button class="tbtn" onclick="mqAlleEml()" ${qOffen?'':'disabled style="opacity:.45"'} title="Jede Mail als einzelne .eml-Datei">💾 Einzeln als .eml</button>
+        <button class="tbtn" onclick="mqXlsx()" ${MAILQ.length?'':'disabled style="opacity:.45"'} title="Ganze Liste als Excel für den Serienbrief">📤 Excel</button>
+        <div style="flex:1"></div>
+        <label style="font-size:11.5px;color:var(--tx2);display:flex;align-items:center;gap:6px">
+          <input type="checkbox" id="mqSperre" ${MQ_SPERRE?'checked':''} onchange="mqSetSperre(this.checked)"> gesperrte Kunden überspringen</label>
+        ${MAILQ.length?`<button class="tbtn" style="color:var(--red)" onclick="mqLeeren()">🗑</button>`:''}
+      </div>
+      ${MAILQ.length?`<div class="prow" style="margin-bottom:12px"><div class="pbar" style="height:9px">
+        <div style="width:${Math.round(qFertig/MAILQ.length*100)}%;background:linear-gradient(90deg,var(--blue),var(--teal))"></div></div>
+        <b>${qFertig} / ${MAILQ.length} versendet</b></div>`:''}
+      <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--tx2);margin-bottom:8px">
+        <span><b style="font-size:17px;color:var(--tx)">${freie}</b> freie Kunden im Filter</span>
+        <span><b style="font-size:17px;color:var(--tx)">${qOffen}</b> offen in der Warteschlange</span>
+        <span><b style="font-size:17px;color:var(--tx)">${qFertig}</b> versendet</span>
+        <span><b style="font-size:17px;color:var(--tx)">${MBLOCK.length}</b> gesperrt</span>
+      </div>
+      ${MAILQ.length?`<div style="max-height:300px;overflow-y:auto;border-top:1px solid var(--line)">
+        ${MAILQ.slice(0,120).map(m=>`<div class="ms-row ${m.status==='gesendet'?'done':''}">
+          <span style="width:22px;font-size:13px">${m.status==='gesendet'?'✅':'⏳'}</span>
+          <div class="mt2" style="min-width:0;flex:1"><span>${esc(m.kunde)}</span>
+            <span style="font-weight:400;color:var(--tx2);font-size:11.5px"> · ${esc(m.mail||'keine Adresse')} · ${esc(m.kt||'')}</span>
+            <div style="font-weight:400;color:var(--tx2);font-size:10.5px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(m.betreff)}</div></div>
+          <span class="badge ${m.score>=85?'b-green':m.score>=70?'b-blue':'b-orange'}" style="font-size:10px">${m.score}</span>
+          <button class="del ms-row" style="border:none;background:none" onclick="mqEntfernen('${m.id}')">✕</button>
+        </div>`).join('')}
+        ${MAILQ.length>120?`<div style="padding:8px;font-size:11.5px;color:var(--tx3)">… und ${MAILQ.length-120} weitere</div>`:''}
+      </div>`:'<div class="empty" style="padding:16px">Noch nichts generiert — Anzahl wählen und «⚡ Mails generieren» drücken</div>'}
     </div>
   </div>
 
@@ -3449,8 +3694,31 @@ function mailRender(){
         <option value="B" ${MAIL_FILTER.prio==='B'?'selected':''}>nur B</option>
       </select>
       <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="serNurMail" ${MAIL_FILTER.nurMail?'checked':''} onchange="mailSetFilter('nurMail',this.checked)"> nur mit E-Mail-Adresse</label>
+      <label style="display:flex;align-items:center;gap:6px" title="Normalerweise werden bereits angeschriebene Kunden übersprungen"><input type="checkbox" id="serOhneSperre" ${MAIL_FILTER.ohneSperre?'checked':''} onchange="mailSetFilter('ohneSperre',this.checked)"> Sperrliste ignorieren</label>
       <span>max.</span><input type="number" id="serLimit" min="1" max="500" value="${MAIL_FILTER.limit}" onchange="mailSetFilter('limit',this.value)"
         style="width:74px;background:var(--bg2);border:1px solid var(--line);border-radius:99px;padding:5px 10px;font-size:12px;color:var(--tx);font-family:inherit;outline:none;text-align:center">
+    </div>
+  </div>
+
+  <div class="card"><div class="card-h"><h3>🚫 Mail-Sperrliste (${MBLOCK.length})</h3>
+    <span class="sub">bereits angeschriebene Kunden — kommen in keiner Serie mehr vor</span>
+    <div style="flex:1"></div>
+    <input id="mbSuche" placeholder="Kunde suchen…" value="${esc(MBLOCK_SUCHE)}" oninput="mblockSuche(this.value)"
+      style="background:var(--bg2);border:1px solid var(--line);border-radius:99px;padding:6px 14px;font-size:12px;color:var(--tx);font-family:inherit;outline:none;min-width:180px">
+    ${MBLOCK.length?`<button class="tbtn" onclick="mblockExport()">📤 Export</button>
+    <button class="tbtn" style="color:var(--red)" onclick="mblockAlleFrei()">🔓 Alle freigeben</button>`:''}
+    </div>
+    <div class="card-b" style="padding-top:6px;max-height:300px;overflow-y:auto">
+    ${(()=>{ const f=MBLOCK.filter(b=>!MBLOCK_SUCHE||String(b.kunde).toLowerCase().includes(MBLOCK_SUCHE)||String(b.mail||'').toLowerCase().includes(MBLOCK_SUCHE));
+      if(!MBLOCK.length) return '<div class="empty" style="padding:16px">Noch kein Kunde angeschrieben — die Sperrliste füllt sich beim Versand von selbst</div>';
+      if(!f.length) return '<div class="empty" style="padding:16px">Kein Treffer für «'+esc(MBLOCK_SUCHE)+'»</div>';
+      return f.slice(0,150).map(b=>`<div class="ms-row">
+        <span style="width:22px">🚫</span>
+        <div class="mt2" style="min-width:0;flex:1"><span>${esc(b.kunde)}</span>
+          <span style="font-weight:400;color:var(--tx2);font-size:11.5px"> · ${esc(b.mail||'keine Adresse')} · ${esc((MAILTYPEN.find(t=>t.id===b.letzterTyp)||{t:b.letzterTyp||'—'}).t)}</span>
+          <div style="font-weight:400;color:var(--tx2);font-size:10.5px;margin-top:2px">seit ${fmtD(b.datum)}${b.anzahl>1?' · '+b.anzahl+'× angeschrieben':''} · via ${esc(b.quelle||'—')}</div></div>
+        <button class="tbtn" style="padding:4px 11px;font-size:11px" onclick="mblockFrei(${JSON.stringify(b.kunde).replace(/"/g,'&quot;')})" title="Kunde darf wieder angeschrieben werden">🔓</button>
+      </div>`).join('')+(f.length>150?`<div style="padding:8px;font-size:11.5px;color:var(--tx3)">… und ${f.length-150} weitere</div>`:''); })()}
     </div>
   </div>
 
