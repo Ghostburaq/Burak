@@ -696,7 +696,8 @@ const Views={
     document.querySelectorAll('.nitem').forEach(n=>n.classList.toggle('on',n.dataset.v===id));
     $('viewTitle').textContent=v.title;
     const vp=$('viewport');
-    if(this.cur&&this.reg[this.cur].el) this.reg[this.cur].el.classList.remove('on');
+    const alt=this.cur&&this.reg[this.cur];
+    if(alt&&alt.el) alt.el.classList.remove('on');
     if(!v.el){ v.el=document.createElement('div'); v.el.className='view'; v.el.id='view-'+id; vp.appendChild(v.el); v.build(v.el); }
     // retrigger animation
     v.el.classList.remove('on'); void v.el.offsetWidth; v.el.classList.add('on');
@@ -3460,6 +3461,68 @@ window.mqZip=()=>{
   toast('📦 '+off.length+' Outlook-Entwürfe im ZIP · '+neu+' Kunden neu gesperrt');
   return off.length;
 };
+/* Windows reicht mailto: über die Kommandozeile an Outlook weiter — dort ist bei
+   rund 2048 Zeichen Schluss. Längere Mails können nicht direkt geöffnet werden. */
+const MAILTO_MAX=1900;
+function mailtoUrl(m){ return 'mailto:'+encodeURIComponent(m.mail||'')+'?subject='+
+  encodeURIComponent(m.betreff)+'&body='+encodeURIComponent(m.text); }
+function mailtoPasst(m){ return mailtoUrl(m).length<=MAILTO_MAX; }
+/* Protokoll-Handler ohne Popup-Blocker anstossen: Anker-Klick statt window.open */
+function mailtoOeffnen(m){
+  if(!mailtoPasst(m)) return false;                 /* zu lang → .eml als Rückfallweg */
+  const a=document.createElement('a'); a.href=mailtoUrl(m); a.style.display='none';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  return true;
+}
+/* Zu lange Mails auf die Kurzfassung umstellen, damit sie in Outlook aufgehen */
+window.mqKuerzen=()=>{
+  const zu=MAILQ.filter(m=>m.status==='offen'&&!mailtoPasst(m));
+  if(!zu.length){ toast('✓ Alle offenen Mails passen bereits in Outlook'); return 0; }
+  let n=0;
+  zu.forEach(m=>{ const k=K.find(x=>x._i===m._i);
+    if(!k) return;
+    const kurz=mailBauen(k,m.typ,Object.assign(mailOpt(),{laenge:'kurz'}));
+    if(!mailtoPasst(kurz)) return;
+    m.betreff=kurz.betreff; m.text=kurz.text; m.score=menschCheck(kurz).score; m.gekuerzt=true; n++; });
+  mqSave(); mailRender();
+  toast(n?('✂️ '+n+' Mails auf Kurzfassung umgestellt — passen jetzt in Outlook'):'⚠ Kürzen hat nicht gereicht — bitte den ZIP-Weg nutzen');
+  return n;
+};
+let MQ_LAUF=null, MQ_TEMPO=1200;
+window.mqSetTempo=v=>{ MQ_TEMPO=Math.max(300,Math.min(6000,+v||1200)); mailRender(); };
+window.mqStop=()=>{ if(MQ_LAUF){ clearTimeout(MQ_LAUF.timer); MQ_LAUF=null; mailRender();
+  toast('⏹ Versand angehalten'); } };
+/* EIN Klick: öffnet alle offenen Mails der Reihe nach im Mailprogramm */
+window.mqAlleOeffnen=(ohneNachfrage)=>{
+  if(MQ_LAUF){ mqStop(); return 0; }
+  let off=MAILQ.filter(m=>m.status==='offen');
+  if(!off.length){ toast('⚠ Keine offenen Mails in der Warteschlange'); return 0; }
+  /* Ehrlich sein, statt still Dateien abzulegen: zu lange Mails vorher kürzen */
+  const zu=off.filter(m=>!mailtoPasst(m));
+  if(zu.length&&!ohneNachfrage){
+    const ja=confirm(zu.length+' von '+off.length+' Mails sind zu lang, um direkt in Outlook geöffnet zu werden.\n\n'+
+      'OK  = auf Kurzfassung umstellen und alle öffnen\n'+
+      'Abbrechen = so lassen; die zu langen werden als .eml gespeichert');
+    if(ja) mqKuerzen();
+    off=MAILQ.filter(m=>m.status==='offen');
+  }
+  MQ_LAUF={ge:0,total:off.length,eml:0,timer:null};
+  const schritt=()=>{
+    if(!MQ_LAUF) return;
+    const m=MAILQ.filter(x=>x.status==='offen')[0];
+    if(!m){ const g=MQ_LAUF.ge,e=MQ_LAUF.eml; MQ_LAUF=null; mailRender();
+      toast('✅ '+g+' Mails in Outlook geöffnet'+(e?' · '+e+' als .eml gespeichert (zu lang für mailto)':'')+' · alle Kunden gesperrt');
+      return; }
+    if(!mailtoOeffnen(m)){ emlDatei(m); MQ_LAUF.eml++; }
+    m.status='gesendet'; m.gesendet=isoOf(new Date());
+    mblockAdd(m,'outlook-auto'); mailHistorie(m,'outlook-auto');
+    MQ_LAUF.ge++; mqSave(); mailRender();
+    MQ_LAUF.timer=setTimeout(schritt,MQ_TEMPO);
+  };
+  toast('📧 Öffne '+off.length+' Mails der Reihe nach — «⏹ Stopp» hält an');
+  schritt();
+  return off.length;
+};
 window.mqXlsx=()=>{
   const list=MAILQ.length?MAILQ:[];
   if(!list.length){ toast('⚠ Warteschlange ist leer'); return; }
@@ -3563,18 +3626,33 @@ function mailRender(){
     </div>
     <div class="card-b" style="padding-top:10px">
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
-        <button class="tbtn primary" onclick="mqNaechste()" ${qOffen?'':'disabled style="opacity:.45"'} title="Öffnet die nächste Mail im Mailprogramm und sperrt den Kunden">📧 Nächste in Outlook öffnen</button>
+        <button class="tbtn primary" onclick="mqAlleOeffnen()" ${qOffen?'':'disabled style="opacity:.45"'}
+          title="Öffnet alle ${qOffen} offenen Mails nacheinander im Mailprogramm — ein Klick, dann läuft es durch">
+          ${MQ_LAUF?'⏹ Stopp ('+MQ_LAUF.ge+'/'+MQ_LAUF.total+')':'📨 Alle '+qOffen+' in Outlook öffnen'}</button>
+        <button class="tbtn" onclick="mqNaechste()" ${qOffen&&!MQ_LAUF?'':'disabled style="opacity:.45"'} title="Nur die nächste Mail öffnen">📧 Nächste einzeln</button>
         <button class="tbtn" onclick="mqZip()" ${qOffen?'':'disabled style="opacity:.45"'} title="Alle offenen Mails als .eml-Entwürfe im ZIP — in Outlook in «Entwürfe» ziehen">📦 Alle als Outlook-Entwürfe (ZIP)</button>
         <button class="tbtn" onclick="mqAlleEml()" ${qOffen?'':'disabled style="opacity:.45"'} title="Jede Mail als einzelne .eml-Datei">💾 Einzeln als .eml</button>
         <button class="tbtn" onclick="mqXlsx()" ${MAILQ.length?'':'disabled style="opacity:.45"'} title="Ganze Liste als Excel für den Serienbrief">📤 Excel</button>
         <div style="flex:1"></div>
+        <label style="font-size:11.5px;color:var(--tx2);display:flex;align-items:center;gap:6px" title="Pause zwischen den Mails — bei Outlook sind 1–2 Sekunden robust">⏱ Takt
+          <input type="number" id="mqTempo" min="300" max="6000" step="100" value="${MQ_TEMPO}" onchange="mqSetTempo(this.value)"
+            style="width:78px;background:var(--bg2);border:1px solid var(--line);border-radius:99px;padding:5px 10px;font-size:12px;color:var(--tx);font-family:inherit;outline:none;text-align:center"> ms</label>
         <label style="font-size:11.5px;color:var(--tx2);display:flex;align-items:center;gap:6px">
           <input type="checkbox" id="mqSperre" ${MQ_SPERRE?'checked':''} onchange="mqSetSperre(this.checked)"> gesperrte Kunden überspringen</label>
         ${MAILQ.length?`<button class="tbtn" style="color:var(--red)" onclick="mqLeeren()">🗑</button>`:''}
       </div>
+      ${MQ_LAUF?`<div style="background:rgba(0,113,227,.09);border:1px solid var(--blue);border-radius:11px;padding:10px 14px;margin-bottom:12px;font-size:12.5px">
+        📨 <b>Versand läuft</b> — ${MQ_LAUF.ge} von ${MQ_LAUF.total} geöffnet, Takt ${MQ_TEMPO} ms.
+        Falls der Browser fragt, ob Links im Mailprogramm geöffnet werden dürfen: erlauben und «immer zulassen» wählen.</div>`:''}
       ${MAILQ.length?`<div class="prow" style="margin-bottom:12px"><div class="pbar" style="height:9px">
         <div style="width:${Math.round(qFertig/MAILQ.length*100)}%;background:linear-gradient(90deg,var(--blue),var(--teal))"></div></div>
         <b>${qFertig} / ${MAILQ.length} versendet</b></div>`:''}
+      ${(()=>{ const off=MAILQ.filter(m=>m.status==='offen'); const zu=off.filter(m=>!mailtoPasst(m));
+        return zu.length?`<div style="background:rgba(255,149,0,.10);border:1px solid var(--orange);border-radius:11px;padding:10px 14px;margin-bottom:12px;font-size:12.5px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span>⚠ <b>${zu.length} von ${off.length}</b> Mails sind zu lang, um direkt in Outlook aufzugehen (Grenze ${MAILTO_MAX} Zeichen).</span>
+          <button class="tbtn" onclick="mqKuerzen()">✂️ Auf Kurzfassung umstellen</button>
+          <span style="color:var(--tx3)">oder den ZIP-Weg nutzen — dort spielt die Länge keine Rolle</span></div>`:
+          (off.length?`<div style="font-size:12px;color:var(--green);margin-bottom:10px">✓ Alle ${off.length} offenen Mails passen in Outlook</div>`:''); })()}
       <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--tx2);margin-bottom:8px">
         <span><b style="font-size:17px;color:var(--tx)">${freie}</b> freie Kunden im Filter</span>
         <span><b style="font-size:17px;color:var(--tx)">${qOffen}</b> offen in der Warteschlange</span>
@@ -3587,6 +3665,8 @@ function mailRender(){
           <div class="mt2" style="min-width:0;flex:1"><span>${esc(m.kunde)}</span>
             <span style="font-weight:400;color:var(--tx2);font-size:11.5px"> · ${esc(m.mail||'keine Adresse')} · ${esc(m.kt||'')}</span>
             <div style="font-weight:400;color:var(--tx2);font-size:10.5px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(m.betreff)}</div></div>
+          ${m.gekuerzt?'<span class="badge b-gray" style="font-size:9px" title="Für die Outlook-Übergabe gekürzt">✂️</span>':''}
+          ${m.status==='offen'&&!mailtoPasst(m)?'<span class="badge b-orange" style="font-size:9px" title="Zu lang für die direkte Outlook-Übergabe — wird als .eml gespeichert">⚠</span>':''}
           <span class="badge ${m.score>=85?'b-green':m.score>=70?'b-blue':'b-orange'}" style="font-size:10px">${m.score}</span>
           <button class="del ms-row" style="border:none;background:none" onclick="mqEntfernen('${m.id}')">✕</button>
         </div>`).join('')}
@@ -3833,17 +3913,63 @@ $('themeBtn').onclick=()=>{
   document.documentElement.setAttribute('data-theme',nx);
   localStorage.setItem('one_theme',nx); toast(nx==='dark'?'🌙 Dark Mode':'☀️ Light Mode');
 };
-$('exportBtn').onclick=()=>{
-  // Export current view's main dataset; fallback: pipeline
-  const map={pipeline:()=>exportRows('Pipeline_Komplett',RAW.pipeline.headers.slice(0,24),P.map(d=>[d.nr,d.co,d.kt,d.seg,d.fleet,d.kw,d.dauer,d.start,pVal(d),d.equip,d.transp,d.fuel,d.tech,d.rest,d.marge,d.margeP,d.gew,pStatus(d),d.wahr,d.akq,d.usp,d.next,d.fup,d.notiz])),
-    kunden:()=>exportRows('Kunden_CRM',RAW.kunden.headers,RAW.kunden.rows),
-    kartei:()=>exportRows('Kundenkartei',RAW.kartei.headers,RAW.kartei.rows),
-    katalog:()=>exportRows('Katalog',RAW.katalog.headers,RAW.katalog.rows),
-    offerten:()=>exportRows('Offerten',RAW.offerten.headers,RAW.offerten.rows),
-    global:()=>exportRows('Global_Projekte',GP.headers,GP.rows),
-    globalk:()=>exportRows('Global_Kontakte',GK.headers,GK.rows)};
-  (map[Views.cur]||map.pipeline)();
+/* ═══ Export-Knopf: JEDE Ansicht exportiert ihre eigenen Daten ═══
+   Vorher deckte die Zuordnung nur 7 von 18 Ansichten ab — überall sonst kam
+   still und leise die Pipeline heraus. */
+const EXPORT_MAP={
+  dashboard:()=>exportRows('Dashboard_Kennzahlen',['Kennzahl','Wert'],[
+    ['Pipeline-Deals',P.length],['Pipeline-Volumen CHF',P.reduce((a,d)=>a+pVal(d),0)],
+    ['Gewichteter Forecast CHF',Math.round(P.reduce((a,d)=>a+pVal(d)*((+d.wahr||0)>1?(+d.wahr||0)/100:(+d.wahr||0)),0))],
+    ['Zielkunden CRM',K.length],['Prio-A-Kunden',K.filter(k=>String(k.prio).trim()==='A').length],
+    ['Kundenkartei',KA.length],['Offerten',OFF.length],['Offert-Positionen',OP.length],
+    ['Katalogartikel',KAT.length],['Projekte',PROJECTS.length],['Termine',TERMINE.length],
+    ['Data-Center-Betreiber',DCB.length],['Data-Center-Projekte',DCP.length],
+    ['Mails versendet',MAILS.length],['Mail-Sperrliste',MBLOCK.length],
+    ['Stand',isoOf(new Date())]]),
+  pipeline:()=>exportRows('Pipeline_Komplett',RAW.pipeline.headers.slice(0,24),P.map(d=>[d.nr,d.co,d.kt,d.seg,d.fleet,d.kw,d.dauer,d.start,pVal(d),d.equip,d.transp,d.fuel,d.tech,d.rest,d.marge,d.margeP,d.gew,pStatus(d),d.wahr,d.akq,d.usp,d.next,d.fup,d.notiz])),
+  forecast:()=>exportRows('Forecast',['Firma','Segment','Kanton','Status','Wert CHF','Wahrsch. %','Gewichtet CHF','Start','Follow-up'],
+    P.map(d=>{const w=(+d.wahr||0)>1?(+d.wahr||0)/100:(+d.wahr||0);
+      return [d.co,d.seg,d.kt,pStatus(d),pVal(d),Math.round(w*100),Math.round(pVal(d)*w),d.start,d.fup];})),
+  projekte:()=>exportRows('Projekte',['Name','Kunde','Status','Start','Ende','Wert CHF','Milestones','Erledigt','Geräte','Notiz'],
+    PROJECTS.map(p2=>[p2.name,p2.kunde,p2.status,p2.start,p2.ende,p2.wert,
+      (p2.milestones||[]).length,(p2.milestones||[]).filter(m=>m.done).length,
+      (p2.geraete||[]).map(g=>g.bez||g.name||g).join(' · '),p2.notiz||''])),
+  kunden:()=>exportRows('Kunden_CRM',RAW.kunden.headers,RAW.kunden.rows),
+  kartei:()=>exportRows('Kundenkartei',RAW.kartei.headers,RAW.kartei.rows),
+  akquise:()=>exportRows('Akquise_90_Tage',RAW.akquise.headers,RAW.akquise.rows),
+  offerten:()=>exportRows('Offerten',RAW.offerten.headers,RAW.offerten.rows),
+  katalog:()=>exportRows('Katalog',RAW.katalog.headers,RAW.katalog.rows),
+  preise:()=>exportRows('Preislisten_CH',RAW.preise.headers,RAW.preise.rows),
+  normen:()=>exportRows('Normen',RAW.normen.headers,RAW.normen.rows),
+  dc:()=>exportRows('Data_Center_Betreiber',RAW.dcBetreiber.headers,RAW.dcBetreiber.rows),
+  global:()=>exportRows('Global_Projekte',GP.headers,GP.rows),
+  globalk:()=>exportRows('Global_Kontakte',GK.headers,GK.rows),
+  kalender:()=>{ const ev=collectEvents();
+    exportRows('Kalender',['Datum','Titel','Details','Quelle'],
+      ev.sort((a,b)=>String(a.d).localeCompare(String(b.d))).map(e=>[e.d,e.t,e.s,(e.s||'').split(' · ')[0]])); },
+  termine:()=>exportRows('Terminplanung',
+    ['Datum','Wochentag','Zeit','Kunde','Typ','Ort','Kanton','km','Stopp','Erledigt','Exportiert','Notiz','Eigene Notiz'],
+    [...TERMINE].sort((a,b)=>(a.datum+a.zeit).localeCompare(b.datum+b.zeit))
+      .map(t=>[t.datum,DOW_LANG[(toDate(t.datum)?(toDate(t.datum).getDay()+6)%7:0)],t.zeit,t.kunde,t.typ,t.ort||'',t.kt||'',t.km||'',t.routePos||'',
+        t.done?'ja':'nein',t.exported?'ja':'nein',t.notiz||'',t.eigeneNotiz||''])),
+  karte:()=>{ const mit=K.filter(k=>k.co&&coordOf(k));
+    exportRows('Kundenkarte_Geo',['Firma','Segment','Prio','Ort','PLZ','Kanton','Breite','Länge','km ab Basis','Status','E-Mail','Telefon'],
+      mit.map(k=>{const c=coordOf(k);
+        return [k.co,k.seg,k.prio,k.ort,k.plz,k.kt,c[0],c[1],distKm(HOME,c),k.status,k.mail,k.tel];})); },
+  mails:()=>{ if(MAILQ.length){
+      exportRows('Mail_Warteschlange',['Firma','Ansprechpartner','E-Mail','Kanton','Segment','Betreff','Mailtext','Menschlichkeit','Status'],
+        MAILQ.map(m=>[m.kunde,m.ap||'',m.mail||'',m.kt||'',m.seg||'',m.betreff,m.text,m.score,m.status])); return; }
+    if(MAILS.length){ mailHistExport(); return; }
+    exportRows('Mail_Sperrliste',['Kunde','E-Mail','Erste Mail','Zuletzt','Anzahl'],
+      MBLOCK.map(b=>[b.kunde,b.mail||'',b.datum,b.zuletzt||b.datum,b.anzahl||1])); }
 };
+window.exportAktuelleAnsicht=(vid)=>{
+  const id=vid||Views.cur, fn=EXPORT_MAP[id];
+  if(!fn){ toast('⚠ Für diese Ansicht ist kein Export hinterlegt'); return false; }
+  try{ fn(); }catch(e){ console.warn(e); toast('⚠ Export fehlgeschlagen: '+(e.message||e)); return false; }
+  return true;
+};
+$('exportBtn').onclick=()=>exportAktuelleAnsicht();
 // Expose core objects for inline handlers (defensive across browsers)
 window.Views=Views; window.Drawer=Drawer; window.Spot=Spot; window.toast=toast; window.exportRows=exportRows;
 /* Live-Datum im Header: zeigt immer den echten heutigen Wochentag */
