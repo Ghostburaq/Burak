@@ -187,7 +187,6 @@ ol.steps p{margin:0;font-size:.91rem;color:var(--ink-700);max-width:62ch}
 .draft{border:1px solid rgba(144,11,111,.35);background:rgba(144,11,111,.05);color:var(--magenta);
   border-radius:var(--radius);padding:.9rem 1.1rem;font-size:.9rem;line-height:1.55;margin:0 0 1.75rem}
 .draft strong{color:var(--magenta)}
-.todo{color:var(--ink-500);font-style:italic}
 
 /* CTA-Band */
 .band{margin-top:3rem;background:var(--anthrazit);color:#fff;border-radius:var(--radius-lg);padding:2rem}
@@ -384,7 +383,8 @@ footer address{font-style:normal;font-size:.9rem;color:var(--ink-700);margin-top
       <p style="margin-top:.75rem;max-width:62ch;color:var(--ink-700)">
         Über fünfzehn Jahre Messpraxis in EMV und Netzqualität, von Kleinelektronik bis zu grossen Systemen.
         Eigene Messmittel der Genauigkeitsklasse A nach IEC 61000-4-30, alle zwei Jahre kalibriert.
-        Berufshaftpflichtversicherung vorhanden. Kein Gerätehandel, keine Provisionsbindung.
+        Berufshaftpflichtversicherung vorhanden. Lizenzierter Funkamateur.
+        Kein Gerätehandel, keine Provisionsbindung.
       </p>
     </div>
 
@@ -504,11 +504,15 @@ footer address{font-style:normal;font-size:.9rem;color:var(--ink-700);margin-top
   <!-- ===================== HAEUFIGE FRAGEN ===================== -->
   <!--
     Fragen ohne fertige Antwort stehen bewusst nicht auf der Seite, damit kein
-    sichtbarer Platzhalter erscheint. Offene Antworten siehe OFFENE_PUNKTE.md:
-      - Muss die Anlage dafür abgeschaltet werden?
-      - Was kostet eine Messung?
-      - Wie schnell ist ein Messtermin möglich?
-      - In welchem Gebiet sind Sie im Einsatz?
+    sichtbarer Platzhalter erscheint. Noch offen, siehe OFFENE_PUNKTE.md:
+      - Wie schnell ist ein Messtermin moeglich?
+        TODO: Realistische Vorlaufzeit festlegen (abhaengig von der
+        Geraeteverfuegbarkeit) und die Frage danach wieder aufnehmen. Eine konkrete
+        Angabe wie "in der Regel innert zwei bis drei Wochen" wirkt stark, wenn sie
+        eingehalten wird.
+
+    TODO (zur Antwort "Was kostet eine Messung?"): Bestaetigen, dass das Erstgespraech
+    tatsaechlich kostenlos angeboten wird. Falls nicht, den entsprechenden Satz streichen.
   -->
   <section id="faq" aria-labelledby="h-faq">
     <p class="kicker">Häufige Fragen</p>
@@ -523,6 +527,39 @@ footer address{font-style:normal;font-size:.9rem;color:var(--ink-700);margin-top
           Für eine Bewertung im Bezugsrahmen EN 50160 ist eine zusammenhängende Messung über
           sieben Tage üblich. Für eine gezielte Störungssuche kann eine kürzere, dafür
           engmaschigere Messung sinnvoller sein. Was passt, wird im Messplan festgelegt.
+        </dd>
+      </div>
+      <div class="card">
+        <dt style="font-size:1.05rem;font-weight:600;color:var(--anthrazit)">Muss die Anlage dafür abgeschaltet werden?</dt>
+        <dd style="margin:.5rem 0 0;font-size:.93rem;color:var(--ink-700);max-width:62ch">
+          <p>In aller Regel nicht. Die Messung erfolgt im laufenden Betrieb, ein Produktions-
+            oder Versorgungsunterbruch ist dafür nicht vorgesehen. Die Strommessung erfolgt
+            berührungslos über Stromwandler, die Anlage läuft während der gesamten Messdauer
+            weiter.</p>
+          <p style="margin-bottom:0">Für den Anschluss der Spannungspfade wird an aktiven Teilen gearbeitet. Diese
+            Arbeiten erfolgen nach den geltenden Sicherheitsvorschriften und in Absprache mit
+            der für die Anlage verantwortlichen Elektrofachkraft. Ob dafür eine kurzzeitige
+            Freischaltung nötig ist, hängt von der konkreten Verteilung ab und wird vorgängig
+            im Messplan geklärt, nicht erst am Messtag.</p>
+        </dd>
+      </div>
+      <div class="card">
+        <dt style="font-size:1.05rem;font-weight:600;color:var(--anthrazit)">Was kostet eine Messung?</dt>
+        <dd style="margin:.5rem 0 0;font-size:.93rem;color:var(--ink-700);max-width:62ch">
+          <p>Auf dieser Seite stehen bewusst keine Pauschalpreise. Der Aufwand hängt von Messort,
+            Dauer, Anzahl Messpunkte und der gewünschten Berichtstiefe ab, und eine Zahl ohne
+            diese Angaben wäre nicht belastbar.</p>
+          <p style="margin-bottom:0">Nach dem Erstgespräch erhalten Sie eine schriftliche Offerte mit festem Rahmen. Das
+            Erstgespräch selbst ist kostenlos. Wenn sich dabei zeigt, dass eine Messung in Ihrem
+            Fall nichts bringt, sage ich Ihnen das, bevor Kosten entstehen.</p>
+        </dd>
+      </div>
+      <div class="card">
+        <dt style="font-size:1.05rem;font-weight:600;color:var(--anthrazit)">In welchem Gebiet sind Sie im Einsatz?</dt>
+        <dd style="margin:.5rem 0 0;font-size:.93rem;color:var(--ink-700);max-width:62ch">
+          Sitz ist Thayngen im Kanton Schaffhausen. Der Einsatz erfolgt in der ganzen Schweiz.
+          Anreise und allfällige Übernachtung werden nach Vereinbarung abgerechnet und in der
+          Offerte transparent ausgewiesen.
         </dd>
       </div>
       <div class="card">
@@ -623,19 +660,29 @@ footer address{font-style:normal;font-size:.9rem;color:var(--ink-700);margin-top
           <ul><li>Für die Beratungs- und Gutachtertätigkeit besteht eine Berufshaftpflichtversicherung. Details zu Deckungssumme und Umfang werden auf Anfrage bekannt gegeben.</li></ul>
         </div>
         <!--
-          Zertifikate und Mitgliedschaften: bleibt ausgeblendet, bis echte Angaben vorliegen.
-          Nichts erfinden, nichts andeuten. Struktur je Eintrag:
-            - Bezeichnung des Zertifikats oder der Qualifikation
-            - Ausstellende Stelle
-            - Jahr bzw. Gültigkeit
-          TODO: Vorhandene Zertifikate, Qualifikationen und Mitgliedschaften eintragen und den
-          Block wieder einkommentieren. Solange nichts eingetragen ist, bleibt er unsichtbar.
+          Lizenzklasse: Es steht bewusst Variante 1 (ohne Klassenangabe).
+          TODO: Lizenzklasse verifizieren, bevor auf Variante 2 gewechselt wird
+          ("Amateurfunkzeugnis Klasse A und Klasse E, Rufzeichen DO1BUU."). In
+          Deutschland ist das Rufzeichenpraefix DO der Klasse E zugeordnet; beim
+          Erwerb der Klasse A wird in der Regel ein Rufzeichen mit anderem Praefix
+          zugeteilt. Angabe im Amateurfunkzeugnis bzw. in der Zulassungsurkunde
+          pruefen. Eine falsche Klassenangabe faellt im Fachumfeld sofort auf.
 
-          <div class="facts">
-            <h2>Zertifikate und Mitgliedschaften</h2>
-            <ul><li><strong>Bezeichnung</strong> Ausstellende Stelle, Jahr bzw. Gültigkeit</li></ul>
-          </div>
+          TODO: Weitere Zertifikate, Qualifikationen und Mitgliedschaften ergaenzen,
+          sobald die Angaben feststehen. Struktur je Eintrag: Bezeichnung,
+          ausstellende Stelle, Jahr bzw. Gueltigkeit. Nichts erfinden.
         -->
+        <div class="facts">
+          <h2>Qualifikationen</h2>
+          <ul>
+            <li><strong>Amateurfunk</strong>Amateurfunkzeugnis, Rufzeichen DO1BUU.</li>
+            <li>Amateurfunk ist in diesem Zusammenhang keine Randnotiz. Wer selbst sendet und
+              empfängt, arbeitet täglich mit genau den Effekten, um die es in der EMV geht:
+              Ausbreitung, Kopplung, Schirmung, Störabstand. Eine Störung im Funkempfang ist
+              messbar und unmittelbar hörbar. Diese Erfahrung fliesst direkt in die Beurteilung
+              von Störaussendung und Störfestigkeit ein.</li>
+          </ul>
+        </div>
         <div class="facts">
           <h2>Referenzen</h2>
           <ul><li>Bis zur schriftlichen Freigabe werden Referenzen ausschliesslich anonymisiert genannt, zum Beispiel &laquo;Industriebetrieb Ostschweiz&raquo;.</li></ul>
@@ -794,12 +841,7 @@ footer address{font-style:normal;font-size:.9rem;color:var(--ink-700);margin-top
 
       <h3>Verantwortlich für den Inhalt</h3>
       <p>Burak Ücöz, Anschrift wie oben.</p>
-
-      <h3>Firmenname und Handelsregister</h3>
-      <p class="todo">TODO: Firmenrechtlich prüfen. Bei einer Einzelfirma muss nach Art. 945 OR der Familienname
-        wesentlicher Bestandteil der Firma sein. &laquo;Engineering.Kabuu&raquo; ist damit eher
-        Geschäftsbezeichnung bzw. Marke als eingetragene Firma. Mit Treuhänder klären, ob und wie die Firma
-        im Handelsregister geführt wird, und diesen Abschnitt entsprechend anpassen oder streichen.</p>
+      <!-- TODO: Firmenrechtlich prüfen. Bei einer Einzelfirma muss nach Art. 945 OR der Familienname wesentlicher Bestandteil der Firma sein. &laquo;Engineering.Kabuu&raquo; ist damit eher Geschäftsbezeichnung bzw. Marke als eingetragene Firma. Mit Treuhänder klären, ob und wie die Firma im Handelsregister geführt wird, und diesen Abschnitt entsprechend anpassen oder streichen. -->
 
       <h3>Haftung für Inhalte</h3>
       <p>Die Inhalte dieser Website werden mit Sorgfalt erstellt. Für Richtigkeit, Vollständigkeit und
@@ -850,19 +892,17 @@ footer address{font-style:normal;font-size:.9rem;color:var(--ink-700);margin-top
       <p>Für Hosting und Formularverarbeitung wird <strong>Netlify, Inc.</strong> eingesetzt (Sitz USA).
         Netlify betreibt die Infrastruktur, auf der diese Website ausgeliefert wird, und verarbeitet die über
         das Kontaktformular eingehenden Daten.</p>
-      <p class="todo">TODO: Auftragsbearbeitungsvertrag (Data Processing Addendum) mit Netlify abschliessen bzw.
-        dessen Annahme dokumentieren. Grundlage der Bekanntgabe ins Ausland in Übereinstimmung mit revDSG
-        prüfen und hier konkret nennen. Aktuellen Stand abklären, keine Behauptung ohne Prüfung.</p>
+      <!-- TODO: Auftragsbearbeitungsvertrag (Data Processing Addendum) mit Netlify abschliessen bzw. dessen Annahme dokumentieren. Grundlage der Bekanntgabe ins Ausland in Übereinstimmung mit revDSG prüfen und hier konkret nennen. Aktuellen Stand abklären, keine Behauptung ohne Prüfung. -->
 
       <h3>5. Bekanntgabe ins Ausland</h3>
       <p>Durch die Nutzung von Netlify können Personendaten in die USA und allenfalls weitere Länder bekannt
         gegeben werden. Die Bekanntgabe erfolgt auf einer nach revDSG zulässigen Grundlage.
-        <span class="todo">TODO: konkrete Grundlage nach Prüfung eintragen.</span></p>
+        <!-- TODO: konkrete Grundlage nach Prüfung eintragen. --></p>
 
       <h3>6. Aufbewahrungsdauer</h3>
       <p>Anfragen über das Kontaktformular werden bis zur endgültigen Erledigung Ihrer Angelegenheit
         aufbewahrt, danach nach den gesetzlichen Vorgaben und anschliessend gelöscht.
-        <span class="todo">TODO: Konkrete Dauer festlegen.</span>
+        <!-- TODO: Konkrete Dauer festlegen. -->
         Server-Logdaten werden nach den Standardvorgaben des Hosters aufbewahrt und anschliessend gelöscht
         oder anonymisiert.</p>
 
@@ -888,17 +928,14 @@ footer address{font-style:normal;font-size:.9rem;color:var(--ink-700);margin-top
       <p>Die Übertragung dieser Website erfolgt verschlüsselt über HTTPS. Die Anbieterin und ihre
         Auftragsbearbeiter treffen angemessene technische und organisatorische Massnahmen zum Schutz der
         Personendaten.</p>
+      <!-- TODO: Prüfen, ob durch Kunden oder Websitebesucher aus der EU zusätzlich europäisches Datenschutzrecht greift und diese Erklärung entsprechend zu ergänzen ist. Mit Fachperson klären, nicht selbst entscheiden. -->
 
-      <h3>11. Kundschaft und Besucher aus der EU</h3>
-      <p class="todo">TODO: Prüfen, ob durch Kunden oder Websitebesucher aus der EU zusätzlich europäisches
-        Datenschutzrecht greift und diese Erklärung entsprechend zu ergänzen ist. Mit Fachperson klären,
-        nicht selbst entscheiden.</p>
-
-      <h3>12. Änderungen dieser Erklärung</h3>
+      <h3>11. Änderungen dieser Erklärung</h3>
       <p>Die Anbieterin behält sich vor, diese Datenschutzerklärung anzupassen. Für Ihren erneuten Besuch
         gilt die jeweils aktuelle Fassung.</p>
 
-      <p class="todo" style="margin-top:1.75rem">Stand: TODO. Dieser Text ist ein Entwurf und vor Live-Gang durch eine Fachperson zu prüfen.</p>
+      <!-- TODO: Beim Inkraftsetzen das Datum eintragen und diesen Hinweis ersetzen. -->
+      <p style="margin-top:1.75rem;font-style:italic;color:var(--ink-500)">Stand: Entwurf. Dieser Text ist vor Live-Gang durch eine Fachperson zu prüfen und wird erst danach in Kraft gesetzt.</p>
     </div>
   </section>
 
@@ -936,7 +973,7 @@ footer address{font-style:normal;font-size:.9rem;color:var(--ink-700);margin-top
       <p>Termine werden verbindlich vereinbart. Bei Verschiebung oder Annullation eines bestätigten
         Vor-Ort-Termins durch den Auftraggeber weniger als fünf Arbeitstage vor Beginn kann der bereits
         entstandene Aufwand in Rechnung gestellt werden.
-        <span class="todo">TODO: Frist und allfällige Pauschale mit Anwalt abstimmen.</span></p>
+        <!-- TODO: Frist und allfällige Pauschale mit Anwalt abstimmen. --></p>
 
       <h3>5. Vergütung und Zahlungskonditionen</h3>
       <p>Die Vergütung richtet sich nach dem Angebot oder der Auftragsbestätigung. Alle Preise verstehen sich
@@ -951,8 +988,7 @@ footer address{font-style:normal;font-size:.9rem;color:var(--ink-700);margin-top
         Obligationenrechts (OR). Bei leichter Fahrlässigkeit ist die Haftung auf den bei Vertragsschluss
         vorhersehbaren, typischerweise eintretenden Schaden begrenzt. Für entgangenen Gewinn, indirekte
         Schäden oder Folgeschäden wird, soweit gesetzlich zulässig, keine Haftung übernommen.
-        <span class="todo">TODO: Konkrete Haftungshöchstsumme, Verjährung und Umgang mit Gutachten und
-        Beweissicherung mit einem Anwalt formulieren.</span></p>
+        <!-- TODO: Konkrete Haftungshöchstsumme, Verjährung und Umgang mit Gutachten und Beweissicherung mit einem Anwalt formulieren. --></p>
 
       <h3>7. Abgrenzung</h3>
       <p>Messungen, Analysen und Empfehlungen der Anbieterin stellen keine Garantie für einen bestimmten
@@ -973,19 +1009,20 @@ footer address{font-style:normal;font-size:.9rem;color:var(--ink-700);margin-top
       <h3>10. Aufbewahrung von Messdaten</h3>
       <p>Rohdaten und Berichte werden von der Anbieterin für eine angemessene Frist zur Nachvollziehbarkeit
         und für allfällige Rückfragen aufbewahrt.
-        <span class="todo">TODO: Konkrete Frist mit Treuhänder abstimmen.</span></p>
+        <!-- TODO: Konkrete Frist mit Treuhänder abstimmen. --></p>
 
       <h3>11. Rechtswahl und Gerichtsstand</h3>
       <p>Auf das Vertragsverhältnis findet ausschliesslich Schweizer Recht Anwendung; das UN-Kaufrecht ist
-        ausgeschlossen. Gerichtsstand ist
-        <span class="todo">TODO: Gerichtsstand festlegen, üblicherweise am Sitz der Anbieterin. Mit Anwalt
-        bestätigen.</span></p>
+        ausgeschlossen. Der Gerichtsstand wird vor Inkraftsetzung dieser Geschäftsbedingungen festgelegt.</p>
+      <!-- TODO: Gerichtsstand festlegen, ueblicherweise am Sitz der Anbieterin.
+           Mit Anwalt bestaetigen und den Satz oben ersetzen. -->
 
       <h3>12. Salvatorische Klausel</h3>
       <p>Sollten einzelne Bestimmungen dieser AGB unwirksam sein oder werden, bleibt die Wirksamkeit der
         übrigen Bestimmungen davon unberührt.</p>
 
-      <p class="todo" style="margin-top:1.75rem">Stand: TODO. Diese AGB sind ein Entwurf und vor Live-Gang durch eine Fachperson zu prüfen.</p>
+      <!-- TODO: Beim Inkraftsetzen das Datum eintragen und diesen Hinweis ersetzen. -->
+      <p style="margin-top:1.75rem;font-style:italic;color:var(--ink-500)">Stand: Entwurf. Diese Geschäftsbedingungen sind vor Live-Gang durch eine Fachperson zu prüfen und werden erst danach in Kraft gesetzt.</p>
     </div>
   </section>
 

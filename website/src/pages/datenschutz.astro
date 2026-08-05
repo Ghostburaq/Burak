@@ -52,25 +52,27 @@ import { site } from '../lib/site';
       Netlify betreibt die Infrastruktur, auf der diese Website ausgeliefert wird, und verarbeitet die über das
       Kontaktformular eingehenden Daten.
     </p>
-    <p>
-      <span class="italic">TODO: Auftragsbearbeitungsvertrag (Data Processing Addendum) mit Netlify abschliessen
-      bzw. dessen Annahme dokumentieren. Grundlage der Bekanntgabe ins Ausland (u.a. USA) in Übereinstimmung
-      mit revDSG prüfen und hier konkret nennen. Aktuellen Stand abklären, keine Behauptung ohne Prüfung.</span>
-    </p>
+    {/*
+      TODO: Auftragsbearbeitungsvertrag (Data Processing Addendum) mit Netlify abschliessen
+      bzw. dessen Annahme dokumentieren. Aktuellen Stand abklären, keine Behauptung ohne Prüfung.
+    */}
 
     <h2>5. Bekanntgabe ins Ausland</h2>
+    {/*
+      TODO: Konkrete Grundlage der Bekanntgabe ins Ausland (u.a. USA) nach revDSG prüfen
+      und im folgenden Absatz benennen, z.B. Standardvertragsklauseln oder anerkannter
+      angemessener Datenschutz. Bis dahin bleibt der Satz bewusst allgemein.
+    */}
     <p>
       Durch die Nutzung von Netlify können Personendaten in die USA und allenfalls weitere Länder bekannt
-      gegeben werden. Die Bekanntgabe erfolgt auf einer nach revDSG zulässigen Grundlage
-      (<span class="italic">TODO: konkrete Grundlage nach Prüfung eintragen, z.B. Standardvertragsklauseln
-      oder anerkannter angemessener Datenschutz</span>).
+      gegeben werden. Die Bekanntgabe erfolgt auf einer nach revDSG zulässigen Grundlage.
     </p>
 
     <h2>6. Aufbewahrungsdauer</h2>
+    {/* TODO: Konkrete Dauer festlegen und hier einsetzen (z.B. Anfragen ohne Auftrag: 12 Monate). */}
     <p>
       Anfragen über das Kontaktformular werden bis zur endgültigen Erledigung Ihrer Angelegenheit aufbewahrt,
       danach nach den gesetzlichen Vorgaben (insbesondere Buchhaltungspflichten) und anschliessend gelöscht.
-      <span class="italic">TODO: Konkrete Dauer festlegen (z.B. Anfragen ohne Auftrag: 12 Monate).</span>
       Server-Logdaten werden nach den Standardvorgaben des Hosters aufbewahrt und anschliessend gelöscht oder
       anonymisiert.
     </p>
@@ -107,22 +109,25 @@ import { site } from '../lib/site';
       gegen unberechtigten Zugriff, Verlust oder Missbrauch zu schützen.
     </p>
 
-    <h2>11. EU-Kunden und DSGVO</h2>
-    <p>
-      <span class="italic">TODO: Prüfen, ob durch Kunden oder Websitebesucher aus der EU zusätzlich die
-      DSGVO greift. Wenn die Seite gezielt auch EU-Kunden anspricht, muss diese Erklärung um die
-      DSGVO-Pflichtangaben ergänzt werden. Mit Fachperson klären, nicht selbst entscheiden.</span>
-    </p>
+    {/*
+      TODO: Prüfen, ob durch Kunden oder Websitebesucher aus der EU zusätzlich
+      europäisches Datenschutzrecht greift. Wenn die Seite gezielt auch EU-Kunden
+      anspricht, muss diese Erklärung um die entsprechenden Pflichtangaben ergänzt
+      und hier ein eigener Abschnitt aufgenommen werden. Mit Fachperson klären,
+      nicht selbst entscheiden.
+    */}
 
-    <h2>12. Änderungen dieser Erklärung</h2>
+    <h2>11. Änderungen dieser Erklärung</h2>
     <p>
       Die Anbieterin behält sich vor, diese Datenschutzerklärung anzupassen, damit sie stets den aktuellen
       rechtlichen Anforderungen entspricht oder um Änderungen der Leistungen umzusetzen. Für Ihren erneuten
       Besuch gilt die jeweils aktuelle Fassung.
     </p>
 
+    {/* TODO: Beim Inkraftsetzen das Datum eintragen und diesen Hinweis ersetzen. */}
     <p class="mt-8 italic text-ink-500">
-      Stand: TODO. Dieser Text ist ein Entwurf und vor Live-Gang durch eine Fachperson zu prüfen.
+      Stand: Entwurf. Dieser Text ist vor Live-Gang durch eine Fachperson zu prüfen und wird erst
+      danach in Kraft gesetzt.
     </p>
   </article>
 </BaseLayout>

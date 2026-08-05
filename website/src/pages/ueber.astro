@@ -133,24 +133,30 @@ const emv = [
       </div>
 
       {/*
-        Zertifikate und Mitgliedschaften: bleibt ausgeblendet, bis echte Angaben vorliegen.
-        Nichts erfinden, nichts andeuten. Struktur je Eintrag:
-          - Bezeichnung des Zertifikats oder der Qualifikation
-          - Ausstellende Stelle
-          - Jahr bzw. Gültigkeit
-        TODO: Vorhandene Zertifikate, Qualifikationen und Mitgliedschaften eintragen und den
-        Block wieder einkommentieren. Solange nichts eingetragen ist, bleibt er unsichtbar.
+        Lizenzklasse: Es steht bewusst Variante 1 (ohne Klassenangabe).
+        TODO: Lizenzklasse verifizieren, bevor auf Variante 2 gewechselt wird
+        («Amateurfunkzeugnis Klasse A und Klasse E, Rufzeichen DO1BUU.»). In
+        Deutschland ist das Rufzeichenpräfix DO der Klasse E zugeordnet; beim
+        Erwerb der Klasse A wird in der Regel ein Rufzeichen mit anderem Präfix
+        zugeteilt. Angabe im Amateurfunkzeugnis bzw. in der Zulassungsurkunde
+        prüfen. Eine falsche Klassenangabe fällt im Fachumfeld sofort auf.
 
-        <div class="rounded-lg border border-ink-200 bg-white p-6">
-          <h2 class="text-xs font-semibold uppercase tracking-wider text-ink-500">Zertifikate und Mitgliedschaften</h2>
-          <dl class="mt-3 space-y-3 text-sm text-ink-800">
-            <div>
-              <dt class="font-medium text-anthrazit">Bezeichnung</dt>
-              <dd class="text-ink-700">Ausstellende Stelle, Jahr bzw. Gültigkeit</dd>
-            </div>
-          </dl>
-        </div>
+        TODO: Weitere Zertifikate, Qualifikationen und Mitgliedschaften ergänzen,
+        sobald die Angaben feststehen. Struktur je Eintrag: Bezeichnung,
+        ausstellende Stelle, Jahr bzw. Gültigkeit. Nichts erfinden, nichts andeuten.
       */}
+      <div class="rounded-lg border border-ink-200 bg-white p-6">
+        <h2 class="text-xs font-semibold uppercase tracking-wider text-ink-500">Qualifikationen</h2>
+        <h3 class="mt-3 text-sm font-semibold text-anthrazit">Amateurfunk</h3>
+        <p class="mt-1 text-sm text-ink-800">Amateurfunkzeugnis, Rufzeichen DO1BUU.</p>
+        <p class="mt-3 text-sm leading-relaxed text-ink-700">
+          Amateurfunk ist in diesem Zusammenhang keine Randnotiz. Wer selbst sendet und
+          empfängt, arbeitet täglich mit genau den Effekten, um die es in der EMV geht:
+          Ausbreitung, Kopplung, Schirmung, Störabstand. Eine Störung im Funkempfang ist
+          messbar und unmittelbar hörbar. Diese Erfahrung fliesst direkt in die Beurteilung
+          von Störaussendung und Störfestigkeit ein.
+        </p>
+      </div>
 
       <div class="rounded-lg border border-ink-200 bg-white p-6">
         <h2 class="text-xs font-semibold uppercase tracking-wider text-ink-500">Referenzen</h2>

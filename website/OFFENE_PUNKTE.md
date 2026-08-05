@@ -122,35 +122,45 @@ Schreibweise verfasst.
       werden sollen. Viele Auftraggeber aus Industrie und Recht fragen danach;
       eine konkrete Deckungssumme wirkt dort staerker als die blosse Erwaehnung.
       Angabe erst nach Abgleich mit der Police.
-- [ ] **Zertifikate und Mitgliedschaften.** Der Block ist auskommentiert und
-      damit unsichtbar, bis echte Angaben vorliegen. Struktur je Eintrag:
-      Bezeichnung des Zertifikats oder der Qualifikation, ausstellende Stelle,
-      Jahr bzw. Gueltigkeit. Nichts erfinden, nichts andeuten. Nach dem Eintragen
-      den Block wieder einkommentieren (in `ueber.astro` und in
-      `netlify-single/index.html`).
+- [ ] **Lizenzklasse Amateurfunk verifizieren.** Auf der Seite steht bewusst
+      Variante 1 ohne Klassenangabe: &laquo;Amateurfunkzeugnis, Rufzeichen
+      DO1BUU.&raquo; Erst nach Pruefung auf Variante 2 wechseln
+      (&laquo;Amateurfunkzeugnis Klasse A und Klasse E, Rufzeichen DO1BUU.&raquo;).
+      In Deutschland ist das Rufzeichenpraefix DO der Klasse E zugeordnet; beim
+      Erwerb der Klasse A wird in der Regel ein Rufzeichen mit anderem Praefix
+      zugeteilt. Angabe im Amateurfunkzeugnis bzw. in der Zulassungsurkunde
+      pruefen. Eine falsche Klassenangabe faellt im Fachumfeld sofort auf.
+- [ ] **Weitere Qualifikationen ergaenzen.** Der Block &laquo;Qualifikationen&raquo;
+      ist seit UPDATE-02 sichtbar und enthaelt bisher nur den Amateurfunk. Weitere
+      Zertifikate, Qualifikationen und Mitgliedschaften eintragen, sobald die
+      Angaben feststehen. Struktur je Eintrag: Bezeichnung, ausstellende Stelle,
+      Jahr bzw. Gueltigkeit. Nichts erfinden, nichts andeuten.
 - [ ] **Berufsbezeichnung.** Klaeren, ob die Bezeichnung &laquo;Ingenieur&raquo;
       gefuehrt werden darf und wie sie geschrieben wird. Der sichtbare Platzhalter
       auf der Seite wurde entfernt; die Frage lebt nur noch hier.
 
-### 6.2 Aus UPDATE-01 (Haeufige Fragen)
+### 6.2 Haeufige Fragen
 
-Vier Fragen haben noch keine Antwort und stehen deshalb **nicht** auf der Seite,
-damit dort kein sichtbarer Platzhalter erscheint. Sobald eine Antwort vorliegt,
-in `src/pages/faq.astro` (Array `faq`) und in `netlify-single/index.html`
-(Abschnitt `#faq`) ergaenzen.
+Seit UPDATE-02 sind fuenf Fragen beantwortet und sichtbar. Eine Frage bleibt offen
+und steht deshalb **nicht** auf der Seite, damit dort kein sichtbarer Platzhalter
+erscheint. Sobald die Antwort vorliegt, in `src/pages/faq.astro` (Array `faq`) und
+in `netlify-single/index.html` (Abschnitt `#faq`) ergaenzen.
 
-- [ ] **Muss die Anlage dafuer abgeschaltet werden?** Diese Frage entscheidet bei
-      Industriekunden haeufig ueber die Anfrage. Formulieren, unter welchen
-      Bedingungen der Messaufbau im laufenden Betrieb moeglich ist und wann eine
-      Freischaltung durch eine Elektrofachkraft noetig wird.
-- [ ] **Was kostet eine Messung?** Keine Preisliste noetig, aber eine Aussage zur
-      Preislogik (Fixpreis pro Messkampagne, Aufwand nach Zeit, Reisekosten
-      separat) senkt die Hemmschwelle deutlich. Mit Treuhaender abstimmen, bevor
-      Zahlen genannt werden. Beachten: auf der Website stehen weiterhin keine Preise.
 - [ ] **Wie schnell ist ein Messtermin moeglich?** Realistische Vorlaufzeit
-      angeben, abhaengig von der Geraeteverfuegbarkeit.
-- [ ] **In welchem Gebiet sind Sie im Einsatz?** Einsatzradius und Regelung zu
-      Reisekosten festlegen.
+      festlegen, abhaengig von der Geraeteverfuegbarkeit, und die Frage danach
+      wieder aufnehmen. Eine konkrete Angabe wie &laquo;in der Regel innert zwei
+      bis drei Wochen&raquo; wirkt stark, wenn sie eingehalten wird.
+- [ ] **Erstgespraech kostenlos bestaetigen.** Die Antwort auf &laquo;Was kostet
+      eine Messung?&raquo; enthaelt den Satz &laquo;Das Erstgespraech selbst ist
+      kostenlos.&raquo; Bestaetigen, dass das tatsaechlich so angeboten wird.
+      Falls nicht, den Satz in beiden Fassungen streichen.
+
+### 6.3 Noch fehlende Inhalte (aus UPDATE-02 Abschnitt H)
+
+- [ ] **Foto der Person** fuer den Abschnitt &laquo;Ueber mich&raquo;.
+- [ ] **Anonymisierter Musterbericht als PDF.** Senkt die Hemmschwelle stark,
+      weil Interessenten sehen, was sie am Ende bekommen. Vor Veroeffentlichung
+      auf Kundendaten pruefen.
 
 ## 7. QUALITAETSSICHERUNG
 
@@ -194,3 +204,38 @@ Einzeldatei `netlify-single/index.html`.
 Unveraendert gueltig: keine erfundenen Fakten, keine Preise auf der Website,
 keine Normgrenzwerte als Zahlenwerte, keine Kundennamen, keine UID oder
 MWST-Nummer.
+
+### UPDATE-02
+
+| Abschnitt | Was geaendert wurde |
+| --- | --- |
+| A | &laquo;Qualifikationen&raquo; sichtbar geschaltet und mit dem Amateurfunk-Block gefuellt. Bewusst **Variante 1** ohne Klassenangabe: &laquo;Amateurfunkzeugnis, Rufzeichen DO1BUU.&raquo; Variante 2 erst nach Verifikation der Lizenzklasse. |
+| B | FAQ-Antwort &laquo;Muss die Anlage dafuer abgeschaltet werden?&raquo; ergaenzt. |
+| C | FAQ-Antwort &laquo;Was kostet eine Messung?&raquo; ergaenzt. Weiterhin keine Preise auf der Seite. |
+| D | FAQ-Antwort &laquo;In welchem Gebiet sind Sie im Einsatz?&raquo; ergaenzt. |
+| E | Frage zur Vorlaufzeit bleibt aus dem sichtbaren Bereich draussen, siehe 6.2. |
+| F | Startseite, Block &laquo;Woher die Einschaetzung kommt&raquo;: Satz um &laquo;Lizenzierter Funkamateur.&raquo; ergaenzt. |
+| G.1 | **Alle sichtbaren `TODO:`-Texte aus dem Kundenbereich entfernt**, auch aus den Rechtstexten. Sie liegen jetzt als HTML-Kommentar an der betroffenen Stelle und hier in dieser Datei. Details unten. |
+
+**Zu G.1 im Detail.** Bis UPDATE-01 trugen Impressum, Datenschutz und AGB
+sichtbare `TODO:`-Hinweise, wie es der urspruengliche BRIEF Abschnitt 7 verlangte.
+UPDATE-02 Punkt G.1 verlangt das Gegenteil. Aufgeloest wurde das so:
+
+- Der `DraftBanner` bleibt auf allen drei Rechtsseiten stehen. Er kennzeichnet
+  die Texte weiterhin sichtbar als Entwurf mit Pruefvorbehalt, verwendet aber
+  nicht das Wort `TODO`. Damit ist die Vorgabe aus BRIEF Abschnitt 7 weiterhin
+  erfuellt.
+- Wo ein `TODO` mitten im Satz stand, wurde der Satz vervollstaendigt statt
+  gekuerzt. AGB Ziffer 11 lautet jetzt &laquo;Der Gerichtsstand wird vor
+  Inkraftsetzung dieser Geschaeftsbedingungen festgelegt.&raquo; statt eines
+  abgebrochenen Satzes.
+- Die Zeilen &laquo;Stand: TODO&raquo; lauten jetzt &laquo;Stand: Entwurf.&raquo;
+  mit dem Zusatz, dass der Text erst nach Pruefung in Kraft gesetzt wird.
+- Zwei Abschnitte, deren einziger Inhalt ein TODO war, sind ganz entfallen:
+  &laquo;Firmenname und Handelsregister&raquo; im Impressum (der BRIEF verlangt
+  in Abschnitt 7.1 ohnehin kein Handelsregister-Feld) und &laquo;EU-Kunden und
+  DSGVO&raquo; in der Datenschutzerklaerung. Beide Fragen leben als Kommentar im
+  Code und hier weiter. Die Datenschutzerklaerung hat dadurch elf statt zwoelf
+  Ziffern; die Nummerierung wurde durchgehend korrigiert.
+- `robots.txt` enthaelt weiterhin einen technischen `TODO`-Kommentar zur
+  Site-URL. Das ist eine Maschinendatei, kein Kundenbereich.

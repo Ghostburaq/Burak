@@ -3,19 +3,41 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import SineDivider from '../components/SineDivider.astro';
 
 // Fragen ohne fertige Antwort bleiben bewusst aus der Liste, damit auf der Seite
-// kein sichtbarer Platzhalter steht. Offene Antworten siehe OFFENE_PUNKTE.md:
-//   - Muss die Anlage dafür abgeschaltet werden?
-//   - Was kostet eine Messung?
+// kein sichtbarer Platzhalter steht. Noch offen, siehe OFFENE_PUNKTE.md:
 //   - Wie schnell ist ein Messtermin möglich?
-//   - In welchem Gebiet sind Sie im Einsatz?
+//     TODO: Realistische Vorlaufzeit bis zum Messtermin festlegen (abhängig von der
+//     Geräteverfügbarkeit) und die Frage danach wieder aufnehmen. Eine konkrete
+//     Angabe wie «in der Regel innert zwei bis drei Wochen» wirkt stark, wenn sie
+//     eingehalten wird.
+//
+// TODO (zur Antwort «Was kostet eine Messung?»): Bestätigen, dass das Erstgespräch
+// tatsächlich kostenlos angeboten wird. Falls nicht, den entsprechenden Satz streichen.
 const faq = [
   {
     q: 'Wie lange dauert eine Messung?',
-    a: 'Für eine Bewertung im Bezugsrahmen EN 50160 ist eine zusammenhängende Messung über sieben Tage üblich. Für eine gezielte Störungssuche kann eine kürzere, dafür engmaschigere Messung sinnvoller sein. Was passt, wird im Messplan festgelegt.',
+    a: ['Für eine Bewertung im Bezugsrahmen EN 50160 ist eine zusammenhängende Messung über sieben Tage üblich. Für eine gezielte Störungssuche kann eine kürzere, dafür engmaschigere Messung sinnvoller sein. Was passt, wird im Messplan festgelegt.'],
+  },
+  {
+    q: 'Muss die Anlage dafür abgeschaltet werden?',
+    a: [
+      'In aller Regel nicht. Die Messung erfolgt im laufenden Betrieb, ein Produktions- oder Versorgungsunterbruch ist dafür nicht vorgesehen. Die Strommessung erfolgt berührungslos über Stromwandler, die Anlage läuft während der gesamten Messdauer weiter.',
+      'Für den Anschluss der Spannungspfade wird an aktiven Teilen gearbeitet. Diese Arbeiten erfolgen nach den geltenden Sicherheitsvorschriften und in Absprache mit der für die Anlage verantwortlichen Elektrofachkraft. Ob dafür eine kurzzeitige Freischaltung nötig ist, hängt von der konkreten Verteilung ab und wird vorgängig im Messplan geklärt, nicht erst am Messtag.',
+    ],
+  },
+  {
+    q: 'Was kostet eine Messung?',
+    a: [
+      'Auf dieser Seite stehen bewusst keine Pauschalpreise. Der Aufwand hängt von Messort, Dauer, Anzahl Messpunkte und der gewünschten Berichtstiefe ab, und eine Zahl ohne diese Angaben wäre nicht belastbar.',
+      'Nach dem Erstgespräch erhalten Sie eine schriftliche Offerte mit festem Rahmen. Das Erstgespräch selbst ist kostenlos. Wenn sich dabei zeigt, dass eine Messung in Ihrem Fall nichts bringt, sage ich Ihnen das, bevor Kosten entstehen.',
+    ],
+  },
+  {
+    q: 'In welchem Gebiet sind Sie im Einsatz?',
+    a: ['Sitz ist Thayngen im Kanton Schaffhausen. Der Einsatz erfolgt in der ganzen Schweiz. Anreise und allfällige Übernachtung werden nach Vereinbarung abgerechnet und in der Offerte transparent ausgewiesen.'],
   },
   {
     q: 'Was passiert mit meinen Messdaten?',
-    a: 'Rohdaten und Bericht werden vertraulich behandelt und ausschliesslich für den vereinbarten Auftrag verwendet. Sie werden für eine festgelegte Frist aufbewahrt, damit Rückfragen und Zweitmeinungen auf derselben Datenbasis möglich bleiben. Eine Weitergabe an Dritte erfolgt nur mit Ihrer schriftlichen Zustimmung.',
+    a: ['Rohdaten und Bericht werden vertraulich behandelt und ausschliesslich für den vereinbarten Auftrag verwendet. Sie werden für eine festgelegte Frist aufbewahrt, damit Rückfragen und Zweitmeinungen auf derselben Datenbasis möglich bleiben. Eine Weitergabe an Dritte erfolgt nur mit Ihrer schriftlichen Zustimmung.'],
   },
 ];
 ---
@@ -42,7 +64,9 @@ const faq = [
     {faq.map((item) => (
       <div class="rounded-lg border border-ink-200 bg-white p-6 md:p-7">
         <dt class="text-lg font-semibold text-anthrazit">{item.q}</dt>
-        <dd class="mt-2 max-w-prose text-sm leading-relaxed text-ink-700">{item.a}</dd>
+        <dd class="mt-2 max-w-prose space-y-3 text-sm leading-relaxed text-ink-700">
+          {item.a.map((absatz) => <p>{absatz}</p>)}
+        </dd>
       </div>
     ))}
   </dl>
