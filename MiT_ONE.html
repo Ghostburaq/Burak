@@ -3491,7 +3491,51 @@ window.mqKuerzen=()=>{
   toast(n?('✂️ '+n+' Mails auf Kurzfassung umgestellt — passen jetzt in Outlook'):'⚠ Kürzen hat nicht gereicht — bitte den ZIP-Weg nutzen');
   return n;
 };
-let MQ_LAUF=null, MQ_TEMPO=1200;
+let MQ_LAUF=null, MQ_TEMPO=1200, MQ_KLICK=false;
+/* Browser starten ein externes Mailprogramm nur, wenn der Aufruf direkt auf eine
+   Nutzeraktion folgt. Ein Timer zählt nicht — deshalb der Klick-Modus: ein grosser
+   Knopf, jeder Druck öffnet die nächste Mail und ist damit eine echte Nutzeraktion. */
+window.mqKlickModus=an=>{ MQ_KLICK=an!==false;
+  if(MQ_KLICK&&MQ_LAUF) mqStop();
+  mailRender();
+  if(MQ_KLICK) setTimeout(()=>{const b=document.getElementById('mqWeiterBtn'); if(b) b.focus();},60); };
+window.mqWeiter=()=>{
+  const m=MAILQ.filter(x=>x.status==='offen')[0];
+  if(!m){ MQ_KLICK=false; mailRender(); toast('✅ Alle Mails der Warteschlange sind erledigt'); return null; }
+  let alsDatei=false;
+  if(!mailtoOeffnen(m)){ emlDatei(m); alsDatei=true; }
+  m.status='gesendet'; m.gesendet=isoOf(new Date());
+  mblockAdd(m,'outlook-klick'); mailHistorie(m,'outlook-klick'); mqSave(); mailRender();
+  const rest=MAILQ.filter(x=>x.status==='offen').length;
+  if(!rest){ MQ_KLICK=false; mailRender(); toast('✅ Fertig — alle Mails geöffnet und alle Kunden gesperrt'); }
+  else setTimeout(()=>{const b=document.getElementById('mqWeiterBtn'); if(b) b.focus();},40);
+  if(alsDatei) toast('💾 '+m.kunde+': zu lang für Outlook → als .eml gespeichert');
+  return m;
+};
+/* EIN Knopf: erzeugen, falls nötig — und sofort mit dem Öffnen beginnen */
+window.mqStartenUndOeffnen=()=>{
+  if(!MAILQ.filter(m=>m.status==='offen').length){
+    if(!mqGenerieren()) return 0;
+    mqKuerzenStill();
+  }
+  MQ_KLICK=true;
+  const m=mqWeiter();          /* erste Mail direkt im Klick — echte Nutzeraktion */
+  mailRender();
+  setTimeout(()=>{const b=document.getElementById('mqWeiterBtn'); if(b) b.focus();},60);
+  return m?1:0;
+};
+/* still kürzen, ohne Meldung — damit der Ein-Klick-Weg nicht stockt */
+function mqKuerzenStill(){
+  const zu=MAILQ.filter(m=>m.status==='offen'&&!mailtoPasst(m));
+  if(!zu.length) return 0;
+  let n=0;
+  zu.forEach(m=>{ const k=K.find(x=>x._i===m._i); if(!k) return;
+    const kurz=mailBauen(k,m.typ,Object.assign(mailOpt(),{laenge:'kurz'}));
+    if(!mailtoPasst(kurz)) return;
+    m.betreff=kurz.betreff; m.text=kurz.text; m.score=menschCheck(kurz).score; m.gekuerzt=true; n++; });
+  if(n) mqSave();
+  return n;
+}
 window.mqSetTempo=v=>{ MQ_TEMPO=Math.max(300,Math.min(6000,+v||1200)); mailRender(); };
 window.mqStop=()=>{ if(MQ_LAUF){ clearTimeout(MQ_LAUF.timer); MQ_LAUF=null; mailRender();
   toast('⏹ Versand angehalten'); } };
@@ -3628,10 +3672,19 @@ function mailRender(){
     <button class="tbtn primary" onclick="mqGenerieren()" title="Erzeugt ${MQ_ANZAHL} Mails der gewählten Art für freie Kunden aus dem Filter">⚡ ${MQ_ANZAHL} Mails generieren</button>
     </div>
     <div class="card-b" style="padding-top:10px">
+      <div style="font-size:11.5px;color:var(--tx2);margin-bottom:10px;line-height:1.55">
+        <b>Drei Wege zu Outlook.</b>
+        <b>⚡📨 Erzeugen &amp; öffnen</b> — Mail für Mail auf Knopfdruck, Enter gedrückt halten genügt; funktioniert immer.
+        <b>📦 ZIP</b> — alle auf einmal als Entwürfe, in Outlook in «Entwürfe» ziehen; der schnellste Weg bei 50 Mails.
+        <b>⏱ Zeitgesteuert</b> — läuft von allein, aber Browser blockieren meist alles nach der ersten Mail.
+      </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
-        <button class="tbtn primary" onclick="mqAlleOeffnen()" ${qOffen?'':'disabled style="opacity:.45"'}
-          title="Öffnet alle ${qOffen} offenen Mails nacheinander im Mailprogramm — ein Klick, dann läuft es durch">
-          ${MQ_LAUF?'⏹ Stopp ('+MQ_LAUF.ge+'/'+MQ_LAUF.total+')':'📨 Alle '+qOffen+' in Outlook öffnen'}</button>
+        <button class="tbtn primary" style="font-size:13.5px;padding:9px 20px" onclick="mqStartenUndOeffnen()"
+          title="Erzeugt bei Bedarf ${MQ_ANZAHL} Mails und öffnet sie sofort der Reihe nach in Outlook">
+          ⚡📨 ${qOffen?qOffen+' Mails':MQ_ANZAHL+' Mails erzeugen &'} in Outlook öffnen</button>
+        <button class="tbtn" onclick="mqAlleOeffnen()" ${qOffen?'':'disabled style="opacity:.45"'}
+          title="Zeitgesteuert ohne weiteres Zutun — funktioniert nur, wenn der Browser das Mailprogramm ohne Nachfrage starten darf">
+          ${MQ_LAUF?'⏹ Stopp ('+MQ_LAUF.ge+'/'+MQ_LAUF.total+')':'⏱ Zeitgesteuert'}</button>
         <button class="tbtn" onclick="mqNaechste()" ${qOffen&&!MQ_LAUF?'':'disabled style="opacity:.45"'} title="Nur die nächste Mail öffnen">📧 Nächste einzeln</button>
         <button class="tbtn" onclick="mqZip()" ${qOffen?'':'disabled style="opacity:.45"'} title="Alle offenen Mails als .eml-Entwürfe im ZIP — in Outlook in «Entwürfe» ziehen">📦 Alle als Outlook-Entwürfe (ZIP)</button>
         <button class="tbtn" onclick="mqAlleEml()" ${qOffen?'':'disabled style="opacity:.45"'} title="Jede Mail als einzelne .eml-Datei">💾 Einzeln als .eml</button>
@@ -3645,6 +3698,28 @@ function mailRender(){
           <input type="checkbox" id="mqSperre" ${MQ_SPERRE?'checked':''} onchange="mqSetSperre(this.checked)"> gesperrte Kunden überspringen</label>
         ${MAILQ.length?`<button class="tbtn" style="color:var(--red)" onclick="mqLeeren()">🗑</button>`:''}
       </div>
+      ${(()=>{ if(!MQ_KLICK) return '';
+        const off=MAILQ.filter(m=>m.status==='offen'); const naechste=off[0];
+        const fertig=MAILQ.filter(m=>m.status==='gesendet').length;
+        if(!naechste) return '';
+        return `<div style="background:linear-gradient(135deg,rgba(0,113,227,.12),rgba(90,200,250,.08));border:1.5px solid var(--blue);border-radius:14px;padding:16px 18px;margin-bottom:14px">
+          <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+            <button class="tbtn primary" id="mqWeiterBtn" onclick="mqWeiter()"
+              style="font-size:15px;padding:13px 26px;font-weight:700">📧 Öffnen &amp; weiter</button>
+            <div style="flex:1;min-width:180px">
+              <div style="font-weight:700;font-size:14px">${esc(naechste.kunde)}</div>
+              <div style="font-size:12px;color:var(--tx2)">${esc(naechste.mail||'keine Adresse')} · ${esc(naechste.betreff)}</div>
+            </div>
+            <div style="text-align:right"><div style="font-size:20px;font-weight:700">${fertig} / ${MAILQ.length}</div>
+              <div style="font-size:11px;color:var(--tx2)">noch ${off.length} offen</div></div>
+            <button class="tbtn" onclick="mqKlickModus(false)">✕ Beenden</button>
+          </div>
+          <div class="prow" style="margin-top:12px"><div class="pbar" style="height:8px">
+            <div style="width:${Math.round(fertig/MAILQ.length*100)}%;background:linear-gradient(90deg,var(--blue),var(--teal))"></div></div></div>
+          <div style="font-size:11.5px;color:var(--tx2);margin-top:8px">
+            💡 Der Knopf hat den Fokus — du kannst einfach <b>Enter</b> gedrückt halten, bis alle durch sind.
+            Browser starten Outlook nur direkt nach einem Klick, deshalb dieser Weg.</div>
+        </div>`; })()}
       ${MQ_LAUF?`<div style="background:rgba(0,113,227,.09);border:1px solid var(--blue);border-radius:11px;padding:10px 14px;margin-bottom:12px;font-size:12.5px">
         📨 <b>Versand läuft</b> — ${MQ_LAUF.ge} von ${MQ_LAUF.total} geöffnet, Takt ${MQ_TEMPO} ms.
         Falls der Browser fragt, ob Links im Mailprogramm geöffnet werden dürfen: erlauben und «immer zulassen» wählen.</div>`:''}
