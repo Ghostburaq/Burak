@@ -1,17 +1,55 @@
-# Gym Logbuch — Beintraining mit Reha-Modus
+# Gym Logbuch — Beintraining, zwei Fassungen
 
 Druckoptimiertes Trainingslogbuch als Excel-Arbeitsmappe. Alle Kennzahlen sind
 Formeln — sobald im Log Zeilen ergänzt werden, aktualisiert sich alles Weitere
 von selbst.
 
-**Datei:** `GymLogbuch_Beine.xlsx` · **PDF-Vorschau:** `GymLogbuch_Beine.pdf`
-(29 A4-Seiten)
+| Fassung | Datei | Gilt | Umfang |
+|---|---|---|---|
+| **Vor der OP** | `GymLogbuch_Beine_PreOP.xlsx` | bis 30.09.2026 | 13 Blätter, 30 A4-Seiten |
+| **Reha** | `GymLogbuch_Beine.xlsx` | ab dem OP-Tag | 12 Blätter, 29 A4-Seiten |
+
+Beide entstehen aus demselben Generator und sind in `Log`, `Einheiten`,
+`Auswertung`, `Progression`, `Rekorde`, `Trainingsblatt` und `Übungen`
+identisch aufgebaut.
+
+## Übergabe am OP-Tag
+
+Zeilen aus `Log` und `Einheiten` aus der Vor-OP-Fassung kopieren und in der
+Reha-Fassung an derselben Stelle einfügen. Spaltenaufbau und Zeilennummern
+stimmen überein, Auswertung, Progression, Rekorde und Dashboard rechnen
+sofort weiter. Danach im Blatt `Reha-Modus` die aktuelle Woche nach OP
+eintragen und im `Reha-Log` das OP-Datum.
 
 > Die Reha-Blätter sind eine Gedächtnisstütze für den Alltag, keine ärztliche
 > Anweisung. Das schriftliche Nachbehandlungsschema des Operateurs und die
 > Ansagen der Physiotherapie haben in jedem Punkt Vorrang.
 
-## Blätter
+## Blätter der Vor-OP-Fassung
+
+Zusätzlich zu den gemeinsamen Blättern:
+
+| Blatt | Zweck | Druck |
+|---|---|---|
+| `OP-Countdown` | Tage und Wochen bis zum Termin; je Übung, wie lange sie danach ausfällt und welcher Ersatz einspringt | A4 quer, 2 S. |
+| `Vorbereitung` | 25-Punkte-Checkliste: Fragen an Operateur und Physiotherapie, Organisation, Gym-Logistik | A4 hoch |
+| `Baseline Schulter` | Ausgangswerte beider Schultern: Beweglichkeit, Schmerz, Curl-Testgewicht | A4 quer |
+
+Das `Trainingsblatt` sperrt vor der OP nichts, vermerkt aber hinter jeder
+Übung, wie lange sie nach der OP ausfällt. `Reha-Modus` und `Reha-Log`
+entfallen, der `Reha-Fahrplan` ist enthalten — er lohnt sich vorher zu lesen.
+
+### Warum die Baseline wichtig ist
+
+Der Reha-Fahrplan misst zwei Meilensteine am Vergleich zur Gegenseite
+(Beugekraft 70 % in Phase 4, 90 % in Phase 5). Ohne einen vor der OP
+gemessenen Ausgangswert der gesunden Seite sind diese Prozentwerte später
+nicht überprüfbar — und nachholen lässt sich die Messung dann nicht mehr.
+
+## Gemeinsame Blätter
+
+Die Reha-Fassung hat statt `OP-Countdown`, `Vorbereitung` und
+`Baseline Schulter` die Blätter `Reha-Modus` und `Reha-Log`.
 
 | Blatt | Zweck | Druck |
 |---|---|---|
@@ -118,10 +156,14 @@ vermerkt.
 
 ```bash
 cd gym
-python3 build_gymlogbuch.py                                    # xlsx bauen
-python3 ~/.claude/skills/xlsx/scripts/recalc.py GymLogbuch_Beine.xlsx 600
+python3 build_gymlogbuch.py reha                               # Reha-Fassung
+python3 build_gymlogbuch.py preop                              # Vor-OP-Fassung
+python3 ~/.claude/skills/xlsx/scripts/recalc.py GymLogbuch_Beine.xlsx 700
 soffice --headless --convert-to pdf GymLogbuch_Beine.xlsx      # PDF-Vorschau
 ```
+
+Ohne Argument wird die Reha-Fassung gebaut. Das OP-Datum steht als Konstante
+`OP_DATUM` oben im Skript.
 
 - `daten.py` — Rohdaten der Einheiten 1 bis 4 aus der Quelle
 - `reha_daten.py` — Wortlaut der Reha-Inhalte, unverändert übernommen
