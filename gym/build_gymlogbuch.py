@@ -71,7 +71,7 @@ UEB = "'Übungen'"       # Blattname mit Umlaut -> in Formeln immer quoten
 UEBUNGEN = [
     dict(name="Beinpresse", block="Beine vorne",
          geraet="Beinpresse, tiefe Fussposition", von=8, bis=12, saetze=3,
-         rpe="8-9", start=None, maxlast=None, schritt=5, letzter="A",
+         rpe="8-9", start=None, maxlast=None, schritt=10, letzter="A",
          aktiv=True,
          notiz="Ersetzt Hackenschmidt-Kniebeuge und Lunges. Schwere "
                "Grundübung zuerst. Hände seitlich ablegen statt an den "
@@ -86,30 +86,31 @@ UEBUNGEN = [
          schritt=5, letzter="R", aktiv=True,
          notiz="Dritter Arbeitssatz läuft als Reduktionssatz aus."),
     dict(name="Adduktion", block="Beine vorne", geraet="Maschine",
-         von=15, bis=20, saetze=3, rpe="9", start=None, maxlast=152.5,
+         von=15, bis=20, saetze=3, rpe="9", start=None, maxlast=None,
          schritt=2.5, letzter="R", aktiv=True,
-         notiz="152.5 kg ist Stackende. Progression ab jetzt über 3 s "
-               "Exzentrik und 1 s Pause in der gedehnten Position, nicht "
-               "über Last."),
+         notiz="Deckel entfernt: in Einheit 5 lagen 162.5 kg an, die frühere "
+               "Annahme 152.5 kg als Stackende stimmt also nicht. Falls doch "
+               "eine Obergrenze existiert, hier unter 'Max (kg)' "
+               "eintragen."),
     dict(name="Rumänisches Kreuzheben", block="Beine hinten",
-         geraet="Langhantel", von=8, bis=10, saetze=3, rpe="8", start=None,
+         geraet="Langhantel", von=10, bis=12, saetze=3, rpe="8", start=None,
          maxlast=None, schritt=2.5, letzter="A", aktiv=True,
          notiz="Ersetzt Kickback. Schliesst die Lücke Hüftstreckung bei "
                "gestrecktem Knie, Ischiokrurale und Gluteus in der Dehnung."),
     dict(name="Hip Thrust", block="Beine hinten", geraet="Langhantel",
-         von=8, bis=12, saetze=3, rpe="8-9", start=None, maxlast=None,
+         von=10, bis=12, saetze=3, rpe="8-9", start=None, maxlast=None,
          schritt=10, letzter="A", aktiv=True,
          notiz="Gesamtgewicht inkl. Stange notieren, auch bei "
                "Reduktionssätzen."),
     dict(name="Beinbeuger", block="Beine hinten", geraet="Maschine, sitzend",
-         von=10, bis=12, saetze=3, rpe="9", start=None, maxlast=None,
+         von=10, bis=15, saetze=3, rpe="9", start=None, maxlast=None,
          schritt=5, letzter="R", aktiv=True,
          notiz="Sitzend statt liegend: Hüfte gebeugt, Ischiokrurale "
                "vorgedehnt, mehr Reiz pro Satz. Dritter Satz als "
                "Reduktionssatz."),
     dict(name="Seitliche Kickbacks", block="Beine hinten", geraet="Kabel",
-         von=15, bis=20, saetze=3, rpe="9", start=None, maxlast=None,
-         schritt=5, letzter="A", aktiv=True,
+         von=10, bis=12, saetze=3, rpe="9", start=None, maxlast=None,
+         schritt=2, letzter="A", aktiv=True,
          notiz="Gluteus medius, relevant für die Silhouette von vorne."),
     dict(name="Waden", block="Beine hinten", geraet="Maschine", von=10,
          bis=15, saetze=3, rpe="9", start=None, maxlast=None, schritt=5,
@@ -546,11 +547,15 @@ for lab, txt in [
      "daraus ist die Freigabe ab Woche 2 abgeleitet. Diese Woche mit "
      "Operateur oder Physiotherapie bestätigen, sie steht im Blatt "
      "'Übungen' und lässt sich dort ändern."),
-    ("Stackende Adduktion",
-     "152.5 kg ist das Ende des Steckgewichts. Im Blatt 'Übungen' als 'Max "
-     "(kg)' hinterlegt, damit der Zielvorschlag dort stehen bleibt statt "
-     "eine Last zu fordern, die die Maschine nicht hergibt. Weitersteigern "
-     "über Tempo und Pausen."),
+    ("Adduktion, Obergrenze",
+     "Die frühere Annahme, 152.5 kg sei das Stackende, ist überholt - in "
+     "Einheit 5 lagen 162.5 kg an. 'Max (kg)' ist deshalb leer. Falls die "
+     "Maschine doch eine Obergrenze hat, im Blatt 'Übungen' eintragen."),
+    ("Absteigende Sätze",
+     "Bei Split Squat, Beinstrecker und Hip Thrust wurden die Arbeitssätze "
+     "in Einheit 5 absteigend beziehungsweise aufsteigend gefahren. Die "
+     "doppelte Progression rechnet auf dem schwersten Satz und dessen "
+     "Wiederholungen - bei Rampen ist das die oberste Stufe."),
     ("Startgewichte fehlen",
      "Beinpresse und Rumänisches Kreuzheben sind neu im Plan "
      "und haben keine Historie. Trag im Blatt 'Übungen' unter 'Start (kg)' "
