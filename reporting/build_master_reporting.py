@@ -30,6 +30,9 @@ PROB = '⚖️ Wahrscheinlichkeit'
 PQ = f"'{PIPE}'"          # Pipeline quoted
 WQ = f"'{PROB}'"          # Wahrscheinlichkeits-Sheet quoted
 
+# Letzte Zeile des Pipeline-Druckbereichs (bleibt eine Querseite)
+PRINT_LAST = 90
+
 # Aktiv-Status (identisch zur bestehenden Logik der Mappe)
 AKTIV = ["WON", "offered", "to be offered", "on hold",
          "follow-up", "Evaluation", "In evaluation", "tbd"]
@@ -285,6 +288,12 @@ checks = [
      f'=IF(E{RC+5}=0,"✔  Alle aktiven Deals sind auf der Skala 0/10/30/60/90 %",'
      f'"⚠  "&E{RC+5}&" Deal(s) auf einen Skalenwert setzen — orange markiert in Spalte S der Pipeline")',
      'General'),
+    (f'Deals unterhalb des Pipeline-Druckbereichs (ab Zeile {PRINT_LAST+1})',
+     f'=SUMPRODUCT(--({PQ}!$B${PRINT_LAST+1}:$B$860<>""))', '0'),
+    ('Status Druckbereich',
+     f'=IF(E{RC+7}=0,"✔  Alle Deals liegen im Druckbereich (Zeilen 6–{PRINT_LAST})",'
+     f'"⚠  "&E{RC+7}&" Deal(s) unterhalb Zeile {PRINT_LAST} — Druckbereich der Pipeline erweitern")',
+     'General'),
 ]
 # Beschriftung ueber A:D, Ergebnis ueber E:H
 for i, (label, formula, fmt) in enumerate(checks):
@@ -317,6 +326,11 @@ LOG = [
     ('Technik', 'Der Faktor je Deal steht in der ausgeblendeten Hilfsspalte Y der Pipeline (bei Bedarf einblenden), '
                 'die Systemkennzeichen in AE/AF. Ganzspalten-Bezüge in Dashboard und CEO Report wurden auf Zeile 860 '
                 'begrenzt, der Druckbereich der Pipeline auf Zeile 80 erweitert (vorher Zeile 48 — Deals fehlten im Ausdruck).'),
+    ('Bereinigt', 'Verwaiste Restformeln in Pipeline Q862 (Summe von Q9, Q10, Q12, Q13, Q14, Q22, Q60, Q61, Q62, Q63) '
+                  'und Q864 (Summe von Q10, Q12, Q60, Q61) entfernt — von nichts referenziert, aber Auslöser für '
+                  'Fehlerwerte, sobald einer dieser Deals keinen numerischen Gew.Wert mehr hat. '
+                  'Die WON-Ranglisten haben neu einen Sortier-Zuschlag, damit betragsgleiche Deals nicht doppelt '
+                  'erscheinen. Ein Deal ohne Wahrscheinlichkeit gilt jetzt korrekt als «ausserhalb der Skala».'),
 ]
 for i, (k, v) in enumerate(LOG):
     r = RL + 1 + i
@@ -359,20 +373,46 @@ for r in range(6, 861):
                      f'IF(OR(I{r}<>"",S{r}<>""),"tbd",""))')
     # 1 = zaehlt zur aktiven Pipeline
     pipe[f'AE{r}'] = f'=IF(B{r}="",0,IF(COUNTIF({AKTIV_LIST},R{r})>0,1,0))'
-    # 1 = Wahrscheinlichkeit liegt auf der Aggreko-Skala
-    pipe[f'AF{r}'] = f'=IF(B{r}="",0,IF(COUNTIF({SKALA_LIST},S{r})>0,1,0))'
+    # 1 = Wahrscheinlichkeit liegt auf der Aggreko-Skala.
+    # ISNUMBER-Waechter ist zwingend: COUNTIF wertet eine leere Bezugszelle
+    # als 0 aus und wuerde einen Deal OHNE Wahrscheinlichkeit sonst als
+    # "skalenkonform" zaehlen (die 0-%-Stufe steht ja in der Liste).
+    pipe[f'AF{r}'] = (f'=IF(B{r}="",0,'
+                      f'IF(AND(ISNUMBER(S{r}),COUNTIF({SKALA_LIST},S{r})>0),1,0))')
+    # Sortierschluessel der WON-Ranglisten: winziger zeilenabhaengiger Zuschlag,
+    # damit zwei betragsgleiche WON-Deals nicht beide auf dieselbe Zeile
+    # matchen und ein Deal doppelt in der Top-Liste erscheint.
+    pipe[f'Z{r}'] = f'=IF(AND(R{r}="WON",ISNUMBER(I{r})),AA{r}+(861-ROW())*0.000001,"")'
 
 # Kopfzeilen praezisieren
 pipe['Q5'] = 'Gew.Wert CHF\n(Aggreko)'
 pipe['S5'] = 'Effektive\nWahr. %'
 pipe['S4'] = '⚖️  Gew. Pipeline (Aggreko)'
+# U4 summierte bisher ALLE Zeilen (inkl. LOST/Declined) und konnte damit von
+# der gewichteten Pipeline in Dashboard, Report und Blatt "Wahrscheinlichkeit"
+# abweichen, sobald ein verlorener Deal seine Wahrscheinlichkeit behaelt.
+# Neu identische Abgrenzung wie ueberall sonst: nur aktive Status.
+pipe['U4'] = '=' + '+'.join(
+    [f'SUMIFS(Q$6:Q$860,R$6:R$860,"{s}")' for s in AKTIV])
 pipe['A2'] = ('  ✏️  Nur in diesem Sheet Daten erfassen — Dashboard, CEO Report, Report, Executive PDF und '
               'Diagramme aktualisieren sich automatisch.   ⚖️  Wahrscheinlichkeit (Spalte S) nach '
               'Aggreko-Skala 0/10/30/60/90 % setzen — Modell siehe Blatt «⚖️ Wahrscheinlichkeit».')
 
+# Verwaiste Restformeln weit unterhalb der Daten (Zeilen 862/864). Sie summierten
+# eine handverlesene Auswahl von Gew.Wert-Zellen, werden von nichts referenziert,
+# liegen ausserhalb jedes Druckbereichs und ergeben #VALUE!, sobald einer der
+# genannten Deals keinen numerischen Gew.Wert mehr hat. Inhalt zur Dokumentation:
+#   Q862 = Q9+Q10+Q12+Q13+Q14+Q22+Q60+Q61+Q62+Q63
+#   Q864 = Q10+Q12+Q60+Q61
+for _co in ('Q862', 'Q864'):
+    pipe[_co].value = None
+
 # Druckbereich reichte nur bis Zeile 48 - die Pipeline ist inzwischen laenger,
-# beim Ausdruck fehlten die Deals ab Zeile 49.
-pipe.print_area = f"'{PIPE}'!$A$1:$Y$80"
+# beim Ausdruck fehlten die Deals ab Zeile 49. Neu deckt er genau den
+# Druckbereich auf Zeile 90 - das bleibt eine Querseite und laesst Platz fuer
+# rund 20 weitere Deals. Wird darunter erfasst, schlaegt die Kontrolle auf dem
+# Blatt "Wahrscheinlichkeit" Alarm (statt wie bisher stillschweigend zu kappen).
+pipe.print_area = f"'{PIPE}'!$A$1:$Y${PRINT_LAST}"
 pipe.page_setup.orientation = 'landscape'
 pipe.page_setup.fitToWidth = 1
 pipe.page_setup.fitToHeight = 0
@@ -541,6 +581,14 @@ upgrade_report('CEO Report', 'L', 'A206:K206')
 # 6) 📄 REPORT
 # =========================================================================
 rep = wb['📄 Report']
+# Die Top-WON-Tabelle zeigte das Volumen ueber LARGE(_WON_Sort;n). Da der
+# Sortierschluessel jetzt einen winzigen Zuschlag traegt, wird der Betrag
+# direkt aus der Volumenspalte geholt - so steht dort immer der exakte Wert.
+for _i in range(1, 11):
+    _r = 28 + _i
+    rep[f'E{_r}'] = (f"=IFERROR(INDEX({PQ}!$I$6:$I$860,"
+                     f"MATCH(LARGE({PQ}!$Z$6:$Z$860,{_i}),{PQ}!$Z$6:$Z$860,0)),\"\")")
+
 for co, src in [('A11', 'A10'), ('B11', 'B10'), ('C11', 'C10'), ('D11', 'D10')]:
     rep[co]._style = copy(rep[src]._style)
 rep['A11'] = '⚖️ Gewichtet'

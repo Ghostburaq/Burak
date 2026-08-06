@@ -63,12 +63,37 @@ es gibt keine fest eingetippten Prozentsätze in den Berichtsblättern.
 
 ### Nebenbei behoben
 
-- **Druckbereich Pipeline** reichte nur bis Zeile 48 — die Deals ab Zeile 49
-  fehlten im Ausdruck. Jetzt bis Zeile 80, quer und auf Seitenbreite.
-- **Ganzspalten-Bezüge** (`INDEX('MiT Strom Pipeline'!$A:$A;…)`) in Dashboard
-  und CEO Report auf Zeile 860 begrenzt — 4'278 Formeln, fachlich identisch,
-  spürbar schneller.
-- Abgeschnittene Beschriftungen in Executive PDF und Report korrigiert.
+Beim vollständigen Audit gefunden und korrigiert:
+
+| Fund | Wirkung | Behoben durch |
+|------|---------|---------------|
+| **Druckbereich Pipeline** endete bei Zeile 48 | Deals ab Zeile 49 fehlten im Ausdruck — kommentarlos | Druckbereich auf Zeile 90 (quer, Seitenbreite). Zusätzlich Kontrolle auf dem ⚖️-Blatt, die Alarm schlägt, sobald ein Deal darunter erfasst wird |
+| **Verwaiste Restformeln** in Pipeline `Q862`/`Q864` | Summierten eine handverlesene Zeilenauswahl, von nichts referenziert — hätten Fehlerwerte erzeugt, sobald einer dieser Deals keinen numerischen Gew.Wert mehr hat | Entfernt (Inhalt im Änderungsprotokoll dokumentiert) |
+| **Top-WON-Ranglisten** bei betragsgleichen Deals | Derselbe Deal erschien zweimal, ein anderer fiel aus der Liste (in Report und Executive PDF) | Sortier-Zuschlag in `_WON_Sort`; Volumen wird direkt aus der Volumenspalte geholt |
+| **`U4` (Kopfzeile Pipeline)** summierte alle Zeilen inkl. LOST/Declined | Zwei Zellen mit demselben Namen «gewichtete Pipeline» konnten verschiedene Zahlen zeigen | Gleiche Abgrenzung wie überall sonst: nur aktive Status |
+| **Skala-Kontrolle** zählte Deals *ohne* Wahrscheinlichkeit als skalenkonform | `COUNTIF` liest eine leere Bezugszelle als 0 — und 0 % steht ja in der Skala | `ISNUMBER`-Wächter; ein Deal ohne Wahrscheinlichkeit gilt jetzt korrekt als offen |
+| **Ganzspalten-Bezüge** in Dashboard/CEO Report | 4'278 Formeln über je 1 Mio. Zeilen | Auf Zeile 860 begrenzt — fachlich identisch, spürbar schneller |
+| Abgeschnittene Beschriftungen in Executive PDF und Report | | Spaltenbreiten und Texte angepasst |
+
+### Prüfung
+
+Die Skripte in [`tests/`](tests/) prüfen die Mappe vollständig:
+
+| Skript | Was es prüft | Ergebnis |
+|--------|--------------|----------|
+| `audit_static.py` | jede der 15'509 Formeln: Funktionsnamen, Blattbezüge, Anführungszeichen, externe Verweise, Fehlerwerte | 0 Befunde |
+| `audit_values.py` | rechnet **das gesamte Modell unabhängig in Python nach** — nur aus den Roheingaben — und vergleicht Zelle für Zelle | 11'255 Werte, 0 Abweichungen |
+| `audit_struktur.py` | benannte Bereiche, Dropdowns, bedingte Formatierung, Diagrammquellen, Druckbereiche, verbundene Zellen, Zahlenformate, Schriften | 0 Befunde |
+| `audit_behaviour.py` | 12 Szenarien mit veränderten Daten (neuer Deal, Statuswechsel, fehlende Wahrscheinlichkeit, Prozent als 60 statt 0.6, alle Bandgrenzen, leere Pipeline, Text im Volumen, Deal ohne Status, betragsgleiche Deals, letzte Zeile 860, Deal unter dem Druckbereich, LOST mit 90 %) | 12 / 12 bestanden |
+
+```bash
+cd reporting/tests && python3 audit_static.py && python3 audit_values.py \
+  && python3 audit_struktur.py && python3 audit_behaviour.py
+```
+
+Die Mappe enthält zusätzlich eine **eingebaute Selbstkontrolle** (⚖️-Blatt,
+Abschnitt 3): sie rechnet die gewichtete Pipeline auf zwei unabhängigen Wegen
+und meldet jede Abweichung — auch nachdem jemand Daten geändert hat.
 
 ---
 
@@ -85,7 +110,7 @@ Bei 46 aktiven Deals mit 6'862'149 CHF Umsatz:
 | **Total** |      | **46** | **6'862'149** | **2'203'080** |
 
 Gewichtungsgrad 32.1 %. Nach der alten Rechnung (Umsatz × Wahrscheinlichkeit)
-waren es 3'444'922 CHF.
+waren es 3'294'922 CHF.
 
 > **Offen fürs Bewertungs-Meeting:** 42 der 46 aktiven Deals stehen auf Werten,
 > die es in der neuen Skala nicht gibt (50 %, 80 %, 20 %, 100 %). Diese Werte
