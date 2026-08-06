@@ -10,6 +10,12 @@ deterministisch und ohne externe Abhängigkeiten zur Laufzeit.
 
 ![Übersicht aller Slides](docs/preview.png)
 
+## Weiteres im Repo
+
+- [`reporting/`](reporting/) — Master-Reporting «MiT Strom Schweiz» (Pipeline, Dashboard,
+  CEO Report, Executive PDF) mit dem Aggreko-Bewertungsmodell für
+  Gewinnwahrscheinlichkeit und gewichteten Umsatz.
+
 ## Was drin steckt
 
 - **10 Slides** mit klarem Spannungsbogen: Titel → Auftrag → Warum ich →
