@@ -100,7 +100,9 @@ Satztypen: `W` Warmup · `A` Arbeitssatz (Basis aller Kennzahlen) ·
 
 | Feld | Wirkung |
 |---|---|
-| `Ziel-Wdh`, `Ziel-Sätze`, `Ziel-RPE` | Vorgabe-Zeile auf dem Trainingsblatt; `Ziel-Sätze` bestimmt auch die Zahl der Satzzeilen |
+| `Wdh von`, `Wdh bis` | Zielbereich der doppelten Progression |
+| `Ziel-Sätze`, `Ziel-RPE` | Vorgabe-Zeile auf dem Trainingsblatt; `Ziel-Sätze` bestimmt auch die Zahl der Satzzeilen |
+| `Schritt (kg)` | kleinste sinnvolle Laststufe an diesem Gerät; steuert, wie viel bei einer Gewichtssteigerung draufkommt |
 | `Start (kg)` | Einstiegsgewicht für Übungen ohne Historie; speist die Plan-Spalte, bis die erste Einheit erfasst ist |
 | `Max (kg)` | deckelt den Zielvorschlag, z. B. am Ende des Steckgewichts; das Trainingsblatt weist dann auf Tempo-Progression hin |
 | `Aktiv = nein` | Archiv: raus aus Trainingsblatt und Reha-Modus, Historie bleibt in Log, Auswertung, Progression und Rekorden — dort grau und kursiv |
@@ -127,22 +129,49 @@ bleibt das Blatt druckbar, egal wie lang die Historie wird.
 - **e1RM (Epley)** = Gewicht × (1 + Wdh / 30). An Maschinen kein echtes 1RM,
   aber ein sauberer Vergleich zwischen Einheiten mit unterschiedlichen
   Wiederholungszahlen.
-- **Nächstes Ziel** = letztes Top-Gewicht + 2.5 %, gerundet auf 0.5 kg und
-  begrenzt durch `Max (kg)`. Ohne Historie greift `Start (kg)`.
+### Doppelte Progression
+
+So entsteht der Vorschlag für die nächste Einheit — er rechnet sich nach
+jedem Log-Eintrag neu:
+
+1. **Wiederholungen zuerst.** Solange der *schwächste* Arbeitssatz unter dem
+   oberen Ende des Zielbereichs liegt, bleibt das Gewicht stehen und es kommt
+   eine Wiederholung dazu.
+2. **Dann Gewicht.** Sitzen alle Arbeitssätze oben im Bereich, geht eine
+   Laststufe (`Schritt (kg)`) drauf und die Wiederholungen fangen unten im
+   Bereich wieder an.
+3. **Unter dem Bereich** bleibt das Gewicht stehen, bis die untere Grenze
+   sauber steht.
+4. **Am Deckel** (`Max (kg)`) steigt die Last nicht weiter — der Hinweis
+   verweist auf Tempo und Pausen.
+
+Beispiel: Split Squat, Zielbereich 8–10, zuletzt 80 kg × 8/8/8 → *Wdh +1 auf
+9*. Nach 80 kg × 10/10/10 → *Gewicht +5 kg, Wdh zurück auf 8*.
+
+Das Blatt `Rekorde` zeigt je Übung `Nächstes Ziel (kg)`, `Ziel-Wdh nächste
+Einheit` und den Schritt im Klartext; das `Trainingsblatt` übernimmt beides.
+`Progression` zählt zusätzlich, wie viele Einheiten die aktuelle Last schon
+steht — ab vier wird die Zeile gelb.
 
 ## Plan
 
 Neun aktive Übungen in zwei Blöcken, schwere Grundübung zuerst:
 
-- **Beine vorne:** Hackenschmidt-Kniebeuge · Split Squat · Beinstrecker · Adduktion
+- **Beine vorne:** Beinpresse · Split Squat · Beinstrecker · Adduktion
 - **Beine hinten:** Rumänisches Kreuzheben · Hip Thrust · Beinbeuger · Seitliche Kickbacks · Waden
 
 Lunges und Kickback sind archiviert; ihre Historie bleibt in allen
 Auswertungen sichtbar.
 
-Hackenschmidt-Kniebeuge und Rumänisches Kreuzheben sind neu und haben noch
-keine Historie — bis ein `Start (kg)` eingetragen ist, bleibt ihre Plan-Spalte
-auf dem Trainingsblatt leer.
+Beinpresse und Rumänisches Kreuzheben sind neu und haben noch keine Historie —
+bis ein `Start (kg)` eingetragen ist, bleibt ihre Plan-Spalte auf dem
+Trainingsblatt leer.
+
+Die Beinpresse hat die Hackenschmidt-Kniebeuge ersetzt. Sie war bisher als
+Ersatzübung für deren Sperrzeit hinterlegt, war also vor Woche 6 nutzbar —
+daraus ist die Freigabe ab Woche 2 abgeleitet. Dieser Wert ist eine Ableitung
+aus dem eigenen Plan, keine ärztliche Freigabe, und steht als offener Punkt
+auf dem Blatt `Start` sowie als Frage in der Vorbereitungs-Checkliste.
 
 ## Datenstand
 

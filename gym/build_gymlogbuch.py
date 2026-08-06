@@ -69,62 +69,82 @@ UEB = "'Übungen'"       # Blattname mit Umlaut -> in Formeln immer quoten
 # Die Reha-Felder (Freigabewoche, Ersatzübung, Hinweis) stehen in
 # reha_daten.py und werden unten anhand des Übungsnamens zugeordnet.
 UEBUNGEN = [
-    dict(name="Hackenschmidt-Kniebeuge", maxlast=None, block="Beine vorne",
-         geraet="Hackenschmidt / Pendel", wdh="6-10", saetze=3, rpe="8-9",
-         start=None, letzter="A", aktiv=True,
-         notiz="Ersetzt Lunges. Schwere Grundübung zuerst, Quadrizeps unter "
-               "Last in der gedehnten Position, Rücken gestützt. Ohne "
-               "Maschine: Pendelkniebeuge, sonst Beinpresse mit tiefer "
-               "Fussposition."),
-    dict(name="Split Squat", maxlast=None, block="Beine vorne",
-         geraet="Multipresse / Hantel", wdh="8-10", saetze=3, rpe="8",
-         start=None, letzter="A", aktiv=True,
+    dict(name="Beinpresse", block="Beine vorne",
+         geraet="Beinpresse, tiefe Fussposition", von=8, bis=12, saetze=3,
+         rpe="8-9", start=None, maxlast=None, schritt=5, letzter="A",
+         aktiv=True,
+         notiz="Ersetzt Hackenschmidt-Kniebeuge und Lunges. Schwere "
+               "Grundübung zuerst. Hände seitlich ablegen statt an den "
+               "Griffen ziehen - dann bleibt die Schulter aussen vor."),
+    dict(name="Split Squat", block="Beine vorne",
+         geraet="Multipresse / Hantel", von=8, bis=10, saetze=3, rpe="8",
+         start=None, maxlast=None, schritt=5, letzter="A", aktiv=True,
          notiz="Wdh-Bereich von 5-8 auf 8-10 je Bein. Limiter soll der "
                "Muskel sein, nicht die Stabilität."),
-    dict(name="Beinstrecker", maxlast=None, block="Beine vorne", geraet="Maschine",
-         wdh="12-15", saetze=3, rpe="9", start=None, letzter="R", aktiv=True,
+    dict(name="Beinstrecker", block="Beine vorne", geraet="Maschine",
+         von=12, bis=15, saetze=3, rpe="9", start=None, maxlast=None,
+         schritt=5, letzter="R", aktiv=True,
          notiz="Dritter Arbeitssatz läuft als Reduktionssatz aus."),
-    dict(name="Adduktion", maxlast=152.5, block="Beine vorne", geraet="Maschine",
-         wdh="15-20", saetze=3, rpe="9", start=None, letzter="R", aktiv=True,
+    dict(name="Adduktion", block="Beine vorne", geraet="Maschine",
+         von=15, bis=20, saetze=3, rpe="9", start=None, maxlast=152.5,
+         schritt=2.5, letzter="R", aktiv=True,
          notiz="152.5 kg ist Stackende. Progression ab jetzt über 3 s "
                "Exzentrik und 1 s Pause in der gedehnten Position, nicht "
                "über Last."),
-    dict(name="Rumänisches Kreuzheben", maxlast=None, block="Beine hinten",
-         geraet="Langhantel", wdh="8-10", saetze=3, rpe="8", start=None,
-         letzter="A", aktiv=True,
+    dict(name="Rumänisches Kreuzheben", block="Beine hinten",
+         geraet="Langhantel", von=8, bis=10, saetze=3, rpe="8", start=None,
+         maxlast=None, schritt=2.5, letzter="A", aktiv=True,
          notiz="Ersetzt Kickback. Schliesst die Lücke Hüftstreckung bei "
                "gestrecktem Knie, Ischiokrurale und Gluteus in der Dehnung."),
-    dict(name="Hip Thrust", maxlast=None, block="Beine hinten", geraet="Langhantel",
-         wdh="8-12", saetze=3, rpe="8-9", start=None, letzter="A",
-         aktiv=True,
+    dict(name="Hip Thrust", block="Beine hinten", geraet="Langhantel",
+         von=8, bis=12, saetze=3, rpe="8-9", start=None, maxlast=None,
+         schritt=10, letzter="A", aktiv=True,
          notiz="Gesamtgewicht inkl. Stange notieren, auch bei "
                "Reduktionssätzen."),
-    dict(name="Beinbeuger", maxlast=None, block="Beine hinten", geraet="Maschine, sitzend",
-         wdh="10-12", saetze=3, rpe="9", start=None, letzter="R", aktiv=True,
+    dict(name="Beinbeuger", block="Beine hinten", geraet="Maschine, sitzend",
+         von=10, bis=12, saetze=3, rpe="9", start=None, maxlast=None,
+         schritt=5, letzter="R", aktiv=True,
          notiz="Sitzend statt liegend: Hüfte gebeugt, Ischiokrurale "
                "vorgedehnt, mehr Reiz pro Satz. Dritter Satz als "
                "Reduktionssatz."),
-    dict(name="Seitliche Kickbacks", maxlast=None, block="Beine hinten", geraet="Kabel",
-         wdh="15-20", saetze=3, rpe="9", start=None, letzter="A", aktiv=True,
+    dict(name="Seitliche Kickbacks", block="Beine hinten", geraet="Kabel",
+         von=15, bis=20, saetze=3, rpe="9", start=None, maxlast=None,
+         schritt=5, letzter="A", aktiv=True,
          notiz="Gluteus medius, relevant für die Silhouette von vorne."),
-    dict(name="Waden", maxlast=None, block="Beine hinten", geraet="Maschine", wdh="10-15",
-         saetze=3, rpe="9", start=None, letzter="A", aktiv=True,
+    dict(name="Waden", block="Beine hinten", geraet="Maschine", von=10,
+         bis=15, saetze=3, rpe="9", start=None, maxlast=None, schritt=5,
+         letzter="A", aktiv=True,
          notiz="In jede Beineinheit, bisher nur in jeder zweiten."),
     # Archiv: raus aus der Planung, Historie bleibt in Log und Auswertung.
-    dict(name="Lunges", maxlast=None, block="Beine vorne", geraet="Kurzhantel",
-         wdh="10-12", saetze=None, rpe=None, start=None, letzter="A",
-         aktiv=False,
+    dict(name="Lunges", block="Beine vorne", geraet="Kurzhantel", von=10,
+         bis=12, saetze=None, rpe=None, start=None, maxlast=None,
+         schritt=None, letzter="A", aktiv=False,
          notiz="Archiv. Redundant zum Split Squat, Historie bleibt in den "
                "Auswertungen sichtbar."),
-    dict(name="Kickback", maxlast=None, block="Beine hinten", geraet="Maschine / Kabel",
-         wdh="10-15", saetze=None, rpe=None, start=None, letzter="A",
-         aktiv=False,
+    dict(name="Kickback", block="Beine hinten", geraet="Maschine / Kabel",
+         von=10, bis=15, saetze=None, rpe=None, start=None, maxlast=None,
+         schritt=None, letzter="A", aktiv=False,
          notiz="Archiv. Von Hip Thrust und RDL abgedeckt, Historie bleibt "
                "erhalten."),
 ]
+
+# Die Reha-Angaben kommen aus reha_daten.py. Beinpresse ist dort nicht
+# hinterlegt, weil sie bis eben die Ersatzübung war - die Werte hier sind
+# aus genau dieser Ersatzangabe abgeleitet und im Blatt 'Start' als offener
+# Punkt vermerkt.
+REHA_ZUSATZ = {
+    "Beinpresse": (
+        2,
+        "Beinstrecker und Beinbeuger sitzend, beide ab Woche 1 frei",
+        "Freigabewoche abgeleitet: die Beinpresse war im bisherigen Plan die "
+        "Ersatzübung für die Hackenschmidt-Sperre, also vor Woche 6 nutzbar. "
+        "Tiefe Fussposition, Hände seitlich ablegen, nicht an den Griffen "
+        "ziehen. Woche mit Operateur oder Physiotherapie bestätigen."),
+}
+
 for _u in UEBUNGEN:
-    _woche, _ersatz, _hinweis = RD.REHA_UEBUNGEN.get(_u["name"],
-                                                     (None, "", ""))
+    _woche, _ersatz, _hinweis = REHA_ZUSATZ.get(
+        _u["name"], RD.REHA_UEBUNGEN.get(_u["name"], (None, "", "")))
     _u["reha_ab"] = _woche
     _u["ersatz"] = _ersatz
     _u["reha_hinweis"] = _hinweis
@@ -283,7 +303,7 @@ def archiv_grau(ws, first_col, last_col, first_row, last_row):
     ws.conditional_formatting.add(
         "%s%d:%s%d" % (get_column_letter(first_col), first_row,
                        get_column_letter(last_col), last_row),
-        FormulaRule(formula=['%s!$I%d="nein"' % (UEB, first_row + versatz)],
+        FormulaRule(formula=['%s!$K%d="nein"' % (UEB, first_row + versatz)],
                     font=Font(name=FONT, size=10, italic=True,
                               color="8A94A0")))
 
@@ -474,6 +494,13 @@ for lab, txt in [
      "Anstrengung 6 bis 10. 10 = keine Wiederholung mehr möglich. Optional, "
      "aber sehr hilfreich für die Steuerung. Die Zielwerte je Übung stehen "
      "im Blatt 'Übungen'."),
+    ("Doppelte Progression",
+     "So wird gesteigert: Zuerst die Wiederholungen bis ans obere Ende des "
+     "Zielbereichs bringen - bei 8-12 also bis alle Arbeitssätze 12 "
+     "schaffen. Erst dann kommt eine Laststufe drauf und die "
+     "Wiederholungen fangen unten wieder an. Bezug ist immer der "
+     "schwächste Satz, nicht der beste. Das Blatt rechnet den nächsten "
+     "Schritt selbst aus, sobald du die Einheit eingetragen hast."),
     ("Archiv",
      "Übung im Blatt 'Übungen' auf Aktiv = nein setzen. Sie verschwindet aus "
      "dem Trainingsblatt, bleibt in Log, Auswertung, Progression und "
@@ -513,13 +540,19 @@ for lab, txt in [
     ("Datum",
      "In der Quelle nicht enthalten. Im Blatt 'Einheiten' nachtragen, falls "
      "du die Termine noch weisst."),
+    ("Beinpresse neu im Plan",
+     "Ersetzt die Hackenschmidt-Kniebeuge. Sie war bisher als Ersatzübung "
+     "für deren Sperrzeit hinterlegt, war also vor Woche 6 nutzbar - "
+     "daraus ist die Freigabe ab Woche 2 abgeleitet. Diese Woche mit "
+     "Operateur oder Physiotherapie bestätigen, sie steht im Blatt "
+     "'Übungen' und lässt sich dort ändern."),
     ("Stackende Adduktion",
      "152.5 kg ist das Ende des Steckgewichts. Im Blatt 'Übungen' als 'Max "
      "(kg)' hinterlegt, damit der Zielvorschlag dort stehen bleibt statt "
      "eine Last zu fordern, die die Maschine nicht hergibt. Weitersteigern "
      "über Tempo und Pausen."),
     ("Startgewichte fehlen",
-     "Hackenschmidt-Kniebeuge und Rumänisches Kreuzheben sind neu im Plan "
+     "Beinpresse und Rumänisches Kreuzheben sind neu im Plan "
      "und haben keine Historie. Trag im Blatt 'Übungen' unter 'Start (kg)' "
      "ein Einstiegsgewicht ein, dann füllt sich die Plan-Spalte des "
      "Trainingsblatts. Aus den bisherigen Daten lässt sich dafür kein "
@@ -556,34 +589,34 @@ titelbalken(wsu, 1, 13, "ÜBUNGEN  |  STAMMDATEN, PLANVORGABEN UND "
             "automatisch nach. Aktiv = nein heisst Archiv: raus aus der "
             "Planung, Historie bleibt in Log und Auswertung erhalten.")
 kopfzeile(wsu, 3, 1,
-          ["Übung", "Block", "Gerät / Variante", "Ziel-Wdh", "Ziel-\nSätze",
-           "Ziel-\nRPE", "Start\n(kg)", "Max\n(kg)", "Aktiv",
-           "Reha frei\nab Woche", "Notiz", "Ersatz in der Sperrzeit",
-           "Reha-Hinweis"],
-          [24, 14, 20, 9, 7, 7, 8, 8, 7, 9, 34, 32, 36], height=32)
+          ["Übung", "Block", "Gerät / Variante", "Wdh\nvon", "Wdh\nbis",
+           "Ziel-\nSätze", "Ziel-\nRPE", "Start\n(kg)", "Max\n(kg)",
+           "Schritt\n(kg)", "Aktiv", "Reha frei\nab Woche", "Notiz",
+           "Ersatz in der Sperrzeit", "Reha-Hinweis"],
+          [23, 13, 19, 6, 6, 7, 7, 8, 8, 8, 7, 9, 32, 30, 34], height=32)
 
 for i in range(EX_SLOTS):
     row = UEB_FIRST + i
     u = UEBUNGEN[i] if i < len(UEBUNGEN) else None
-    werte = [None] * 13
+    werte = [None] * 15
     if u:
-        werte = [u["name"], u["block"], u["geraet"], u["wdh"], u["saetze"],
-                 u["rpe"], u["start"], u["maxlast"],
-                 "ja" if u["aktiv"] else "nein", u["reha_ab"], u["notiz"],
-                 u["ersatz"], u["reha_hinweis"]]
+        werte = [u["name"], u["block"], u["geraet"], u["von"], u["bis"],
+                 u["saetze"], u["rpe"], u["start"], u["maxlast"],
+                 u["schritt"], "ja" if u["aktiv"] else "nein", u["reha_ab"],
+                 u["notiz"], u["ersatz"], u["reha_hinweis"]]
     for j, v in enumerate(werte):
         c = wsu.cell(row, 1 + j, v)
         c.font, c.fill, c.border = F_BODY, FILL_INPUT, B_ALL
-        if j in (10, 11, 12):
+        if j in (12, 13, 14):
             c.alignment = LW
         elif j in (0, 1, 2):
             c.alignment = L
         else:
             c.alignment = C
-        if j in (6, 7):
+        if j in (7, 8, 9):
             c.number_format = NF_KG
     if u and not u["aktiv"]:
-        for j in range(13):
+        for j in range(15):
             wsu.cell(row, 1 + j).font = Font(name=FONT, size=10,
                                              color="8A94A0", italic=True)
     wsu.row_dimensions[row].height = 58 if u else 18
@@ -598,11 +631,11 @@ dv_aktiv.errorTitle = "Aktiv"
 dv_aktiv.error = ("ja = Teil der Planung, nein = Archiv. Die Historie bleibt "
                   "in beiden Fällen erhalten.")
 wsu.add_data_validation(dv_aktiv)
-dv_aktiv.add("I%d:I%d" % (UEB_FIRST, UEB_LAST))
+dv_aktiv.add("K%d:K%d" % (UEB_FIRST, UEB_LAST))
 
 hinweis = UEB_LAST + 2
 wsu.merge_cells(start_row=hinweis, start_column=1, end_row=hinweis,
-                end_column=13)
+                end_column=15)
 c = wsu.cell(hinweis, 1,
              "Reihenfolge hier = Reihenfolge in allen Auswertungen und auf "
              "dem Trainingsblatt.   ·   'Start (kg)' braucht nur eine Übung "
@@ -615,13 +648,16 @@ c = wsu.cell(hinweis, 1,
              "statt über Last.   ·   Archivierte Übungen erscheinen grau und "
              "tauchen im Trainingsblatt nicht mehr auf.   ·   'Reha frei "
              "ab Woche' steuert die Ampel im Blatt 'Reha-Modus' und den "
-             "Sperrvermerk auf dem Trainingsblatt.")
+             "Sperrvermerk auf dem Trainingsblatt.   ·   'Wdh von / bis' ist "
+             "der Zielbereich der doppelten Progression, 'Schritt (kg)' die "
+             "kleinste sinnvolle Laststufe an diesem Gerät. Beides steuert "
+             "den Vorschlag für die nächste Einheit.")
 c.font, c.alignment = F_SMALL, LW
 wsu.row_dimensions[hinweis].height = 40
 wsu.freeze_panes = "B4"
-# Gedruckt wird bis Spalte K. Ersatzübung und Reha-Hinweis stehen ohnehin
+# Gedruckt wird bis Spalte M. Ersatzübung und Reha-Hinweis stehen ohnehin
 # im Blatt 'Reha-Modus'; so bleibt dieses Blatt eine saubere Seite.
-druck(wsu, "A1:K%d" % hinweis, landscape=True, titles="1:3")
+druck(wsu, "A1:M%d" % hinweis, landscape=True, titles="1:3")
 
 # ==========================================================================
 # EINHEITEN
@@ -906,8 +942,8 @@ kopfzeile(wsp, 3, 1,
            "Letzte\nEinheit", "Volumen\nletzte (kg)", "Veränderung\n(kg)",
            "Veränderung\n(%)", "Top-Gewicht\nzuletzt (kg)",
            "Bestes Top-\nGewicht (kg)", "Abstand zum\nBestwert (kg)",
-           "Trend"],
-          [24, 9, 13, 9, 13, 13, 13, 13, 13, 14, 14], height=34)
+           "Trend", "Einheiten auf\ndiesem Gewicht", "Nächster Schritt"],
+          [22, 8, 12, 8, 12, 12, 12, 12, 12, 13, 12, 13, 30], height=34)
 
 PROG_FIRST = 4
 for k in range(EX_SLOTS):
@@ -944,18 +980,30 @@ for k in range(EX_SLOTS):
     wsp.cell(row, 11, "=IF($G%d=\"\",\"\",IF($G%d>0.05,\"steigend\","
                       "IF($G%d<-0.05,\"fallend\",\"stabil\")))"
              % (row, row, row))
+    # Wie viele Einheiten läuft dieses Gewicht schon? Bleibt es lange
+    # stehen, ist das ein Plateau und kein Fortschritt.
+    stagn = ("SUMPRODUCT((COUNTIFS(%s,%s,%s,\"A\",%s,$H%d,%s,"
+             "Einheiten!$A$%d:$A$%d)>0)*1)"
+             % (D_, ex, E_, F_, row, B_, EINH_FIRST, EINH_LAST))
+    wsp.cell(row, 12, "=IF($H%d=\"\",\"\",%s)" % (row, stagn))
+    wsp.cell(row, 13,
+             "=IFERROR(INDEX(Rekorde!$Q$%d:$Q$%d,MATCH(%s,"
+             "Rekorde!$A$%d:$A$%d,0)),\"\")"
+             % (REK_FIRST, REK_LAST, ex, REK_FIRST, REK_LAST))
     fmts = {2: NF_INT, 3: NF_INT, 4: NF_INT, 5: NF_INT, 6: NF_INT,
-            7: NF_PCT, 8: NF_KG, 9: NF_KG, 10: NF_KG}
-    for col in range(1, 12):
+            7: NF_PCT, 8: NF_KG, 9: NF_KG, 10: NF_KG, 12: NF_INT}
+    for col in range(1, 14):
         cc = wsp.cell(row, col)
         cc.border = B_ALL
         if col > 1:
             cc.font, cc.alignment = F_BODY, C
+        if col == 13:
+            cc.font, cc.alignment = Font(name=FONT, size=9, color=NAVY), LW
         if col in fmts:
             cc.number_format = fmts[col]
         if k % 2 == 0:
             cc.fill = FILL_LIGHT
-    wsp.row_dimensions[row].height = 18
+    wsp.row_dimensions[row].height = 26
 
 PROG_LAST = PROG_FIRST + EX_SLOTS - 1
 for bereich, bedingung, farbe in (
@@ -972,19 +1020,28 @@ for bereich, bedingung, farbe in (
                              font=Font(name=FONT, size=10, bold=True,
                                        color=farbe)))
 
-archiv_grau(wsp, 1, 11, PROG_FIRST, PROG_LAST)
+# Plateau: vier Einheiten oder mehr auf demselben Gewicht
+wsp.conditional_formatting.add(
+    "L%d:M%d" % (PROG_FIRST, PROG_LAST),
+    FormulaRule(formula=['AND($L%d<>"",$L%d>=4)' % (PROG_FIRST, PROG_FIRST)],
+                fill=PatternFill("solid", bgColor="FEF6E7"),
+                font=Font(name=FONT, size=9, bold=True, color=AMBER)))
+archiv_grau(wsp, 1, 13, PROG_FIRST, PROG_LAST)
 
 hin = PROG_LAST + 2
-wsp.merge_cells(start_row=hin, start_column=1, end_row=hin, end_column=11)
+wsp.merge_cells(start_row=hin, start_column=1, end_row=hin, end_column=13)
 c = wsp.cell(hin, 1,
              "Lesehilfe: Volumen schwankt mit der Wiederholungszahl. "
              "Fallendes Volumen bei steigendem Top-Gewicht ist kein "
              "Rückschritt, sondern eine Verschiebung Richtung Kraft. "
-             "Schwelle für steigend / fallend: 5 Prozent.")
+             "Schwelle für steigend / fallend: 5 Prozent.   ·   "
+             "'Einheiten auf diesem Gewicht' zählt, wie lange die aktuelle "
+             "Last schon steht - ab vier Einheiten gelb, dann lohnt ein "
+             "Blick auf Ausführung, Erholung oder eine Variante.")
 c.font, c.alignment = F_SMALL, LW
 wsp.row_dimensions[hin].height = 26
 wsp.freeze_panes = "B4"
-druck(wsp, "A1:K%d" % hin, landscape=True, titles="1:3")
+druck(wsp, "A1:M%d" % hin, landscape=True, titles="1:3")
 
 # ==========================================================================
 # REKORDE
@@ -996,9 +1053,12 @@ kopfzeile(wsr, 3, 1,
           ["Übung", "Block", "Ein-\nheiten", "Arbeits-\nsätze",
            "Gesamt-\nvolumen (kg)", "Top-Gewicht\n(kg)", "in\nEinheit",
            "Bester e1RM\n(kg)", "in\nEinheit", "Bestes Satz-\nvolumen (kg)",
-           "Letzte\nEinheit", "Top-Gewicht\nzuletzt (kg)", "Wdh\ndazu",
-           "Nächstes\nZiel (kg)"],
-          [24, 14, 8, 9, 13, 12, 8, 12, 8, 13, 9, 12, 8, 11], height=34)
+           "Letzte\nEinheit", "Top-Gewicht\nzuletzt (kg)",
+           "beste Wdh\ndazu", "schwächster\nSatz (Wdh)",
+           "Nächstes\nZiel (kg)", "Ziel-Wdh\nnächste Einheit",
+           "Nächster Schritt"],
+          [22, 13, 7, 8, 12, 11, 7, 11, 7, 12, 8, 11, 8, 10, 10, 11, 26],
+          height=34)
 
 for k in range(EX_SLOTS):
     row = REK_FIRST + k
@@ -1046,18 +1106,59 @@ for k in range(EX_SLOTS):
            % (D_, ex, B_, row, E_, F_, row, G_))
     wsr.cell(row, 13, "=IF($L%d=\"\",\"\",IF(%s=0,\"\",%s))"
              % (row, wdh, wdh))
-    # Mit Historie: letztes Top-Gewicht plus 2.5 %, gedeckelt durch die
-    # Lastobergrenze. Ohne Historie greift das Startgewicht.
+    # Schwächster Arbeitssatz auf dem letzten Top-Gewicht. Die doppelte
+    # Progression steigert die Last erst, wenn ALLE Sätze oben im
+    # Zielbereich angekommen sind - deshalb zählt hier das Minimum.
+    minwdh = ("SUMPRODUCT(MIN((%s=%s)*(%s=$K%d)*(%s=\"A\")*(%s=$L%d)*%s"
+              "+((%s<>%s)+(%s<>$K%d)+(%s<>\"A\")+(%s<>$L%d)+(%s=\"\")>0)"
+              "*999))"
+              % (D_, ex, B_, row, E_, F_, row, G_,
+                 D_, ex, B_, row, E_, F_, row, G_))
+    wsr.cell(row, 14, "=IF($L%d=\"\",\"\",IF(%s>=999,\"\",%s))"
+             % (row, minwdh, minwdh))
+    # ---- Doppelte Progression ------------------------------------------
+    # Regel: Erst die Wiederholungen bis ans obere Ende des Zielbereichs
+    # bringen, dann eine Laststufe drauf und wieder unten im Bereich
+    # anfangen. Bezug ist immer der schwächste Satz der letzten Einheit.
     ueb_row = UEB_FIRST + k
-    steig = "ROUND($L%d*1.025*2,0)/2" % row
-    wsr.cell(row, 14, "=IF($L%d<>\"\",IF(%s!$H%d=\"\",%s,"
-                      "MIN(%s,%s!$H%d)),IF(%s!$G%d=\"\",\"\",%s!$G%d))"
-             % (row, UEB, ueb_row, steig, steig, UEB, ueb_row, UEB, ueb_row,
-                UEB, ueb_row))
+    u_von = "%s!$D%d" % (UEB, ueb_row)
+    u_bis = "%s!$E%d" % (UEB, ueb_row)
+    u_start = "%s!$H%d" % (UEB, ueb_row)
+    u_max = "%s!$I%d" % (UEB, ueb_row)
+    u_schritt = "%s!$J%d" % (UEB, ueb_row)
+    schritt = "IF(%s=\"\",0,%s)" % (u_schritt, u_schritt)
+    hoch = "$L%d+%s" % (row, schritt)             # eine Laststufe drauf
+    gedeckelt = "IF(%s=\"\",%s,MIN(%s,%s))" % (u_max, hoch, hoch, u_max)
+    reif = "AND($N%d<>\"\",%s<>\"\",$N%d>=%s)" % (row, u_bis, row, u_bis)
+
+    # Nächstes Zielgewicht
+    wsr.cell(row, 15,
+             "=IF($L%d=\"\",IF(%s=\"\",\"\",%s),IF(%s,%s,$L%d))"
+             % (row, u_start, u_start, reif, gedeckelt, row))
+    # Ziel-Wiederholungen dazu
+    wsr.cell(row, 16,
+             "=IF(%s=\"\",\"\",IF($O%d=\"\",\"\",IF($L%d=\"\",%s,"
+             "IF(%s,%s,IF(OR($N%d=\"\",$N%d<%s),%s,MIN(%s,$N%d+1))))))"
+             % (u_von, row, row, u_von, reif, u_von, row, row, u_von,
+                u_von, u_bis, row))
+    # Klartext, was der Schritt bedeutet
+    wsr.cell(row, 17,
+             "=IF($O%d=\"\",\"\",IF($L%d=\"\",\"Einstieg mit "
+             "Startgewicht\",IF(AND(%s,$O%d>$L%d),\"Gewicht +\"&"
+             "TEXT($O%d-$L%d,\"0.#\")&\" kg, Wdh zurück auf \"&%s,"
+             "IF(AND(%s,%s=\"\"),\"Zielbereich voll - dafür fehlt "
+             "'Schritt (kg)' im Blatt Übungen\","
+             "IF(%s,\"Obergrenze erreicht - über Tempo und Pausen "
+             "steigern\",IF(OR($N%d=\"\",$N%d<%s),\"Gewicht halten, "
+             "erst \"&%s&"
+             "\" Wdh sauber schaffen\",\"Wdh +1 auf \"&$P%d&"
+             "\" bei gleichem Gewicht\"))))))"
+             % (row, row, reif, row, row, row, row, u_von, reif, u_schritt,
+                reif, row, row, u_von, u_von, row))
     fmts = {3: NF_INT, 4: NF_INT, 5: NF_INT, 6: NF_KG, 7: NF_INT, 8: NF_KG,
             9: NF_INT, 10: NF_INT, 11: NF_INT, 12: NF_KG, 13: NF_INT,
-            14: NF_KG}
-    for col in range(1, 15):
+            14: NF_INT, 15: NF_KG, 16: NF_INT}
+    for col in range(1, 18):
         cc = wsr.cell(row, col)
         cc.border = B_ALL
         if col > 2:
@@ -1066,26 +1167,33 @@ for k in range(EX_SLOTS):
             cc.number_format = fmts[col]
         if k % 2 == 0:
             cc.fill = FILL_LIGHT
-    for col in (6, 8, 14):
+    for col in (6, 8):
         wsr.cell(row, col).font = Font(name=FONT, size=10, bold=True,
                                        color=AMBER)
+    for col in (15, 16):
+        wsr.cell(row, col).font = Font(name=FONT, size=11, bold=True,
+                                       color=GREEN)
+    wsr.cell(row, 17).alignment = LW
+    wsr.cell(row, 17).font = Font(name=FONT, size=9, color=NAVY)
     wsr.row_dimensions[row].height = 18
 
-archiv_grau(wsr, 1, 14, REK_FIRST, REK_LAST)
+archiv_grau(wsr, 1, 17, REK_FIRST, REK_LAST)
 
 note = REK_LAST + 2
-wsr.merge_cells(start_row=note, start_column=1, end_row=note, end_column=14)
+wsr.merge_cells(start_row=note, start_column=1, end_row=note, end_column=17)
 c = wsr.cell(note, 1,
-             "Nächstes Ziel = letztes Top-Gewicht plus 2.5 Prozent, gerundet "
-             "auf 0.5 kg, begrenzt durch 'Max (kg)' aus dem Blatt 'Übungen'. "
-             "Ohne Historie greift stattdessen das Startgewicht. Richtwert, "
-             "keine Vorgabe - an Maschinen bestimmt die Steckplatte den "
-             "Sprung.   ·   Graue, kursive Zeilen sind archivierte Übungen: "
-             "nicht mehr im Plan, Historie bleibt.")
+             "Doppelte Progression: Solange der schwächste Arbeitssatz "
+             "unter dem oberen Ende des Zielbereichs liegt, bleibt das "
+             "Gewicht stehen und es kommt eine Wiederholung dazu. Sitzen "
+             "alle Sätze oben im Bereich, geht eine Laststufe drauf und die "
+             "Wiederholungen fangen unten wieder an. Begrenzt durch 'Max "
+             "(kg)'; ohne Historie greift das Startgewicht. Alles rechnet "
+             "aus dem Log - jede neue Zeile aktualisiert den Vorschlag "
+             "sofort.   ·   Graue, kursive Zeilen sind archivierte Übungen.")
 c.font, c.alignment = F_SMALL, LW
 wsr.row_dimensions[note].height = 30
 wsr.freeze_panes = "C4"
-druck(wsr, "A1:N%d" % note, landscape=True, titles="1:3")
+druck(wsr, "A1:Q%d" % note, landscape=True, titles="1:3")
 
 # ==========================================================================
 # OP-COUNTDOWN  (nur Vor-OP-Fassung)
@@ -1149,14 +1257,14 @@ if PREOP:
     for k in range(EX_SLOTS):
         row = CD_FIRST + k
         ur = UEB_FIRST + k
-        aktiv = "%s!$I%d" % (UEB, ur)
+        aktiv = "%s!$K%d" % (UEB, ur)
         wsc.cell(row, 1, "=IF(%s<>\"ja\",\"\",%s!$A%d)" % (aktiv, UEB, ur))
-        wsc.cell(row, 2, "=IF(%s<>\"ja\",\"\",%s!$J%d)" % (aktiv, UEB, ur))
+        wsc.cell(row, 2, "=IF(%s<>\"ja\",\"\",%s!$L%d)" % (aktiv, UEB, ur))
         wsc.cell(row, 3, "=IF($B%d=\"\",\"\",MAX(0,$B%d-1))" % (row, row))
         wsc.cell(row, 4, "=IF(OR($B%d=\"\",%s=\"\"),\"\",%s+($B%d-1)*7)"
                  % (row, OPD, OPD, row))
         wsc.cell(row, 5, "=IF($A%d=\"\",\"\",IF($C%d<=0,\"kein Ausfall, "
-                         "läuft durch\",%s!$L%d))" % (row, row, UEB, ur))
+                         "läuft durch\",%s!$N%d))" % (row, row, UEB, ur))
         c = wsc.cell(row, 6)
         c.fill, c.alignment, c.border = FILL_INPUT, C, B_ALL
         c = wsc.cell(row, 7)
@@ -1270,6 +1378,8 @@ if PREOP:
             "Dann gilt deren Protokoll.",
             "Wie lange Schlinge, und ab wann darf sie abgebaut werden?",
             "Ab wann ist Beintraining im Sitzen wieder erlaubt?",
+            "Ab wann ist die Beinpresse erlaubt? Im Logbuch steht Woche 2 "
+            "als abgeleiteter Wert, nicht als ärztliche Freigabe.",
             "Ab wann darf der Arm wieder Hebelast tragen, und wie viel?",
             "Ab wann Bizeps-Curls gegen Widerstand?",
             "Welches schriftliche Nachbehandlungsschema bekomme ich mit?",
@@ -1607,16 +1717,17 @@ if not PREOP:
     for k in range(EX_SLOTS):
         row = MOD_FIRST + k
         ur = UEB_FIRST + k
-        aktiv = "%s!$I%d" % (UEB, ur)
+        aktiv = "%s!$K%d" % (UEB, ur)
         wsm.cell(row, 1, "=IF(%s<>\"ja\",\"\",%s!$A%d)" % (aktiv, UEB, ur))
-        wsm.cell(row, 2, "=IF(%s<>\"ja\",\"\",%s!$J%d)" % (aktiv, UEB, ur))
+        wsm.cell(row, 2, "=IF(%s<>\"ja\",\"\",%s!$L%d)" % (aktiv, UEB, ur))
         wsm.cell(row, 3, "=IF($A%d=\"\",\"\",IF($B%d=\"\",\"offen\","
                          "IF(%s>=$B%d,\"FREI\",\"GESPERRT\")))"
                  % (row, row, WOCHE, row))
-        wsm.cell(row, 4, "=IF(%s<>\"ja\",\"\",%s!$E%d)" % (aktiv, UEB, ur))
-        wsm.cell(row, 5, "=IF(%s<>\"ja\",\"\",%s!$D%d)" % (aktiv, UEB, ur))
-        wsm.cell(row, 6, "=IF($C%d=\"GESPERRT\",%s!$L%d,\"\")" % (row, UEB, ur))
-        wsm.cell(row, 7, "=IF(%s<>\"ja\",\"\",%s!$M%d)" % (aktiv, UEB, ur))
+        wsm.cell(row, 4, "=IF(%s<>\"ja\",\"\",%s!$F%d)" % (aktiv, UEB, ur))
+        wsm.cell(row, 5, "=IF(%s<>\"ja\",\"\",%s!$D%d&\"-\"&%s!$E%d)"
+                 % (aktiv, UEB, ur, UEB, ur))
+        wsm.cell(row, 6, "=IF($C%d=\"GESPERRT\",%s!$N%d,\"\")" % (row, UEB, ur))
+        wsm.cell(row, 7, "=IF(%s<>\"ja\",\"\",%s!$O%d)" % (aktiv, UEB, ur))
         for col in range(1, 8):
             c = wsm.cell(row, col)
             c.border = B_ALL
@@ -1820,7 +1931,9 @@ if not PREOP:
 # TRAININGSBLATT (Druckvorlage zum Mitnehmen)
 # ==========================================================================
 wst = sheet("Trainingsblatt")
-for col, w in zip("ABCDEFGH", [5, 9, 13, 13, 10, 8, 7, 30]):
+# Die breite Notizspalte ist Absicht: sie bestimmt über die
+# Breitenanpassung den Zoom, und damit passt ein Block auf eine A4-Seite.
+for col, w in zip("ABCDEFGHI", [5, 8, 11, 9, 13, 9, 8, 6, 50]):
     wst.column_dimensions[col].width = w
 
 
@@ -1839,11 +1952,11 @@ blaetter = [(bi, block, kopie)
 
 row = 1
 for nr, (bi, block, kopie) in enumerate(blaetter):
-    wst.merge_cells(start_row=row, start_column=1, end_row=row, end_column=8)
+    wst.merge_cells(start_row=row, start_column=1, end_row=row, end_column=9)
     c = wst.cell(row, 1, "TRAININGSBLATT  |  %s        Blatt %d von %d"
                  % (block.upper(), kopie, BLATT_KOPIEN))
     c.font, c.fill, c.alignment = F_TITLE, FILL_TITLE, L_IND
-    for col in range(1, 9):
+    for col in range(1, 10):
         wst.cell(row, col).fill = FILL_TITLE
     wst.row_dimensions[row].height = 28
     row += 1
@@ -1863,8 +1976,8 @@ for nr, (bi, block, kopie) in enumerate(blaetter):
         for k in range(span):
             wst.cell(row + 1, col + k).border = Border(
                 bottom=Side("medium", color=NAVY))
-    wst.row_dimensions[row].height = 13
-    wst.row_dimensions[row + 1].height = 20
+    wst.row_dimensions[row].height = 12
+    wst.row_dimensions[row + 1].height = 18
     row += 3
 
     # Nur aktive Übungen aufs Blatt - Archiv bleibt aussen vor.
@@ -1872,27 +1985,28 @@ for nr, (bi, block, kopie) in enumerate(blaetter):
               if u["block"] == block and u["aktiv"]]
     for i, u in aktive:
         exref = "%s!$A$%d" % (UEB, UEB_FIRST + i)
-        wdhref = "%s!$D$%d" % (UEB, UEB_FIRST + i)
-        saetzeref = "%s!$E$%d" % (UEB, UEB_FIRST + i)
-        rperef = "%s!$F$%d" % (UEB, UEB_FIRST + i)
-        ziel = rek("N", exref)
+        wdhref = ("%s!$D$%d&\"-\"&%s!$E$%d"
+                  % (UEB, UEB_FIRST + i, UEB, UEB_FIRST + i))
+        saetzeref = "%s!$F$%d" % (UEB, UEB_FIRST + i)
+        rperef = "%s!$G$%d" % (UEB, UEB_FIRST + i)
+        ziel = rek("O", exref)
         # Satzschema aus den Planvorgaben: zwei Warmups, dann die
         # Ziel-Arbeitssätze, der letzte optional als Reduktionssatz.
         satzmuster = (["W"] * len(WARMUP_FAKTOR)
                       + ["A"] * (u["saetze"] - 1) + [u["letzter"]])
 
         wst.merge_cells(start_row=row, start_column=1, end_row=row,
-                        end_column=8)
+                        end_column=9)
         c = wst.cell(row, 1, "=%s" % exref)
         c.font, c.fill, c.alignment = F_H1, FILL_HEAD, L_IND
-        for col in range(1, 9):
+        for col in range(1, 10):
             wst.cell(row, col).fill = FILL_HEAD
             wst.cell(row, col).border = B_ALL
         wst.row_dimensions[row].height = 19
         row += 1
 
         wst.merge_cells(start_row=row, start_column=1, end_row=row,
-                        end_column=8)
+                        end_column=9)
         # Vorgabe-Teil steht immer, der Historien-Teil nur wenn es ihn gibt.
         vorgabe = ("\"Vorgabe: \"&%s&\" × \"&%s&\" Wdh @ RPE \"&%s"
                    % (saetzeref, wdhref, rperef))
@@ -1904,9 +2018,9 @@ for nr, (bi, block, kopie) in enumerate(blaetter):
         neu = ("IF(%s=\"\",\"Neu im Plan - Startgewicht im Blatt 'Übungen' "
                "eintragen     ·     \",\"Neu im Plan     ·     Start: \"&"
                "TEXT(%s,\"0.#\")&\" kg     ·     \")" % (ziel, ziel))
-        maxref = "%s!$H$%d" % (UEB, UEB_FIRST + i)
-        rehaab = "%s!$J$%d" % (UEB, UEB_FIRST + i)
-        ersatzref = "%s!$L$%d" % (UEB, UEB_FIRST + i)
+        maxref = "%s!$I$%d" % (UEB, UEB_FIRST + i)
+        rehaab = "%s!$L$%d" % (UEB, UEB_FIRST + i)
+        ersatzref = "%s!$N$%d" % (UEB, UEB_FIRST + i)
         woche = "'Reha-Modus'!$B$4"
         # Sperrvermerk kommt vor allem anderen: er entscheidet, ob die
         # Übung heute überhaupt stattfindet.
@@ -1930,26 +2044,47 @@ for nr, (bi, block, kopie) in enumerate(blaetter):
         deckel = ("IF(AND(%s<>\"\",%s<>\"\",%s>=%s),\"Stackende, über "
                   "Tempo und Pausen steigern     ·     \",\"\")"
                   % (maxref, ziel, ziel, maxref))
+        zielwdh = rek("P", exref)
+        schrittext = rek("Q", exref)
         ziel_teil = ("IF(%s=\"\",\"\",\"Ziel heute: \"&TEXT(%s,\"0.#\")&"
-                     "\" kg     ·     \")&%s" % (ziel, ziel, deckel))
+                     "\" kg × \"&IF(%s=\"\",\"\",TEXT(%s,\"0\")&\" "
+                     "Wdh\")&\"     ·     \")&%s"
+                     % (ziel, ziel, zielwdh, zielwdh, deckel))
+        # Zwei Zeilen statt einer: oben der Rückblick mit dem Ziel für
+        # heute, darunter die Vorgabe und der nächste Schritt. In eine
+        # Zeile gequetscht wird der Text auf A4 rechts abgeschnitten.
         c = wst.cell(row, 1,
-                     "=IF(%s,%s,IF(%s=\"\",%s,%s&%s))&%s&%s"
+                     "=IF(%s,%s,IF(%s=\"\",%s,%s&%s))"
                      % (gesperrt, sperrtext, rek("L", exref), neu, historie,
-                        ziel_teil, vorgabe, ausblick))
-        c.font = Font(name=FONT, size=9, color=NAVY)
+                        ziel_teil))
+        c.font = Font(name=FONT, size=9, bold=True, color=NAVY)
         c.fill, c.alignment = FILL_LIGHT, L_IND
-        for col in range(1, 9):
+        for col in range(1, 10):
             wst.cell(row, col).fill = FILL_LIGHT
             wst.cell(row, col).border = B_ALL
-        wst.row_dimensions[row].height = 15
+        wst.row_dimensions[row].height = 14
         row += 1
 
-        for j, lab in enumerate(["#", "Typ", "Plan (kg)", "Gewicht (kg)",
-                                 "Wdh", "RPE", "OK", "Notiz"]):
+        wst.merge_cells(start_row=row, start_column=1, end_row=row,
+                        end_column=9)
+        c = wst.cell(row, 1,
+                     "=%s&%s&IF(OR(%s,%s=\"\"),\"\","
+                     "\"     ·     Schritt: \"&%s)"
+                     % (vorgabe, ausblick, gesperrt, schrittext, schrittext))
+        c.font = Font(name=FONT, size=9, color="4A5568")
+        c.alignment = L_IND
+        for col in range(1, 10):
+            wst.cell(row, col).border = B_ALL
+        wst.row_dimensions[row].height = 14
+        row += 1
+
+        for j, lab in enumerate(["#", "Typ", "Plan (kg)", "Ziel\nWdh",
+                                 "Gewicht (kg)", "Wdh", "RPE", "OK",
+                                 "Notiz"]):
             c = wst.cell(row, 1 + j, lab)
             c.font = Font(name=FONT, size=8.5, bold=True, color=NAVY)
-            c.fill, c.alignment, c.border = FILL_CALC, C, B_ALL
-        wst.row_dimensions[row].height = 14
+            c.fill, c.alignment, c.border = FILL_CALC, CW, B_ALL
+        wst.row_dimensions[row].height = 18
         row += 1
 
         for s, typ in enumerate(satzmuster):
@@ -1970,25 +2105,32 @@ for nr, (bi, block, kopie) in enumerate(blaetter):
                              % (gesperrt, ziel, ziel, fak))
                 c.font = Font(name=FONT, size=10, color="4A5568")
                 c.alignment, c.number_format = C, NF_KG
-            for col in range(4, 9):
+            # Ziel-Wdh nur bei den Arbeitssätzen, Warmups bleiben frei
+            if typ == "A":
+                c = wst.cell(row, 4,
+                             "=IF(%s,\"\",IF(%s=\"\",\"\",%s))"
+                             % (gesperrt, zielwdh, zielwdh))
+                c.font = Font(name=FONT, size=10, bold=True, color=GREEN)
+                c.alignment, c.number_format = C, NF_INT
+            for col in range(5, 10):
                 wst.cell(row, col).fill = FILL_WHITE
-            for col in range(1, 9):
+            for col in range(1, 10):
                 wst.cell(row, col).border = B_ALL
-            wst.row_dimensions[row].height = 20
+            wst.row_dimensions[row].height = 18
             row += 1
         row += 1
 
-    wst.merge_cells(start_row=row, start_column=1, end_row=row, end_column=8)
+    wst.merge_cells(start_row=row, start_column=1, end_row=row, end_column=9)
     c = wst.cell(row, 1, "Notizen zur Einheit")
     c.font, c.fill, c.alignment = F_H1, FILL_SUB, L_IND
-    for col in range(1, 9):
+    for col in range(1, 10):
         wst.cell(row, col).fill = FILL_SUB
     wst.row_dimensions[row].height = 16
     row += 1
-    for _ in range(3):
+    for _ in range(2):
         wst.merge_cells(start_row=row, start_column=1, end_row=row,
-                        end_column=8)
-        for col in range(1, 9):
+                        end_column=9)
+        for col in range(1, 10):
             wst.cell(row, col).border = Border(bottom=thin)
         wst.row_dimensions[row].height = 18
         row += 1
@@ -2000,14 +2142,14 @@ for nr, (bi, block, kopie) in enumerate(blaetter):
 # Gesperrte Übungen rot hinterlegen - die Infozeile trägt den Vermerk,
 # die Regel prüft deshalb Spalte A der jeweiligen Zeile.
 wst.conditional_formatting.add(
-    "A1:H%d" % (row - 1),
+    "A1:I%d" % (row - 1),
     FormulaRule(formula=['LEFT($A1,8)="GESPERRT"'],
                 fill=PatternFill("solid", bgColor="FDEAEA"),
                 font=Font(name=FONT, size=9, bold=True, color=RED)))
 
-druck(wst, "A1:H%d" % (row - 1), margins=(0.5, 0.4, 0.5, 0.5),
-      fussnote="Plan (kg) = Aufwärm-Rampe 45 % / 70 %, dann Zielgewicht aus "
-               "dem Blatt 'Rekorde'")
+druck(wst, "A1:I%d" % (row - 1), margins=(0.45, 0.35, 0.45, 0.45),
+      fussnote="Plan und Ziel-Wdh kommen aus der doppelten Progression im "
+               "Blatt 'Rekorde'  ·  Warmups 45 % / 70 % vom Zielgewicht")
 
 # ==========================================================================
 # DASHBOARD
@@ -2033,7 +2175,7 @@ kacheln = [
     ("Bester e1RM (kg)",
      "=MAX(Rekorde!$H$%d:$H$%d)" % (REK_FIRST, REK_LAST), NF_KG),
     ("Übungen im Plan",
-     "=COUNTIF(%s!$I$%d:$I$%d,\"ja\")" % (UEB, UEB_FIRST, UEB_LAST),
+     "=COUNTIF(%s!$K$%d:$K$%d,\"ja\")" % (UEB, UEB_FIRST, UEB_LAST),
      NF_INT),
 ]
 if PREOP:
