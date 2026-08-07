@@ -70,8 +70,8 @@ def s1(wb):
 def s1x(V):
     m = []
     p = V[P]
-    if p['Y72'].value != 0.5:
-        m.append(f'Faktor 60% -> erwartet 0.5, ist {p["Y72"].value}')
+    if p['AJ72'].value != 0.5:
+        m.append(f'Faktor 60% -> erwartet 0.5, ist {p["AJ72"].value}')
     if abs((p['Q72'].value or 0) - 125000) > 0.01:
         m.append(f'Gew.Wert erwartet 125000, ist {p["Q72"].value}')
     # Deal muss im Offerte-Block des Dashboards auftauchen
@@ -92,8 +92,8 @@ def s2x(V):
     m = []
     if V['Dashboard']['A7'].value != 11:
         m.append(f'WON-Anzahl erwartet 11, ist {V["Dashboard"]["A7"].value}')
-    if V[P]['Z9'].value not in (None, ''):
-        m.append('Z9 muss leer sein, wenn nicht mehr WON')
+    if V[P]['AK9'].value not in (None, ''):
+        m.append('AK9 muss leer sein, wenn nicht mehr WON')
     top = V['📑 Executive PDF']['C14'].value
     if top == 'Ice Hockey Championship':
         m.append('Top-1 WON haette wechseln muessen')
@@ -109,10 +109,10 @@ def s3x(V):
     m = []
     if V[P]['Q6'].value != 'tbd':
         m.append(f'Q6 erwartet "tbd", ist {V[P]["Q6"].value!r}')
-    if V[P]['Y6'].value != 0:
-        m.append(f'Y6 erwartet 0, ist {V[P]["Y6"].value}')
-    if V[P]['AF6'].value != 0:
-        m.append('AF6 muss 0 sein (nicht auf Skala)')
+    if V[P]['AJ6'].value != 0:
+        m.append(f'AJ6 erwartet 0, ist {V[P]["AJ6"].value}')
+    if V[P]['AQ6'].value != 0:
+        m.append('AQ6 muss 0 sein (nicht auf Skala)')
     return m
 
 
@@ -123,8 +123,8 @@ def s4(wb):
 
 def s4x(V):
     m = []
-    if V[P]['Y6'].value != 0.5:
-        m.append(f'60 (statt 0.6) -> Faktor erwartet 0.5, ist {V[P]["Y6"].value}')
+    if V[P]['AJ6'].value != 0.5:
+        m.append(f'60 (statt 0.6) -> Faktor erwartet 0.5, ist {V[P]["AJ6"].value}')
     if abs((V[P]['Q6'].value or 0) - 195000) > 0.01:
         m.append(f'Q6 erwartet 195000, ist {V[P]["Q6"].value}')
     return m
@@ -152,7 +152,7 @@ def s5x(V):
     m = []
     for i, (prob, want) in enumerate(BOUND):
         r = 100 + i
-        got = V[P][f'Y{r}'].value
+        got = V[P][f'AJ{r}'].value
         if abs((got or 0) - want) > 1e-9:
             m.append(f'S={prob} -> Faktor erwartet {want}, ist {got}')
         q = V[P][f'Q{r}'].value
@@ -197,8 +197,8 @@ def s7x(V):
         m.append(f'Q6 erwartet "tbd", ist {V[P]["Q6"].value!r}')
     if V[P]['O6'].value not in (None, ''):
         m.append(f'Marge O6 muss leer sein, ist {V[P]["O6"].value!r}')
-    if V[P]['AA6'].value != 0:
-        m.append('AA6 muss 0 sein bei Text-Volumen')
+    if V[P]['AL6'].value != 0:
+        m.append('AL6 muss 0 sein bei Text-Volumen')
     return m
 
 
@@ -215,7 +215,7 @@ def s8(wb):
 def s8x(V):
     m = []
     p = V[P]
-    if p['AE72'].value != 0:
+    if p['AP72'].value != 0:
         m.append('Deal ohne Status darf nicht als aktiv zaehlen')
     if p['Q72'].value != 25000:          # 50'000 x Faktor 50 % (S=60 %)
         m.append(f'Q72 erwartet 25000, ist {p["Q72"].value}')
@@ -304,6 +304,87 @@ def s12x(V):
         m.append(f'Q6 des LOST-Deals erwartet 351000, ist {V[P]["Q6"].value}')
     return m
 
+
+def s13(wb):
+    """WON-Deal vollstaendig belegen: PO-Nr., Datum, Einstand, Vertragsart."""
+    ws = wb[P]
+    ws['AF9'] = 'PO-2026-0815'
+    ws['AG9'] = __import__('datetime').date(2026, 5, 12)
+    ws['AB9'] = 'Einzelauftrag'
+
+
+def s13x(V):
+    m = []
+    p = V[P]
+    if p['AV9'].value != 1:
+        m.append('Beleg-Kennzeichen AV9 muesste 1 sein')
+    if p['AW9'].value != 1:
+        m.append('WON-belegt AW9 muesste 1 sein')
+    if p['AH9'].value != '✅ belegt & kalkuliert':
+        m.append(f'Pruefstatus erwartet belegt, ist {p["AH9"].value!r}')
+    if abs((V['Dashboard']['E221'].value or 0) - 380000) > 1:
+        m.append(f'belegtes WON erwartet 380000, ist {V["Dashboard"]["E221"].value}')
+    return m
+
+
+def s14(wb):
+    """Variante ausschliessen: bereinigtes Volumen muss sinken."""
+    ws = wb[P]
+    ws['AC62'] = 'DPR-Loadbank'
+    ws['AC63'] = 'DPR-Loadbank'
+    ws['AD62'] = 'Führend'
+    ws['AD63'] = 'Alternative – zählt nicht'
+
+
+def s14x(V):
+    m = []
+    brutto = V['Dashboard']['E223'].value or 0
+    berein = V['Dashboard']['E224'].value or 0
+    if abs((brutto - berein) - 331889.15) > 1:
+        m.append(f'Bereinigung erwartet -331889, ist {brutto - berein}')
+    if V[P]['AX63'].value != 0:
+        m.append('AX63 muesste 0 sein (Alternative)')
+    return m
+
+
+def s15(wb):
+    """MwSt-Schalter auf netto: Nettoumsatz muss dem Volumen entsprechen."""
+    d = wb['📋 Definitionen & Klärung']
+    # Schalterzelle relativ zum benannten Bereich Netto_Faktor bestimmen
+    fak = wb.defined_names['Netto_Faktor'].attr_text.split('!')[1].replace('$', '')
+    schalter = f"C{int(fak[1:]) - 3}"
+    d[schalter] = 'netto exkl. MwSt'
+
+
+def s15x(V):
+    m = []
+    p = V[P]
+    if abs((p['Y6'].value or 0) - 390000) > 0.01:
+        m.append(f'Netto bei Schalter «netto» erwartet 390000, ist {p["Y6"].value}')
+    if abs((p['O6'].value or 0) - 118000) > 0.01:
+        m.append(f'Marge erwartet 118000, ist {p["O6"].value}')
+    return m
+
+
+def s16(wb):
+    """Einstand unvollstaendig: keine Marge, aber Hinweis."""
+    ws = wb[P]
+    ws['K6'] = None            # Transport loeschen
+    ws['AF6'] = 'PO-X'
+    ws['AG6'] = __import__('datetime').date(2026, 1, 1)
+
+
+def s16x(V):
+    m = []
+    p = V[P]
+    if p['AR6'].value != 0:
+        m.append('Einstand duerfte nicht als vollstaendig gelten')
+    if p['O6'].value not in (None, ''):
+        m.append(f'Marge muesste leer sein, ist {p["O6"].value!r}')
+    if 'Einstand' not in str(p['AH6'].value):
+        m.append(f'Pruefstatus muesste den Einstand nennen: {p["AH6"].value!r}')
+    return m
+
 SZENARIEN = [
     ('neuer_deal', s1, s1x),
     ('won_wird_lost', s2, s2x),
@@ -317,6 +398,10 @@ SZENARIEN = [
     ('letzte_zeile_860', s10, s10x),
     ('unter_druckbereich', s11, s11x),
     ('lost_mit_90_prozent', s12, s12x),
+    ('won_belegt', s13, s13x),
+    ('variante_ausschliessen', s14, s14x),
+    ('mwst_schalter_netto', s15, s15x),
+    ('einstand_unvollstaendig', s16, s16x),
 ]
 
 for name, mut, ex in SZENARIEN:

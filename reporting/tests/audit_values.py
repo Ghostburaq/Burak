@@ -45,12 +45,24 @@ def isnum(x):
 
 
 # ---------------------------------------------------------------- Rohdaten
-raw = {}
-for r in range(6, LAST + 1):
-    raw[r] = {c: P[f'{c}{r}'].value for c in
-              ('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L',
-               'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
-               'Y', 'Z', 'AA', 'AB', 'AC', 'AD', 'AE', 'AF')}
+COLS = ('A B C D E F G H I J K L M N O P Q R S T U V W X Y Z '
+        'AA AB AC AD AE AF AG AH AJ AK AL AM AN AO AP AQ AR AS AT AU AV AW '
+        'AX AY AZ BA BB').split()
+raw = {r: {c: P[f'{c}{r}'].value for c in COLS} for r in range(6, LAST + 1)}
+
+# Annahmezellen ueber die benannten Bereiche holen - keine fixen Zeilennummern
+D_ = V['📋 Definitionen & Klärung']
+
+
+def named(nm):
+    ref = V.defined_names[nm].attr_text.split('!')[1].replace('$', '')
+    return D_[ref].value
+
+
+NETTO_FAKTOR = named('Netto_Faktor')
+SCHWELLE = named('Schwelle_Aufteilung')
+assert isinstance(NETTO_FAKTOR, (int, float)) and NETTO_FAKTOR > 0, NETTO_FAKTOR
+assert isinstance(SCHWELLE, (int, float)), SCHWELLE
 
 # N-Spalte enthaelt teils Formeln (MwSt) - der berechnete Wert steht drin.
 
@@ -74,8 +86,26 @@ for r in range(6, LAST + 1):
     d = raw[r]
     I, S, R, B = d['I'], d['S'], d['R'], d['B']
 
-    o = I - sum(x for x in (d['J'], d['K'], d['L'], d['M'], d['N']) if isnum(x)) if isnum(I) else ''
-    p = (o / I) if (isnum(o) and isnum(I) and I != 0) else ''
+    # Nettoumsatz und Einstand
+    netto = I / NETTO_FAKTOR if isnum(I) else ''
+    kosten = [d[c] for c in ('J', 'K', 'L', 'M', 'N')]
+    einstand = '' if B in (None, '') else ('' if sum(1 for x in kosten if isnum(x)) == 0
+                                           else sum(x for x in kosten if isnum(x)))
+    # Kalkulationsklassen
+    ein_ok = 0 if B in (None, '') else (
+        1 if (sum(1 for c in 'JKLM' if isnum(d[c])) == 4
+              and sum(d[c] for c in 'JKLM' if isnum(d[c])) > 0) else 0)
+    def cls(kind):
+        if ein_ok == 0 or not isnum(netto) or not isnum(einstand) or netto <= 0:
+            return 0
+        if kind == 'kalk':
+            return 1 if einstand < netto * (1 - SCHWELLE) else 0
+        if kind == 'auft':
+            return 1 if abs(einstand - netto) <= netto * SCHWELLE else 0
+        return 1 if einstand > netto * (1 + SCHWELLE) else 0
+    kalk, auft, ueber = cls('kalk'), cls('auft'), cls('ueber')
+    o = netto - einstand if (kalk == 1 or ueber == 1) else ''
+    p = (o / netto) if (isnum(o) and isnum(netto) and netto != 0) else ''
     y = faktor(S) if isnum(S) else 0
     q = I * y if (isnum(I) and isnum(S)) else ('tbd' if (I not in (None, '') or S not in (None, '')) else '')
     aa = I * 1 if isnum(I) else 0
@@ -85,9 +115,20 @@ for r in range(6, LAST + 1):
     cnt_opp += 1 if (R in ('follow-up', 'Evaluation', 'tbd', 'In evaluation') and B not in (None, '')) else 0
     ae = 0 if B in (None, '') else (1 if R in AKTIV else 0)
     af = 0 if B in (None, '') else (1 if (isnum(S) and S in SKALA) else 0)
+    bel_ok = 0 if B in (None, '') else (
+        1 if (d['AF'] not in (None, '') and d['AG'] not in (None, '')) else 0)
+    wonb = 1 if (R == 'WON' and bel_ok == 1 and ein_ok == 1) else 0
+    zaehlt = 0 if B in (None, '') else (0 if d['AD'] == 'Alternative – zählt nicht' else 1)
+    mehrf = 0 if B in (None, '') else (
+        1 if sum(1 for x in range(6, LAST + 1) if raw[x]['B'] == B) > 1 else 0)
 
-    exp[r] = dict(O=o, P=p, Q=q, Y=y, Z=z, AA=aa, AB=cnt_won, AC=cnt_off, AD=cnt_opp, AE=ae, AF=af)
-    for col in ('O', 'P', 'Q', 'Y', 'Z', 'AA', 'AB', 'AC', 'AD', 'AE', 'AF'):
+    exp[r] = dict(O=o, P=p, Q=q, Y=netto, Z=einstand, AJ=y, AK=z, AL=aa,
+                  AM=cnt_won, AN=cnt_off, AO=cnt_opp, AP=ae, AQ=af,
+                  AR=ein_ok, AS=kalk, AT=auft, AU=ueber, AV=bel_ok, AW=wonb,
+                  AX=zaehlt, AY=mehrf,
+                  AZ=(o if isnum(o) else 0), BA=(netto if isnum(netto) else 0))
+    for col in ('O', 'P', 'Q', 'Y', 'Z', 'AJ', 'AK', 'AL', 'AM', 'AN', 'AO',
+                'AP', 'AQ', 'AR', 'AS', 'AT', 'AU', 'AV', 'AW', 'AX', 'AY', 'AZ', 'BA'):
         chk(f'Pipeline!{col}{r}', exp[r][col], d[col])
 
 # Kopfzeilen der Pipeline
@@ -105,9 +146,9 @@ chk('Pipeline!U4 gewichtet', gew_sum, P['U4'].value)
 # ========================================== 2) Blatt "Wahrscheinlichkeit"
 band_cnt, band_rev, band_wgt = [], [], []
 for i, (lo, hi, fk) in enumerate(BANDS):
-    rows = [r for r in raw if exp[r]['AE'] == 1 and exp[r]['Y'] == fk]
+    rows = [r for r in raw if exp[r]['AP'] == 1 and exp[r]['AJ'] == fk]
     n = len(rows)
-    rev = sum(exp[r]['AA'] for r in rows)
+    rev = sum(exp[r]['AL'] for r in rows)
     band_cnt.append(n); band_rev.append(rev); band_wgt.append(rev * fk)
     R0 = 16 + i
     chk(f'W!D{R0} Faktor', fk, W[f'D{R0}'].value)
@@ -129,7 +170,7 @@ chk('W!E24 Bandtabelle', tot_wgt, W['E24'].value)
 chk('W!E25 Spalte Q', gew_aktiv_q, W['E25'].value)
 chk('W!E26 Abweichung', 0, W['E26'].value)
 chk('W!E27 Status', '✔  Konsistent — alle Blätter rechnen mit demselben Modell', W['E27'].value)
-offscale = sum(1 for r in raw if exp[r]['AE'] == 1 and exp[r]['AF'] == 0)
+offscale = sum(1 for r in raw if exp[r]['AP'] == 1 and exp[r]['AQ'] == 0)
 chk('W!E28 ausserhalb Skala', offscale, W['E28'].value)
 unter = sum(1 for r in raw if r >= 91 and raw[r]['B'] not in (None, ''))
 chk('W!E30 unter Druckbereich', unter, W['E30'].value)
@@ -195,10 +236,10 @@ def match_row(counter_key, k):
     return None
 
 
-BLOCKS = [('AB', 11, 72), ('AC', 75, 136), ('AD', 139, 200)]
+BLOCKS = [('AM', 11, 72), ('AN', 75, 136), ('AO', 139, 200)]
 for sh, name, colmap in (
         (D, 'Dashboard', dict(A='A', B='B', C='C', D='D', E='H', F='E', G='I', H='Q', I='R', J='S', K='V')),
-        (CEO, 'CEO Report', dict(A='A', B='B', C='C', D='D', E='H', F='E', G='I', H='Q', I='O', J='R', K='S', L='V'))):
+        (CEO, 'CEO Report', dict(A='A', B='B', C='C', D='D', E='H', F='E', G='I', H='Q', I='O', J='R', K='S', L='V', M='AF', N='AH'))):
     for key, first, last in BLOCKS:
         for n, xr in enumerate(range(first, last + 1), start=1):
             src = match_row(key, n)
@@ -230,6 +271,33 @@ chk('Report!B8', sum_status(OFF), REP['B8'].value)
 chk('Report!B9', sum_status(OPP), REP['B9'].value)
 chk('Report!B10', sum_status(('WON',) + OFF + OPP), REP['B10'].value)
 chk('Report!B11 gewichtet', tot_wgt, REP['B11'].value)
+won_belegt = sum(exp[r]['AL'] for r in raw if exp[r]['AW'] == 1)
+chk('Report!B12 WON belegt', won_belegt, REP['B12'].value)
+chk('Report!C12 Anzahl belegt', sum(exp[r]['AW'] for r in raw), REP['C12'].value)
+_wonbr = sum_status(('WON',))
+chk('Report!D12 Anteil', (won_belegt / _wonbr) if _wonbr else 0, REP['D12'].value)
+won_netto = sum(exp[r]['BA'] for r in raw if raw[r]['R'] == 'WON')
+marge_kalk = sum(exp[r]['AZ'] for r in raw if exp[r]['AP'] == 1 and exp[r]['AS'] == 1)
+netto_kalk = sum(exp[r]['BA'] for r in raw if exp[r]['AP'] == 1 and exp[r]['AS'] == 1)
+akt_brutto = sum(exp[r]['AL'] for r in raw if exp[r]['AP'] == 1)
+akt_berein = sum(exp[r]['AL'] for r in raw if exp[r]['AP'] == 1 and exp[r]['AX'] == 1)
+chk('ExecPDF!E42 WON netto', won_netto, EX['E42'].value)
+chk('ExecPDF!E43 WON belegt', won_belegt, EX['E43'].value)
+chk('ExecPDF!E44 Marge kalkuliert', marge_kalk, EX['E44'].value)
+chk('ExecPDF!E45 Marge %', (marge_kalk / netto_kalk) if netto_kalk else 0, EX['E45'].value)
+for _sh, _nm in ((D, 'Dashboard'), (CEO, 'CEO Report')):
+    chk(f'{_nm}!E219 WON brutto', _wonbr, _sh['E219'].value)
+    chk(f'{_nm}!E220 WON netto', won_netto, _sh['E220'].value)
+    chk(f'{_nm}!E221 WON belegt', won_belegt, _sh['E221'].value)
+    chk(f'{_nm}!E222 offen', _wonbr - won_belegt, _sh['E222'].value)
+    chk(f'{_nm}!E223 aktiv brutto', akt_brutto, _sh['E223'].value)
+    chk(f'{_nm}!E224 aktiv bereinigt', akt_berein, _sh['E224'].value)
+    chk(f'{_nm}!E225 Marge kalkuliert', marge_kalk, _sh['E225'].value)
+    chk(f'{_nm}!E226 Marge %', (marge_kalk / netto_kalk) if netto_kalk else 0, _sh['E226'].value)
+    chk(f'{_nm}!E227 ohne Kalkulation',
+        sum(1 for r in raw if exp[r]['AP'] == 1 and exp[r]['AT'] == 1), _sh['E227'].value)
+    chk(f'{_nm}!E228 Kosten über Umsatz',
+        sum(1 for r in raw if exp[r]['AP'] == 1 and exp[r]['AU'] == 1), _sh['E228'].value)
 chk('Report!C11', tot_cnt, REP['C11'].value)
 _ges = sum_status(('WON',) + OFF + OPP)
 chk('Report!D11', (tot_wgt / _ges) if _ges else 0, REP['D11'].value)
@@ -257,12 +325,12 @@ for i in range(10):
     chk(f'Report!E{r} WON-Rate', (wonn / n) if n else '', REP[f'E{r}'].value)
 
 # Top-WON (LARGE ueber Z)
-zvals = sorted([exp[r]['Z'] for r in raw if isnum(exp[r]['Z'])], reverse=True)
+zvals = sorted([exp[r]['AK'] for r in raw if isnum(exp[r]['AK'])], reverse=True)
 for i in range(10):
     r = 29 + i
     if i < len(zvals):
         v = zvals[i]
-        first = next(x for x in range(6, LAST + 1) if exp[x]['Z'] == v)
+        first = next(x for x in range(6, LAST + 1) if exp[x]['AK'] == v)
         chk(f'Report!E{r} Volumen', raw[first]['I'], REP[f'E{r}'].value)
         chk(f'Report!B{r} Kunde', raw[first]['B'], REP[f'B{r}'].value)
         chk(f'Report!C{r} Kanton', raw[first]['C'], REP[f'C{r}'].value)
@@ -295,7 +363,7 @@ for i in range(5):
         chk(f'ExecPDF!C{r} leer', '', EX[f'C{r}'].value)
         continue
     v = zvals[i]
-    first = next(x for x in range(6, LAST + 1) if exp[x]['Z'] == v)
+    first = next(x for x in range(6, LAST + 1) if exp[x]['AK'] == v)
     chk(f'ExecPDF!C{r} Kunde', raw[first]['B'], EX[f'C{r}'].value)
     chk(f'ExecPDF!G{r} Volumen', raw[first]['I'], EX[f'G{r}'].value)
     chk(f'ExecPDF!H{r} Marge', exp[first]['O'], EX[f'H{r}'].value)

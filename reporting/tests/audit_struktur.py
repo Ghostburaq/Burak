@@ -80,7 +80,7 @@ for ws in wb.worksheets:
             if c.value in (None, ''):
                 continue
             col = get_column_letter(c.column)
-            if ws.title == 'MiT Strom Pipeline' and c.column > 24:   # ab Y = Hilfsspalten
+            if ws.title == 'MiT Strom Pipeline' and c.column > 34:   # ab AJ = Hilfsspalten
                 continue
             if ws.title in ('Dashboard', 'CEO Report') and col == 'U':
                 continue
@@ -148,7 +148,8 @@ for r in range(16, 20):
 
 # 10) Blattreihenfolge / Register
 if wb.sheetnames != ['📑 Executive PDF', '📄 Report', 'CEO Report', 'Dashboard',
-                     '📊 Diagramme', 'MiT Strom Pipeline', '⚖️ Wahrscheinlichkeit', '_data']:
+                     '📊 Diagramme', 'MiT Strom Pipeline', '📋 Definitionen & Klärung',
+                     '⚖️ Wahrscheinlichkeit', '_data']:
     note('BLATT', f'Reihenfolge: {wb.sheetnames}')
 if wb['_data'].sheet_state != 'hidden':
     note('BLATT', '_data ist nicht mehr ausgeblendet')
@@ -163,8 +164,33 @@ for ws in wb.worksheets:
                 continue
             for col in re.findall(r"'MiT Strom Pipeline'!\$?([A-Z]{1,2})\$?\d", v):
                 idx = openpyxl.utils.column_index_from_string(col)
-                if idx > 32:
+                if idx > 54:                       # bis BB reichen die Hilfsspalten
                     note('BEZUG', f'{ws.title}!{c.coordinate} zeigt auf Spalte {col} (> AF)')
+
+# 12) Neue Fachspalten, Dropdowns und benannte Bereiche
+P_ = wb['MiT Strom Pipeline']
+for co, want in (('Y5', 'Nettoumsatz'), ('Z5', 'Einstand'), ('AA5', 'Abwicklung'),
+                 ('AB5', 'Vertragsart'), ('AC5', 'Deal-Gruppe'), ('AD5', 'Variante'),
+                 ('AE5', 'Offert-Nr.'), ('AF5', 'Auftrag / PO-Nr.'),
+                 ('AG5', 'Beleg-Datum'), ('AH5', 'Prüfstatus'), ('N5', 'Übrige Kosten')):
+    if want not in str(P_[co].value):
+        note('SPALTE', f'{co}: erwartet «{want}», gefunden {P_[co].value!r}')
+dvs2 = {str(x.sqref): x for x in P_.data_validations.dataValidation}
+for need in ('AA6:AA860', 'AB6:AB860', 'AD6:AD860', 'AG6:AG860'):
+    if need not in dvs2:
+        note('DROPDOWN', f'Auswahlliste {need} fehlt')
+for nm in ('MwSt_Satz', 'Netto_Faktor', 'Schwelle_Aufteilung', 'Wahrscheinlichkeit_Skala'):
+    if wb.defined_names.get(nm) is None:
+        note('NAME', f'benannter Bereich {nm} fehlt')
+# MwSt darf in Spalte N nicht mehr als Kosten stehen
+for r in range(6, 121):
+    v = P_[f'N{r}'].value
+    if isinstance(v, str) and '1.081' in v:
+        note('MWST', f'N{r} enthält weiterhin eine MwSt-Formel')
+cf2 = [str(k.sqref) for k in P_.conditional_formatting._cf_rules]
+for need in ('AH6:AH860', 'O6:O860'):
+    if need not in cf2:
+        note('FORMAT', f'bedingte Formatierung {need} fehlt')
 
 print('=' * 70)
 if bad:

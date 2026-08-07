@@ -34,6 +34,43 @@ Der Faktor wird aus dem Feld *Effective Probability* abgeleitet:
 
 ---
 
+## Rückfragen von Maria — was daraus im File wurde
+
+Jede Rückfrage ist im neuen Blatt **`📋 Definitionen & Klärung`** mit einer
+Live-Zahl beantwortet. Die Regeln stehen dort, nicht in einer Mail.
+
+| Rückfrage | Was im File passiert |
+|-----------|----------------------|
+| **Negative Margen in Spalte I** | Ursache gefunden: die **MwSt war als Kostenposition erfasst** und wurde vom Umsatz abgezogen. Neu gilt `Marge = Nettoumsatz − Einstand`, ohne MwSt auf beiden Seiten. Zusätzlich zeigte sich: bei 36 Zeilen wurde gar nicht kalkuliert, sondern nur der Verkaufspreis in netto + MwSt zerlegt. Dort wird jetzt **bewusst keine Marge ausgewiesen** — mit Begründung in der Spalte «Prüfstatus». |
+| **Wer verantwortet die Kalkulation?** | Der Einstand wird vom Verkäufer erfasst und vor dem Statuswechsel auf WON vom Innendienst gegengeprüft. Die Regel steht im Definitionsblatt, der Erfüllungsstand pro Zeile in Spalte AH. |
+| **Laufen alle Projekte über MiT CH?** | Ja — MiT CH ist die Standardabwicklung. Abweichungen werden in der neuen Spalte **AA «Abwicklung»** erfasst (Aggreko intl. / Partner–Dritte). Eine leere Zelle heisst ausdrücklich MiT CH, nicht «unbekannt». |
+| **Wie ist das WON-Volumen zu verstehen?** | Neu dreifach ausgewiesen: **brutto wie erfasst**, **netto ohne MwSt**, und **davon belegt** — belegt heisst Auftrags-/PO-Nr. + Belegdatum + vollständiger Einstand. Aktuell: 1'428'553 brutto, 1'321'511 netto, **0 belegt**. |
+| **Datacenter: 660 oder 330 kCHF?** | Entscheidet die neue Variantenlogik: gleiche **Deal-Gruppe (AC)** setzen, die nicht führende Zeile auf **«Alternative – zählt nicht» (AD)**. Dann zählt nur die führende Variante. Die beiden DPR-Zeilen stehen namentlich auf der Klärungsliste. |
+| **Was heisst «Abrufbereitschaft»?** | Neue Spalte **AB «Vertragsart»** mit vier definierten Werten. «Abrufbereitschaft» = Kapazität reserviert, **kein bestätigter Abruf** → gehört nicht in WON, sondern in die Offert-Pipeline. Murg Flums Energie steht namentlich auf der Klärungsliste. |
+
+### Die vier Anpassungen im Detail
+
+1. **Marge** = Nettoumsatz − Einstand (Equipment, Transport, Treibstoff, Personal, Übrige), ohne MwSt. Marge % neu auf den Nettoumsatz bezogen.
+2. **Statusdefinition fix**: WON verlangt unterschriebene Bestellung oder gültige PO — mit Offert-Nr. (AE), Auftrags-/PO-Nr. (AF) und Belegdatum (AG) in eigenen Spalten.
+3. **Varianten-Kennzeichnung**: Deal-Gruppe + Variante, damit derselbe Entscheid nur einmal ins Volumen läuft. Sicherheitsregel: nur ausdrücklich als Alternative markierte Zeilen fallen weg — eine vergessene Markierung kann nie Volumen verschwinden lassen.
+4. **Sperre**: WON ohne vollständigen Einstand oder ohne Beleg fliesst **nicht** in die Kennzahl «belegtes WON». Statt eines Dialogfensters, das ein Import umgeht, wirkt die Sperre über die Zahl selbst — und die Lücke steht offen im Bericht.
+
+### Stand der offenen Punkte
+
+| Punkt | Anzahl | Volumen CHF |
+|-------|--------|-------------|
+| WON ohne Auftrags-/PO-Nr. und Datum | 12 | 1'428'553 |
+| WON ohne vollständigen Einstand | 2 | 10'000 |
+| WON ohne Vertragsart | 12 | 1'428'553 |
+| Aktive Deals ohne Kostenkalkulation | 10 | 606'942 |
+| Aktive Deals mit Einstand über Nettoumsatz | 12 | 3'843'342 |
+| Kunden mehrfach in der Pipeline, Variante offen | 17 | 3'368'728 |
+
+Sauber kalkuliert sind aktuell **16 von 46** aktiven Deals; darauf beträgt die
+Marge **363'396 CHF (17.5 %)**.
+
+---
+
 ## Wie es umgesetzt ist
 
 Neues Blatt **`⚖️ Wahrscheinlichkeit`** — die Steuerzentrale der Mappe:
@@ -52,12 +89,13 @@ es gibt keine fest eingetippten Prozentsätze in den Berichtsblättern.
 
 | Blatt | Änderung |
 |-------|----------|
-| `MiT Strom Pipeline` | `Gew.Wert CHF` (Spalte Q) = **Volumen × Aggreko-Faktor** statt Volumen × Wahrscheinlichkeit. Spalte S mit Dropdown 0/10/30/60/90 % und oranger Markierung bei abweichenden Werten. Faktor je Deal in der ausgeblendeten Hilfsspalte Y. |
-| `⚖️ Wahrscheinlichkeit` | neu (siehe oben) |
-| `Dashboard` | Info-Zeile mit gewichteter Pipeline unter den KPI-Kacheln, Abschnitt 4 «Gewichtete Pipeline» mit Bandtabelle |
-| `CEO Report` | dito |
-| `📄 Report` | KPI-Zeile «⚖️ Gewichtet» und Abschnitt «Wahrscheinlichkeits-Bewertung» |
-| `📑 Executive PDF` | gewichteter Wert in der Pipeline-Zeile, Bandtabelle auf der Seite |
+| `MiT Strom Pipeline` | `Gew.Wert CHF` (Spalte Q) = **Volumen × Aggreko-Faktor**. Spalte S mit Dropdown 0/10/30/60/90 %. Neue Fachspalten Y–AH: Nettoumsatz, Einstand, Abwicklung, Vertragsart, Deal-Gruppe, Variante, Offert-Nr., Auftrag/PO-Nr., Beleg-Datum, Prüfstatus. Spalte N heisst neu «Übrige Kosten» und enthält keine MwSt mehr. Hilfsspalten liegen ausgeblendet ab AJ. |
+| `⚖️ Wahrscheinlichkeit` | neu — Aggreko-Bewertungsmodell |
+| `📋 Definitionen & Klärung` | neu — beantwortet jede Rückfrage mit Live-Zahl, enthält Annahmen, Margendefinition, Status- und Vertragsartendefinitionen, Variantenregel, Klärungsliste und die Liste der offenen Pflichtangaben |
+| `Dashboard` | Info-Zeile mit gewichteter Pipeline, Abschnitt 4 «Gewichtete Pipeline», Abschnitt 5 «Qualität & Nachweis» |
+| `CEO Report` | dito, zusätzlich je Deal die Spalten «Auftrag / PO-Nr.» und «Prüfstatus» |
+| `📄 Report` | KPI-Zeilen «⚖️ Gewichtet» und «📋 WON belegt», Abschnitt «Wahrscheinlichkeits-Bewertung» |
+| `📑 Executive PDF` | gewichteter Wert, Bandtabelle und Block «Nachweis & Marge» (WON netto, davon belegt, Marge kalkuliert) |
 | `📊 Diagramme` | neues Diagramm «Umsatz vs. gewichtet je Band» |
 | `_data` | Bandtabelle als Diagramm-Quelle |
 
@@ -81,10 +119,10 @@ Die Skripte in [`tests/`](tests/) prüfen die Mappe vollständig:
 
 | Skript | Was es prüft | Ergebnis |
 |--------|--------------|----------|
-| `audit_static.py` | jede der 15'509 Formeln: Funktionsnamen, Blattbezüge, Anführungszeichen, externe Verweise, Fehlerwerte | 0 Befunde |
-| `audit_values.py` | rechnet **das gesamte Modell unabhängig in Python nach** — nur aus den Roheingaben — und vergleicht Zelle für Zelle | 11'255 Werte, 0 Abweichungen |
+| `audit_static.py` | jede der 27'114 Formeln: Funktionsnamen, Blattbezüge, Anführungszeichen, externe Verweise, Fehlerwerte | 0 Befunde |
+| `audit_values.py` | rechnet **das gesamte Modell unabhängig in Python nach** — nur aus den Roheingaben — und vergleicht Zelle für Zelle | 21'634 Werte, 0 Abweichungen |
 | `audit_struktur.py` | benannte Bereiche, Dropdowns, bedingte Formatierung, Diagrammquellen, Druckbereiche, verbundene Zellen, Zahlenformate, Schriften | 0 Befunde |
-| `audit_behaviour.py` | 12 Szenarien mit veränderten Daten (neuer Deal, Statuswechsel, fehlende Wahrscheinlichkeit, Prozent als 60 statt 0.6, alle Bandgrenzen, leere Pipeline, Text im Volumen, Deal ohne Status, betragsgleiche Deals, letzte Zeile 860, Deal unter dem Druckbereich, LOST mit 90 %) | 12 / 12 bestanden |
+| `audit_behaviour.py` | 16 Szenarien mit veränderten Daten — u. a. neuer Deal, Statuswechsel, fehlende Wahrscheinlichkeit, alle Bandgrenzen, leere Pipeline, betragsgleiche Deals, LOST mit 90 %, **WON vollständig belegen**, **Variante ausschliessen**, **MwSt-Schalter auf netto**, **unvollständiger Einstand** | 16 / 16 bestanden |
 
 ```bash
 cd reporting/tests && python3 audit_static.py && python3 audit_values.py \
@@ -124,7 +162,7 @@ waren es 3'294'922 CHF.
 ## Datei neu erzeugen
 
 ```bash
-python3 build_master_reporting.py    # erwartet original.xlsx im selben Ordner
+./build_all.sh      # erwartet original.xlsx (= quelle_stand_vor_update.xlsx) im selben Ordner
 ```
 
 Danach in LibreOffice/Excel einmal neu berechnen lassen, damit die
