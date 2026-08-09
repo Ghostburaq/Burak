@@ -93,10 +93,12 @@ damit jede Änderung nachvollziehbar ist.
 
 ---
 
-## Rückfragen von Maria — was daraus im File wurde
+## Rückfragen — was daraus im File wurde
 
-Jede Rückfrage ist im neuen Blatt **`📋 Definitionen & Klärung`** mit einer
-Live-Zahl beantwortet. Die Regeln stehen dort, nicht in einer Mail.
+Alle acht Rückfragen von Maria und Oliver sind im Blatt
+**`📋 Definitionen & Klärung`** beantwortet, jede mit einer Live-Zahl. Die Regeln
+stehen dort, nicht in einer Mail. Ein eigener Test (`tests/audit_fragen.py`)
+stellt sicher, dass keine Frage ohne Antwort und ohne rechnende Zahl bleibt.
 
 | Rückfrage | Was im File passiert |
 |-----------|----------------------|
@@ -105,6 +107,7 @@ Live-Zahl beantwortet. Die Regeln stehen dort, nicht in einer Mail.
 | **Laufen alle Projekte über MiT CH?** | Ja — MiT CH ist die Standardabwicklung. Abweichungen werden in der neuen Spalte **AA «Abwicklung»** erfasst (Aggreko intl. / Partner–Dritte). Eine leere Zelle heisst ausdrücklich MiT CH, nicht «unbekannt». |
 | **Wie ist das WON-Volumen zu verstehen?** | Neu dreifach ausgewiesen: **brutto wie erfasst**, **netto ohne MwSt**, und **davon belegt** — belegt heisst Auftrags-/PO-Nr. + Belegdatum + vollständiger Einstand. Aktuell: 1'428'553 brutto, 1'321'511 netto, **0 belegt**. |
 | **Datacenter: 660 oder 330 kCHF?** | Entscheidet die neue Variantenlogik: gleiche **Deal-Gruppe (AC)** setzen, die nicht führende Zeile auf **«Alternative – zählt nicht» (AD)**. Dann zählt nur die führende Variante. Die beiden DPR-Zeilen stehen namentlich auf der Klärungsliste. |
+| **Wurden Offerten erstellt bzw. liegen Verträge vor?** | Steht nicht mehr im Kommentar, sondern in eigenen Spalten: **AE «Offert-Nr.»** für die versendete Offerte, **AF «Auftrag / PO-Nr.»** und **AG «Beleg-Datum»** für den erteilten Auftrag. Spalte AH «Prüfstatus» zeigt je Zeile, was vorliegt und was fehlt. Aktuell: 0 von 29 Offerten mit Offert-Nr., 0 von 12 Aufträgen mit PO-Nr. und Datum. |
 | **Was heisst «Abrufbereitschaft»?** | Neue Spalte **AB «Vertragsart»** mit vier definierten Werten. «Abrufbereitschaft» = Kapazität reserviert, **kein bestätigter Abruf** → gehört nicht in WON, sondern in die Offert-Pipeline. Murg Flums Energie steht namentlich auf der Klärungsliste. |
 
 ### Die vier Anpassungen im Detail
@@ -216,12 +219,24 @@ Die Skripte in [`tests/`](tests/) prüfen die Mappe vollständig:
 | `audit_static.py` | jede der 27'302 Formeln: Funktionsnamen, Blattbezüge, Anführungszeichen, externe Verweise, Fehlerwerte | 0 Befunde |
 | `audit_values.py` | rechnet **das gesamte Modell unabhängig in Python nach** — nur aus den Roheingaben — und vergleicht Zelle für Zelle | 21'772 Werte, 0 Abweichungen |
 | `audit_struktur.py` | benannte Bereiche, Dropdowns, bedingte Formatierung, Diagrammquellen, Druckbereiche, verbundene Zellen, Zahlenformate, Schriften | 0 Befunde |
+| `audit_fragen.py` | prüft, ob **jede** Rückfrage von Maria und Oliver eine Antwortzeile mit einer Live-Zahl hat und ob die Antwort die zugesagten Begriffe nennt | 8 / 8 abgedeckt |
 | `audit_behaviour.py` | 17 Szenarien mit veränderten Daten — u. a. neuer Deal, Statuswechsel, fehlende Wahrscheinlichkeit, alle Bandgrenzen, leere Pipeline, betragsgleiche Deals, LOST mit 90 %, **WON vollständig belegen**, **Variante ausschliessen**, **MwSt-Schalter auf netto**, **unvollständiger Einstand** | 17 / 17 bestanden |
 
 ```bash
-cd reporting/tests && python3 audit_static.py && python3 audit_values.py \
-  && python3 audit_struktur.py && python3 audit_behaviour.py
+cd reporting/tests && python3 run_durchgaenge.py
 ```
+
+`run_durchgaenge.py` baut die Datei **fünfmal** komplett neu, berechnet sie jedes
+Mal neu und lässt alle Prüfungen laufen. Zusätzlich prüft es zwei Eigenschaften,
+die einzelne Läufe nicht zeigen:
+
+- **Determinismus** — alle fünf Durchgänge müssen exakt dieselben Zahlen liefern
+  (Vergleich über einen Hash aller berechneten Werte).
+- **Idempotenz** — ein zweites Neuberechnen der fertigen Datei darf nichts mehr
+  verändern.
+
+Letzter Lauf: **5 / 5 Durchgänge fehlerfrei**, identischer Fingerabdruck
+`373ec3ff48c3696f`, idempotent.
 
 Die Mappe enthält zusätzlich eine **eingebaute Selbstkontrolle** (⚖️-Blatt,
 Abschnitt 3): sie rechnet die gewichtete Pipeline auf zwei unabhängigen Wegen

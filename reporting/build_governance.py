@@ -156,6 +156,9 @@ EINOK, KALK, AUFT = f'{PQ}!$AR$6:$AR${LAST}', f'{PQ}!$AS$6:$AS${LAST}', f'{PQ}!$
 NEGM, BELOK, WONB = f'{PQ}!$AU$6:$AU${LAST}', f'{PQ}!$AV$6:$AV${LAST}', f'{PQ}!$AW$6:$AW${LAST}'
 ZAEHLT, MEHRF = f'{PQ}!$AX$6:$AX${LAST}', f'{PQ}!$AY$6:$AY${LAST}'
 MARGN, NETTN = f'{PQ}!$AZ$6:$AZ${LAST}', f'{PQ}!$BA$6:$BA${LAST}'
+OFFNR, AUFNR = f'{PQ}!$AE$6:$AE${LAST}', f'{PQ}!$AF$6:$AF${LAST}'
+ALTW, SKOK = f'{PQ}!$AI$6:$AI${LAST}', f'{PQ}!$AQ$6:$AQ${LAST}'
+IST_OFFERTE = f'--(({STA}="offered")+({STA}="to be offered")>0)'
 
 row = 4
 
@@ -205,6 +208,25 @@ ANTWORT = [
      f'="Brutto: "&TEXT(SUMPRODUCT({AKT},{INUM}),"#,##0")&" CHF  ·  bereinigt: "'
      f'&TEXT(SUMPRODUCT({AKT},{ZAEHLT},{INUM}),"#,##0")&" CHF  ·  Zeilen mit Mehrfachkunde: "'
      f'&SUMPRODUCT({AKT},{MEHRF})'),
+    ('Wurden Offerten erstellt bzw. liegen Aufträge vor?',
+     'Das steht neu nicht mehr im Kommentar, sondern in eigenen Spalten: AE «Offert-Nr.» belegt die '
+     'versendete Offerte, AF «Auftrag / PO-Nr.» und AG «Beleg-Datum» den erteilten Auftrag. Die Spalte '
+     'AH «Prüfstatus» zeigt je Zeile, was davon vorliegt und was fehlt.',
+     f'="Offerten mit Offert-Nr.: "&SUMPRODUCT({IST_OFFERTE},--({OFFNR}<>""))&" von "'
+     f'&SUMPRODUCT({IST_OFFERTE})&"  ·  Aufträge mit PO-Nr. und Datum: "'
+     f'&SUMPRODUCT({WONB})&" von "&COUNTIF({STA},"WON")'),
+    ('Wahrscheinlichkeiten ausserhalb der Aggreko-Skala (50 %)',
+     'Alle Zeilen sind auf die Skala 0/10/30/60/90 % umgeschlüsselt; der bisherige Wert bleibt in der '
+     'neuen Spalte AI erhalten. Leitregel: wo eine Skalenstufe denselben Gewichtungsfaktor hat, wird sie '
+     'gewählt — der gewichtete Umsatz bleibt dann unverändert (20→30, 80→60, 100→90). Die Deals mit 50 % '
+     'können das nicht: kein Skalenwert fällt in das Gewichtungsband 45–59 % (Faktor 30 %). Sie stehen '
+     'nach Aggreko-Definition auf 30 % und sind einzeln zu bestätigen — namentliche Liste und Protokoll '
+     'im Blatt «⚖️ Wahrscheinlichkeit».',
+     f'="Noch ausserhalb der Skala: "&SUMPRODUCT({AKT},--({SKOK}=0))&"  ·  umgeschlüsselt: "'
+     f'&SUMPRODUCT(--({KUN}<>""),--({ALTW}<>""),--({ALTW}<>{PQ}!$S$6:$S${LAST}))'
+     f'&"  ·  davon mit Gewichtsänderung: "'
+     f'&SUMPRODUCT(--({KUN}<>""),--(ROUND({ALTW},6)=0.5))&"  ·  gewichtete Pipeline: "'
+     f'&TEXT({WQ}!$G$20,"#,##0")&" CHF"'),
     ('Was heisst «Abrufbereitschaft»?',
      'Kapazität ist für den Kunden reserviert, ein bestätigter Abruf liegt aber NICHT vor. Der Umsatz '
      'entsteht erst mit dem Abruf. Solche Deals gehören deshalb in die Offert-Pipeline, nicht in WON. '
