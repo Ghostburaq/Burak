@@ -453,7 +453,7 @@ const ST_BADGE = {WON:'b-green',OFFERTE:'b-blue','FOLLOW-UP':'b-orange','TO OFFE
 const OV_KEY='one_overlay_v1';
 let OV=ladeObjekt(OV_KEY);
 const ovGet=(ds,i)=>((OV[ds]||{})[i])||{};
-function ovSet(ds,i,patch){ OV[ds]=OV[ds]||{}; OV[ds][i]={...(OV[ds][i]||{}),...patch}; localStorage.setItem(OV_KEY,JSON.stringify(OV)); }
+function ovSet(ds,i,patch){ OV[ds]=OV[ds]||{}; OV[ds][i]={...(OV[ds][i]||{}),...patch}; localStorage.setItem(OV_KEY,JSON.stringify(OV)); cacheLeeren(); }
 const pStatus = d => (ovGet('P',d._i).status)||ST_LBL(d.status);
 const pVal = d => { const o=ovGet('P',d._i); return o.vol!=null?+o.vol:(+d.vol||0); };
 
@@ -585,13 +585,21 @@ function kv(k,v){ return `<div class="kvrow"><span class="k">${esc(k)}</span><sp
 function linkRow(t,s,fn){ return `<div class="linkcard" onclick='${fn}'><div class="t">${esc(t)}</div><div class="s">${esc(s)}</div></div>`; }
 
 /* Cross-links: find related entities by company */
+/* ── Zwischenspeicher ──
+   related() durchsucht zehn Datensätze. Für 801 Kunden bei jedem Neuzeichnen
+   aufgerufen ergab das rund drei Sekunden Wartezeit pro Klick. */
+const CACHE={related:new Map(),akq:new Map(),bedarf:new Map()};
+function cacheLeeren(){ CACHE.related.clear(); CACHE.akq.clear(); CACHE.bedarf.clear();
+  CACHE.hist=null; CACHE.mblock=null; CACHE.akqZaehl=null; CACHE.rang=null; CACHE.rangKey=null; CACHE.reg=null; }
+window.cacheLeeren=cacheLeeren;
 function related(co){
   const leer={deals:[],kunden:[],kartei:[],offerten:[],dck:[],rech:[],chp:[],chk:[],proj:[],term:[]};
   const n=norm(co); if(!n) return leer;
+  const hit=CACHE.related.get(n); if(hit) return hit;
   /* Teiltreffer für Firmen, die in der Projektdatenbank anders geschrieben sind
      («Implenia AG» ↔ «Implenia Schweiz AG») */
   const teil=x=>{ const m=norm(x); return !!m&&(m===n||m.includes(n)||n.includes(m)); };
-  return {
+  const erg={
     deals: P.filter(d=>norm(d.co)===n),
     kunden: K.filter(d=>norm(d.co)===n),
     kartei: KA.filter(d=>norm(d.co)===n),
@@ -603,6 +611,8 @@ function related(co){
     proj: (typeof PROJECTS!=='undefined'&&Array.isArray(PROJECTS)?PROJECTS:[]).filter(p=>teil(p.kunde)),
     term: (typeof TERMINE!=='undefined'&&Array.isArray(TERMINE)?TERMINE:[]).filter(t=>!t.buero&&norm(t.kunde)===n),
   };
+  CACHE.related.set(n,erg);
+  return erg;
 }
 function relatedHTML(co, skip){
   const r=related(co); let h='';
@@ -1025,7 +1035,7 @@ Views.add('globalk','Global-Kontakte','Global','◌',GK.rows.length,buildGlobalK
 /* ═══════════════ PROJEKT-MODUL — Status · Milestones · Geräte · Kalkulation ═══════════════ */
 const PROJ_KEY='one_projects_v1';
 let PROJECTS=ladeListe(PROJ_KEY);
-const projSave=()=>{ localStorage.setItem(PROJ_KEY,JSON.stringify(PROJECTS)); try{if(window.Spot)Spot.idx=null;}catch(e){} };
+const projSave=()=>{ localStorage.setItem(PROJ_KEY,JSON.stringify(PROJECTS)); cacheLeeren(); try{if(window.Spot)Spot.idx=null;}catch(e){} };
 const PHASEN=['Anfrage','Planung','Offeriert','Beauftragt','Lieferung','In Betrieb','Demontage','Abgeschlossen'];
 const MS_TPL={
  'Event':['Anfrage erhalten','Standort-Besichtigung','Lastberechnung erstellt','Offerte versendet','Auftrag erhalten','Disposition Geräte','Lieferung & Aufbau','Inbetriebnahme & Test','Event-Begleitung','Demontage','Rücktransport','Abrechnung & Feedback'],
@@ -1867,12 +1877,12 @@ document.addEventListener('paste',e=>{
 /* ═══════════════ TERMINPLANUNG — Wochenziel 5–7 · Outlook-Export ═══════════════ */
 const TERM_KEY='one_termine_v1';
 let TERMINE=ladeListe(TERM_KEY);
-const termSave=()=>{ localStorage.setItem(TERM_KEY,JSON.stringify(TERMINE)); try{if(window.Spot)Spot.idx=null;}catch(e){} };
+const termSave=()=>{ localStorage.setItem(TERM_KEY,JSON.stringify(TERMINE)); cacheLeeren(); try{if(window.Spot)Spot.idx=null;}catch(e){} };
 /* Sperrliste: einmal exportierte/genommene Kunden kommen nicht wieder in Auto-Planung & Vorschläge */
 const HIST_KEY='one_besucht_v1';
 let BESUCHT=ladeListe(HIST_KEY);
-const histSave=()=>localStorage.setItem(HIST_KEY,JSON.stringify(BESUCHT));
-const histSet=()=>new Set(BESUCHT.map(b=>norm(b.kunde)));
+const histSave=()=>{ localStorage.setItem(HIST_KEY,JSON.stringify(BESUCHT)); cacheLeeren(); };
+const histSet=()=>{ if(!CACHE.hist) CACHE.hist=new Set(BESUCHT.map(b=>norm(b.kunde))); return CACHE.hist; };
 function histAdd(t){ if(!BESUCHT.some(b=>norm(b.kunde)===norm(t.kunde)))
   BESUCHT.push({kunde:t.kunde,datum:t.datum,zeit:t.zeit,am:isoOf(new Date())}); }
 window.histRemove=i=>{ BESUCHT.splice(i,1); histSave(); toast('Aus Sperrliste entfernt'); Views.rerender('termine'); };
@@ -2458,6 +2468,7 @@ function buildTermine(el){
         ${kantonRanking().slice(0,8).map(x=>`<span class="chip" style="${x.passt?'':'opacity:.55'}" title="${x.n} offene Kunden · ${x.a} Prio-A · Anfahrt ${x.km} km · geschätzte Wochentour ${x.tour} km">${x.passt?'✓':'⚠'} ${x.kt} · ${x.n} (${x.a}×A) · ~${x.tour}km</span>`).join('')||'<span style="font-size:12px;color:var(--tx2)">Alle Kantone abgearbeitet</span>'}
         </div></div>
       <div class="card-b" id="monatUebersicht"></div></div>
+    ${akqBlock()}
     ${weekBlock(showWk,showWk===thisWk?'📌 Diese Woche':(showWk>thisWk?'📅 Kommende Woche':'🕓 Vergangene Woche'))}
     <div class="card"><div class="card-h"><h3>💡 Termin-Vorschläge</h3><span class="sub">${vsPool.length} Prio-A-Kunden ohne Termin — zufällige Auswahl</span>
       <div style="flex:1"></div><button class="tbtn" onclick="Views.rerender('termine')" title="Andere 6 Kandidaten anzeigen">🎲 Neu mischen</button></div>
@@ -2517,15 +2528,13 @@ function selKanton(){ const e=document.getElementById('planKanton');
 window.planTagBtn=()=>{ const e=document.getElementById('planTagDatum');
   const iso=(e&&e.value)||PLAN_TAG||naechsterKundentag(); PLAN_TAG=iso;
   termPlanTag(iso,selKanton()); };
-window.planWocheBtn=()=>{ const e=document.getElementById('planWocheDatum');
-  const raw=(e&&e.value)||PLAN_WOCHE||naechsteWoche(); PLAN_WOCHE=raw;
+window.planWocheBtn=()=>{ const raw=planWocheLesen();
   const d=toDate(raw)||new Date();
   const wk=isoOf(weekStartOf(d));
   if(wk<isoOf(weekStartOf(new Date()))){ toast('⚠ Diese Woche liegt in der Vergangenheit — bitte eine Woche ab heute wählen'); return; }
   termAutoPlan(wk,false,false,selKanton()); planBuero(wk); termSave();
   Views.rerender('termine'); Views.rerender('kalender'); Views.rerender('dashboard'); };
-window.planRandomBtn=()=>{ const e=document.getElementById('planWocheDatum');
-  const raw=(e&&e.value)||PLAN_WOCHE||naechsteWoche(); PLAN_WOCHE=raw;
+window.planRandomBtn=()=>{ const raw=planWocheLesen();
   const d=toDate(raw)||new Date();
   const wk=isoOf(weekStartOf(d));
   const r=kantonRanking();
@@ -3344,8 +3353,8 @@ window.serienVorschau=()=>{
 /* ═══════════════ MAIL-SPERRLISTE: kein Kunde wird zweimal angeschrieben ═══════════════ */
 const MBLOCK_KEY='one_mailblock_v1', MQ_KEY='one_mailq_v1';
 let MBLOCK=ladeListe(MBLOCK_KEY);
-function mblockSave(){ try{localStorage.setItem(MBLOCK_KEY,JSON.stringify(MBLOCK))}catch(e){} }
-function mblockSet(){ return new Set(MBLOCK.map(b=>norm(b.kunde))); }
+function mblockSave(){ try{localStorage.setItem(MBLOCK_KEY,JSON.stringify(MBLOCK))}catch(e){} cacheLeeren(); }
+function mblockSet(){ if(!CACHE.mblock) CACHE.mblock=new Set(MBLOCK.map(b=>norm(b.kunde))); return CACHE.mblock; }
 function istGesperrt(co){ return mblockSet().has(norm(co)); }
 function mblockInfo(co){ const n=norm(co); return MBLOCK.filter(b=>norm(b.kunde)===n); }
 /* Kunden nach dem Versand sperren — mehrfaches Anschreiben wird gezählt, nicht dupliziert */
@@ -4035,6 +4044,8 @@ const BAUPHASEN=[
 ];
 /* ── Die Analyse ── */
 function bedarfFuer(k){
+  const ck=k&&k._i!=null?'i'+k._i:null;
+  if(ck){ const hit=CACHE.bedarf.get(ck); if(hit) return hit; }
   const seg=brancheKey(k.seg);
   const treffer=new Map();
   const add=(key,grund,quelle)=>{ const p=BEDARF_KATALOG[key]; if(!p) return;
@@ -4052,7 +4063,9 @@ function bedarfFuer(k){
       chf:e.p.chf,gewichtet:Math.round(e.p.chf*faktor),
       grund:e.gruende.join(' · '),stark:e.punkte>=4}));
   const potenzial=liste.reduce((a,x)=>a+x.gewichtet,0);
-  return {seg,liste,potenzial,faktor,signale:BEDARF_SIGNAL.filter(s=>s.re.test(text)).length,text};
+  const erg={seg,liste,potenzial,faktor,signale:BEDARF_SIGNAL.filter(s=>s.re.test(text)).length,text};
+  if(ck) CACHE.bedarf.set(ck,erg);
+  return erg;
 }
 window.bedarfFuer=bedarfFuer;
 
@@ -4300,6 +4313,355 @@ window.rechExport=()=>exportRows('Marktrecherche_CH',RAW.recherche.headers,RAW.r
 window.chpExport=()=>exportRows('CH_Projekte',RAW.chProjekte.headers,RAW.chProjekte.rows);
 window.chkExport=()=>exportRows('CH_Projektkontakte',RAW.chKontakte.headers,RAW.chKontakte.rows);
 Views.add('recherche','Marktrecherche CH','Data Center','◉',RECH.length,buildRecherche);
+
+/* ═══════════════ AKQUISE-AUSWAHL FÜR DIE TERMINPLANUNG ═══════════════ */
+const AKQ_KEY='one_akquiseart_v1';
+let AKQ_OVR=ladeObjekt(AKQ_KEY);          /* manuell gesetzte Akquise-Art je Kunde */
+function akqOvrSave(){ try{localStorage.setItem(AKQ_KEY,JSON.stringify(AKQ_OVR))}catch(e){} cacheLeeren(); }
+
+/* Vokabular aus dem eigenen Listenblatt */
+const AKQ_ARTEN=[
+  {id:'kalt',      t:'Kaltakquise',    ic:'❄️', farbe:'b-blue',   was:'noch nie kontaktiert, kein Vorgang hinterlegt'},
+  {id:'warm',      t:'Warm',           ic:'🔥', farbe:'b-orange', was:'Vorgang, Offerte oder Gespräch vorhanden'},
+  {id:'bestand',   t:'Bestandskunde',  ic:'🤝', farbe:'b-green',  was:'gewonnener Auftrag in der Pipeline'},
+  {id:'ausschreib',t:'Ausschreibung',  ic:'📋', farbe:'b-purple', was:'Submission oder simap-Bezug in den Notizen'},
+  {id:'partner',   t:'Partner',        ic:'🧩', farbe:'b-purple', was:'Planer, Multiplikator oder Partnerhinweis'},
+  {id:'inbound',   t:'Inbound',        ic:'📨', farbe:'b-green',  was:'Anfrage kam vom Kunden'}
+];
+const AKQ_STUFEN=[
+  {id:'erst',t:'Erstkontakt',ic:'🌱',was:'weder Mail noch Termin noch Besuch erfasst'},
+  {id:'wieder',t:'Wiedervorlage',ic:'🔁',was:'bereits angeschrieben oder besucht'}
+];
+const AKQ_KANAELE=[
+  {id:'telefon',t:'Telefonakquise',ic:'📞',was:'Telefonnummer hinterlegt'},
+  {id:'mail',t:'Mail-Akquise',ic:'✉️',was:'E-Mail-Adresse hinterlegt'},
+  {id:'vorort',t:'Vor Ort',ic:'📍',was:'Standort bekannt, Besuch planbar'},
+  {id:'linkedin',t:'LinkedIn',ic:'💼',was:'LinkedIn-Hinweis in den Notizen'}
+];
+/* ── Einstufung eines Kunden ── */
+/* Register statt Suche: einmal gebaut, dann konstante Nachschlagezeit.
+   Vorher lief für jeden der 801 Kunden eine Volltextsuche über zehn Datensätze. */
+function akqRegister(){
+  if(CACHE.reg) return CACHE.reg;
+  const won=new Set(), vorgang=new Set(), terminiert=new Set();
+  P.forEach(d=>{ const n=norm(d.co); if(!n) return; vorgang.add(n); if(pStatus(d)==='WON') won.add(n); });
+  OFF.forEach(o=>{ const n=norm(o.co); if(n) vorgang.add(n); });
+  if(Array.isArray(TERMINE)) TERMINE.forEach(t=>{ if(!t.buero&&!t.mail){ const n=norm(t.kunde); if(n) terminiert.add(n); } });
+  CACHE.reg={won,vorgang,terminiert};
+  return CACHE.reg;
+}
+function akqArt(k){
+  const ck=k&&k._i!=null?'i'+k._i:'c'+norm(k&&k.co);
+  const hit=CACHE.akq.get(ck); if(hit) return hit;
+  const n0=norm(k.co);
+  const manuell=AKQ_OVR[n0];
+  const txt=[k.notiz,k.intern,k.next,k.status,k.seg].filter(Boolean).join(' ');
+  const reg=akqRegister();
+  const gewonnen=reg.won.has(n0);
+  const vorgang=reg.vorgang.has(n0);
+  const angeschrieben=mblockSet().has(n0)||histSet().has(n0)||reg.terminiert.has(n0);
+  let art='kalt', grund='kein Vorgang, keine Offerte, kein Kontakt erfasst';
+  if(/ausschreib|submission|simap|vergabe|wettbewerb/i.test(txt)){ art='ausschreib'; grund='Ausschreibung oder Submission in den Notizen'; }
+  else if(/inbound|anfrage erhalten|hat angefragt|kundenanfrage/i.test(txt)){ art='inbound'; grund='Anfrage kam vom Kunden'; }
+  else if(gewonnen){ art='bestand'; grund='gewonnener Auftrag in der Pipeline'; }
+  else if(vorgang){ art='warm'; grund='Vorgang oder Offerte in der Pipeline hinterlegt'; }
+  else if(/planer|engineering|ingenieurbüro|partner|multiplikator/i.test(txt)||brancheKey(k.seg)==='Elektroplaner/Engineering'){
+    art='partner'; grund='Planer beziehungsweise Multiplikator'; }
+  else if(String(k.status||'').trim().toLowerCase()!=='offen'&&String(k.status||'').trim()){
+    art='warm'; grund='Status «'+k.status+'»'; }
+  else if(angeschrieben){ art='warm'; grund='bereits angeschrieben oder besucht'; }
+  if(manuell&&AKQ_ARTEN.some(a=>a.id===manuell)){ art=manuell; grund='von Hand gesetzt'; }
+  const kanaele=[];
+  if(String(k.tel||'').trim()) kanaele.push('telefon');
+  if(/@/.test(String(k.mail||''))) kanaele.push('mail');
+  if(coordOf(k)) kanaele.push('vorort');
+  if(/linkedin/i.test(txt)) kanaele.push('linkedin');
+  const erg={art,grund,kanaele,stufe:angeschrieben?'wieder':'erst',manuell:!!manuell};
+  CACHE.akq.set(ck,erg);
+  return erg;
+}
+window.akqSetArt=(i,art)=>{ const k=K.find(x=>x._i===i); if(!k) return;
+  if(art) AKQ_OVR[norm(k.co)]=art; else delete AKQ_OVR[norm(k.co)];
+  akqOvrSave(); Views.rerender('termine');
+  toast(art?('✓ '+k.co+' als '+(AKQ_ARTEN.find(a=>a.id===art)||{t:art}).t+' markiert'):'↺ Einstufung zurückgesetzt'); };
+
+/* ── Bewertung für die Vorschläge ── */
+let AKQ_WK_KT=null;                 /* je Neuzeichnen einmal bestimmt */
+function akqScore(k){
+  const a=akqArt(k);
+  let s=scoreKunde(k);
+  if(a.art==='inbound') s+=120;
+  if(a.art==='ausschreib') s+=90;
+  if(a.art==='warm') s+=60;
+  if(a.art==='partner') s+=45;
+  if(a.art==='bestand') s+=25;
+  if(a.stufe==='erst') s+=20;
+  const b=bedarfFuer(k);
+  s+=Math.min(150,Math.round(b.potenzial/2500));
+  s+=b.signale*12;
+  if(a.kanaele.includes('telefon')&&a.kanaele.includes('mail')) s+=15;
+  const kt=String(k.kt||'').trim().toUpperCase();
+  const wocheKt=AKQ_WK_KT!==null?AKQ_WK_KT:akqWochenKanton();
+  if(wocheKt&&kt===wocheKt) s+=70;                 /* passt in die laufende Kantonswoche */
+  return {s,a,b};
+}
+/* Das Datumsfeld wird beim Neuzeichnen neu aufgebaut. Wer ein Datum eintippt und
+   sofort einen Knopf drückt, verlöre es sonst — deshalb vorher übernehmen. */
+function planWocheLesen(){
+  const e=document.getElementById('planWocheDatum');
+  if(e&&e.value) PLAN_WOCHE=e.value;
+  return PLAN_WOCHE||naechsteWoche();
+}
+window.planWocheLesen=planWocheLesen;
+function akqWochenKanton(){
+  const wk=planWocheLesen();
+  const list=kundenTermine(termineOfWeek(isoOf(weekStartOf(toDate(wk)||new Date()))));
+  const kts=[...new Set(list.map(t=>t.kt).filter(Boolean))];
+  return kts.length===1?kts[0]:'';
+}
+/* ── Empfehlung im Klartext ── */
+function akqVorschlag(k){
+  const {a,b}=akqScore(k);
+  const br=branche(k.seg);
+  const teile=[];
+  const artT=(AKQ_ARTEN.find(x=>x.id===a.art)||{t:a.art}).t;
+  teile.push(artT+(a.stufe==='erst'?' · Erstkontakt':' · Wiedervorlage'));
+  if(a.kanaele.includes('telefon')&&a.stufe==='erst') teile.push('Weg: erst anrufen, dann Mail hinterher');
+  else if(a.kanaele.includes('mail')) teile.push('Weg: Mail, danach telefonisch nachfassen');
+  else teile.push('Weg: Besuch vor Ort ohne Voranmeldung prüfen');
+  if(b.liste.length) teile.push('Aufhänger: '+b.liste[0].titel+(b.liste[1]?' und '+b.liste[1].titel:''));
+  teile.push('Einstieg: '+pick(br.hook,(k.co||'')+'|akq'));
+  if(b.potenzial) teile.push('Potenzial rund '+fmtCHF(b.potenzial));
+  return teile.join(' | ');
+}
+window.akqVorschlag=akqVorschlag;
+
+/* ── Auswahlzustand ── */
+let AKQ_SEL=new Set();
+let AKQ_F={q:'',arten:new Set(),stufen:new Set(),kanaele:new Set(),seg:'',kt:'',plz:'',prio:'A',ohneGesperrt:true};
+window.akqSetQ=v=>{ AKQ_F.q=String(v||'').trim().toLowerCase(); Views.rerender('termine');
+  setTimeout(()=>{const e=document.getElementById('akqSuche'); if(e){e.focus();e.setSelectionRange(e.value.length,e.value.length);}},20); };
+window.akqToggle=(gruppe,id)=>{ planWocheLesen();
+  const s=AKQ_F[gruppe]; if(s.has(id)) s.delete(id); else s.add(id); Views.rerender('termine'); };
+window.akqSetF=(f,v)=>{ AKQ_F[f]=(f==='ohneGesperrt')?!!v:v; Views.rerender('termine'); };
+window.akqSel=i=>{ i=+i; planWocheLesen();
+  if(AKQ_SEL.has(i)) AKQ_SEL.delete(i); else AKQ_SEL.add(i); Views.rerender('termine'); };
+window.akqLeeren=()=>{ AKQ_SEL.clear(); Views.rerender('termine'); toast('Auswahl geleert'); };
+function akqPool(){
+  const gesperrt=histSet();
+  return K.filter(k=>k.co)
+    .filter(k=>!AKQ_F.prio||String(k.prio||'').trim()===AKQ_F.prio)
+    .filter(k=>!AKQ_F.seg||brancheKey(k.seg)===AKQ_F.seg)
+    .filter(k=>!AKQ_F.kt||String(k.kt||'').trim().toUpperCase()===AKQ_F.kt)
+    .filter(k=>!AKQ_F.plz||String(k.plz||'').trim().startsWith(AKQ_F.plz))
+    .filter(k=>!AKQ_F.ohneGesperrt||!gesperrt.has(norm(k.co)))
+    .filter(k=>{ if(!AKQ_F.q) return true;
+      return [k.co,k.ort,k.plz,k.kt,k.seg,k.ap,k.kva,k.notiz,k.status,k.mail,k.tel]
+        .filter(Boolean).join(' ').toLowerCase().includes(AKQ_F.q); })
+    .filter(k=>{ const a=akqArt(k);
+      if(AKQ_F.arten.size&&!AKQ_F.arten.has(a.art)) return false;
+      if(AKQ_F.stufen.size&&!AKQ_F.stufen.has(a.stufe)) return false;
+      if(AKQ_F.kanaele.size&&![...AKQ_F.kanaele].some(x=>a.kanaele.includes(x))) return false;
+      return true; });
+}
+/* Die Rangliste hängt nur am Filter, nicht an der Auswahl — beim Anklicken
+   eines Kunden muss sie deshalb nicht neu berechnet werden. */
+function akqFilterSchluessel(){
+  return [AKQ_F.q,AKQ_F.seg,AKQ_F.kt,AKQ_F.plz,AKQ_F.prio,AKQ_F.ohneGesperrt,
+    [...AKQ_F.arten].sort().join(','),[...AKQ_F.stufen].sort().join(','),
+    [...AKQ_F.kanaele].sort().join(','),akqWochenKanton()].join('|');
+}
+function akqRang(){
+  const key=akqFilterSchluessel();
+  if(CACHE.rang&&CACHE.rangKey===key) return CACHE.rang;
+  AKQ_WK_KT=akqWochenKanton();
+  const r=akqPool().map(k=>({k,...akqScore(k)})).sort((a,b)=>b.s-a.s);
+  AKQ_WK_KT=null;
+  CACHE.rang=r; CACHE.rangKey=key;
+  return r; }
+window.akqZufall=n=>{
+  planWocheLesen();
+  const pool=akqPool(); if(!pool.length){ toast('⚠ Kein Kunde im Filter'); return 0; }
+  n=Math.min(n||TERMINE_PRO_WOCHE,pool.length);
+  /* gewichteter Zufall: gute Kandidaten häufiger, aber nie immer dieselben */
+  const rest=pool.map(k=>({k,s:Math.max(1,akqScore(k).s)}));
+  AKQ_SEL.clear();
+  while(AKQ_SEL.size<n&&rest.length){
+    let r=Math.random()*rest.reduce((a,x)=>a+x.s,0), idx=0;
+    for(let i=0;i<rest.length;i++){ r-=rest[i].s; if(r<=0){idx=i;break;} }
+    AKQ_SEL.add(rest.splice(idx,1)[0].k._i);
+  }
+  Views.rerender('termine'); toast('🎲 '+AKQ_SEL.size+' Kunden zufällig ausgewählt');
+  return AKQ_SEL.size;
+};
+window.akqBeste=n=>{
+  planWocheLesen();
+  const r=akqRang(); if(!r.length){ toast('⚠ Kein Kunde im Filter'); return 0; }
+  AKQ_SEL=new Set(r.slice(0,n||TERMINE_PRO_WOCHE).map(x=>x.k._i));
+  Views.rerender('termine'); toast('⭐ Beste '+AKQ_SEL.size+' vorgeschlagen');
+  return AKQ_SEL.size;
+};
+/* ── Ausgewählte Kunden in die Woche legen ── */
+window.akqEinplanen=()=>{
+  if(!AKQ_SEL.size){ toast('⚠ Noch niemand ausgewählt'); return 0; }
+  const wk=isoOf(weekStartOf(toDate(planWocheLesen())||new Date()));
+  if(wk<isoOf(weekStartOf(new Date()))){ toast('⚠ Die gewählte Woche liegt in der Vergangenheit'); return 0; }
+  const ws=toDate(wk);
+  const slots=[];
+  for(const z of KUNDEN_SLOTS){ for(const d of KUNDEN_TAGE){
+    const iso=isoOf(new Date(ws.getFullYear(),ws.getMonth(),ws.getDate()+d));
+    if(!istPlanbar(iso)) continue;
+    if(!TERMINE.some(t=>t.datum===iso&&t.zeit===z)) slots.push({iso,z}); }}
+  if(!slots.length){ toast('⚠ In dieser Woche ist kein Termin mehr frei (Mo–Mi, ab heute)'); return 0; }
+  const belegt=kundenTermine(termineOfWeek(wk)).length;
+  const platz=Math.max(0,TERMINE_PRO_WOCHE-belegt);
+  if(!platz){ toast('✓ Die Woche ist bereits voll ('+belegt+'/'+TERMINE_PRO_WOCHE+')'); return 0; }
+  const schon=new Set(TERMINE.map(t=>norm(t.kunde)));
+  const gewaehlt=[...AKQ_SEL].map(i=>K.find(k=>k._i===i)).filter(Boolean)
+    .filter(k=>!schon.has(norm(k.co)));
+  if(!gewaehlt.length){ toast('✓ Alle Ausgewählten haben bereits einen Termin'); return 0; }
+  const nehmen=gewaehlt.slice(0,Math.min(platz,slots.length));
+  /* Route optimieren, damit die Reihenfolge stimmt */
+  const mitGeo=nehmen.map(k=>({k,c:coordOf(k)})).filter(x=>x.c);
+  const ohneGeo=nehmen.filter(k=>!coordOf(k));
+  const route=optimizeRoute(mitGeo,HOME).map(x=>x.k).concat(ohneGeo);
+  let cur=HOME, n=0;
+  route.forEach((k,i)=>{
+    const slot=slots[i]; if(!slot) return;
+    const c=coordOf(k); const km=c?distKm(cur,c):0; if(c) cur=c;
+    const a=akqArt(k);
+    const typ=a.kanaele.includes('vorort')?'Besuch vor Ort':(a.kanaele.includes('telefon')?'Telefontermin':'Teams-Call');
+    const artT=(AKQ_ARTEN.find(x=>x.id===a.art)||{t:a.art}).t;
+    TERMINE.push({id:uid8(),kunde:k.co,datum:slot.iso,zeit:slot.z,dauer:60,typ,
+      betreff:'MiT Strom — '+artT+' '+k.co,
+      ort:[k.ort,k.kt].filter(Boolean).join(' '),kt:String(k.kt||'').trim().toUpperCase(),
+      km,routePos:belegt+i+1,akqArt:a.art,akqStufe:a.stufe,
+      notiz:'AKQUISE: '+artT+' · '+(a.stufe==='erst'?'Erstkontakt':'Wiedervorlage')+'\n'+
+            akqVorschlag(k)+'\n'+termBegruendung(k),
+      auto:false,handverlesen:true,done:false,created:new Date().toISOString()});
+    n++;
+  });
+  termSave(); zeigeWocheSetzen(wk); AKQ_SEL.clear();
+  toast('✓ '+n+' Termine eingeplant'+(gewaehlt.length>n?' — '+(gewaehlt.length-n)+' passten nicht mehr in die Woche':'')+
+    ' · jetzt «📆 → Outlook» drücken');
+  Views.rerender('termine'); Views.rerender('kalender'); Views.rerender('dashboard');
+  return n;
+};
+window.akqExport=()=>{
+  const r=akqRang();
+  if(!r.length){ toast('⚠ Kein Kunde im Filter'); return; }
+  exportRows('Akquise_Auswahl',
+    ['Firma','Akquise-Art','Begründung','Stufe','Kanäle','Segment','Kanton','PLZ','Ort',
+     'Ansprechpartner','Telefon','E-Mail','Prio','Punkte','Potenzial CHF','Empfehlung','ausgewählt'],
+    r.map(x=>[x.k.co,(AKQ_ARTEN.find(a=>a.id===x.a.art)||{t:x.a.art}).t,x.a.grund,
+      (AKQ_STUFEN.find(s=>s.id===x.a.stufe)||{t:x.a.stufe}).t,
+      x.a.kanaele.map(c=>(AKQ_KANAELE.find(y=>y.id===c)||{t:c}).t).join(' + '),
+      x.k.seg||'',x.k.kt||'',x.k.plz||'',x.k.ort||'',x.k.ap||'',x.k.tel||'',x.k.mail||'',x.k.prio||'',
+      x.s,x.b.potenzial,akqVorschlag(x.k),AKQ_SEL.has(x.k._i)?'ja':'nein']));
+};
+window.akqDetail=i=>{
+  const k=K.find(x=>x._i===i); if(!k) return;
+  const {a,b,s}=akqScore(k);
+  Drawer.open('Akquise — '+(k.co||''),`
+    <div class="dr-sec">Einstufung</div>
+    ${kv('Akquise-Art',`<span class="badge ${(AKQ_ARTEN.find(x=>x.id===a.art)||{}).farbe||'b-gray'}">${(AKQ_ARTEN.find(x=>x.id===a.art)||{ic:'',t:a.art}).ic} ${(AKQ_ARTEN.find(x=>x.id===a.art)||{t:a.art}).t}</span>${a.manuell?' <span class="badge b-gray" style="font-size:9px">von Hand</span>':''}`)}
+    ${kv('Warum diese Einstufung',esc(a.grund))}
+    ${kv('Stufe',(AKQ_STUFEN.find(x=>x.id===a.stufe)||{ic:'',t:a.stufe}).ic+' '+(AKQ_STUFEN.find(x=>x.id===a.stufe)||{t:a.stufe}).t)}
+    ${kv('Mögliche Kanäle',a.kanaele.map(c=>{const x=AKQ_KANAELE.find(y=>y.id===c)||{ic:'',t:c};return x.ic+' '+x.t;}).join(' · ')||'—')}
+    ${kv('Punktzahl',s+' (Priorität, Bedarf, Auslöser, Kantonsnähe)')}
+    <div class="dr-sec">Empfehlung</div>
+    <div style="font-size:13px;line-height:1.65;padding:4px 0">${esc(akqVorschlag(k))}</div>
+    <div class="dr-sec">Einstufung von Hand ändern</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      ${AKQ_ARTEN.map(x=>`<button class="tbtn ${x.id===a.art?'primary':''}" style="padding:5px 12px;font-size:11.5px" onclick="akqSetArt(${k._i},'${x.id}')">${x.ic} ${x.t}</button>`).join('')}
+      ${a.manuell?`<button class="tbtn" style="padding:5px 12px;font-size:11.5px" onclick="akqSetArt(${k._i},'')">↺ automatisch</button>`:''}
+    </div>
+    <div class="dr-sec">Bedarf — Potenzial ${fmtCHF(b.potenzial)}</div>
+    ${b.liste.slice(0,4).map(x=>`<div class="kvrow"><span class="k">${x.ic} ${esc(x.titel)}</span><span class="v">${fmtCHF(x.chf)}</span></div>`).join('')}
+    <div class="dr-sec">Weiter</div>
+    <button class="tbtn primary" style="width:100%;justify-content:center;padding:11px" onclick="mailFuerKunde(${k._i})">✉️ Mail schreiben</button>
+    <div style="height:8px"></div>
+    <button class="tbtn" style="width:100%;justify-content:center;padding:11px" onclick="openKunde(${k._i})">👤 Kundendetail</button>`);
+};
+/* ── Der Block, der in der Terminplanung erscheint ── */
+function akqBlock(){
+  const rang=akqRang();
+  const kantone=[...new Set(K.map(x=>String(x.kt||'').trim().toUpperCase()).filter(Boolean))].sort();
+  if(!CACHE.akqZaehl){
+    const zaehl={}; AKQ_ARTEN.forEach(a=>zaehl[a.id]=0);
+    const zStufe={erst:0,wieder:0}, zKanal={telefon:0,mail:0,vorort:0,linkedin:0};
+    K.filter(k=>k.co).forEach(k=>{ const a=akqArt(k); zaehl[a.art]=(zaehl[a.art]||0)+1;
+      zStufe[a.stufe]++; a.kanaele.forEach(c=>zKanal[c]++); });
+    CACHE.akqZaehl={zaehl,zStufe,zKanal};
+  }
+  const {zaehl,zStufe,zKanal}=CACHE.akqZaehl;
+  const chip=(gruppe,x,anzahl)=>`<span class="chip" style="cursor:pointer;${AKQ_F[gruppe].has(x.id)?'background:var(--blue);color:#fff;border-color:var(--blue)':''}"
+     onclick="akqToggle('${gruppe}','${x.id}')" title="${esc(x.was)}">${x.ic} ${x.t}${anzahl!=null?' · '+anzahl:''}</span>`;
+  const sel=[...AKQ_SEL].map(i=>K.find(k=>k._i===i)).filter(Boolean);
+  return `<div class="card" style="border-color:var(--line2)"><div class="card-h">
+    <h3>🎯 Akquise-Auswahl</h3>
+    <span class="sub">${rang.length} Kunden im Filter · ${AKQ_SEL.size} ausgewählt</span>
+    <div style="flex:1"></div>
+    <input id="akqSuche" placeholder="Firma, Ort, PLZ, Notiz…" value="${esc(AKQ_F.q)}" oninput="akqSetQ(this.value)"
+      style="background:var(--bg2);border:1px solid var(--line);border-radius:99px;padding:7px 16px;font-size:12.5px;color:var(--tx);font-family:inherit;outline:none;min-width:220px">
+    <button class="tbtn" onclick="akqExport()">📤 Export</button>
+    </div>
+    <div class="card-b" style="padding-top:10px">
+      <div style="font-size:11px;color:var(--tx3);font-weight:700;letter-spacing:.4px;margin-bottom:5px">AKQUISE-ART</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">${AKQ_ARTEN.map(a=>chip('arten',a,zaehl[a.id])).join('')}</div>
+      <div style="font-size:11px;color:var(--tx3);font-weight:700;letter-spacing:.4px;margin-bottom:5px">STUFE UND KANAL</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+        ${AKQ_STUFEN.map(s=>chip('stufen',s,zStufe[s.id])).join('')}
+        <span style="width:10px"></span>
+        ${AKQ_KANAELE.map(c=>chip('kanaele',c,zKanal[c.id])).join('')}</div>
+      <div style="display:flex;gap:9px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--tx2);margin-bottom:12px">
+        <span>Branche:</span>
+        <select onchange="akqSetF('seg',this.value)" style="background:var(--bg2);border:1px solid var(--line);border-radius:99px;padding:5px 12px;font-size:12px;font-weight:600;color:var(--tx);font-family:inherit;outline:none;cursor:pointer">
+          <option value="">alle</option>${Object.keys(BEDARF_BRANCHE).map(b=>`<option value="${b}" ${AKQ_F.seg===b?'selected':''}>${(BRANCHEN[b]||{ic:'🔷'}).ic} ${b}</option>`).join('')}</select>
+        <span>Kanton:</span>
+        <select onchange="akqSetF('kt',this.value)" style="background:var(--bg2);border:1px solid var(--line);border-radius:99px;padding:5px 12px;font-size:12px;font-weight:600;color:var(--tx);font-family:inherit;outline:none;cursor:pointer">
+          <option value="">alle</option>${kantone.map(x=>`<option value="${x}" ${AKQ_F.kt===x?'selected':''}>${x}</option>`).join('')}</select>
+        <span>PLZ beginnt mit:</span>
+        <input value="${esc(AKQ_F.plz)}" onchange="akqSetF('plz',this.value)" placeholder="z. B. 82"
+          style="width:80px;background:var(--bg2);border:1px solid var(--line);border-radius:99px;padding:5px 10px;font-size:12px;color:var(--tx);font-family:inherit;outline:none;text-align:center">
+        <span>Prio:</span>
+        <select onchange="akqSetF('prio',this.value)" style="background:var(--bg2);border:1px solid var(--line);border-radius:99px;padding:5px 12px;font-size:12px;font-weight:600;color:var(--tx);font-family:inherit;outline:none;cursor:pointer">
+          <option value="" ${AKQ_F.prio===''?'selected':''}>alle</option>
+          <option value="A" ${AKQ_F.prio==='A'?'selected':''}>nur A</option>
+          <option value="B" ${AKQ_F.prio==='B'?'selected':''}>nur B</option></select>
+        <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="akqOhneGesperrt" ${AKQ_F.ohneGesperrt?'checked':''} onchange="akqSetF('ohneGesperrt',this.checked)"> bereits besuchte ausblenden</label>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
+        <button class="tbtn primary" onclick="akqBeste(${TERMINE_PRO_WOCHE})" title="Die ${TERMINE_PRO_WOCHE} stärksten Kandidaten aus dem Filter vorschlagen">⭐ Beste ${TERMINE_PRO_WOCHE} vorschlagen</button>
+        <button class="tbtn" onclick="akqZufall(${TERMINE_PRO_WOCHE})" title="Gewichteter Zufall — gute Kandidaten häufiger, aber nie dieselben">🎲 Zufällig ${TERMINE_PRO_WOCHE}</button>
+        <button class="tbtn primary" onclick="akqEinplanen()" ${AKQ_SEL.size?'':'disabled style="opacity:.45"'} title="Die ausgewählten Kunden in die eingestellte Woche legen">📌 ${AKQ_SEL.size||''} Ausgewählte einplanen</button>
+        ${AKQ_SEL.size?`<button class="tbtn" onclick="akqLeeren()">✕ Auswahl leeren</button>`:''}
+        <div style="flex:1"></div>
+        <span style="font-size:11.5px;color:var(--tx2)">${akqWochenKanton()?'📍 laufende Woche in '+akqWochenKanton()+' — passende Kunden werden bevorzugt':'Kanton der Woche noch offen'}</span>
+      </div>
+      ${sel.length?`<div style="background:rgba(0,113,227,.07);border:1px solid var(--blue);border-radius:11px;padding:10px 13px;margin-bottom:12px">
+        <div style="font-size:11.5px;font-weight:700;margin-bottom:6px">Ausgewählt (${sel.length}) — Vorschlag für den Ablauf</div>
+        ${sel.map((k,i)=>`<div style="font-size:11.5px;color:var(--tx2);padding:2px 0">
+          <b style="color:var(--tx)">${i+1}. ${esc(k.co)}</b> — ${esc(akqVorschlag(k))}</div>`).join('')}
+      </div>`:''}
+      <div style="max-height:340px;overflow-y:auto;border-top:1px solid var(--line)">
+      ${rang.length?rang.slice(0,60).map(x=>{ const art=AKQ_ARTEN.find(a=>a.id===x.a.art)||{ic:'',t:x.a.art,farbe:'b-gray'};
+        const an=AKQ_SEL.has(x.k._i);
+        return `<div class="ms-row" style="${an?'background:rgba(0,113,227,.06)':''}">
+        <div class="ms-chk ${an?'on':''}" onclick="akqSel(${x.k._i})" title="auswählen">${an?'✓':''}</div>
+        <span class="badge ${art.farbe}" style="font-size:9.5px">${art.ic} ${art.t}</span>
+        <div class="mt2" style="min-width:0;flex:1;cursor:pointer" onclick="akqDetail(${x.k._i})">
+          <span>${esc(x.k.co)}</span>
+          <span style="font-weight:400;color:var(--tx2);font-size:11.5px"> · ${esc(x.k.ort||'')} ${esc(x.k.kt||'')}${x.k.plz?' · '+esc(x.k.plz):''}</span>
+          <div style="font-weight:400;color:var(--tx2);font-size:10.5px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+            ${x.a.kanaele.map(c=>(AKQ_KANAELE.find(y=>y.id===c)||{ic:''}).ic).join('')} ${esc(x.a.grund)} · ${esc(x.b.liste.slice(0,2).map(l=>l.titel).join(' · '))}</div></div>
+        <span style="font-size:11px;color:var(--tx3);width:44px;text-align:right" title="Punktzahl">${x.s}</span>
+        <b style="width:100px;text-align:right;font-size:12px">${fmtCHF(x.b.potenzial)}</b>
+      </div>`;}).join('')+(rang.length>60?`<div style="padding:9px;font-size:11.5px;color:var(--tx3)">… und ${rang.length-60} weitere — Filter enger stellen oder «📤 Export» nutzen</div>`:'')
+      :'<div class="empty" style="padding:18px">Kein Kunde passt zu dieser Auswahl</div>'}
+      </div>
+    </div></div>`;
+}
 
 /* ═══════════════ SIDEBAR BUILD ═══════════════ */
 (function(){
