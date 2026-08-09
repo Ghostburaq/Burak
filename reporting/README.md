@@ -71,6 +71,40 @@ Marge **363'396 CHF (17.5 %)**.
 
 ---
 
+## Wie die Rechnung entsteht
+
+Das Blatt **`🔍 Herleitung & Formeln`** schlüsselt alles auf:
+
+1. **Der Rechenweg in sieben Stufen** — Erfassung → netto machen → Einstand bilden →
+   Marge rechnen → Kalkulation prüfen → gewichten → verdichten. Jede Stufe mit
+   Live-Wert und Begründung, warum sie so gebaut ist.
+2. **Zwei durchgerechnete Beispiele** — Zeile für Zeile, jeder Wert live aus der
+   Pipeline geholt:
+   - *Wincasa Solothurn* (sauber kalkuliert): 390 000 brutto ÷ 1.081 = 360 777 netto,
+     − 272 000 Einstand = **88 777 Marge (24.6 %)**. Wahrscheinlichkeit 50 % →
+     Faktor 30 % → 117 000 gewichtet.
+   - *DPR Heat Loadbank* (die Datacenter-Position): 333 790 brutto = 308 779 netto,
+     Equipment ebenfalls 333 790 → **−25 011**. Kein Rechenfehler: die Zeile sagt
+     Einkauf = Verkauf.
+3. **Landkarte der Verknüpfungen** — für jede Kennzahl im Bericht: wie sie gebildet
+   wird, aus welcher Spalte, mit welchem Filter.
+4. **Spaltenverzeichnis** — alle 54 Spalten mit Formel, Typ, Sichtbarkeit und Zweck.
+   Automatisch aus der Mappe erzeugt, kann also nicht veralten.
+5. **Warum es so gebaut ist** — zwölf Entscheide, jeweils mit der verworfenen
+   Alternative und der Begründung.
+6. **Funktionslexikon** — jede verwendete Excel-Funktion, was sie tut, und welche
+   bewusst nicht verwendet wurden (XVERWEIS, FILTER, EINDEUTIG — damit die Mappe
+   auch in älterem Excel und in LibreOffice rechnet).
+
+### Was die Umstellung zahlenmässig bewirkt
+
+| Fall | Zeilen | Wirkung |
+|------|--------|---------|
+| **A** — Spalte N enthielt die MwSt | 36 | Betrag bleibt gleich (brutto − MwSt = netto). Geändert hat sich, dass die Zeile jetzt korrekt als «Kosten über Umsatz» oder «nur Preis-Aufteilung» markiert wird statt als geplante Negativmarge dazustehen. |
+| **B** — Spalte N war eine echte Kostenposition | 30 | Marge sinkt um die MwSt, weil der Umsatz jetzt netto ist. Beispiel Wincasa: 118 000 → 88 777, Differenz 29 223 = MwSt auf 390 000. Die alte Zahl war zu hoch. |
+
+---
+
 ## Wie es umgesetzt ist
 
 Neues Blatt **`⚖️ Wahrscheinlichkeit`** — die Steuerzentrale der Mappe:
@@ -92,6 +126,7 @@ es gibt keine fest eingetippten Prozentsätze in den Berichtsblättern.
 | `MiT Strom Pipeline` | `Gew.Wert CHF` (Spalte Q) = **Volumen × Aggreko-Faktor**. Spalte S mit Dropdown 0/10/30/60/90 %. Neue Fachspalten Y–AH: Nettoumsatz, Einstand, Abwicklung, Vertragsart, Deal-Gruppe, Variante, Offert-Nr., Auftrag/PO-Nr., Beleg-Datum, Prüfstatus. Spalte N heisst neu «Übrige Kosten» und enthält keine MwSt mehr. Hilfsspalten liegen ausgeblendet ab AJ. |
 | `⚖️ Wahrscheinlichkeit` | neu — Aggreko-Bewertungsmodell |
 | `📋 Definitionen & Klärung` | neu — beantwortet jede Rückfrage mit Live-Zahl, enthält Annahmen, Margendefinition, Status- und Vertragsartendefinitionen, Variantenregel, Klärungsliste und die Liste der offenen Pflichtangaben |
+| `🔍 Herleitung & Formeln` | neu — der Rechenweg in sieben Stufen, zwei komplett durchgerechnete Beispiele, die Herkunft jeder Berichtszahl, das Verzeichnis aller 54 Spalten mit ihren Formeln, die Begründung jedes Designentscheids und ein Funktionslexikon |
 | `Dashboard` | Info-Zeile mit gewichteter Pipeline, Abschnitt 4 «Gewichtete Pipeline», Abschnitt 5 «Qualität & Nachweis» |
 | `CEO Report` | dito, zusätzlich je Deal die Spalten «Auftrag / PO-Nr.» und «Prüfstatus» |
 | `📄 Report` | KPI-Zeilen «⚖️ Gewichtet» und «📋 WON belegt», Abschnitt «Wahrscheinlichkeits-Bewertung» |
@@ -119,8 +154,8 @@ Die Skripte in [`tests/`](tests/) prüfen die Mappe vollständig:
 
 | Skript | Was es prüft | Ergebnis |
 |--------|--------------|----------|
-| `audit_static.py` | jede der 27'114 Formeln: Funktionsnamen, Blattbezüge, Anführungszeichen, externe Verweise, Fehlerwerte | 0 Befunde |
-| `audit_values.py` | rechnet **das gesamte Modell unabhängig in Python nach** — nur aus den Roheingaben — und vergleicht Zelle für Zelle | 21'634 Werte, 0 Abweichungen |
+| `audit_static.py` | jede der 27'159 Formeln: Funktionsnamen, Blattbezüge, Anführungszeichen, externe Verweise, Fehlerwerte | 0 Befunde |
+| `audit_values.py` | rechnet **das gesamte Modell unabhängig in Python nach** — nur aus den Roheingaben — und vergleicht Zelle für Zelle | 21'671 Werte, 0 Abweichungen |
 | `audit_struktur.py` | benannte Bereiche, Dropdowns, bedingte Formatierung, Diagrammquellen, Druckbereiche, verbundene Zellen, Zahlenformate, Schriften | 0 Befunde |
 | `audit_behaviour.py` | 16 Szenarien mit veränderten Daten — u. a. neuer Deal, Statuswechsel, fehlende Wahrscheinlichkeit, alle Bandgrenzen, leere Pipeline, betragsgleiche Deals, LOST mit 90 %, **WON vollständig belegen**, **Variante ausschliessen**, **MwSt-Schalter auf netto**, **unvollständiger Einstand** | 16 / 16 bestanden |
 

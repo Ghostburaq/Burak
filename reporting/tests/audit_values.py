@@ -393,6 +393,52 @@ for i in range(4):
     chk(f'_data!N{r}', band_wgt[i], DAT[f'N{r}'].value)
     chk(f'_data!O{r}', band_cnt[i], DAT[f'O{r}'].value)
 
+# ============================== 7) Blatt "Herleitung & Formeln"
+E_ = V['🔍 Herleitung & Formeln']
+
+
+def rowof(name):
+    return next(r for r in raw if raw[r]['B'] == name)
+
+
+def find_rows(text, col='B'):
+    """Zeilennummern im Erklaerungsblatt anhand der Beschriftung finden."""
+    return [r for r in range(1, E_.max_row + 1)
+            if str(E_[f'{col}{r}'].value or '').startswith(text)]
+
+
+netto_aktiv = sum(exp[r]['BA'] for r in raw if exp[r]['AP'] == 1)
+STUFEN_ERW = {'②': netto_aktiv, '④': marge_kalk,
+              '⑤': sum(1 for r in raw if exp[r]['AP'] == 1 and exp[r]['AS'] == 1),
+              '⑥': tot_wgt, '⑦': akt_brutto}
+for zeichen, erwartet in STUFEN_ERW.items():
+    rr = find_rows(zeichen)
+    assert len(rr) == 1, (zeichen, rr)
+    chk(f'Herleitung Stufe {zeichen}', erwartet, E_[f'E{rr[0]}'].value)
+
+# Die beiden Wasserfall-Beispiele muessen Zelle fuer Zelle der Pipeline entsprechen
+starts = find_rows('Volumen wie erfasst')
+assert len(starts) == 2, starts
+vorhandene = {raw[r]['B'] for r in raw}
+SPALTEN = ['I', None, 'Y', 'J', 'K', 'L', 'M', 'N', 'Z', 'O', 'P', 'S', 'AJ', 'Q', 'AH']
+for start, kunde in zip(starts, ('Wincasa Solothurn', 'DPR Heat Loadbank')):
+    hinweis = E_[f'E{start + len(SPALTEN)}'].value
+    if kunde not in vorhandene:            # Beispielkunde entfernt -> Block muss warnen
+        chk(f'Herleitung Hinweis «{kunde}»', '⚠ nicht in der Pipeline', hinweis)
+        continue
+    chk(f'Herleitung Hinweis «{kunde}»', '✔ gefunden', hinweis)
+    src = rowof(kunde)
+    for i, col in enumerate(SPALTEN):
+        r = start + i
+        if col is None:                       # Umrechnungsfaktor
+            chk(f'Herleitung!E{r} Netto-Faktor', NETTO_FAKTOR, E_[f'E{r}'].value)
+            continue
+        want = exp[src][col] if col in exp[src] else raw[src][col]
+        # INDEX liefert fuer eine leere Quellzelle 0 - das ist der korrekte Ausweis
+        if want in (None, '') and E_[f'E{r}'].value == 0:
+            want = 0
+        chk(f'Herleitung!E{r} ({kunde}, Spalte {col})', want, E_[f'E{r}'].value)
+
 # ================================================================== Ergebnis
 print(f'Geprüfte Zellen/Werte : {checks}')
 print(f'Abweichungen          : {len(fails)}')

@@ -119,7 +119,7 @@ for ws in wb.worksheets:
         for c in row:
             if c.value is not None and c.font and c.font.name:
                 fonts.add(c.font.name)
-if not fonts <= {'Arial', 'Calibri', 'Cambria', 'Times New Roman'}:
+if not fonts <= {'Arial', 'Calibri', 'Cambria', 'Times New Roman', 'Consolas'}:
     note('SCHRIFT', f'unerwartete Schriftarten: {fonts}')
 
 # 8) Zahlenformate der neuen Bereiche
@@ -149,7 +149,7 @@ for r in range(16, 20):
 # 10) Blattreihenfolge / Register
 if wb.sheetnames != ['📑 Executive PDF', '📄 Report', 'CEO Report', 'Dashboard',
                      '📊 Diagramme', 'MiT Strom Pipeline', '📋 Definitionen & Klärung',
-                     '⚖️ Wahrscheinlichkeit', '_data']:
+                     '🔍 Herleitung & Formeln', '⚖️ Wahrscheinlichkeit', '_data']:
     note('BLATT', f'Reihenfolge: {wb.sheetnames}')
 if wb['_data'].sheet_state != 'hidden':
     note('BLATT', '_data ist nicht mehr ausgeblendet')
@@ -191,6 +191,16 @@ cf2 = [str(k.sqref) for k in P_.conditional_formatting._cf_rules]
 for need in ('AH6:AH860', 'O6:O860'):
     if need not in cf2:
         note('FORMAT', f'bedingte Formatierung {need} fehlt')
+
+# 13) Erklaerungsblatt: kein Beschriftungstext darf als Formel gelesen werden
+E_ = wb['🔍 Herleitung & Formeln']
+for r_ in E_.iter_rows():
+    for c_ in r_:
+        v_ = c_.value
+        if isinstance(v_, str) and v_.startswith('='):
+            if re.search(r'[()!$]', v_) or v_[1:].strip() in wb.defined_names:
+                continue
+            note('TEXT-ALS-FORMEL', f'Herleitung!{c_.coordinate}: {v_[:40]}')
 
 print('=' * 70)
 if bad:
