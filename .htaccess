@@ -1,0 +1,57 @@
+# =============================================================================
+# NEXA – Konfiguration für klassisches Webhosting (Apache)
+# Ersetzt die Netlify-Datei "_headers". Einfach mit hochladen.
+# Alle Blöcke sind mit <IfModule> abgesichert: Fehlt ein Modul beim Hoster,
+# wird der Block übersprungen statt einen Serverfehler auszulösen.
+# =============================================================================
+
+# --- Zeichensatz -------------------------------------------------------------
+AddDefaultCharset UTF-8
+
+# --- Startseite --------------------------------------------------------------
+DirectoryIndex index.html index.php
+
+# --- Eigene Fehlerseite ------------------------------------------------------
+# HINWEIS: Liegt die Website in einem Unterordner (z. B. /nexa/), muss der Pfad
+# angepasst werden: ErrorDocument 404 /nexa/404.html
+ErrorDocument 404 /404.html
+
+# --- Verzeichnis-Auflistung verbieten ----------------------------------------
+Options -Indexes
+
+# --- Sicherheits-Header ------------------------------------------------------
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "geolocation=(), camera=(), microphone=()"
+</IfModule>
+
+# --- MIME-Typen (ältere Server kennen woff2/webmanifest teils nicht) ---------
+<IfModule mod_mime.c>
+  AddType font/woff2                  .woff2
+  AddType application/manifest+json   .webmanifest
+  AddType image/svg+xml               .svg
+  AddType video/mp4                   .mp4
+</IfModule>
+
+# --- Kompression (schnellere Ladezeiten) -------------------------------------
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css text/plain text/xml
+  AddOutputFilterByType DEFLATE application/javascript application/json
+  AddOutputFilterByType DEFLATE image/svg+xml application/manifest+json
+  # Schriften und Videos sind bereits komprimiert – nicht nochmal packen.
+</IfModule>
+
+# --- Browser-Caching ---------------------------------------------------------
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresDefault                          "access plus 1 week"
+  ExpiresByType text/html                 "access plus 0 seconds"
+  ExpiresByType text/css                  "access plus 1 month"
+  ExpiresByType application/javascript    "access plus 1 month"
+  ExpiresByType font/woff2                "access plus 1 year"
+  ExpiresByType image/png                 "access plus 1 month"
+  ExpiresByType image/svg+xml             "access plus 1 month"
+  ExpiresByType video/mp4                 "access plus 1 month"
+</IfModule>

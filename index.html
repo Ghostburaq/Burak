@@ -437,7 +437,9 @@
 
     <!-- ========================================================================
          8. KONTAKT / CTA
-         Formular via Netlify Forms (data-netlify) + direkte E-Mail als Alternative.
+         Formular wird von kontakt.php entgegengenommen (läuft auf jedem Hosting
+         mit PHP) und leitet nach dem Absenden auf danke.html weiter.
+         Die Empfängeradresse steht oben in kontakt.php.
          ========================================================================= -->
     <section class="contact" id="kontakt">
       <div class="container">
@@ -449,9 +451,8 @@
             klarer nächster Schritt. Mehr braucht es für den Anfang nicht.
           </p>
 
-          <form class="contact-form" name="kontakt" method="POST"
-                data-netlify="true" netlify-honeypot="bot-field" action="/danke.html">
-            <input type="hidden" name="form-name" value="kontakt">
+          <form class="contact-form" name="kontakt" method="POST" action="kontakt.php">
+            <!-- Spam-Falle: bleibt für Menschen unsichtbar und muss leer sein -->
             <p class="hp" aria-hidden="true">
               <label>Bitte leer lassen: <input name="bot-field" tabindex="-1" autocomplete="off"></label>
             </p>

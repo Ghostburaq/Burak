@@ -1,0 +1,133 @@
+===============================================================================
+NEXA WEBSITE – ANLEITUNG ZUM HOCHLADEN
+===============================================================================
+
+Diese Website ist reines HTML/CSS/JavaScript. Es wird KEINE Datenbank und
+KEIN Framework benötigt. Einfach hochladen, fertig.
+
+
+-------------------------------------------------------------------------------
+1) WAS HOCHGELADEN WIRD
+-------------------------------------------------------------------------------
+Den INHALT dieses Ordners in das Web-Verzeichnis des Hosting-Pakets kopieren.
+
+Das Web-Verzeichnis heisst je nach Anbieter:
+    public_html   /   httpdocs   /   www   /   htdocs   /   web
+
+WICHTIG: Den Inhalt hochladen, nicht den Ordner selbst.
+Danach muss "index.html" DIREKT im Web-Verzeichnis liegen – nicht in einem
+Unterordner. Sonst erscheint die Startseite nicht.
+
+Richtig:                              Falsch:
+  public_html/index.html                public_html/nexa-website/index.html
+  public_html/assets/...                public_html/nexa-website/assets/...
+
+
+-------------------------------------------------------------------------------
+2) DATEIEN IM PAKET
+-------------------------------------------------------------------------------
+  index.html          Startseite
+  demo.html           CRM-Demo
+  impressum.html      Impressum
+  datenschutz.html    Datenschutzerklärung
+  danke.html          Bestätigung nach dem Kontaktformular
+  404.html            Fehlerseite
+  kontakt.php         Nimmt das Kontaktformular entgegen (siehe Punkt 3)
+  .htaccess           Servereinstellungen (Fehlerseite, Sicherheit, Tempo)
+  robots.txt          Für Suchmaschinen
+  sitemap.xml         Seitenverzeichnis für Suchmaschinen
+  site.webmanifest    App-Symbol-Einstellungen
+  assets/             Design, Schriften, Logo, Bilder, Video
+
+ACHTUNG bei .htaccess:
+Das ist eine versteckte Datei (Name beginnt mit einem Punkt). Manche
+FTP-Programme blenden sie aus. Im FTP-Programm die Option
+"versteckte Dateien anzeigen" aktivieren, damit sie mit hochgeladen wird.
+
+ACHTUNG beim Ordner assets/fonts/:
+Dort liegen die Schriftdateien (.woff2). Die müssen mit hochgeladen werden,
+sonst sieht die Seite anders aus. Die Schriften werden bewusst vom eigenen
+Server geladen (DSGVO – keine Verbindung zu Google).
+
+
+-------------------------------------------------------------------------------
+3) KONTAKTFORMULAR
+-------------------------------------------------------------------------------
+Das Formular wird von "kontakt.php" verarbeitet. Das funktioniert auf jedem
+Hosting-Paket mit PHP (das haben praktisch alle Anbieter).
+
+EINSTELLEN: In "kontakt.php" ganz oben steht die Empfängeradresse:
+
+    $empfaenger = 'engineering.kabuu@gmail.com';
+
+Dort die gewünschte Adresse eintragen, an die die Anfragen gehen sollen.
+
+TESTEN: Nach dem Hochladen einmal selbst das Formular ausfüllen und absenden.
+  - Es erscheint die Seite "Danke. Wir melden uns."  -> alles korrekt
+  - Es erscheint "Das hat leider nicht geklappt"     -> siehe unten
+
+Falls der Versand nicht klappt, blockiert der Anbieter meist den Versand an
+fremde Adressen. Zwei Lösungen:
+  a) Als Empfänger eine E-Mail-Adresse der eigenen Domain eintragen
+     (z. B. info@meinedomain.ch) und diese an die private Adresse
+     weiterleiten lassen.
+  b) Beim Anbieter nachfragen, ob PHP-Mail freigeschaltet ist.
+
+Sollte das Hosting-Paket gar kein PHP haben, funktioniert das Formular nicht.
+Dann kann "kontakt.php" gelöscht werden – die Seite läuft trotzdem, nur der
+Formular-Versand fehlt.
+
+
+-------------------------------------------------------------------------------
+4) NACH DEM HOCHLADEN NOCH ANPASSEN (WICHTIG FÜR GOOGLE)
+-------------------------------------------------------------------------------
+In den Dateien ist als Adresse noch die alte Test-Adresse hinterlegt:
+
+    https://teal-manatee-698455.netlify.app
+
+Diese muss durch die echte Domain ersetzt werden. Am einfachsten mit
+"Suchen und Ersetzen" in einem Text-Editor über diese Dateien:
+
+    index.html, demo.html, impressum.html, datenschutz.html,
+    robots.txt, sitemap.xml
+
+Suchen:   https://teal-manatee-698455.netlify.app
+Ersetzen: https://DIE-ECHTE-DOMAIN.ch          (ohne Schrägstrich am Ende)
+
+Das betrifft nur Suchmaschinen und die Vorschau beim Teilen (WhatsApp,
+LinkedIn). Die Website funktioniert auch ohne diese Anpassung.
+
+
+-------------------------------------------------------------------------------
+5) WENN DIE SEITE IN EINEM UNTERORDNER LIEGT
+-------------------------------------------------------------------------------
+Soll die Seite z. B. unter meinedomain.ch/nexa/ laufen, muss in der Datei
+".htaccess" eine Zeile angepasst werden:
+
+    Vorher:  ErrorDocument 404 /404.html
+    Nachher: ErrorDocument 404 /nexa/404.html
+
+Alles andere funktioniert auch in Unterordnern ohne Änderung.
+
+
+-------------------------------------------------------------------------------
+6) HTTPS (SCHLOSS-SYMBOL)
+-------------------------------------------------------------------------------
+Beim Anbieter im Kundenbereich das kostenlose SSL-Zertifikat (Let's Encrypt)
+aktivieren und "HTTPS erzwingen" einschalten. Das ist bei allen gängigen
+Anbietern mit zwei Klicks erledigt und für die Datenschutzerklärung wichtig.
+
+
+-------------------------------------------------------------------------------
+7) KURZ-CHECKLISTE
+-------------------------------------------------------------------------------
+  [ ] Inhalt des Ordners ins Web-Verzeichnis hochgeladen
+  [ ] index.html liegt direkt im Web-Verzeichnis
+  [ ] Versteckte Datei .htaccess ist mit hochgeladen
+  [ ] Ordner assets/ vollständig (inkl. fonts/)
+  [ ] Empfängeradresse in kontakt.php eingetragen
+  [ ] Formular einmal getestet
+  [ ] Domain in den Dateien ersetzt (Punkt 4)
+  [ ] SSL/HTTPS aktiviert
+
+===============================================================================
