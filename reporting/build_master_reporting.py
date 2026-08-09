@@ -22,7 +22,7 @@ from openpyxl.worksheet.pagebreak import Break
 from openpyxl.utils import quote_sheetname
 from copy import copy
 
-SRC = 'original.xlsx'          # Ausgangsdatei = quelle_stand_vor_update.xlsx
+SRC = 'original.xlsx'
 OUT = 'CH_MiT_Strom_Customer_CEO_CFO_MASTER.xlsx'
 
 PIPE = 'MiT Strom Pipeline'

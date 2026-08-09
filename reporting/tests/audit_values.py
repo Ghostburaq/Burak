@@ -47,7 +47,7 @@ def isnum(x):
 # ---------------------------------------------------------------- Rohdaten
 COLS = ('A B C D E F G H I J K L M N O P Q R S T U V W X Y Z '
         'AA AB AC AD AE AF AG AH AI AJ AK AL AM AN AO AP AQ AR AS AT AU AV AW '
-        'AX AY AZ BA BB').split()
+        'AX AY AZ BA BB BC').split()
 raw = {r: {c: P[f'{c}{r}'].value for c in COLS} for r in range(6, LAST + 1)}
 
 # Annahmezellen ueber die benannten Bereiche holen - keine fixen Zeilennummern
@@ -122,13 +122,33 @@ for r in range(6, LAST + 1):
     mehrf = 0 if B in (None, '') else (
         1 if sum(1 for x in range(6, LAST + 1) if raw[x]['B'] == B) > 1 else 0)
 
+    # Kurzstatus fuer die Spalte «Prüfstatus» im CEO Report - dieselbe
+    # Rangfolge wie die Formel in BC: erst fehlender Nachweis, dann negative
+    # Marge, dann fehlende Kalkulation, dann offener Einstand.
+    if B in (None, ''):
+        kurz = ''
+    elif R == 'WON' and bel_ok == 0:
+        kurz = '⛔ Nachweis fehlt'
+    elif ueber == 1:
+        kurz = '⚠ Marge negativ'
+    elif auft == 1:
+        kurz = '⚠ nicht kalkuliert'
+    elif ein_ok == 0:
+        kurz = '○ Einstand offen'
+    elif R == 'WON':
+        kurz = '✅ belegt'
+    else:
+        kurz = '✔ kalkuliert'
+
     exp[r] = dict(O=o, P=p, Q=q, Y=netto, Z=einstand, AJ=y, AK=z, AL=aa,
                   AM=cnt_won, AN=cnt_off, AO=cnt_opp, AP=ae, AQ=af,
                   AR=ein_ok, AS=kalk, AT=auft, AU=ueber, AV=bel_ok, AW=wonb,
                   AX=zaehlt, AY=mehrf,
-                  AZ=(o if isnum(o) else 0), BA=(netto if isnum(netto) else 0))
+                  AZ=(o if isnum(o) else 0), BA=(netto if isnum(netto) else 0),
+                  BC=kurz)
     for col in ('O', 'P', 'Q', 'Y', 'Z', 'AJ', 'AK', 'AL', 'AM', 'AN', 'AO',
-                'AP', 'AQ', 'AR', 'AS', 'AT', 'AU', 'AV', 'AW', 'AX', 'AY', 'AZ', 'BA'):
+                'AP', 'AQ', 'AR', 'AS', 'AT', 'AU', 'AV', 'AW', 'AX', 'AY', 'AZ',
+                'BA', 'BC'):
         chk(f'Pipeline!{col}{r}', exp[r][col], d[col])
 
 # Kopfzeilen der Pipeline
@@ -239,7 +259,7 @@ def match_row(counter_key, k):
 BLOCKS = [('AM', 11, 72), ('AN', 75, 136), ('AO', 139, 200)]
 for sh, name, colmap in (
         (D, 'Dashboard', dict(A='A', B='B', C='C', D='D', E='H', F='E', G='I', H='Q', I='R', J='S', K='V')),
-        (CEO, 'CEO Report', dict(A='A', B='B', C='C', D='D', E='H', F='E', G='I', H='Q', I='O', J='R', K='S', L='V', M='AF', N='AH'))):
+        (CEO, 'CEO Report', dict(A='A', B='B', C='C', D='D', E='H', F='E', G='I', H='Q', I='O', J='R', K='S', L='V', M='AF', N='BC'))):
     for key, first, last in BLOCKS:
         for n, xr in enumerate(range(first, last + 1), start=1):
             src = match_row(key, n)

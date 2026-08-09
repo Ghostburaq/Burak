@@ -6,5 +6,19 @@ python3 build_master_reporting.py   # Stufe 1: Aggreko-Wahrscheinlichkeitsmodell
 python3 build_governance.py         # Stufe 2: Marge, Nachweis, Varianten, Definitionen
 python3 build_erklaerung.py         # Stufe 3: Herleitung, Formel- und Funktionsverzeichnis
 python3 build_umschluesselung.py    # Stufe 4: Wahrscheinlichkeiten auf die Aggreko-Skala
-echo "Fertig. Datei jetzt einmal in Excel oder LibreOffice öffnen und neu"
-echo "berechnen lassen, damit die zwischengespeicherten Werte stimmen."
+
+cat <<'HINWEIS'
+
+Stufe 1 bis 4 sind fertig.
+
+Jetzt die Datei einmal in Excel oder LibreOffice öffnen und neu berechnen
+lassen (Excel: Strg+Alt+F9, dann speichern). Erst danach stehen in den
+Formelzellen auch Ergebnisse - und nur dann kann die Layoutstufe messen,
+wie breit ein Text tatsächlich ist.
+
+Anschliessend:
+
+    python3 build_layout.py         # Stufe 5: Breiten, Umbrüche, Höhen, Seiten
+
+und danach noch einmal neu berechnen und speichern. Dann ist die Mappe fertig.
+HINWEIS

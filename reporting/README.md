@@ -143,8 +143,8 @@ Das Blatt **`🔍 Herleitung & Formeln`** schlüsselt alles auf:
 2. **Zwei durchgerechnete Beispiele** — Zeile für Zeile, jeder Wert live aus der
    Pipeline geholt:
    - *Wincasa Solothurn* (sauber kalkuliert): 390 000 brutto ÷ 1.081 = 360 777 netto,
-     − 272 000 Einstand = **88 777 Marge (24.6 %)**. Wahrscheinlichkeit 50 % →
-     Faktor 30 % → 117 000 gewichtet.
+     − 272 000 Einstand = **88 777 Marge (24.6 %)**. Wahrscheinlichkeit nach der
+     Umschlüsselung 30 % → Band 0–44 % → Faktor 0 % → **0 gewichtet**.
    - *DPR Heat Loadbank* (die Datacenter-Position): 333 790 brutto = 308 779 netto,
      Equipment ebenfalls 333 790 → **−25 011**. Kein Rechenfehler: die Zeile sagt
      Einkauf = Verkauf.
@@ -190,7 +190,7 @@ es gibt keine fest eingetippten Prozentsätze in den Berichtsblättern.
 | `📋 Definitionen & Klärung` | neu — beantwortet jede Rückfrage mit Live-Zahl, enthält Annahmen, Margendefinition, Status- und Vertragsartendefinitionen, Variantenregel, Klärungsliste und die Liste der offenen Pflichtangaben |
 | `🔍 Herleitung & Formeln` | neu — der Rechenweg in sieben Stufen, zwei komplett durchgerechnete Beispiele, die Herkunft jeder Berichtszahl, das Verzeichnis aller 54 Spalten mit ihren Formeln, die Begründung jedes Designentscheids und ein Funktionslexikon |
 | `Dashboard` | Info-Zeile mit gewichteter Pipeline, Abschnitt 4 «Gewichtete Pipeline», Abschnitt 5 «Qualität & Nachweis» |
-| `CEO Report` | dito, zusätzlich je Deal die Spalten «Auftrag / PO-Nr.» und «Prüfstatus» |
+| `CEO Report` | dito, zusätzlich je Deal die Spalten «Auftrag / PO-Nr.» und «Prüfstatus». Der Prüfstatus zeigt hier den Kurzbefund (⛔ Nachweis fehlt · ⚠ Marge negativ · ⚠ nicht kalkuliert · ○ Einstand offen · ✅ belegt · ✔ kalkuliert); die vollständige Aufzählung aller offenen Punkte einer Zeile steht in der Pipeline in Spalte AH |
 | `📄 Report` | KPI-Zeilen «⚖️ Gewichtet» und «📋 WON belegt», Abschnitt «Wahrscheinlichkeits-Bewertung» |
 | `📑 Executive PDF` | gewichteter Wert, Bandtabelle und Block «Nachweis & Marge» (WON netto, davon belegt, Marge kalkuliert) |
 | `📊 Diagramme` | neues Diagramm «Umsatz vs. gewichtet je Band» |
@@ -208,7 +208,9 @@ Beim vollständigen Audit gefunden und korrigiert:
 | **`U4` (Kopfzeile Pipeline)** summierte alle Zeilen inkl. LOST/Declined | Zwei Zellen mit demselben Namen «gewichtete Pipeline» konnten verschiedene Zahlen zeigen | Gleiche Abgrenzung wie überall sonst: nur aktive Status |
 | **Skala-Kontrolle** zählte Deals *ohne* Wahrscheinlichkeit als skalenkonform | `COUNTIF` liest eine leere Bezugszelle als 0 — und 0 % steht ja in der Skala | `ISNUMBER`-Wächter; ein Deal ohne Wahrscheinlichkeit gilt jetzt korrekt als offen |
 | **Ganzspalten-Bezüge** in Dashboard/CEO Report | 4'278 Formeln über je 1 Mio. Zeilen | Auf Zeile 860 begrenzt — fachlich identisch, spürbar schneller |
-| Abgeschnittene Beschriftungen in Executive PDF und Report | | Spaltenbreiten und Texte angepasst |
+| **Abgeschnittene Texte, ####-Zahlen und zu niedrige Zeilen** auf allen Blättern | 149 Stellen, u. a. Kundennamen, «Nächster Schritt», «Prüfstatus», Margenbeträge | Neue Stufe 5 (Layout), siehe unten |
+| **Blatt «⚖️ Wahrscheinlichkeit» druckte auf 25 % verkleinert** | 93 Zeilen wurden auf eine Seite gezwungen — unlesbar | Höhe nur noch dann auf eine Seite zwingen, wenn es den Massstab nicht kostet |
+| **Diagramme überlappten sich** und lagen teils ausserhalb des Druckbereichs | Diagramm 3 und 5 überschnitten sich um drei Zeilen | Festes Raster: zwei Reihen zu zweit, das Band-Diagramm über die volle Breite |
 
 ### Prüfung
 
@@ -216,10 +218,11 @@ Die Skripte in [`tests/`](tests/) prüfen die Mappe vollständig:
 
 | Skript | Was es prüft | Ergebnis |
 |--------|--------------|----------|
-| `audit_static.py` | jede der 27'302 Formeln: Funktionsnamen, Blattbezüge, Anführungszeichen, externe Verweise, Fehlerwerte | 0 Befunde |
-| `audit_values.py` | rechnet **das gesamte Modell unabhängig in Python nach** — nur aus den Roheingaben — und vergleicht Zelle für Zelle | 21'772 Werte, 0 Abweichungen |
+| `audit_static.py` | jede der 28'159 Formeln: Funktionsnamen, Blattbezüge, Anführungszeichen, externe Verweise, Fehlerwerte | 0 Befunde |
+| `audit_values.py` | rechnet **das gesamte Modell unabhängig in Python nach** — nur aus den Roheingaben — und vergleicht Zelle für Zelle | 22'627 Werte, 0 Abweichungen |
 | `audit_struktur.py` | benannte Bereiche, Dropdowns, bedingte Formatierung, Diagrammquellen, Druckbereiche, verbundene Zellen, Zahlenformate, Schriften | 0 Befunde |
 | `audit_fragen.py` | prüft, ob **jede** Rückfrage von Maria und Oliver eine Antwortzeile mit einer Live-Zahl hat und ob die Antwort die zugesagten Begriffe nennt | 8 / 8 abgedeckt |
+| `audit_layout.py` | misst **jede sichtbare Zelle**: passt der Text in die Spalte, passt die Zahl (sonst zeigt Excel `####`), reicht die Zeilenhöhe, und druckt das Blatt lesbar auf sein Papier | 0 Befunde |
 | `audit_behaviour.py` | 17 Szenarien mit veränderten Daten — u. a. neuer Deal, Statuswechsel, fehlende Wahrscheinlichkeit, alle Bandgrenzen, leere Pipeline, betragsgleiche Deals, LOST mit 90 %, **WON vollständig belegen**, **Variante ausschliessen**, **MwSt-Schalter auf netto**, **unvollständiger Einstand** | 17 / 17 bestanden |
 
 ```bash
@@ -236,7 +239,7 @@ die einzelne Läufe nicht zeigen:
   verändern.
 
 Letzter Lauf: **5 / 5 Durchgänge fehlerfrei**, identischer Fingerabdruck
-`373ec3ff48c3696f`, idempotent.
+`8dc530b5c5d2f5ec`, idempotent.
 
 Die Mappe enthält zusätzlich eine **eingebaute Selbstkontrolle** (⚖️-Blatt,
 Abschnitt 3): sie rechnet die gewichtete Pipeline auf zwei unabhängigen Wegen
@@ -244,27 +247,90 @@ und meldet jede Abweichung — auch nachdem jemand Daten geändert hat.
 
 ---
 
+## Layout und Druckbild
+
+Nach dem inhaltlichen Aufbau kam eine eigene Stufe dazu, die **nur** das
+Erscheinungsbild macht: [`build_layout.py`](build_layout.py). Sie ändert keine
+einzige Zahl und keine einzige Formel — sie setzt Spaltenbreiten, Umbrüche,
+Zeilenhöhen, Innenabstände und die Seiteneinrichtung.
+
+Der Grund: In der Vorversion waren an **149 Stellen** Texte abgeschnitten,
+Zahlen zu breit für ihre Spalte (Excel zeigt dann `####`) oder Zeilen zu
+niedrig für ihren umgebrochenen Inhalt. Das fiel niemandem als Fehler auf, weil
+Excel nicht warnt — es zeigt einfach weniger an, als in der Zelle steht.
+
+### Was die Stufe tut
+
+| Schritt | Was passiert |
+|---------|--------------|
+| **Innenabstand** | Jede Zahl bekommt rechts, jeder Text links ein Zeichen Abstand. Ohne das klebt der Betrag am Rahmen und läuft optisch in die Nachbarspalte — «116 526 CHF Mai» statt «116 526 CHF │ Mai». |
+| **Breiten** | Jede Spalte wird nur so weit verbreitert, wie ihr Inhalt es verlangt. Text, der ohnehin in eine leere Nachbarzelle ragen darf, verlangt nichts. Zahlen verlangen immer die volle Breite, weil sie nicht überlaufen können. |
+| **Umbruch** | Die langen Textspalten (Kunde, Segment, Leistung / Fleet, Nächster Schritt, Prüfstatus) bekommen eine feste Breite und brechen um, statt das Blatt in die Breite zu ziehen. |
+| **Zeilenhöhen** | Jede Zeile bekommt genau die Höhe, die ihr umgebrochener Inhalt braucht — Wort für Wort nachgerechnet, wie Excel selbst umbricht. |
+| **Seiten** | Je Blatt bewusst festgelegt, wie viele Seiten breit gedruckt wird, und ob die Höhe auf eine Seite gezwungen werden darf. Einheitlich A4, gleiche Ränder, gleiche Kopf- und Fusszeile auf jedem Blatt. |
+| **Diagramme** | Die fünf Diagramme liegen auf einem festen Raster statt sich zu überlappen, mit Seitenumbrüchen zwischen den Reihen. |
+
+### Massstab im Ausdruck
+
+| Blatt | Seiten breit | Massstab | Höhe |
+|-------|--------------|----------|------|
+| 📑 Executive PDF | 1 | 99 % | 1 Seite |
+| 📄 Report | 1 | 82 % | 1 Seite |
+| CEO Report | 1 | 72 % | fortlaufend |
+| Dashboard | 1 | 79 % | fortlaufend |
+| 📊 Diagramme | 1 | 72 % | 3 Seiten |
+| MiT Strom Pipeline | 3 | 76 % | fortlaufend |
+| 📋 Definitionen & Klärung | 1 | 87 % | fortlaufend |
+| 🔍 Herleitung & Formeln | 1 | 75 % | fortlaufend |
+| ⚖️ Wahrscheinlichkeit | 1 | 100 % | fortlaufend |
+
+Vorher stand der CEO Report auf 53 % und das Blatt «⚖️ Wahrscheinlichkeit» auf
+**25 %** — beides im Ausdruck nicht mehr lesbar. Die beiden breiten Textspalten
+des CEO Reports («Leistung / Fleet» 79 Zeichen, «Nächster Schritt» 53 Zeichen)
+sind jetzt 26 bzw. 24 Zeichen breit und brechen um; dadurch passt das Blatt mit
+allen 14 Spalten auf eine Seitenbreite und ist um die Hälfte grösser gedruckt.
+
+### Nachgemessen wird mit demselben Lineal
+
+[`build_layout.py`](build_layout.py) und [`tests/audit_layout.py`](tests/audit_layout.py)
+rechnen beide mit [`layout_modell.py`](layout_modell.py) — den echten
+Zeichenbreiten von Calibri und Arial in Pixeln, den Zeilenhöhen, die Excel beim
+automatischen Anpassen einstellt, und einem Wort-für-Wort-Umbruch. Sonst würde
+die eine Seite etwas bauen, das die andere anschliessend beanstandet.
+
+Die Prüfung meldet drei Arten von Fehlern, die alle bei **0** stehen:
+abgeschnittener Text, zu breite Zahl (`####`) und zu niedrige Zeile — dazu ein
+Blatt, das nur noch unter 60 % verkleinert auf sein Papier passt.
+
+---
+
 ## Stand der Zahlen
 
-Bei 46 aktiven Deals mit 6'862'149 CHF Umsatz:
+Bei 46 aktiven Deals mit 6'862'149 CHF Umsatz — nach der Umschlüsselung auf die
+Aggreko-Skala:
 
 | Band | Faktor | Deals | Umsatz CHF | Gewichtet CHF |
 |------|--------|-------|------------|---------------|
-| 0 – 44 %  | 0 %  | 8  | 2'700'484 | 0 |
-| 45 – 59 % | 30 % | 22 | 2'391'698 | 717'509 |
+| 0 – 44 %  | 0 %  | 30 | 5'092'182 | 0 |
+| 45 – 59 % | 30 % | 0  | 0 | 0 |
 | 60 – 89 % | 50 % | 2  | 268'500 | 134'250 |
 | ab 90 %   | 90 % | 14 | 1'501'467 | 1'351'320 |
-| **Total** |      | **46** | **6'862'149** | **2'203'080** |
+| **Total** |      | **46** | **6'862'149** | **1'485'570** |
 
-Gewichtungsgrad 32.1 %. Nach der alten Rechnung (Umsatz × Wahrscheinlichkeit)
-waren es 3'294'922 CHF.
+Gewichtungsgrad **21.6 %**. Vor der Umschlüsselung waren es 2'203'080 CHF
+(32.1 %), nach der alten Rechnung (Umsatz × Wahrscheinlichkeit) 3'294'922 CHF.
 
-> **Offen fürs Bewertungs-Meeting:** 42 der 46 aktiven Deals stehen auf Werten,
-> die es in der neuen Skala nicht gibt (50 %, 80 %, 20 %, 100 %). Diese Werte
-> wurden bewusst **nicht** automatisch umgesetzt — die Neubewertung ist eine
-> Vertriebsentscheidung. Die Faktor-Logik funktioniert trotzdem korrekt, weil
-> sie das Feld als *Effective Probability* behandelt und über die Bänder
-> abbildet. In der Pipeline sind die betroffenen Zellen orange markiert.
+Das Band 45–59 % ist leer, und das bleibt es: **keine Stufe der Aggreko-Skala
+fällt in dieses Band.** Die Zeile steht trotzdem in der Tabelle, weil sie zur
+Vorgabe gehört — und weil sofort sichtbar wäre, wenn jemand einen Wert dazwischen
+einträgt.
+
+> **Zur Bestätigung im Bewertungs-Meeting:** Die 22 Deals, die auf 50 % standen,
+> sind auf 30 % gesetzt — die einzige Stufe, deren Begründung «Ausgang offen»
+> trifft. Sie stehen namentlich auf dem Blatt `⚖️ Wahrscheinlichkeit`. Wo das
+> Fleet-Team die On-/Off-Hire-Daten bereits überwacht, gehört der Deal auf 60 %:
+> eine Zelle in Spalte S ändern, alles Weitere rechnet nach. Gingen alle 22 auf
+> 60 %, läge die gewichtete Pipeline bei **2'681'419 CHF**.
 
 ---
 
@@ -274,5 +340,22 @@ waren es 3'294'922 CHF.
 ./build_all.sh      # erwartet original.xlsx (= quelle_stand_vor_update.xlsx) im selben Ordner
 ```
 
-Danach in LibreOffice/Excel einmal neu berechnen lassen, damit die
-zwischengespeicherten Werte stimmen.
+Das Skript führt Stufe 1 bis 4 aus. Danach die Datei einmal in Excel oder
+LibreOffice neu berechnen lassen und speichern — erst dann stehen in den
+Formelzellen auch Ergebnisse. Anschliessend:
+
+```bash
+python3 build_layout.py     # Stufe 5: Breiten, Umbrüche, Höhen, Seiten
+```
+
+und noch einmal neu berechnen und speichern. Die Layoutstufe braucht die
+gerechneten Werte, weil sie misst, was in der Zelle tatsächlich steht.
+
+Die Prüfungen laufen mit:
+
+```bash
+cd tests && RECALC=/pfad/zu/recalc.py python3 run_durchgaenge.py
+```
+
+`RECALC` zeigt auf ein Hilfsskript, das eine Mappe über LibreOffice neu rechnet;
+ohne Angabe wird der Standardpfad der Arbeitsumgebung verwendet.

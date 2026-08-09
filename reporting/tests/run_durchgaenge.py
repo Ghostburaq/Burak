@@ -6,13 +6,19 @@ neu berechnen und alle Pruefungen laufen lassen. Zusaetzlich wird geprueft, ob
 jeder Durchgang exakt dieselben Zahlen liefert (Determinismus) und ob ein
 zweites Neuberechnen nichts mehr veraendert (Idempotenz).
 """
-import subprocess, sys, shutil, json, hashlib, openpyxl
+import subprocess, sys, shutil, json, hashlib, os, openpyxl
 
 F = 'CH_MiT_Strom_Customer_CEO_CFO_MASTER.xlsx'
-RECALC = '/root/.claude/skills/xlsx/scripts/recalc.py'
+# Neuberechnung braucht LibreOffice. Pfad zum Hilfsskript per Umgebungsvariable
+# RECALC ueberschreibbar, damit der Lauf auch auf einem anderen Rechner geht.
+RECALC = os.environ.get('RECALC', '/root/.claude/skills/xlsx/scripts/recalc.py')
+# build_layout.py braucht die gerechneten Werte (es misst, was in der Zelle
+# steht) - deshalb wird vorher einmal neu berechnet und danach noch einmal.
 STUFEN = ['build_master.py', 'build_governance.py',
           'build_erklaerung.py', 'build_umschluesselung.py']
-PRUEF = ['audit_static.py', 'audit_values.py', 'audit_struktur.py', 'audit_fragen.py']
+LAYOUT = 'build_layout.py'
+PRUEF = ['audit_static.py', 'audit_values.py', 'audit_struktur.py',
+         'audit_fragen.py', 'audit_layout.py']
 PASSES = 5
 BEHAVIOUR_IN = {1, PASSES}          # der lange Verhaltenslauf im ersten und letzten Durchgang
 
@@ -50,17 +56,28 @@ for p in range(1, PASSES + 1):
             break
         print(f'  ✔ {stufe}')
     else:
-        # --- neu berechnen
-        rc, out, err = run([RECALC, F, '400'])
-        try:
-            j = json.loads(out)
-        except Exception:
-            j = {'status': 'PARSE-FEHLER', 'raw': out[-200:]}
-        if j.get('status') != 'success':
-            fehler.append(f'D{p}: Neuberechnung: {json.dumps(j)[:300]}')
-            print(f'  ✗ Neuberechnung: {j.get("status")}')
+        def neu_berechnen(runde):
+            rc_, out_, err_ = run([RECALC, F, '400'])
+            try:
+                j_ = json.loads(out_)
+            except Exception:
+                j_ = {'status': 'PARSE-FEHLER', 'raw': out_[-200:]}
+            if j_.get('status') != 'success':
+                fehler.append(f'D{p}: Neuberechnung {runde}: {json.dumps(j_)[:300]}')
+                print(f'  ✗ Neuberechnung {runde}: {j_.get("status")}')
+                return False
+            print(f'  ✔ Neuberechnung {runde} — {j_["total_formulas"]} Formeln, '
+                  f'{j_["total_errors"]} Fehler')
+            return True
+
+        neu_berechnen(1)
+        rc, out, err = run([LAYOUT])
+        if rc != 0:
+            fehler.append(f'D{p}: {LAYOUT} fehlgeschlagen: {err.strip()[-300:]}')
+            print(f'  ✗ {LAYOUT}')
         else:
-            print(f'  ✔ Neuberechnung — {j["total_formulas"]} Formeln, 0 Fehler')
+            print(f'  ✔ {LAYOUT}')
+        neu_berechnen(2)
 
         # --- Pruefungen
         for pruef in PRUEF:
@@ -103,7 +120,6 @@ if fp2 == fingerprints[-1]:
 else:
     fehler.append(f'Idempotenz verletzt: {fingerprints[-1]} -> {fp2}')
     print(f'  ✗ Werte ändern sich beim zweiten Neuberechnen: {fingerprints[-1]} -> {fp2}')
-import os
 os.remove('idem.xlsx')
 
 print(f'\n{"=" * 74}')

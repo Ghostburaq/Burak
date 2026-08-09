@@ -155,7 +155,7 @@ if wb['_data'].sheet_state != 'hidden':
     note('BLATT', '_data ist nicht mehr ausgeblendet')
 
 # 11) Keine Formel darf auf ein leeres Blatt / falsche Spalte zeigen
-#     Stichprobe: alle Verweise auf die Pipeline muessen in A..AF liegen
+#     Stichprobe: alle Verweise auf die Pipeline muessen in A..BC liegen
 for ws in wb.worksheets:
     for row in ws.iter_rows():
         for c in row:
@@ -164,8 +164,8 @@ for ws in wb.worksheets:
                 continue
             for col in re.findall(r"'MiT Strom Pipeline'!\$?([A-Z]{1,2})\$?\d", v):
                 idx = openpyxl.utils.column_index_from_string(col)
-                if idx > 54:                       # bis BB reichen die Hilfsspalten
-                    note('BEZUG', f'{ws.title}!{c.coordinate} zeigt auf Spalte {col} (> AF)')
+                if idx > 55:                       # bis BC reichen die Hilfsspalten
+                    note('BEZUG', f'{ws.title}!{c.coordinate} zeigt auf Spalte {col} (> BC)')
 
 # 12) Neue Fachspalten, Dropdowns und benannte Bereiche
 P_ = wb['MiT Strom Pipeline']

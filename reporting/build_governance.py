@@ -618,6 +618,12 @@ for r in range(6, LAST + 1):
                       f'&IF(AND(R{r}="WON",AB{r}=""),"⛔ Vertragsart fehlt · ","")'
                       f'&IF(AU{r}=1,"⚠ Kosten über Umsatz · ","")'
                       f'&IF(AT{r}=1,"⚠ nur Preis-Aufteilung · ",""))')
+    pipe[f'BC{r}'] = (f'=IF(B{r}="","",'
+                      f'IF(AND(R{r}="WON",AV{r}=0),"⛔ Nachweis fehlt",'
+                      f'IF(AU{r}=1,"⚠ Marge negativ",'
+                      f'IF(AT{r}=1,"⚠ nicht kalkuliert",'
+                      f'IF(AR{r}=0,"○ Einstand offen",'
+                      f'IF(R{r}="WON","✅ belegt","✔ kalkuliert"))))))')
     pipe[f'AH{r}'] = (f'=IF(B{r}="","",IF(BB{r}="",'
                       f'IF(R{r}="WON","✅ belegt & kalkuliert","✔ kalkuliert"),'
                       f'LEFT(BB{r},LEN(BB{r})-3)))')
@@ -647,12 +653,13 @@ for r in range(6, LAST + 1):
         if col in ('AA', 'AB', 'AC', 'AD', 'AE', 'AF', 'AH'):
             c.alignment = Alignment(horizontal='left', vertical='center')
 
-for col in ('AR', 'AS', 'AT', 'AU', 'AV', 'AW', 'AX', 'AY', 'AZ', 'BA', 'BB'):
+for col in ('AR', 'AS', 'AT', 'AU', 'AV', 'AW', 'AX', 'AY', 'AZ', 'BA', 'BB', 'BC'):
     pipe.column_dimensions[col].hidden = True
     pipe.column_dimensions[col].width = 12
 HELP_HDR = {'AR': '_EinstandOK', 'AS': '_Kalkuliert', 'AT': '_Aufteilung', 'AU': '_KostenUeber',
             'AV': '_BelegOK', 'AW': '_WONbelegt', 'AX': '_Zaehlt', 'AY': '_Mehrfachkunde',
-            'AZ': '_MargeNum', 'BA': '_NettoNum', 'BB': '_Befunde'}
+            'AZ': '_MargeNum', 'BA': '_NettoNum', 'BB': '_Befunde',
+            'BC': '_KurzStatus'}
 for col, t in HELP_HDR.items():
     pipe[f'{col}5']._style = copy(pipe['AK5']._style)
     pipe[f'{col}5'].value = t
@@ -808,7 +815,7 @@ for blk in (10, 74, 138):
         ceo[co].value = t
 for first, last in ((11, 72), (75, 136), (139, 200)):
     for xr in range(first, last + 1):
-        for co, src in ((f'M{xr}', '$AF'), (f'N{xr}', '$AH')):
+        for co, src in ((f'M{xr}', '$AF'), (f'N{xr}', '$BC')):
             ceo[co]._style = copy(ceo[f'L{xr}']._style)
             ceo[co].value = (f'=IF($U{xr}="","",IF(INDEX({PQ}!{src}$1:{src}${LAST},$U{xr})="","",'
                              f'INDEX({PQ}!{src}$1:{src}${LAST},$U{xr})))')
