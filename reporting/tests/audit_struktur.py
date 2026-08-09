@@ -80,7 +80,7 @@ for ws in wb.worksheets:
             if c.value in (None, ''):
                 continue
             col = get_column_letter(c.column)
-            if ws.title == 'MiT Strom Pipeline' and c.column > 34:   # ab AJ = Hilfsspalten
+            if ws.title == 'MiT Strom Pipeline' and c.column > 35:   # ab AJ = Hilfsspalten
                 continue
             if ws.title in ('Dashboard', 'CEO Report') and col == 'U':
                 continue
@@ -172,7 +172,8 @@ P_ = wb['MiT Strom Pipeline']
 for co, want in (('Y5', 'Nettoumsatz'), ('Z5', 'Einstand'), ('AA5', 'Abwicklung'),
                  ('AB5', 'Vertragsart'), ('AC5', 'Deal-Gruppe'), ('AD5', 'Variante'),
                  ('AE5', 'Offert-Nr.'), ('AF5', 'Auftrag / PO-Nr.'),
-                 ('AG5', 'Beleg-Datum'), ('AH5', 'Prüfstatus'), ('N5', 'Übrige Kosten')):
+                 ('AG5', 'Beleg-Datum'), ('AH5', 'Prüfstatus'), ('AI5', 'Wahr. %'),
+                 ('N5', 'Übrige Kosten')):
     if want not in str(P_[co].value):
         note('SPALTE', f'{co}: erwartet «{want}», gefunden {P_[co].value!r}')
 dvs2 = {str(x.sqref): x for x in P_.data_validations.dataValidation}
@@ -188,7 +189,7 @@ for r in range(6, 121):
     if isinstance(v, str) and '1.081' in v:
         note('MWST', f'N{r} enthält weiterhin eine MwSt-Formel')
 cf2 = [str(k.sqref) for k in P_.conditional_formatting._cf_rules]
-for need in ('AH6:AH860', 'O6:O860'):
+for need in ('AH6:AH860', 'O6:O860', 'AI6:AI860'):
     if need not in cf2:
         note('FORMAT', f'bedingte Formatierung {need} fehlt')
 
@@ -201,6 +202,24 @@ for r_ in E_.iter_rows():
             if re.search(r'[()!$]', v_) or v_[1:].strip() in wb.defined_names:
                 continue
             note('TEXT-ALS-FORMEL', f'Herleitung!{c_.coordinate}: {v_[:40]}')
+
+# 14) Auslieferungsstand: jede erfasste Wahrscheinlichkeit liegt auf der Skala
+SKALA_SET = {0, 0.1, 0.3, 0.6, 0.9}
+Vp = V['MiT Strom Pipeline']
+ab = 0
+for r in range(6, 861):
+    if Vp[f'B{r}'].value in (None, ''):
+        continue
+    sv = Vp[f'S{r}'].value
+    if isinstance(sv, (int, float)) and round(sv, 6) not in SKALA_SET:
+        note('SKALA', f'S{r} = {sv} liegt nicht auf 0/10/30/60/90 %')
+        ab += 1
+    # Der bisherige Wert muss erhalten geblieben sein, wo umgeschluesselt wurde
+    alt = Vp[f'AI{r}'].value
+    if isinstance(alt, (int, float)) and not isinstance(sv, (int, float)):
+        note('UMSCHLUESSELUNG', f'AI{r} hat einen Altwert, S{r} ist aber leer')
+if ab == 0 and V['⚖️ Wahrscheinlichkeit']['E28'].value not in (0, None):
+    note('SKALA', 'Zaehler der Deals ausserhalb der Skala steht nicht auf 0')
 
 print('=' * 70)
 if bad:

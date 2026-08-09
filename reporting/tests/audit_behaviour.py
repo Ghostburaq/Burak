@@ -149,6 +149,8 @@ def s5(wb):
 
 
 def s5x(V):
+    # Hinweis: dieses Szenario setzt bewusst Werte ausserhalb der Skala, um die
+    # Bandgrenzen zu pruefen. Die Skalenkontrolle der Mappe muss das melden.
     m = []
     for i, (prob, want) in enumerate(BOUND):
         r = 100 + i
@@ -385,6 +387,31 @@ def s16x(V):
         m.append(f'Pruefstatus muesste den Einstand nennen: {p["AH6"].value!r}')
     return m
 
+
+def s17(wb):
+    """Einen umgeschluesselten 50-%-Deal auf 60 % hochstufen."""
+    ws = wb[P]
+    for r in range(6, 90):
+        if isinstance(ws[f'AI{r}'].value, (int, float)) and abs(ws[f'AI{r}'].value - 0.5) < 1e-9:
+            ws[f'S{r}'] = 0.6
+            break
+
+
+def s17x(V):
+    m = []
+    p = V[P]
+    ziel = next((r for r in range(6, 90)
+                 if isinstance(p[f'AI{r}'].value, (int, float))
+                 and abs(p[f'AI{r}'].value - 0.5) < 1e-9), None)
+    if ziel is None:
+        return ['keine umgeschluesselte 50-%-Zeile gefunden']
+    if p[f'AJ{ziel}'].value != 0.5:
+        m.append(f'Faktor nach Hochstufung erwartet 50 %, ist {p[f"AJ{ziel}"].value}')
+    vol = p[f'I{ziel}'].value or 0
+    if abs((p[f'Q{ziel}'].value or 0) - vol * 0.5) > 0.01:
+        m.append(f'Gew.Wert erwartet {vol*0.5}, ist {p[f"Q{ziel}"].value}')
+    return m
+
 SZENARIEN = [
     ('neuer_deal', s1, s1x),
     ('won_wird_lost', s2, s2x),
@@ -402,6 +429,7 @@ SZENARIEN = [
     ('variante_ausschliessen', s14, s14x),
     ('mwst_schalter_netto', s15, s15x),
     ('einstand_unvollstaendig', s16, s16x),
+    ('fuenfzig_auf_sechzig', s17, s17x),
 ]
 
 for name, mut, ex in SZENARIEN:

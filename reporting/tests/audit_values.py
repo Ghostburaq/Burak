@@ -46,7 +46,7 @@ def isnum(x):
 
 # ---------------------------------------------------------------- Rohdaten
 COLS = ('A B C D E F G H I J K L M N O P Q R S T U V W X Y Z '
-        'AA AB AC AD AE AF AG AH AJ AK AL AM AN AO AP AQ AR AS AT AU AV AW '
+        'AA AB AC AD AE AF AG AH AI AJ AK AL AM AN AO AP AQ AR AS AT AU AV AW '
         'AX AY AZ BA BB').split()
 raw = {r: {c: P[f'{c}{r}'].value for c in COLS} for r in range(6, LAST + 1)}
 
@@ -392,6 +392,40 @@ for i in range(4):
     chk(f'_data!M{r}', band_rev[i], DAT[f'M{r}'].value)
     chk(f'_data!N{r}', band_wgt[i], DAT[f'N{r}'].value)
     chk(f'_data!O{r}', band_cnt[i], DAT[f'O{r}'].value)
+
+# ====================== 6b) Umschluesselung: Skala und Protokoll
+SKALA_SET = {0, 0.1, 0.3, 0.6, 0.9}
+for r in raw:
+    if raw[r]['B'] in (None, ''):
+        continue
+    sv = raw[r]['S']
+    # Hinweis: dass jeder Wert auf der Skala liegt, gilt fuer den Auslieferungs-
+    # stand und wird in audit_struktur geprueft. Hier nicht, weil die
+    # Verhaltenstests bewusst Werte ausserhalb der Skala setzen.
+    # Der bisherige Wert muss erhalten und der Faktor konsistent sein
+    alt = raw[r]['AI']
+    if isnum(alt) and isnum(sv):
+        chk(f'Pipeline!AI{r} Faktorlogik', True,
+            (faktor(alt) == faktor(sv)) or (round(alt, 6) == 0.5))
+
+UM = {0.0: 0.0, 0.1: 0.1, 0.2: 0.3, 0.5: 0.3, 0.8: 0.6, 0.9: 0.9, 1.0: 0.9}
+prot = find_prot = None
+for r in range(1, W.max_row + 1):
+    if str(W[f'A{r}'].value or '').startswith('bisher'):
+        find_prot = r + 1
+        break
+assert find_prot, 'Protokolltabelle nicht gefunden'
+for i, alt in enumerate(sorted(UM)):
+    r = find_prot + i
+    n = sum(1 for x in raw if raw[x]['B'] not in (None, '')
+            and isnum(raw[x]['AI']) and round(raw[x]['AI'], 6) == alt)
+    volsum = sum(exp[x]['AL'] for x in raw if raw[x]['B'] not in (None, '')
+                 and isnum(raw[x]['AI']) and round(raw[x]['AI'], 6) == alt)
+    chk(f'W!A{r} Altwert', alt, W[f'A{r}'].value)
+    chk(f'W!B{r} Neuwert', UM[alt], W[f'B{r}'].value)
+    chk(f'W!E{r} Zeilen', n, W[f'E{r}'].value)
+    chk(f'W!F{r} gewichtet bisher', volsum * faktor(alt), W[f'F{r}'].value)
+    chk(f'W!G{r} gewichtet neu', volsum * faktor(UM[alt]), W[f'G{r}'].value)
 
 # ============================== 7) Blatt "Herleitung & Formeln"
 E_ = V['🔍 Herleitung & Formeln']

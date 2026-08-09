@@ -34,6 +34,65 @@ Der Faktor wird aus dem Feld *Effective Probability* abgeleitet:
 
 ---
 
+## Umschlüsselung auf die Aggreko-Skala
+
+**Ausgangslage:** In der Liste standen Wahrscheinlichkeiten von 20 %, 50 %, 80 %
+und 100 % — Werte, die es auf der Aggreko-Skala (0 / 10 / 30 / 60 / 90 %) nicht
+gibt. Alle 66 Zeilen sind jetzt auf eine Skalenstufe gesetzt.
+
+**Leitregel:** Wo eine Skalenstufe denselben Gewichtungsfaktor hat, wird sie
+gewählt — der gewichtete Umsatz bleibt dann unverändert. Nur wo das unmöglich
+ist, entscheidet die Aggreko-Definition.
+
+| bisher | neu | Faktor bisher | Faktor neu | Zeilen | gewichtet bisher | gewichtet neu | Wirkung |
+|--------|-----|---------------|------------|--------|------------------|---------------|---------|
+| 0 %   | 0 %  | 0 %  | 0 %  | 21 | 0 | 0 | unverändert |
+| 10 %  | 10 % | 0 %  | 0 %  | 1  | 0 | 0 | unverändert |
+| 20 %  | 30 % | 0 %  | 0 %  | 6  | 0 | 0 | unverändert |
+| **50 %** | **30 %** | **30 %** | **0 %** | **22** | **717'509** | **0** | **Faktor ändert sich** |
+| 80 %  | 60 % | 50 % | 50 % | 2  | 134'250 | 134'250 | unverändert |
+| 90 %  | 90 % | 90 % | 90 % | 2  | 65'622 | 65'622 | unverändert |
+| 100 % | 90 % | 90 % | 90 % | 12 | 1'285'698 | 1'285'698 | unverändert |
+| **Total** | | | | **66** | **2'203'080** | **1'485'570** | **−717'509** |
+
+### Der strukturelle Befund
+
+**Kein Wert der Skala fällt in das Gewichtungsband 45–59 % (Faktor 30 %).**
+Die Skala kennt 0 / 10 / 30 / 60 / 90 — zwischen 45 und 59 liegt keine Stufe.
+Wer die Skala einhält, kann dieses Band nie treffen; es ist in der
+Aggreko-Vorgabe angelegt, aber nicht erreichbar.
+
+Genau dort lagen die 22 Deals mit 50 %. Deshalb lassen sich **44 der 66 Zeilen
+umschlüsseln, ohne dass sich ein gewichteter Umsatz ändert** — die 22 bei 50 %
+können es nicht. Für sie gibt es keine Zuordnung, die das Gewicht erhält.
+
+### Warum 50 % → 30 %
+
+Massgebend ist die Definition, nicht der Zahlenabstand:
+
+- **30 %** = «Die Opportunität lebt, wir wissen aber nicht, ob sie on-hire geht.»
+  Das beschreibt eine offene Offerte, deren Ausgang beidseitig möglich ist —
+  also genau das, was 50 % ausdrücken sollte.
+- **60 %** = «Sehr gute Chance» **und** das Fleet-Team überwacht bereits die
+  On-/Off-Hire-Daten. Das ist ein deutlich stärkerer Zustand als «könnte so oder
+  so ausgehen».
+
+Rein rechnerisch läge 50 % näher bei 60 %. Die Skala ist aber über ihre
+Begründungen definiert, nicht über Abstände — und für einen CEO/CFO-Bericht ist
+die vorsichtige Zuordnung die richtige Vorgabe.
+
+**Diese 22 Deals sind einzeln zu bestätigen.** Sie stehen namentlich auf dem
+Blatt `⚖️ Wahrscheinlichkeit` mit Volumen und aktuellem Wert. Wo das Fleet-Team
+die Daten bereits überwacht, gehört der Deal auf 60 % — eine Zelle in Spalte S,
+alles Weitere rechnet nach. Das Blatt zeigt live, wie viele noch auf der Vorgabe
+stehen und was die gewichtete Pipeline wäre, wenn alle auf 60 % gingen
+(**2'681'419 CHF**).
+
+Der bisherige Wert bleibt in der neuen Spalte **AI «Wahr. % bisher»** erhalten,
+damit jede Änderung nachvollziehbar ist.
+
+---
+
 ## Rückfragen von Maria — was daraus im File wurde
 
 Jede Rückfrage ist im neuen Blatt **`📋 Definitionen & Klärung`** mit einer
@@ -154,10 +213,10 @@ Die Skripte in [`tests/`](tests/) prüfen die Mappe vollständig:
 
 | Skript | Was es prüft | Ergebnis |
 |--------|--------------|----------|
-| `audit_static.py` | jede der 27'159 Formeln: Funktionsnamen, Blattbezüge, Anführungszeichen, externe Verweise, Fehlerwerte | 0 Befunde |
-| `audit_values.py` | rechnet **das gesamte Modell unabhängig in Python nach** — nur aus den Roheingaben — und vergleicht Zelle für Zelle | 21'671 Werte, 0 Abweichungen |
+| `audit_static.py` | jede der 27'302 Formeln: Funktionsnamen, Blattbezüge, Anführungszeichen, externe Verweise, Fehlerwerte | 0 Befunde |
+| `audit_values.py` | rechnet **das gesamte Modell unabhängig in Python nach** — nur aus den Roheingaben — und vergleicht Zelle für Zelle | 21'772 Werte, 0 Abweichungen |
 | `audit_struktur.py` | benannte Bereiche, Dropdowns, bedingte Formatierung, Diagrammquellen, Druckbereiche, verbundene Zellen, Zahlenformate, Schriften | 0 Befunde |
-| `audit_behaviour.py` | 16 Szenarien mit veränderten Daten — u. a. neuer Deal, Statuswechsel, fehlende Wahrscheinlichkeit, alle Bandgrenzen, leere Pipeline, betragsgleiche Deals, LOST mit 90 %, **WON vollständig belegen**, **Variante ausschliessen**, **MwSt-Schalter auf netto**, **unvollständiger Einstand** | 16 / 16 bestanden |
+| `audit_behaviour.py` | 17 Szenarien mit veränderten Daten — u. a. neuer Deal, Statuswechsel, fehlende Wahrscheinlichkeit, alle Bandgrenzen, leere Pipeline, betragsgleiche Deals, LOST mit 90 %, **WON vollständig belegen**, **Variante ausschliessen**, **MwSt-Schalter auf netto**, **unvollständiger Einstand** | 17 / 17 bestanden |
 
 ```bash
 cd reporting/tests && python3 audit_static.py && python3 audit_values.py \
