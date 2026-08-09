@@ -2347,27 +2347,83 @@ window.termDel=id=>{ TERMINE=TERMINE.filter(t=>t.id!==id); termSave(); toast('Te
 window.termDone=id=>{ const t=TERMINE.find(x=>x.id===id); if(t){t.done=!t.done;termSave();Views.rerender('termine');Views.rerender('kalender');} };
 window.termMove=(id,iso)=>{ const t=TERMINE.find(x=>x.id===id); if(t){t.datum=iso;termSave();toast('📅 Termin → '+fmtD(iso));Views.rerender('termine');Views.rerender('kalender');} };
 /* ── Outlook: .ics mit Uhrzeiten (VEVENT mit DTSTART/DTEND lokal) ── */
+/* ═══ Kalender-Export nach RFC 5545 ═══
+   Frühere Fassung ersetzte Komma, Semikolon und Zeilenumbruch durch Leerzeichen —
+   damit kam in Outlook aus «400 kVA; USV; 24h» ein «400 kVA  USV  24h». Richtig ist
+   maskieren, nicht löschen. Dazu kommen Zeilenfaltung und eine echte Zeitzone. */
+function icsEsc(v){
+  return String(v==null?'':v)
+    .replace(/\\/g,'\\\\')      /* Reihenfolge zählt: Backslash zuerst */
+    .replace(/;/g,'\\;')      /* '\;' waere in JavaScript nur ';' — der Backslash fiele weg */
+    .replace(/,/g,'\\,')
+    .replace(/\r?\n/g,'\\n')
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g,'');
+}
+function icsBytes(s){ let n=0; for(const ch of s){ const c=ch.codePointAt(0);
+  n+=c<0x80?1:c<0x800?2:c<0x10000?3:4; } return n; }
+/* Zeilen über 75 Oktett müssen gefaltet werden, sonst schneiden Kalender sie ab */
+function icsFold(line){
+  if(icsBytes(line)<=73) return line;
+  const out=[]; let cur='';
+  for(const ch of line){
+    if(icsBytes(cur+ch)>73){ out.push(cur); cur=' '+ch; }
+    else cur+=ch;
+  }
+  if(cur.trim()) out.push(cur);
+  return out.join('\r\n');
+}
+const ICS_TZ='Europe/Zurich';
+const ICS_VTIMEZONE=['BEGIN:VTIMEZONE','TZID:'+ICS_TZ,
+  'BEGIN:DAYLIGHT','TZOFFSETFROM:+0100','TZOFFSETTO:+0200','TZNAME:CEST',
+  'DTSTART:19700329T020000','RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU','END:DAYLIGHT',
+  'BEGIN:STANDARD','TZOFFSETFROM:+0200','TZOFFSETTO:+0100','TZNAME:CET',
+  'DTSTART:19701025T030000','RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU','END:STANDARD',
+  'END:VTIMEZONE'];
 function icsForTermine(list,name){
   const pad=n=>String(n).padStart(2,'0');
   const stamp=new Date().toISOString().replace(/[-:.]/g,'').slice(0,15)+'Z';
-  const lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//MiT ONE//Terminplanung//DE','CALSCALE:GREGORIAN','METHOD:PUBLISH'];
+  const roh=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//MiT ONE//Terminplanung 2026//DE',
+    'CALSCALE:GREGORIAN','METHOD:PUBLISH','X-WR-CALNAME:MiT ONE Akquise','X-WR-TIMEZONE:'+ICS_TZ,
+    ...ICS_VTIMEZONE];
   list.forEach(t=>{
     const [h,mi]=(t.zeit||'09:00').split(':').map(Number);
-    const d0=toDate(t.datum); if(!d0)return;
-    const start=new Date(d0.getFullYear(),d0.getMonth(),d0.getDate(),h,mi);
-    const end=new Date(start.getTime()+(t.dauer||60)*60000);
+    const d0=toDate(t.datum); if(!d0) return;
+    const start=new Date(d0.getFullYear(),d0.getMonth(),d0.getDate(),h||0,mi||0);
+    const end=new Date(start.getTime()+(+t.dauer||60)*60000);
     const fmt=x=>x.getFullYear()+pad(x.getMonth()+1)+pad(x.getDate())+'T'+pad(x.getHours())+pad(x.getMinutes())+'00';
-    lines.push('BEGIN:VEVENT','UID:mitone-term-'+t.id+'@mitone','DTSTAMP:'+stamp,
-      'DTSTART:'+fmt(start),'DTEND:'+fmt(end),
-      'SUMMARY:'+String(t.betreff||t.kunde).replace(/[\n,;]/g,' '),
-      'LOCATION:'+String(t.ort||'').replace(/[\n,;]/g,' '),
-      'DESCRIPTION:'+String((t.typ||'')+(t.notiz?' — '+t.notiz:'')).replace(/[\n,;]/g,' '),
-      'STATUS:CONFIRMED','BEGIN:VALARM','TRIGGER:-PT30M','ACTION:DISPLAY','DESCRIPTION:Erinnerung','END:VALARM','END:VEVENT');
+    /* Beschreibung mit echten Zeilenumbrüchen, damit sie in Outlook lesbar bleibt */
+    const teile=[];
+    if(t.typ) teile.push('Art: '+t.typ);
+    if(t.kunde) teile.push('Kunde: '+t.kunde);
+    if(t.ort) teile.push('Ort: '+t.ort);
+    if(t.km) teile.push('Anfahrt: ca. '+t.km+' km');
+    if(t.routePos) teile.push('Stopp Nr. '+t.routePos);
+    if(t.notiz) teile.push('',String(t.notiz));
+    if(t.eigeneNotiz) teile.push('','Eigene Notiz:',String(t.eigeneNotiz));
+    const kat=[t.akqModus&&(PLANER_MODI.find(m=>m.id===t.akqModus)||{}).t,
+      t.akqArt&&(AKQ_ARTEN.find(a=>a.id===t.akqArt)||{}).t,
+      t.buero?'Büro':null,t.telefon?'Telefonakquise':null].filter(Boolean);
+    roh.push('BEGIN:VEVENT',
+      'UID:mitone-'+String(t.id||uid8())+'@mit-one.ch',
+      'DTSTAMP:'+stamp,
+      'SEQUENCE:0',
+      'DTSTART;TZID='+ICS_TZ+':'+fmt(start),
+      'DTEND;TZID='+ICS_TZ+':'+fmt(end),
+      'SUMMARY:'+icsEsc(t.betreff||t.kunde||'Termin'),
+      'LOCATION:'+icsEsc(t.ort||''),
+      'DESCRIPTION:'+icsEsc(teile.join('\n')),
+      kat.length?'CATEGORIES:'+kat.map(icsEsc).join(','):'CATEGORIES:MiT Akquise',
+      'STATUS:CONFIRMED','TRANSP:OPAQUE','PRIORITY:5',
+      'X-MICROSOFT-CDO-BUSYSTATUS:BUSY',
+      'BEGIN:VALARM','TRIGGER:-PT30M','ACTION:DISPLAY','DESCRIPTION:'+icsEsc('Erinnerung: '+(t.kunde||'Termin')),
+      'END:VALARM','END:VEVENT');
   });
-  lines.push('END:VCALENDAR');
-  const b=new Blob([lines.join('\r\n')],{type:'text/calendar;charset=utf-8'});
+  roh.push('END:VCALENDAR');
+  const text=roh.map(icsFold).join('\r\n')+'\r\n';
+  const b=new Blob([text],{type:'text/calendar;charset=utf-8'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(b);
   a.download=(name||'MiT_Termine')+'.ics'; a.click(); URL.revokeObjectURL(a.href);
+  return text;
 }
 window.termICSweek=wk=>{ const list=termineOfWeek(wk).filter(t=>!t.done);
   if(!list.length){toast('⚠ Keine offenen Termine in der Woche');return;}
@@ -4910,7 +4966,7 @@ window.planerUebernehmen=()=>{
       akqArt:a.art,akqStufe:a.stufe,akqModus:m.id,
       telefon:m.id==='telefon'?true:undefined,
       quelle:e.k.quelle||'crm',
-      notiz:'AKQUISE-PLANER: '+m.t+' · '+artT+qT+'\n'+akqVorschlag(e.k)+'\n'+termBegruendung(e.k)+
+      notiz:'AKQUISE-PLANER: '+m.t+qT+'\n'+akqVorschlag(e.k)+'\n'+termBegruendung(e.k)+
         (e.k.quelle&&e.k.quelle!=='crm'&&!e.k.tel&&!e.k.mail?'\nHINWEIS: Kontaktdaten noch recherchieren.':''),
       handverlesen:true,done:false,created:new Date().toISOString()});
     schon.add(norm(e.k.co)); n++;
