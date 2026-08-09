@@ -591,7 +591,7 @@ function linkRow(t,s,fn){ return `<div class="linkcard" onclick='${fn}'><div cla
 const CACHE={related:new Map(),akq:new Map(),bedarf:new Map()};
 function cacheLeeren(){ CACHE.related.clear(); CACHE.akq.clear(); CACHE.bedarf.clear();
   CACHE.hist=null; CACHE.mblock=null; CACHE.akqZaehl=null; CACHE.rang=null; CACHE.rangKey=null;
-  CACHE.reg=null; CACHE.dcreg=null; }
+  CACHE.reg=null; CACHE.dcreg=null; CACHE.zusatz=null; }
 window.cacheLeeren=cacheLeeren;
 function related(co){
   const leer={deals:[],kunden:[],kartei:[],offerten:[],dck:[],rech:[],chp:[],chk:[],proj:[],term:[]};
@@ -2976,7 +2976,16 @@ const BRANCHEN={
 };
 /* Schreibvarianten aus den Daten auf die Wissensbasis mappen */
 const BRANCHEN_ALIAS={'Bildung / Forschung':'Forschung/Bildung','Events & Kultur':'Events/Messen',
-  'Vermietung / Handel':'Allgemein','Notstrom/USV':'Allgemein'};
+  'Vermietung / Handel':'Allgemein','Notstrom/USV':'Allgemein',
+  /* Vokabular der Kundenkartei */
+  'Industrie / Allgemein':'Industrie/Maschinenbau','Industrie / Elektro':'Industrie/Maschinenbau',
+  'Maschinenbau':'Industrie/Maschinenbau','Elektroinstallation':'Elektroplaner/Engineering',
+  'Wiederverkäufer':'Elektroplaner/Engineering','Gesundheit / Spital':'Spital/Klinik',
+  'EVU / Energie':'EVU/Netzbetreiber','Bahn / ÖPNV':'Bau/Infrastruktur',
+  'Wasser / Infrastruktur':'Bau/Infrastruktur','Luftfahrt / Infra':'Bau/Infrastruktur',
+  'Chemie / Pharma':'Pharma/Chemie','Nahrungsmittel / Baustoffe':'Lebensmittel/Food',
+  'Öffentliche Hand':'Gemeinde/Öffentlich','Rechenzentrum / IT':'Rechenzentrum/IT',
+  'Events & Messen':'Events/Messen'};
 function branche(seg){ const s=String(seg||'').trim();
   return BRANCHEN[s]||BRANCHEN[BRANCHEN_ALIAS[s]]||BRANCHEN['Allgemein']; }
 function brancheKey(seg){ const s=String(seg||'').trim();
@@ -4699,7 +4708,8 @@ const PLANER_MODI=[
    dauer:60,typ:'Besuch vor Ort',zaehlt:true,
    was:'Alles zusammen — Verteilung frei wählbar',pflicht:null}
 ];
-let PLANER=ladeObjekt(PLANER_KEY,{modus:'kalt',tage:{},branchen:{},kt:'',prio:'A'});
+let PLANER=ladeObjekt(PLANER_KEY,{modus:'kalt',tage:{},branchen:{},kt:'',prio:'A',
+  qKartei:false,qProjekt:false,suche:'',sort:'punkte'});
 if(!PLANER.tage||typeof PLANER.tage!=='object') PLANER.tage={};
 if(!PLANER.branchen||typeof PLANER.branchen!=='object') PLANER.branchen={};
 function planerSave(){ try{localStorage.setItem(PLANER_KEY,JSON.stringify(PLANER))}catch(e){} }
@@ -4716,19 +4726,73 @@ window.planerSetF=(f,v)=>{ PLANER[f]=v; planerSave(); PLANER_VORSCHAU=null; View
 function planerSumme(){ return Object.values(PLANER.tage).reduce((a,b)=>a+(+b||0),0); }
 function planerBranchenSumme(){ return Object.values(PLANER.branchen).reduce((a,b)=>a+(+b||0),0); }
 
+/* ── Zusätzliche Quellen neben dem CRM ──
+   Die Kundenkartei enthält über 1100 Firmen, die im CRM fehlen; aus den
+   Schweizer Projektkontakten kommen weitere Firmen dazu. */
+const KT_NAME={'zurich':'ZH','zürich':'ZH','bern':'BE','berne':'BE','luzern':'LU','lucerne':'LU','uri':'UR',
+ 'schwyz':'SZ','obwalden':'OW','nidwalden':'NW','glarus':'GL','zug':'ZG','fribourg':'FR','freiburg':'FR',
+ 'solothurn':'SO','soleure':'SO','basel-stadt':'BS','basel':'BS','basel-landschaft':'BL','baselland':'BL',
+ 'schaffhausen':'SH','appenzell ausserrhoden':'AR','appenzell innerrhoden':'AI','st. gallen':'SG',
+ 'st.gallen':'SG','sankt gallen':'SG','graubunden':'GR','graubünden':'GR','grisons':'GR','aargau':'AG',
+ 'argovie':'AG','thurgau':'TG','thurgovie':'TG','ticino':'TI','tessin':'TI','vaud':'VD','waadt':'VD',
+ 'valais':'VS','wallis':'VS','neuchatel':'NE','neuchâtel':'NE','neuenburg':'NE','geneve':'GE','genève':'GE',
+ 'geneva':'GE','genf':'GE','jura':'JU'};
+function ktKuerzel(x){ const s=String(x||'').trim();
+  if(/^(CH|CHE|SUI)$/i.test(s)) return '';            /* «CH» ist kein Kanton */
+  if(/^[A-Z]{2}$/.test(s)&&GEO_KT[s]) return s;
+  return KT_NAME[s.toLowerCase()]||''; }
+function planerZusatz(){
+  if(CACHE.zusatz) return CACHE.zusatz;
+  const imCrm=new Set(K.map(k=>norm(k.co)).filter(Boolean));
+  const gesehen=new Set(imCrm);
+  const out=[];
+  KA.forEach(x=>{ const n=norm(x.co); if(!n||gesehen.has(n)) return; gesehen.add(n);
+    out.push({_i:null,_qid:'ka'+x._i,quelle:'kartei',co:x.co,seg:x.seg||'',
+      kt:ktKuerzel(x.kt),ort:'',plz:'',
+      ap:x.ap||'',tel:String(x.tel||'').replace(/^T\s*/,'').trim(),mail:x.mail||'',
+      prio:'B',status:'offen',kva:'',notiz:'Aus der Kundenkartei · Verantwortlich: '+(x.verantw||'—'),
+      prod:'',intern:'',next:'',wert:0,fc:0,wahr:0}); });
+  (typeof CHK!=='undefined'?CHK:[]).forEach(c=>{ const n=norm(c.firma); if(!n||gesehen.has(n)) return; gesehen.add(n);
+    out.push({_i:null,_qid:'chk'+c._i,quelle:'projekt',co:c.firma,seg:'Rechenzentrum/IT',
+      kt:ktKuerzel(c.region),ort:c.ort||'',plz:c.plz||'',
+      ap:[c.vor,c.nach].filter(Boolean).join(' '),tel:c.tel||'',mail:c.mail||'',
+      prio:'A',status:'offen',kva:'Datacenter-Projekt: '+(c.projekt||''),
+      notiz:'Aus einem Schweizer Datacenter-Projekt · '+(c.funk||''),
+      prod:'',intern:'',next:'',wert:0,fc:0,wahr:0}); });
+  CACHE.zusatz=out; return out;
+}
 /* ── Kandidaten je Modus ── */
 function planerKandidaten(branche){
   const m=planerModus();
   const gesperrt=histSet();
   const schon=new Set((Array.isArray(TERMINE)?TERMINE:[]).map(t=>norm(t.kunde)));
-  let pool=K.filter(k=>k.co&&!gesperrt.has(norm(k.co))&&!schon.has(norm(k.co)));
+  let pool=K.filter(k=>k.co).map(k=>Object.assign({quelle:'crm',_qid:'k'+k._i},k));
+  if(PLANER.qKartei) pool=pool.concat(planerZusatz().filter(x=>x.quelle==='kartei'));
+  if(PLANER.qProjekt) pool=pool.concat(planerZusatz().filter(x=>x.quelle==='projekt'));
+  pool=pool.filter(k=>!gesperrt.has(norm(k.co))&&!schon.has(norm(k.co)));
   if(PLANER.prio) pool=pool.filter(k=>String(k.prio||'').trim()===PLANER.prio);
   if(PLANER.kt) pool=pool.filter(k=>String(k.kt||'').trim().toUpperCase()===PLANER.kt);
   if(m.pflicht) pool=pool.filter(k=>akqArt(k).kanaele.includes(m.pflicht));
   if(m.id==='kalt') pool=pool.filter(k=>akqArt(k).art==='kalt');
   if(m.id==='dc') pool=pool.filter(k=>planerIstDC(k));
   if(branche) pool=pool.filter(k=>brancheKey(k.seg)===branche);
-  return pool.map(k=>({k,...akqScore(k)})).sort((a,b)=>b.s-a.s);
+  const q=String(PLANER.suche||'').trim().toLowerCase();
+  if(q) pool=pool.filter(k=>[k.co,k.ort,k.plz,k.kt,k.seg,k.ap,k.kva,k.notiz,k.tel,k.mail]
+    .filter(Boolean).join(' ').toLowerCase().includes(q));
+  /* Im CRM stehen einzelne Firmen doppelt. Ohne Entdopplung liesse sich dieselbe
+     Firma zweimal einplanen — deshalb je Firmenname nur der stärkste Eintrag. */
+  const besteJeFirma=new Map();
+  pool.forEach(k=>{ const n=norm(k.co); if(!n) return;
+    const s2=scoreKunde(k)+(k.quelle==='crm'?50:0);
+    const alt=besteJeFirma.get(n);
+    if(!alt||s2>alt.s2) besteJeFirma.set(n,{k,s2}); });
+  pool=[...besteJeFirma.values()].map(x=>x.k);
+  const r=pool.map(k=>({k,...akqScore(k)}));
+  if(PLANER.sort==='name') r.sort((a,b)=>String(a.k.co).localeCompare(String(b.k.co)));
+  else if(PLANER.sort==='potenzial') r.sort((a,b)=>b.b.potenzial-a.b.potenzial);
+  else if(PLANER.sort==='kanton') r.sort((a,b)=>String(a.k.kt||'').localeCompare(String(b.k.kt||''))||b.s-a.s);
+  else r.sort((a,b)=>b.s-a.s);
+  return r;
 }
 /* Datacenter-Umfeld: eigene Branche, Recherche, CH-Projekte oder DC-Register */
 function planerIstDC(k){
@@ -4753,6 +4817,25 @@ function planerDCReg(){
 }
 /* ── Plan berechnen ── */
 let PLANER_VORSCHAU=null;
+let PLANER_FIX=new Set();          /* von Hand fest eingeplante Kandidaten */
+window.planerFix=qid=>{ if(PLANER_FIX.has(qid)) PLANER_FIX.delete(qid); else PLANER_FIX.add(qid);
+  PLANER_VORSCHAU=null; Views.rerender('planer'); };
+window.planerFixLeeren=()=>{ PLANER_FIX.clear(); PLANER_VORSCHAU=null; Views.rerender('planer'); toast('Auswahl geleert'); };
+window.planerFixAlle=()=>{ const n=planerSumme()||TERMINE_PRO_WOCHE;
+  planerKandidaten(null).slice(0,n).forEach(x=>PLANER_FIX.add(x.k._qid));
+  PLANER_VORSCHAU=null; Views.rerender('planer');
+  toast('✓ '+PLANER_FIX.size+' Kandidaten fest eingeplant'); };
+window.planerSuche=v=>{ PLANER.suche=String(v||''); planerSave(); PLANER_VORSCHAU=null; Views.rerender('planer');
+  setTimeout(()=>{const e=document.getElementById('planerSuche'); if(e){e.focus();e.setSelectionRange(e.value.length,e.value.length);}},20); };
+/* freie Zeitfenster eines Tages — damit sichtbar wird, was noch geht */
+function planerFreiAmTag(dow,wkIso){
+  const m=planerModus();
+  const ws=toDate(wkIso||planWocheLesen()); if(!ws) return {frei:0,belegt:0,max:m.slots.length,iso:''};
+  const base=weekStartOf(ws);
+  const iso=isoOf(new Date(base.getFullYear(),base.getMonth(),base.getDate()+dow));
+  const belegt=m.slots.filter(z=>TERMINE.some(t=>t.datum===iso&&t.zeit===z)).length;
+  return {frei:m.slots.length-belegt,belegt,max:m.slots.length,iso,planbar:istPlanbar(iso)};
+}
 window.planerErstellen=()=>{
   const m=planerModus();
   const gesamt=planerSumme();
@@ -4767,11 +4850,16 @@ window.planerErstellen=()=>{
   const genommen=new Set();
   const holen=(branche)=>{
     const liste=planerKandidaten(branche||null);
-    for(const x of liste){ if(!genommen.has(x.k._i)){ genommen.add(x.k._i); return x.k; } }
+    for(const x of liste){ if(!genommen.has(x.k._qid)){ genommen.add(x.k._qid); return x.k; } }
     return null;
   };
-  /* zuerst die Quoten füllen, dann mit den besten übrigen auffüllen */
+  /* 1. von Hand fest ausgewählte, 2. Branchenquoten, 3. beste übrige */
   const auswahl=[];
+  if(PLANER_FIX.size){
+    const alle=planerKandidaten(null);
+    for(const x of alle){ if(auswahl.length>=gesamt) break;
+      if(PLANER_FIX.has(x.k._qid)&&!genommen.has(x.k._qid)){ genommen.add(x.k._qid); auswahl.push(x.k); } }
+  }
   Object.entries(quoten).forEach(([b,n])=>{ for(let i=0;i<n&&auswahl.length<gesamt;i++){ const k=holen(b); if(k) auswahl.push(k); } });
   while(auswahl.length<gesamt){ const k=holen(null); if(!k) break; auswahl.push(k); }
   if(!auswahl.length){ toast('⚠ Keine freien Kunden für diesen Modus und Filter'); return null; }
@@ -4793,10 +4881,13 @@ window.planerErstellen=()=>{
       plan.push({k,datum:iso,zeit:frei[i],dow,km,pos:i+1});
     });
   }
-  if(!plan.length){ toast('⚠ An den gewählten Tagen ist kein Zeitfenster mehr frei'); return null; }
-  PLANER_VORSCHAU={modus:m.id,wk,eintraege:plan,uebrig:rest.length};
+  if(!plan.length){ toast('⚠ An den gewählten Tagen ist kein Zeitfenster mehr frei — bestehende Termine prüfen'); return null; }
+  const fehlend=gesamt-plan.length;
+  PLANER_VORSCHAU={modus:m.id,wk,eintraege:plan,uebrig:rest.length,gewuenscht:gesamt,fehlend};
   Views.rerender('planer');
-  toast('📋 Vorschau mit '+plan.length+' Terminen erstellt — prüfen und übernehmen');
+  toast(fehlend>0
+    ? '📋 '+plan.length+' von '+gesamt+' Terminen möglich — '+fehlend+' Zeitfenster sind bereits belegt oder liegen ausserhalb'
+    : '📋 Vorschau mit '+plan.length+' Terminen erstellt — prüfen und übernehmen');
   return PLANER_VORSCHAU;
 };
 window.planerVerwerfen=()=>{ PLANER_VORSCHAU=null; Views.rerender('planer'); };
@@ -4810,13 +4901,17 @@ window.planerUebernehmen=()=>{
     if(TERMINE.some(t=>t.datum===e.datum&&t.zeit===e.zeit)) return;
     const a=akqArt(e.k);
     const artT=(AKQ_ARTEN.find(x=>x.id===a.art)||{t:a.art}).t;
+    const qT=e.k.quelle==='kartei'?' · Quelle: Kundenkartei'
+            :e.k.quelle==='projekt'?' · Quelle: Datacenter-Projektkontakt':'';
     TERMINE.push({id:uid8(),kunde:e.k.co,datum:e.datum,zeit:e.zeit,dauer:m.dauer,typ:m.typ,
       betreff:'MiT Strom — '+m.t+' '+e.k.co,
       ort:m.id==='telefon'?(e.k.tel||'Telefon'):[e.k.ort,e.k.kt].filter(Boolean).join(' '),
       kt:String(e.k.kt||'').trim().toUpperCase(),km:e.km||0,routePos:e.pos,
       akqArt:a.art,akqStufe:a.stufe,akqModus:m.id,
       telefon:m.id==='telefon'?true:undefined,
-      notiz:'AKQUISE-PLANER: '+m.t+' · '+artT+'\n'+akqVorschlag(e.k)+'\n'+termBegruendung(e.k),
+      quelle:e.k.quelle||'crm',
+      notiz:'AKQUISE-PLANER: '+m.t+' · '+artT+qT+'\n'+akqVorschlag(e.k)+'\n'+termBegruendung(e.k)+
+        (e.k.quelle&&e.k.quelle!=='crm'&&!e.k.tel&&!e.k.mail?'\nHINWEIS: Kontaktdaten noch recherchieren.':''),
       handverlesen:true,done:false,created:new Date().toISOString()});
     schon.add(norm(e.k.co)); n++;
   });
@@ -4872,15 +4967,24 @@ function buildPlaner(el){
   const kantone=[...new Set(K.map(x=>String(x.kt||'').trim().toUpperCase()).filter(Boolean))].sort();
   const proBranche=Object.keys(BEDARF_BRANCHE).filter(b=>b!=='Allgemein')
     .map(b=>({b,n:planerKandidaten(b).length,ic:(BRANCHEN[b]||{ic:'🔷'}).ic})).filter(x=>x.n>0);
-  const poolGesamt=planerKandidaten(null).length;
+  const liste=planerKandidaten(null);
+  const poolGesamt=liste.length;
   const wk=planWocheLesen();
   const v=PLANER_VORSCHAU;
+  const freiGesamt=[0,1,2,3,4].filter(d=>m.tage.includes(d)).reduce((a,d)=>{const f=planerFreiAmTag(d,wk);return a+(f.planbar?f.frei:0);},0);
+  const potPlan=(v?v.eintraege:[]).reduce((a,e)=>a+(bedarfFuer(e.k).potenzial||0),0);
   el.innerHTML=`<div class="hero" style="display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap">
     <div style="flex:1"><h1>Akquise-Planer</h1>
       <p>Modus wählen, Tage und Anzahl festlegen, auf Branchen verteilen — Vorschau prüfen und als Outlook-Kalender exportieren</p></div>
     <button class="tbtn" onclick="planerZuruecksetzen()">↺ Zurücksetzen</button>
     <button class="tbtn" onclick="planerExport()">📤 Export</button></div>
 
+  <div class="kpis">
+    <div class="kpi"><div class="kl">Kandidaten im Filter</div><div class="kv">${poolGesamt}</div></div>
+    <div class="kpi"><div class="kl">Fest eingeplant</div><div class="kv">${PLANER_FIX.size}</div></div>
+    <div class="kpi"><div class="kl">Freie Zeitfenster</div><div class="kv">${freiGesamt}</div></div>
+    <div class="kpi"><div class="kl">${v?'Potenzial im Plan':'Gewünscht'}</div><div class="kv">${v?fmtCHF(potPlan):gesamt}</div></div>
+  </div>
   <div class="card"><div class="card-h"><h3>1 · Modus</h3><span class="sub">${esc(m.was)}</span></div>
     <div class="card-b" style="padding-top:10px;display:flex;gap:8px;flex-wrap:wrap">
     ${PLANER_MODI.map(x=>`<button class="tbtn ${x.id===PLANER.modus?'primary':''}" style="padding:9px 18px;font-size:13px"
@@ -4898,6 +5002,12 @@ function buildPlaner(el){
         <option value="A" ${PLANER.prio==='A'?'selected':''}>nur A</option>
         <option value="B" ${PLANER.prio==='B'?'selected':''}>nur B</option></select>
       <span style="margin-left:auto"><b style="color:var(--tx);font-size:15px">${poolGesamt}</b> freie Kandidaten in diesem Modus</span>
+    </div>
+    <div class="card-b" style="padding-top:4px;display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--tx2)">
+      <span style="font-weight:700;color:var(--tx3);font-size:11px;letter-spacing:.4px">QUELLEN</span>
+      <label style="display:flex;align-items:center;gap:6px" title="Die 801 Zielkunden aus dem CRM"><input type="checkbox" checked disabled> Kunden-CRM (${K.length})</label>
+      <label style="display:flex;align-items:center;gap:6px" title="Firmen aus der Kundenkartei, die im CRM fehlen"><input type="checkbox" id="qKartei" ${PLANER.qKartei?'checked':''} onchange="planerSetF('qKartei',this.checked)"> Kundenkartei (+${planerZusatz().filter(x=>x.quelle==='kartei').length})</label>
+      <label style="display:flex;align-items:center;gap:6px" title="Firmen aus Schweizer Datacenter-Projekten"><input type="checkbox" id="qProjekt" ${PLANER.qProjekt?'checked':''} onchange="planerSetF('qProjekt',this.checked)"> Datacenter-Projektkontakte (+${planerZusatz().filter(x=>x.quelle==='projekt').length})</label>
     </div></div>
 
   <div class="card"><div class="card-h"><h3>2 · Tage und Anzahl</h3>
@@ -4906,15 +5016,18 @@ function buildPlaner(el){
     <span class="badge ${gesamt?'b-green':'b-gray'}">${gesamt} Termine geplant</span></div>
     <div class="card-b" style="padding-top:10px;display:flex;gap:10px;flex-wrap:wrap">
     ${[0,1,2,3,4].map(d=>{ const erlaubt=m.tage.includes(d);
-      const ws=toDate(isoOf(weekStartOf(toDate(wk)||new Date())));
-      const iso=isoOf(new Date(ws.getFullYear(),ws.getMonth(),ws.getDate()+d));
-      const planbar=istPlanbar(iso);
-      return `<div style="border:1px solid ${PLANER.tage[d]?'var(--blue)':'var(--line)'};border-radius:12px;padding:10px 14px;min-width:132px;${erlaubt&&planbar?'':'opacity:.4'}">
+      const f=planerFreiAmTag(d,wk);
+      const wunsch=+PLANER.tage[d]||0;
+      const zuviel=wunsch>f.frei;
+      return `<div style="border:1.5px solid ${zuviel?'var(--orange)':wunsch?'var(--blue)':'var(--line)'};border-radius:12px;padding:10px 14px;min-width:148px;${erlaubt&&f.planbar?'':'opacity:.4'}">
         <div style="font-weight:700;font-size:13px">${DOW_LANG[d]}</div>
-        <div style="font-size:11px;color:var(--tx2);margin-bottom:6px">${fmtD(iso)}${!planbar?' · vergangen':''}${erlaubt?'':' · in diesem Modus nicht'}</div>
-        <input type="number" min="0" max="${m.slots.length}" value="${PLANER.tage[d]||0}" ${erlaubt&&planbar?'':'disabled'}
+        <div style="font-size:11px;color:var(--tx2)">${fmtD(f.iso)}${!f.planbar?' · vergangen':''}${erlaubt?'':' · in diesem Modus nicht'}</div>
+        <div style="font-size:10.5px;margin:4px 0 6px;color:${f.belegt?'var(--blue)':'var(--tx3)'}">
+          ${f.belegt?'🔒 '+f.belegt+' belegt · ':''}${f.frei} von ${f.max} frei</div>
+        <input type="number" min="0" max="${Math.max(0,f.frei)}" value="${wunsch}" ${erlaubt&&f.planbar&&f.frei>0?'':'disabled'}
           onchange="planerSetTag(${d},this.value)"
-          style="width:100%;background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:14px;font-weight:700;color:var(--tx);font-family:inherit;outline:none;text-align:center">
+          style="width:100%;background:var(--bg2);border:1px solid ${zuviel?'var(--orange)':'var(--line)'};border-radius:8px;padding:6px 10px;font-size:14px;font-weight:700;color:var(--tx);font-family:inherit;outline:none;text-align:center">
+        ${zuviel?`<div style="font-size:10px;color:var(--orange);margin-top:4px">nur ${f.frei} möglich</div>`:''}
       </div>`;}).join('')}
     </div></div>
 
@@ -4931,13 +5044,50 @@ function buildPlaner(el){
     </div>`).join(''):'<div class="empty" style="padding:16px">Keine Kandidaten — Modus oder Filter ändern</div>'}
     </div></div>
 
-  <div class="card" style="border-color:var(--line2)"><div class="card-h"><h3>4 · Plan erzeugen</h3>
+  <div class="card"><div class="card-h"><h3>4 · Kunden aussuchen</h3>
+    <span class="sub">${liste.length} Kandidaten · ${PLANER_FIX.size} fest eingeplant — die kommen zuerst in den Plan</span>
+    <div style="flex:1"></div>
+    <input id="planerSuche" placeholder="Firma, Ort, PLZ, Notiz…" value="${esc(PLANER.suche||'')}" oninput="planerSuche(this.value)"
+      style="background:var(--bg2);border:1px solid var(--line);border-radius:99px;padding:7px 16px;font-size:12.5px;color:var(--tx);font-family:inherit;outline:none;min-width:220px">
+    <select onchange="planerSetF('sort',this.value)" style="background:var(--bg2);border:1px solid var(--line);border-radius:99px;padding:6px 13px;font-size:12px;font-weight:600;color:var(--tx);font-family:inherit;outline:none;cursor:pointer">
+      <option value="punkte" ${PLANER.sort==='punkte'?'selected':''}>nach Punktzahl</option>
+      <option value="potenzial" ${PLANER.sort==='potenzial'?'selected':''}>nach Potenzial</option>
+      <option value="kanton" ${PLANER.sort==='kanton'?'selected':''}>nach Kanton</option>
+      <option value="name" ${PLANER.sort==='name'?'selected':''}>nach Name</option></select>
+    <button class="tbtn" onclick="planerFixAlle()" title="Die stärksten Kandidaten bis zur gewünschten Terminzahl übernehmen">⭐ Top übernehmen</button>
+    ${PLANER_FIX.size?`<button class="tbtn" onclick="planerFixLeeren()">✕ Auswahl leeren</button>`:''}
+    </div>
+    <div class="card-b" style="padding-top:6px;max-height:400px;overflow-y:auto;border-top:1px solid var(--line)">
+    ${liste.length?liste.slice(0,120).map(x=>{ const a=x.a;
+      const art=AKQ_ARTEN.find(y=>y.id===a.art)||{ic:'',t:a.art,farbe:'b-gray'};
+      const fix=PLANER_FIX.has(x.k._qid);
+      const qIc=x.k.quelle==='kartei'?'<span class="badge b-gray" style="font-size:9px" title="aus der Kundenkartei">📇</span>'
+              :x.k.quelle==='projekt'?'<span class="badge b-purple" style="font-size:9px" title="aus einem Datacenter-Projekt">🏢</span>':'';
+      return `<div class="ms-row" style="${fix?'background:rgba(0,113,227,.07)':''}">
+        <div class="ms-chk ${fix?'on':''}" onclick="planerFix('${esc(x.k._qid)}')" title="fest einplanen">${fix?'✓':''}</div>
+        <span class="badge ${art.farbe}" style="font-size:9.5px">${art.ic} ${art.t}</span>
+        ${qIc}
+        <div class="mt2" style="min-width:0;flex:1;cursor:pointer" ${x.k._i!=null?`onclick="akqDetail(${x.k._i})"`:''}>
+          <span>${esc(x.k.co)}</span>
+          <span style="font-weight:400;color:var(--tx2);font-size:11.5px"> · ${esc(brancheKey(x.k.seg))}${x.k.kt?' · '+esc(x.k.kt):''}${x.k.ort?' · '+esc(x.k.ort):''}</span>
+          <div style="font-weight:400;color:var(--tx2);font-size:10.5px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+            ${x.k.tel?'📞 '+esc(x.k.tel)+' ':''}${x.k.mail?'✉️ '+esc(String(x.k.mail).slice(0,32))+' ':''}${esc(String(x.k.kva||x.k.notiz||'').slice(0,70))}</div></div>
+        <span style="font-size:11px;color:var(--tx3);width:42px;text-align:right" title="Punktzahl">${x.s}</span>
+        <b style="width:98px;text-align:right;font-size:12px">${fmtCHF(x.b.potenzial)}</b>
+      </div>`;}).join('')+(liste.length>120?`<div style="padding:9px;font-size:11.5px;color:var(--tx3)">… und ${liste.length-120} weitere — Suche oder Filter nutzen</div>`:'')
+    :'<div class="empty" style="padding:18px">Kein Kandidat — Modus, Kanton, Prio oder Quellen anpassen</div>'}
+    </div></div>
+
+  <div class="card" style="border-color:var(--line2)"><div class="card-h"><h3>5 · Plan erzeugen</h3>
     <div style="flex:1"></div>
     <button class="tbtn primary" style="padding:9px 20px;font-size:13.5px" onclick="planerErstellen()" ${gesamt?'':'disabled style="opacity:.45"'}>📋 Vorschau erstellen</button>
     ${v?`<button class="tbtn primary" onclick="planerUebernehmen()">✓ ${v.eintraege.length} übernehmen</button>
         <button class="tbtn" onclick="planerVerwerfen()">✕ verwerfen</button>`:''}
     <button class="tbtn" onclick="planerICS()">📆 Woche → Outlook</button></div>
     <div class="card-b" style="padding-top:10px">
+    ${v&&v.fehlend>0?`<div style="background:rgba(255,149,0,.10);border:1px solid var(--orange);border-radius:11px;padding:10px 14px;margin-bottom:12px;font-size:12.5px">
+        ⚠ Du wolltest <b>${v.gewuenscht}</b> Termine, möglich waren <b>${v.eintraege.length}</b>.
+        An den gewählten Tagen sind bereits Zeitfenster belegt. Oben in den Tageskacheln steht, wie viele je Tag noch frei sind.</div>`:''}
     ${v?`<div style="font-size:12px;color:var(--tx2);margin-bottom:10px">
         Woche ab ${fmtD(v.wk)} · ${v.eintraege.length} Termine${v.uebrig?' · '+v.uebrig+' Kandidaten blieben übrig':''}
         · Gesamtstrecke ~${v.eintraege.reduce((a,e)=>a+(+e.km||0),0)} km</div>
