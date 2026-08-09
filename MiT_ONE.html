@@ -393,6 +393,26 @@ const fmtN = n => (+n||0).toLocaleString('de-CH',{maximumFractionDigits:0});
 const fmtP = n => { n=+n||0; if(n<=1.5)n*=100; return Math.round(n)+'%'; };
 const esc = s => String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const norm = s => String(s||'').toLowerCase().replace(/\s+ag$|\s+gmbh$|\s+sa$/,'').replace(/[^a-z0-9äöü]/g,'');
+/* ── Speicher typsicher lesen ──
+   JSON.parse('"text"') liefert klaglos einen String. Landete so etwas in einem
+   der Listen-Schlüssel, brach der ganze Start ab und die Seite blieb leer. */
+function ladeListe(key){
+  try{ const v=JSON.parse(localStorage.getItem(key)||'[]');
+    if(Array.isArray(v)) return v;
+    console.warn('Speicher '+key+' hatte den falschen Typ — wird zurückgesetzt');
+  }catch(e){ console.warn('Speicher '+key+' unlesbar — wird zurückgesetzt'); }
+  try{ localStorage.removeItem(key); }catch(e){}
+  return [];
+}
+function ladeObjekt(key,standard){
+  const std=standard||{};
+  try{ const v=JSON.parse(localStorage.getItem(key)||'{}');
+    if(v&&typeof v==='object'&&!Array.isArray(v)) return Object.assign({},std,v);
+    console.warn('Speicher '+key+' hatte den falschen Typ — wird zurückgesetzt');
+  }catch(e){ console.warn('Speicher '+key+' unlesbar — wird zurückgesetzt'); }
+  try{ localStorage.removeItem(key); }catch(e){}
+  return Object.assign({},std);
+}
 const toDate = v => { if(!v) return null;
   /* reine Datumsstrings lokal parsen — 'new Date("2026-08-03")' wäre UTC-Mitternacht
      und kippt in der Schweiz (UTC+1/+2) beim Zurückrechnen auf den Vortag */
@@ -431,7 +451,7 @@ const ST_BADGE = {WON:'b-green',OFFERTE:'b-blue','FOLLOW-UP':'b-orange','TO OFFE
 
 /* Local overlay for edits */
 const OV_KEY='one_overlay_v1';
-let OV={}; try{OV=JSON.parse(localStorage.getItem(OV_KEY)||'{}')}catch(e){}
+let OV=ladeObjekt(OV_KEY);
 const ovGet=(ds,i)=>((OV[ds]||{})[i])||{};
 function ovSet(ds,i,patch){ OV[ds]=OV[ds]||{}; OV[ds][i]={...(OV[ds][i]||{}),...patch}; localStorage.setItem(OV_KEY,JSON.stringify(OV)); }
 const pStatus = d => (ovGet('P',d._i).status)||ST_LBL(d.status);
@@ -566,13 +586,22 @@ function linkRow(t,s,fn){ return `<div class="linkcard" onclick='${fn}'><div cla
 
 /* Cross-links: find related entities by company */
 function related(co){
-  const n=norm(co); if(!n) return {deals:[],kunden:[],kartei:[],offerten:[],dck:[]};
+  const leer={deals:[],kunden:[],kartei:[],offerten:[],dck:[],rech:[],chp:[],chk:[],proj:[],term:[]};
+  const n=norm(co); if(!n) return leer;
+  /* Teiltreffer für Firmen, die in der Projektdatenbank anders geschrieben sind
+     («Implenia AG» ↔ «Implenia Schweiz AG») */
+  const teil=x=>{ const m=norm(x); return !!m&&(m===n||m.includes(n)||n.includes(m)); };
   return {
     deals: P.filter(d=>norm(d.co)===n),
     kunden: K.filter(d=>norm(d.co)===n),
     kartei: KA.filter(d=>norm(d.co)===n),
     offerten: OFF.filter(d=>norm(d.co)===n),
     dck: DCK.filter(d=>norm(d.co)===n),
+    rech: (typeof RECH!=='undefined'?RECH:[]).filter(r=>teil(r.co)),
+    chp:  (typeof CHP!=='undefined'?CHP:[]).filter(p=>teil(p.firma)),
+    chk:  (typeof CHK!=='undefined'?CHK:[]).filter(c=>teil(c.firma)),
+    proj: (typeof PROJECTS!=='undefined'&&Array.isArray(PROJECTS)?PROJECTS:[]).filter(p=>teil(p.kunde)),
+    term: (typeof TERMINE!=='undefined'&&Array.isArray(TERMINE)?TERMINE:[]).filter(t=>!t.buero&&norm(t.kunde)===n),
   };
 }
 function relatedHTML(co, skip){
@@ -582,6 +611,11 @@ function relatedHTML(co, skip){
   if(r.kunden.length&&skip!=='kunde') h+='<div class="dr-sec">Kunden-CRM</div>'+r.kunden.map(k=>linkRow(k.co,(k.ap||'')+' · '+(k.status||''),`openKunde(${k._i})`)).join('');
   if(r.kartei.length&&skip!=='kartei') h+='<div class="dr-sec">Kundenkartei</div>'+r.kartei.map(k=>linkRow(k.co,(k.ansprech||k.ap||'')+' · '+(k.pstatus||k.mit||''),`openKartei(${k._i})`)).join('');
   if(r.dck.length&&skip!=='dck') h+='<div class="dr-sec">DC-Kontakte</div>'+r.dck.map(k=>linkRow(k.name,k.funk||'',`openDCK(${k._i})`)).join('');
+  if(r.rech.length&&skip!=='recherche') h+='<div class="dr-sec">Marktrecherche</div>'+r.rech.map(x=>linkRow(x.co,(x.kat||'')+' · '+(x.ort||''),`openRech(${x._i})`)).join('');
+  if(r.chp.length&&skip!=='chp') h+='<div class="dr-sec">Projekte in der Schweiz</div>'+r.chp.map(x=>linkRow(x.projekt,(x.phase||'')+' · '+(x.status||''),`openCHP(${x._i})`)).join('');
+  if(r.chk.length&&skip!=='chk') h+='<div class="dr-sec">Projektkontakte</div>'+r.chk.map(c=>linkRow([c.vor,c.nach].filter(Boolean).join(' ')||c.firma,(c.funk||'')+(c.mail?' · '+c.mail:''),`Views.show('recherche')`)).join('');
+  if(r.proj.length&&skip!=='proj') h+='<div class="dr-sec">Eigene Projekte</div>'+r.proj.map(p=>linkRow(p.name,(p.status||'')+' · '+(p.kunde||''),`projOpen('${p.id}')`)).join('');
+  if(r.term.length&&skip!=='termin') h+='<div class="dr-sec">Termine</div>'+r.term.map(t=>linkRow(fmtD(t.datum)+' '+t.zeit,(t.typ||'')+(t.ort?' · '+t.ort:''),`termOpen('${t.id}')`)).join('');
   return h;
 }
 
@@ -990,7 +1024,7 @@ Views.add('globalk','Global-Kontakte','Global','◌',GK.rows.length,buildGlobalK
 
 /* ═══════════════ PROJEKT-MODUL — Status · Milestones · Geräte · Kalkulation ═══════════════ */
 const PROJ_KEY='one_projects_v1';
-let PROJECTS=[]; try{PROJECTS=JSON.parse(localStorage.getItem(PROJ_KEY)||'[]')}catch(e){}
+let PROJECTS=ladeListe(PROJ_KEY);
 const projSave=()=>{ localStorage.setItem(PROJ_KEY,JSON.stringify(PROJECTS)); try{if(window.Spot)Spot.idx=null;}catch(e){} };
 const PHASEN=['Anfrage','Planung','Offeriert','Beauftragt','Lieferung','In Betrieb','Demontage','Abgeschlossen'];
 const MS_TPL={
@@ -1375,7 +1409,8 @@ function buildProjekteTimeline(body){
 
 /* ═══════════════ NEUE DEALS + KUNDEN (CRUD) ═══════════════ */
 const EXTRA_KEY='one_extra_v1';
-let EXTRA={deals:[],kunden:[]}; try{EXTRA={deals:[],kunden:[],...JSON.parse(localStorage.getItem(EXTRA_KEY)||'{}')}}catch(e){}
+let EXTRA=ladeObjekt(EXTRA_KEY,{deals:[],kunden:[]});
+if(!Array.isArray(EXTRA.deals))EXTRA.deals=[]; if(!Array.isArray(EXTRA.kunden))EXTRA.kunden=[];
 EXTRA.deals.forEach((x,xi)=>{ P.push({...x,_i:P.length,_new:true,_xi:xi}); });
 EXTRA.kunden.forEach((x,xi)=>{ K.push({...x,_i:K.length,_new:true,_xi:xi}); });
 const extraSave=()=>localStorage.setItem(EXTRA_KEY,JSON.stringify(EXTRA));
@@ -1831,11 +1866,11 @@ document.addEventListener('paste',e=>{
 
 /* ═══════════════ TERMINPLANUNG — Wochenziel 5–7 · Outlook-Export ═══════════════ */
 const TERM_KEY='one_termine_v1';
-let TERMINE=[]; try{TERMINE=JSON.parse(localStorage.getItem(TERM_KEY)||'[]')}catch(e){}
+let TERMINE=ladeListe(TERM_KEY);
 const termSave=()=>{ localStorage.setItem(TERM_KEY,JSON.stringify(TERMINE)); try{if(window.Spot)Spot.idx=null;}catch(e){} };
 /* Sperrliste: einmal exportierte/genommene Kunden kommen nicht wieder in Auto-Planung & Vorschläge */
 const HIST_KEY='one_besucht_v1';
-let BESUCHT=[]; try{BESUCHT=JSON.parse(localStorage.getItem(HIST_KEY)||'[]')}catch(e){}
+let BESUCHT=ladeListe(HIST_KEY);
 const histSave=()=>localStorage.setItem(HIST_KEY,JSON.stringify(BESUCHT));
 const histSet=()=>new Set(BESUCHT.map(b=>norm(b.kunde)));
 function histAdd(t){ if(!BESUCHT.some(b=>norm(b.kunde)===norm(t.kunde)))
@@ -2653,11 +2688,11 @@ Views.add('karte','Kundenkarte','Vertrieb','◍',null,buildKarte);
 
 /* ═══════════════ MAIL-STUDIO: Kaltakquise · Follow-up · Beratung ═══════════════ */
 const MAIL_KEY='one_mails_v1', ABS_KEY='one_absender_v1';
-let MAILS=(()=>{try{return JSON.parse(localStorage.getItem(MAIL_KEY))||[]}catch(e){return[]}})();
+let MAILS=ladeListe(MAIL_KEY);
 function mailSave(){ try{localStorage.setItem(MAIL_KEY,JSON.stringify(MAILS))}catch(e){} }
 const ABS_STD={name:'Burak Ücöz',rolle:'Sales Engineer',firma:'Mobil in Time AG',
   tel:'',mail:'',web:'www.mobilintime.ch',ort:'Schaffhausen'};
-let ABS=(()=>{try{return Object.assign({},ABS_STD,JSON.parse(localStorage.getItem(ABS_KEY))||{})}catch(e){return Object.assign({},ABS_STD)}})();
+let ABS=ladeObjekt(ABS_KEY,ABS_STD);
 function absSave(){ try{localStorage.setItem(ABS_KEY,JSON.stringify(ABS))}catch(e){} }
 window.setAbs=(f,v)=>{ ABS[f]=String(v||'').trim(); absSave(); mailRender(); };
 
@@ -3308,7 +3343,7 @@ window.serienVorschau=()=>{
 
 /* ═══════════════ MAIL-SPERRLISTE: kein Kunde wird zweimal angeschrieben ═══════════════ */
 const MBLOCK_KEY='one_mailblock_v1', MQ_KEY='one_mailq_v1';
-let MBLOCK=(()=>{try{return JSON.parse(localStorage.getItem(MBLOCK_KEY))||[]}catch(e){return[]}})();
+let MBLOCK=ladeListe(MBLOCK_KEY);
 function mblockSave(){ try{localStorage.setItem(MBLOCK_KEY,JSON.stringify(MBLOCK))}catch(e){} }
 function mblockSet(){ return new Set(MBLOCK.map(b=>norm(b.kunde))); }
 function istGesperrt(co){ return mblockSet().has(norm(co)); }
@@ -3383,7 +3418,7 @@ function dateiName(co,i){
 }
 
 /* ═══════════════ SERIEN-WARTESCHLANGE FÜR OUTLOOK ═══════════════ */
-let MAILQ=(()=>{try{return JSON.parse(localStorage.getItem(MQ_KEY))||[]}catch(e){return[]}})();
+let MAILQ=ladeListe(MQ_KEY);
 function mqSave(){ try{localStorage.setItem(MQ_KEY,JSON.stringify(MAILQ))}catch(e){} }
 let MQ_ANZAHL=50, MQ_SPERRE=true;
 window.mqSetAnzahl=v=>{ MQ_ANZAHL=Math.max(1,Math.min(500,+v||50)); mailRender(); };
