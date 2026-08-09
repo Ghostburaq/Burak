@@ -16,8 +16,9 @@ export const site = {
     phoneDisplay: '079 512 98 07',
     phoneLink: '+41795129807',
   },
-  // TODO: Domain festlegen. Bis dahin steht die Netlify-Subdomain als Fallback in astro.config.mjs.
-  domain: 'engineering-kabuu.example',
+  // Die Site-URL wird nicht hier gepflegt. Sie kommt beim Netlify-Build aus der
+  // Umgebungsvariable URL, siehe astro.config.mjs. In Komponenten ueber Astro.site
+  // verfuegbar. Nach dem Verbinden der eigenen Domain stimmt sie automatisch.
   claim: 'Netzqualität und EMV messen, bevor investiert wird.',
 };
 

@@ -8,15 +8,30 @@
 <meta name="description" content="Unabhängige Messungen und Beratung zu Netzqualität (Power Quality) und EMV. Messgerät nach IEC 61000-4-30 Klasse A, Bewertung nach EN 50160. Sitz Schweiz.">
 <meta name="author" content="Burak Ücöz">
 
-<!-- TODO: Nach Festlegung der Domain hier die produktive URL eintragen (nicht die netlify.app-Subdomain). -->
-<link rel="canonical" href="https://TODO-domain.ch/">
+<!--
+  DOMAIN
+  Canonical und og:url stehen bewusst NICHT drin. Eine Adresse, die es noch
+  nicht gibt, waere schaedlicher als gar keine: Suchmaschinen wuerden die
+  echte Seite fuer eine Kopie halten. Sobald die Domain steht, hier einfuegen
+  und DEINE-DOMAIN.ch ersetzen:
+
+    <link rel="canonical" href="https://DEINE-DOMAIN.ch/">
+    <meta property="og:url" content="https://DEINE-DOMAIN.ch/">
+
+  Ohne diese beiden Zeilen funktioniert die Seite vollstaendig.
+-->
+
 <meta property="og:type" content="website">
 <meta property="og:locale" content="de_CH">
 <meta property="og:site_name" content="Engineering.Kabuu">
 <meta property="og:title" content="Engineering.Kabuu — Netzqualität und EMV">
 <meta property="og:description" content="Unabhängige Messungen und Beratung zu Netzqualität und EMV. Sitz Schweiz.">
-<meta property="og:url" content="https://TODO-domain.ch/">
-<meta name="twitter:card" content="summary">
+<meta name="twitter:card" content="summary_large_image">
+<meta property="og:image" content="og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Engineering.Kabuu — Netzqualität und EMV Messungen">
+<meta name="twitter:image" content="og-image.png">
 
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 210'><polygon points='100,14 176,58 176,152 100,196 24,152 24,58' fill='none' stroke='%234A505E' stroke-width='13' stroke-linejoin='round'/><path d='M 34 106 L 78 106 C 87 106 88 58 97 58 C 106 58 107 112 113 126 C 119 140 123 152 130 152 C 136 152 138 122 144 122 C 150 122 152 146 158 146' fill='none' stroke='%234A505E' stroke-width='9' stroke-linecap='round' stroke-linejoin='round'/><path d='M 157 40 L 116 116 L 131 121 L 84 184 L 103 118 L 90 113 Z' fill='%232A2F3A'/></svg>">
 
@@ -135,7 +150,7 @@ section+section{border-top:1px solid var(--ink-200)}
 .card p{margin-bottom:0;font-size:.93rem;color:var(--ink-700)}
 
 .facts{background:var(--surface);border:1px solid var(--ink-200);border-radius:var(--radius-lg);padding:1.5rem}
-.facts h2{font-size:.7rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-500);margin-bottom:.9rem}
+.facts h2,.facts h3{font-size:.7rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-500);margin-bottom:.9rem}
 .facts ul{list-style:none;margin:0;padding:0}
 .facts li{padding:.85rem 0;border-top:1px solid var(--ink-100);font-size:.92rem;color:var(--ink-700)}
 .facts li:first-child{border-top:none;padding-top:0}
@@ -219,14 +234,14 @@ ol.steps p{margin:0;font-size:.91rem;color:var(--ink-700);max-width:62ch}
 
 /* Kontakt-Aside */
 .contact-card{background:var(--surface);border:1px solid var(--ink-200);border-radius:var(--radius-lg);padding:1.5rem}
-.contact-card h2{font-size:.7rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-500);margin-bottom:.9rem}
+.contact-card h3{font-size:.7rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-500);margin-bottom:.9rem}
 .contact-card dl{margin:0}
 .contact-card dt{font-size:.8rem;color:var(--ink-500);margin-top:.9rem}
 .contact-card dt:first-of-type{margin-top:0}
 .contact-card dd{margin:.15rem 0 0;font-size:.93rem;color:var(--ink-800)}
 .contact-card address{font-style:normal}
 .dark-card{background:var(--anthrazit);color:var(--ink-200);border-color:var(--anthrazit)}
-.dark-card h2{color:var(--ink-300)}
+.dark-card h3{color:var(--ink-300)}
 .dark-card p{margin:0;font-size:.91rem;line-height:1.6}
 
 /* Danke-Sektion: nur sichtbar, wenn per #danke angesprungen */
@@ -643,7 +658,7 @@ footer address{font-style:normal;font-size:.9rem;color:var(--ink-700);margin-top
           akkreditierten Stelle vorliegt, hier ergänzen. Nur eintragen, was vorhanden ist.
         -->
         <div class="facts">
-          <h2>Ausstattung</h2>
+          <h3>Ausstattung</h3>
           <ul>
             <li>Für Netzqualitätsmessungen stehen eigene Messgeräte zur Verfügung, welche die Genauigkeitsklasse A nach IEC 61000-4-30 erfüllen. Dazu kommt das benötigte Zubehör: Stromwandler, Adapter und Sicherheitsausrüstung für Messungen im Niederspannungsbereich.</li>
             <li>Alle Messmittel werden alle zwei Jahre kalibriert. Das Kalibrierdatum wird in jedem Bericht ausgewiesen, damit die Messung auch Jahre später nachvollziehbar bleibt.</li>
@@ -656,7 +671,7 @@ footer address{font-style:normal;font-size:.9rem;color:var(--ink-700);margin-top
           wirkt dort stärker als die blosse Erwähnung. Angabe erst nach Abgleich mit der Police.
         -->
         <div class="facts">
-          <h2>Absicherung</h2>
+          <h3>Absicherung</h3>
           <ul><li>Für die Beratungs- und Gutachtertätigkeit besteht eine Berufshaftpflichtversicherung. Details zu Deckungssumme und Umfang werden auf Anfrage bekannt gegeben.</li></ul>
         </div>
         <!--
@@ -673,7 +688,7 @@ footer address{font-style:normal;font-size:.9rem;color:var(--ink-700);margin-top
           ausstellende Stelle, Jahr bzw. Gueltigkeit. Nichts erfinden.
         -->
         <div class="facts">
-          <h2>Qualifikationen</h2>
+          <h3>Qualifikationen</h3>
           <ul>
             <li><strong>Amateurfunk</strong>Amateurfunkzeugnis, Rufzeichen DO1BUU.</li>
             <li>Amateurfunk ist in diesem Zusammenhang keine Randnotiz. Wer selbst sendet und
@@ -684,7 +699,7 @@ footer address{font-style:normal;font-size:.9rem;color:var(--ink-700);margin-top
           </ul>
         </div>
         <div class="facts">
-          <h2>Referenzen</h2>
+          <h3>Referenzen</h3>
           <ul><li>Bis zur schriftlichen Freigabe werden Referenzen ausschliesslich anonymisiert genannt, zum Beispiel &laquo;Industriebetrieb Ostschweiz&raquo;.</li></ul>
         </div>
       </div>
@@ -705,7 +720,7 @@ footer address{font-style:normal;font-size:.9rem;color:var(--ink-700);margin-top
 
     <div class="grid split" style="margin-top:2rem">
       <div class="form-card">
-        <h2 id="form-h" style="font-size:1.15rem;letter-spacing:-0.015em;text-transform:none;color:var(--anthrazit)">Anfrage</h2>
+        <h3 id="form-h" style="font-size:1.15rem;letter-spacing:-0.015em;text-transform:none;color:var(--anthrazit)">Anfrage</h3>
         <p style="font-size:.9rem;color:var(--ink-700);margin-top:.4rem">
           Pflichtfelder mit <span class="req" aria-hidden="true">*</span> markiert. Rückmeldung in der Regel innert zwei Werktagen.
         </p>
@@ -775,7 +790,7 @@ footer address{font-style:normal;font-size:.9rem;color:var(--ink-700);margin-top
 
       <aside style="display:grid;gap:1rem">
         <div class="contact-card">
-          <h2>Direktkontakt</h2>
+          <h3>Direktkontakt</h3>
           <dl>
             <dt>E-Mail</dt>
             <dd><a href="mailto:engineering.kabuu@gmail.com">engineering.kabuu@gmail.com</a></dd>
@@ -792,7 +807,7 @@ footer address{font-style:normal;font-size:.9rem;color:var(--ink-700);margin-top
           </dl>
         </div>
         <div class="contact-card dark-card">
-          <h2>Antwortzeit</h2>
+          <h3>Antwortzeit</h3>
           <p>Antwort in der Regel innert zwei Werktagen. Bei akuten Prozessstörungen kurz per Telefon melden.</p>
         </div>
       </aside>

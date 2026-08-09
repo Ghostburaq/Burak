@@ -9,12 +9,12 @@ interface Props {
   noindex?: boolean;
 }
 const { title, description, path = '', jsonLd, noindex = false } = Astro.props;
-const base = Astro.site ?? `https://${site.domain}`;
+// Astro.site kommt aus astro.config.mjs und damit beim Netlify-Build aus der
+// Umgebungsvariable URL. Nichts von Hand einzutragen.
+const base = Astro.site!;
 const canonical = new URL(path, base).toString();
 const fullTitle = `${title} | ${site.brand}`;
-// TODO: Für Social-Previews zusätzlich ein PNG (1200x630) erzeugen. Viele
-// Plattformen rendern SVG als og:image nicht. Siehe OFFENE_PUNKTE.md.
-const ogImage = new URL('/logo/logo-lockup.svg', base).toString();
+const ogImage = new URL('/og-image.png', base).toString();
 ---
 
 <title>{fullTitle}</title>
@@ -28,8 +28,10 @@ const ogImage = new URL('/logo/logo-lockup.svg', base).toString();
 <meta property="og:site_name" content={site.brand} />
 <meta property="og:locale" content="de_CH" />
 <meta property="og:image" content={ogImage} />
-<meta property="og:image:alt" content={`Logo ${site.brand}`} />
-<meta name="twitter:card" content="summary" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content={`${site.brand} — Netzqualität und EMV Messungen`} />
+<meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content={fullTitle} />
 <meta name="twitter:description" content={description} />
 <meta name="twitter:image" content={ogImage} />

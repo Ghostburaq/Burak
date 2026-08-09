@@ -1,5 +1,0 @@
-User-agent: *
-Allow: /
-
-# TODO: Site-URL nach Domain-Wahl in astro.config.mjs setzen; Sitemap wird beim Build erzeugt.
-Sitemap: /sitemap-index.xml

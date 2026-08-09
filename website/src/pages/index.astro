@@ -9,13 +9,14 @@ const services = [
   { href: '/leistungen#gutachten',    title: 'Gutachten und Beweissicherung', text: 'Rechtsfest dokumentierte Messungen als Grundlage für Klärung und Entscheidung.' },
 ];
 
+const base = Astro.site!;
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'ProfessionalService',
   name: site.brand,
   description: 'Unabhängige Messungen und Beratung zu Netzqualität (Power Quality) und EMV in der Schweiz.',
-  logo: `https://${site.domain}/logo/logo-lockup.svg`,
-  image: `https://${site.domain}/logo/logo-lockup.svg`,
+  logo: new URL('/logo/logo-lockup.svg', base).toString(),
+  image: new URL('/og-image.png', base).toString(),
   founder: { '@type': 'Person', name: site.owner },
   areaServed: 'CH',
   address: {
@@ -27,7 +28,7 @@ const jsonLd = {
   },
   email: `mailto:${site.contact.email}`,
   telephone: site.contact.phoneLink,
-  url: `https://${site.domain}/`,
+  url: base.toString(),
 };
 ---
 

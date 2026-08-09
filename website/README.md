@@ -1,14 +1,14 @@
 # Homepage — Engineering.Kabuu (PQ &amp; EMV)
 
-Statische Homepage fuer einen unabhaengigen Ingenieur fuer Power Quality
-(Netzqualitaet) und EMV. Sitz Schweiz.
+Statische Homepage für einen unabhaengigen Ingenieur für Power Quality
+(Netzqualität) und EMV. Sitz Schweiz.
 
 - Framework: **Astro** (statisch) mit **Tailwind CSS**
 - Deutsch, Schweizer Schreibweise (ss)
 - Kein Blog, kein Shop, keine Tracker, kein Cookie-Banner
 - Rechtstexte (Kontakt/Impressum, Datenschutz nach revDSG, AGB nach OR) sind
   **pruefungsbeduerftige Entwuerfe**
-- Hosting: **Netlify** (Netlify Forms fuer das Kontaktformular)
+- Hosting: **Netlify** (Netlify Forms für das Kontaktformular)
 
 ---
 
@@ -32,7 +32,7 @@ Die `netlify.toml` im Projekt-Root ist bereits konfiguriert. Zwei Wege:
 
 1. In Netlify: **Add new site → Import an existing project**
 2. Repository verbinden (Ghostburaq/Burak), Branch waehlen
-3. Netlify uebernimmt aus der `netlify.toml`:
+3. Netlify übernimmt aus der `netlify.toml`:
    - **Base directory**: `website`
    - **Build command**: `npm run build`
    - **Publish directory**: `website/dist`
@@ -59,8 +59,12 @@ netlify deploy --prod --dir=dist
    auf die Netlify-Adresse).
 4. In den Domain-Einstellungen die `netlify.app`-Subdomain auf die eigene Domain
    weiterleiten lassen (verhindert doppelten Inhalt).
-5. Domain in `astro.config.mjs` bei `SITE_URL` und in `src/lib/site.ts` bei
-   `domain` eintragen und neu deployen (Sitemap und Canonical-URLs stimmen dann).
+
+**Es muss nichts im Code eingetragen werden.** Die Site-URL kommt beim Build aus
+der Netlify-Umgebungsvariable `URL`, siehe `astro.config.mjs`. Canonical-Links,
+`sitemap.xml`, `robots.txt` und `og:image` zeigen nach dem nächsten Deploy
+automatisch auf die richtige Adresse. Lokal wird auf `http://localhost:4321`
+zurückgefallen.
 
 ## Netlify Forms
 
@@ -92,7 +96,9 @@ Das Kontaktformular ist als statisches Netlify-Formular ausgezeichnet
 | Design-Tokens (Farben, Fonts)   | `src/styles/global.css`, `tailwind.config.mjs`         |
 | Layout / Header / Footer        | `src/layouts/BaseLayout.astro`, `src/components/`      |
 | Logo-Komponente (Lockup)        | `src/components/Logo.astro`                            |
-| Robots, Favicon, Logo-Dateien   | `public/`, `public/logo/`                              |
+| Vorschaubild (Social)           | `scripts/make-og-image.py` → `public/og-image.png`     |
+| robots.txt (dynamisch)          | `src/pages/robots.txt.ts`                              |
+| Favicon, Logo-Dateien           | `public/`, `public/logo/`                              |
 | Security-Header und CSP         | `netlify.toml`                                         |
 
 ## Farbtokens (aus dem Logo)
@@ -102,22 +108,40 @@ Das Kontaktformular ist als statisches Netlify-Formular ausgezeichnet
 | signal-violett  | `#3317E9` | Primaerer Akzent (Links, Buttons, aktive Zustaende) |
 | signal-magenta  | `#900B6F` | Sekundaer, sparsam                                 |
 | signal-rot      | `#E2081B` | Nur Warn-/Stoerungsbezug                            |
-| rahmen-stahl    | `#959AAF` | Nur dekorativ (Trenner, Rahmen). Nie fuer Text.     |
+| rahmen-stahl    | `#959AAF` | Nur dekorativ (Trenner, Rahmen). Nie für Text.     |
 | anthrazit       | `#12151A` | Fliesstext und Ueberschriften                      |
+
+## Vorschaubild neu erzeugen
+
+`public/og-image.png` (1200x630) wird beim Teilen des Links angezeigt. Es wird
+aus derselben Geometrie gezeichnet wie `public/logo/mark.svg`:
+
+```bash
+pip install Pillow
+python3 scripts/make-og-image.py
+```
+
+## Einzeldatei-Fassung
+
+Neben dieser Astro-Fassung liegt unter [`../netlify-single/`](../netlify-single/)
+dieselbe Website als **eine einzelne HTML-Datei** zum Hochladen per
+Drag-and-drop. Anleitung dort in `DEPLOY.md`. Beide Fassungen werden parallel
+gepflegt und haben denselben Inhalt.
 
 ## Offene Punkte
 
 **Alle** offenen Fragen (Domain, SVG-Logo, Handelsregister-Frage, Netlify-DPA,
-MWST-Klaerung, Rechtstext-Freigabe) sind zentral in
-[`OFFENE_PUNKTE.md`](./OFFENE_PUNKTE.md) gesammelt. Zusaetzlich sind Luecken im
-Code als `TODO:` markiert.
+MWST-Klärung, Rechtstext-Freigabe) sind zentral in
+[`OFFENE_PUNKTE.md`](./OFFENE_PUNKTE.md) gesammelt. Zusaetzlich sind Luecken als
+`TODO:`-Kommentare im Code markiert. Im ausgelieferten HTML ist kein sichtbares
+`TODO:` mehr enthalten.
 
 ## Grundhaltung
 
 - Nichts wird erfunden. Keine Kundennamen, keine Preise, keine Zertifikate,
   keine Normgrenzwerte ohne belegte Quelle. Alles Unbelegte ist `TODO:`.
-- Norm-Bezug klar: das **Messgeraet** (Camille Bauer Metrawatt PQMobile5000)
-  erfuellt die Genauigkeitsklasse A nach IEC 61000-4-30. Nicht die Person
-  &laquo;ist Class A zertifiziert&raquo;.
+- Norm-Bezug klar: das **Messgerät** erfüllt die Genauigkeitsklasse A nach
+  IEC 61000-4-30. Nicht die Person &laquo;ist Class A zertifiziert&raquo;.
+  Fabrikate und Typenbezeichnungen werden bewusst nirgends genannt.
 - Referenzen bleiben anonymisiert bis zur schriftlichen Freigabe.
 - Rechtstexte sind Schweizer Recht (revDSG, OR). Keine deutschen Rechtsbegriffe.
