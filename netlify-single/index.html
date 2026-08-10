@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#12151A">
 <title>Engineering.Kabuu — Netzqualität und EMV messen, bevor investiert wird</title>
-<meta name="description" content="Unabhängige Messungen und Beratung zu Netzqualität (Power Quality) und EMV. Messgerät nach IEC 61000-4-30 Klasse A, Bewertung nach EN 50160. Sitz Schweiz.">
+<meta name="description" content="Unabhängige Messungen und Beratung zu Netzqualität (Power Quality) und EMV. Messgeräte der Genauigkeitsklasse A nach IEC 61000-4-30, Bewertung nach EN 50160. Sitz Schweiz.">
 <meta name="author" content="Burak Ücöz">
 
 <!--
@@ -56,267 +56,413 @@
 </script>
 
 <style>
+/* ==========================================================================
+   Design-Tokens. Farben aus dem Logo (BRIEF Abschnitt 2), Layout-Sprache
+   angelehnt an grosse Hersteller-Startseiten: breite Buehne, Kachelraster,
+   viel Weissraum, runde Ecken, ruhige Bewegung.
+   ========================================================================== */
 :root{
   --violett:#3317E9;
-  --violett-dark:#2611B8;
+  --violett-hell:#4A32F0;
+  --violett-tief:#1B0C8C;
   --magenta:#900B6F;
+  --magenta-tief:#4A0639;
   --rot:#E2081B;
   --stahl:#959AAF;
   --anthrazit:#12151A;
 
+  --ink-900:#12151A;
   --ink-800:#1E2129;
   --ink-700:#3A3F4B;
   --ink-500:#606775;
+  --ink-400:#7C8390;
   --ink-300:#B4B8C2;
   --ink-200:#D9DBE1;
   --ink-100:#EDEEF1;
   --ink-50:#F7F8FA;
-  --surface:#FFFFFF;
+  --weiss:#FFFFFF;
 
-  --radius:10px;
-  --radius-lg:14px;
-  --maxw:72rem;
+  --r-sm:8px; --r:14px; --r-lg:22px; --r-xl:28px;
+  --maxw:1440px;
+  --pad:1.25rem;
+
+  --kopf:60px;
+  --ease:cubic-bezier(.22,.61,.36,1);
   color-scheme:light;
 }
+@media(min-width:768px){ :root{ --pad:2.5rem; --kopf:68px; } }
+
 *,*::before,*::after{box-sizing:border-box}
-html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;scroll-padding-top:88px}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;scroll-padding-top:calc(var(--kopf) + 12px)}
 body{
-  margin:0;background:var(--ink-50);color:var(--anthrazit);
+  margin:0;background:var(--weiss);color:var(--ink-900);
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,ui-sans-serif,system-ui,sans-serif;
   line-height:1.55;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  overflow-x:hidden;
 }
-h1,h2,h3,h4{margin:0;color:var(--anthrazit);line-height:1.18;letter-spacing:-0.015em;font-weight:600}
-h1{font-size:clamp(1.85rem,4.4vw,3rem);line-height:1.1;letter-spacing:-0.025em}
-h2{font-size:clamp(1.4rem,2.6vw,1.9rem)}
-h3{font-size:1.125rem}
+h1,h2,h3,h4{margin:0;color:inherit;font-weight:700;letter-spacing:-.028em;line-height:1.1}
+h1{font-size:clamp(2.1rem,5.6vw,4.1rem);letter-spacing:-.038em;line-height:1.03}
+h2{font-size:clamp(1.7rem,3.6vw,2.9rem);letter-spacing:-.032em}
+h3{font-size:clamp(1.05rem,1.5vw,1.3rem);letter-spacing:-.02em}
 p{margin:0 0 1rem}
 a{color:var(--violett);text-decoration:none}
 a:hover{text-decoration:underline;text-underline-offset:3px}
-:focus-visible{outline:2px solid var(--violett);outline-offset:2px;border-radius:4px}
+:focus-visible{outline:3px solid var(--violett);outline-offset:3px;border-radius:6px}
 ::selection{background:var(--violett);color:#fff}
 img,svg{max-width:100%}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 var(--pad)}
+.eng{max-width:1180px;margin:0 auto}
 
-.wrap{max-width:var(--maxw);margin:0 auto;padding:0 1.25rem}
-@media(min-width:768px){.wrap{padding:0 2rem}}
-
-/* ---------- Header ---------- */
-header.site{position:sticky;top:0;z-index:40;background:rgba(255,255,255,.92);
-  backdrop-filter:saturate(180%) blur(10px);-webkit-backdrop-filter:saturate(180%) blur(10px);
-  border-bottom:1px solid var(--ink-200)}
-.bar{display:flex;align-items:center;justify-content:space-between;gap:1.25rem;padding:.7rem 0}
-.brand{display:inline-flex;align-items:center;gap:.6rem;text-decoration:none;color:var(--anthrazit)}
-.brand:hover{text-decoration:none}
-.brand .mark{width:34px;height:auto;flex:none}
-.brand .words{display:flex;flex-direction:column;line-height:1}
-.brand .name{font-size:1.05rem;font-weight:600;letter-spacing:-0.02em}
-.brand .sub{margin-top:.18rem;font-size:.6rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-500)}
-nav.primary ul{display:none;list-style:none;margin:0;padding:0;gap:1.4rem;align-items:center}
-@media(min-width:900px){nav.primary ul{display:flex}}
-nav.primary a{color:var(--ink-700);font-size:.9rem;text-decoration:none}
-nav.primary a:hover{color:var(--violett);text-decoration:none}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:.4rem;
-  padding:.6rem 1.05rem;border-radius:var(--radius);font-size:.9rem;font-weight:500;
-  text-decoration:none;border:1px solid transparent;cursor:pointer;font-family:inherit;
-  transition:background .15s,border-color .15s,color .15s}
-.btn:hover{text-decoration:none}
-.btn-primary{background:var(--violett);color:#fff}
-.btn-primary:hover{background:var(--violett-dark)}
-.btn-outline{background:#fff;color:var(--anthrazit);border-color:var(--ink-300)}
-.btn-outline:hover{border-color:var(--anthrazit)}
-.menu{border-top:1px solid var(--ink-100)}
-@media(min-width:900px){.menu{display:none}}
-.menu summary{cursor:pointer;list-style:none;padding:.7rem 0;font-size:.9rem;color:var(--ink-700)}
-.menu summary::-webkit-details-marker{display:none}
-.menu ul{list-style:none;margin:0;padding:0 0 .9rem}
-.menu li a{display:block;padding:.5rem .4rem;border-radius:6px;color:var(--ink-700);font-size:.92rem;text-decoration:none}
-.menu li a:hover{background:var(--ink-100);text-decoration:none}
-
-/* ---------- Sections ---------- */
-main{padding:2.5rem 0 0}
-section{padding:3.25rem 0;scroll-margin-top:88px}
-section+section{border-top:1px solid var(--ink-200)}
-.kicker{margin:0 0 .7rem;font-size:.7rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--violett)}
-.lead{max-width:66ch;font-size:1.08rem;color:var(--ink-700)}
-.btn-row{display:flex;flex-wrap:wrap;gap:.7rem;margin-top:1.75rem}
-
-.grid{display:grid;gap:1.5rem}
-@media(min-width:900px){
-  .grid.split{grid-template-columns:1.35fr 1fr;gap:2.5rem;align-items:start}
-  .grid.two{grid-template-columns:repeat(2,1fr)}
+/* ---------- Kopfzeile ---------- */
+header.top{
+  position:sticky;top:0;z-index:60;height:var(--kopf);
+  background:rgba(255,255,255,.86);
+  backdrop-filter:saturate(180%) blur(14px);-webkit-backdrop-filter:saturate(180%) blur(14px);
+  border-bottom:1px solid transparent;transition:border-color .3s,background .3s;
 }
+header.top.scrolled{border-bottom-color:var(--ink-200);background:rgba(255,255,255,.96)}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:1rem;height:var(--kopf)}
+.brand{display:inline-flex;align-items:center;gap:.6rem;color:var(--ink-900);text-decoration:none}
+.brand:hover{text-decoration:none}
+.brand svg{width:30px;height:auto;flex:none}
+.brand .wort{font-size:1.12rem;font-weight:700;letter-spacing:-.03em;line-height:1}
+.brand .eng-sub{display:block;font-size:.56rem;font-weight:700;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--ink-500);margin-top:.2rem}
+nav.haupt ul{display:none;list-style:none;margin:0;padding:0;gap:.35rem;align-items:center}
+@media(min-width:1000px){nav.haupt ul{display:flex}}
+nav.haupt a{display:block;padding:.5rem .9rem;border-radius:999px;color:var(--ink-800);
+  font-size:.9rem;font-weight:500;text-decoration:none;transition:background .2s,color .2s}
+nav.haupt a:hover{background:var(--ink-100);color:var(--ink-900);text-decoration:none}
+.kopf-cta{display:none}
+@media(min-width:560px){
+  .kopf-cta{display:inline-flex;align-items:center;padding:.55rem 1.15rem;border-radius:999px;
+    background:var(--ink-900);color:#fff;font-size:.87rem;font-weight:600;text-decoration:none;
+    transition:background .2s,transform .2s}
+  .kopf-cta:hover{background:var(--violett);text-decoration:none;transform:translateY(-1px)}
+}
+.burger{display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;
+  border:0;background:transparent;border-radius:999px;cursor:pointer;color:var(--ink-900)}
+.burger:hover{background:var(--ink-100)}
+@media(min-width:1000px){.burger{display:none}}
+#mobilnav{display:none;border-top:1px solid var(--ink-200);background:#fff}
+#mobilnav.offen{display:block}
+#mobilnav ul{list-style:none;margin:0;padding:.6rem 0 1.2rem}
+#mobilnav a{display:block;padding:.7rem var(--pad);color:var(--ink-800);font-size:1rem;
+  font-weight:500;text-decoration:none}
+#mobilnav a:hover{background:var(--ink-50);text-decoration:none}
 
-.card{background:var(--surface);border:1px solid var(--ink-200);border-radius:var(--radius-lg);padding:1.5rem}
-.card h3{margin-bottom:.5rem}
-.card p{margin-bottom:0;font-size:.93rem;color:var(--ink-700)}
+/* ---------- Knoepfe ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;
+  padding:.85rem 1.7rem;border-radius:999px;font-size:.97rem;font-weight:600;
+  text-decoration:none;border:1.5px solid transparent;cursor:pointer;font-family:inherit;
+  transition:background .22s var(--ease),color .22s,border-color .22s,transform .22s var(--ease)}
+.btn:hover{text-decoration:none;transform:translateY(-2px)}
+.btn-dunkel{background:var(--ink-900);color:#fff}
+.btn-dunkel:hover{background:var(--violett)}
+.btn-hell{background:#fff;color:var(--ink-900)}
+.btn-hell:hover{background:var(--ink-100)}
+.btn-linie-hell{border-color:rgba(255,255,255,.75);color:#fff}
+.btn-linie-hell:hover{background:rgba(255,255,255,.14)}
+.btn-linie{border-color:var(--ink-300);color:var(--ink-900);background:#fff}
+.btn-linie:hover{border-color:var(--ink-900)}
+.mehr{display:inline-flex;align-items:center;gap:.35rem;font-weight:600;font-size:.93rem;
+  color:var(--violett);text-decoration:none}
+.mehr::after{content:"›";font-size:1.35em;line-height:0;transition:transform .2s var(--ease)}
+.mehr:hover{text-decoration:none}
+.mehr:hover::after{transform:translateX(4px)}
 
-.facts{background:var(--surface);border:1px solid var(--ink-200);border-radius:var(--radius-lg);padding:1.5rem}
-.facts h2,.facts h3{font-size:.7rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-500);margin-bottom:.9rem}
-.facts ul{list-style:none;margin:0;padding:0}
-.facts li{padding:.85rem 0;border-top:1px solid var(--ink-100);font-size:.92rem;color:var(--ink-700)}
-.facts li:first-child{border-top:none;padding-top:0}
-.facts li:last-child{padding-bottom:0}
-.facts strong{display:block;color:var(--anthrazit);font-weight:600;margin-bottom:.15rem}
+/* ==========================================================================
+   Buehne / Slider
+   ========================================================================== */
+.buehne{position:relative;isolation:isolate;background:var(--ink-900)}
+.folien{position:relative;height:clamp(500px,78vh,760px)}
+.folie{position:absolute;inset:0;display:flex;align-items:center;overflow:auto;
+  padding:calc(var(--kopf) + 1.25rem) 0 5.5rem;
+  opacity:0;visibility:hidden;transition:opacity .8s var(--ease),visibility .8s}
+.folie>.wrap{width:100%;position:relative;z-index:1}
+.folie>.wrap.eng{max-width:1180px}
+.folie.aktiv{opacity:1;visibility:visible}
+.folie-inhalt{max-width:640px;color:#fff}
+.folie .kicker{display:inline-block;font-size:.7rem;font-weight:700;letter-spacing:.2em;
+  text-transform:uppercase;padding:.4rem .85rem;border-radius:999px;
+  background:rgba(255,255,255,.15);backdrop-filter:blur(6px);margin-bottom:1.3rem}
+.folie h1,.folie h2{color:#fff;margin-bottom:1.1rem}
+.folie p{color:rgba(255,255,255,.82);font-size:clamp(1rem,1.5vw,1.2rem);max-width:52ch}
+.folie .knopfreihe{display:flex;flex-wrap:wrap;gap:.75rem;margin-top:2rem}
+/* Einflug-Animation je Folie */
+.folie .folie-inhalt>*{opacity:0;transform:translateY(26px)}
+.folie.aktiv .folie-inhalt>*{animation:einflug .7s var(--ease) forwards}
+.folie.aktiv .folie-inhalt>*:nth-child(1){animation-delay:.10s}
+.folie.aktiv .folie-inhalt>*:nth-child(2){animation-delay:.19s}
+.folie.aktiv .folie-inhalt>*:nth-child(3){animation-delay:.28s}
+.folie.aktiv .folie-inhalt>*:nth-child(4){animation-delay:.37s}
+@keyframes einflug{to{opacity:1;transform:none}}
 
-.pills{list-style:none;margin:1.4rem 0 0;padding:0;display:grid;gap:.6rem;grid-template-columns:1fr}
-@media(min-width:600px){.pills{grid-template-columns:repeat(2,1fr)}}
-@media(min-width:900px){.pills{grid-template-columns:repeat(3,1fr)}}
-.pills li{background:var(--surface);border:1px solid var(--ink-200);border-radius:var(--radius);padding:.75rem 1rem;font-size:.9rem;color:var(--ink-800)}
+/* Folien-Hintergruende, gedeckt gehalten */
+.bg-1{background:
+  radial-gradient(120% 100% at 78% 22%, rgba(74,50,240,.55), transparent 62%),
+  linear-gradient(140deg,#1B0C8C 0%,#12151A 62%)}
+.bg-2{background:
+  radial-gradient(110% 90% at 15% 85%, rgba(149,154,175,.30), transparent 60%),
+  linear-gradient(160deg,#1E2129 0%,#0B0D11 70%)}
+.bg-3{background:
+  radial-gradient(120% 100% at 82% 78%, rgba(144,11,111,.55), transparent 60%),
+  linear-gradient(140deg,#4A0639 0%,#12151A 66%)}
+.bg-4{background:linear-gradient(140deg,#2A2F3A 0%,#12151A 70%)}
+/* dezente Signalkurve im Hintergrund */
+.folie .welle{position:absolute;inset:0;z-index:0;opacity:.18;pointer-events:none;
+  display:flex;align-items:center;justify-content:flex-end}
+.folie .welle svg{width:min(58%,720px);height:auto;transform:translateX(8%)}
 
-.tiles{list-style:none;margin:1.5rem 0 0;padding:0;display:grid;gap:1rem}
-@media(min-width:768px){.tiles{grid-template-columns:repeat(2,1fr)}}
-.tiles a{display:block;height:100%;background:var(--surface);border:1px solid var(--ink-200);
-  border-radius:var(--radius-lg);padding:1.5rem;text-decoration:none;transition:border-color .15s}
-.tiles a:hover{border-color:var(--anthrazit);text-decoration:none}
-.tiles h3{color:var(--anthrazit);margin-bottom:.45rem}
-.tiles p{font-size:.92rem;color:var(--ink-700);margin-bottom:.9rem}
-.tiles .more{font-size:.87rem;color:var(--violett);font-weight:500}
+/* Steuerung */
+.steuerung{position:absolute;left:0;right:0;bottom:1.5rem;z-index:5}
+.steuerleiste{display:flex;align-items:center;gap:.8rem}
+.punkte{display:flex;gap:.55rem;flex:1;max-width:340px}
+.punkt{position:relative;flex:1;height:3px;border:0;padding:0;cursor:pointer;
+  background:rgba(255,255,255,.3);border-radius:99px;overflow:hidden}
+.punkt span{position:absolute;inset:0;transform-origin:left;transform:scaleX(0);
+  background:#fff;border-radius:99px}
+.punkt[aria-current="true"] span{animation:fortschritt var(--dauer,6s) linear forwards}
+.punkt.gestoppt[aria-current="true"] span{animation-play-state:paused}
+@keyframes fortschritt{to{transform:scaleX(1)}}
+.s-knopf{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;
+  border-radius:999px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.08);
+  color:#fff;cursor:pointer;transition:background .2s}
+.s-knopf:hover{background:rgba(255,255,255,.22)}
+.s-knopf svg{width:15px;height:15px;fill:currentColor}
 
-/* Logo-Trennmotiv */
-.logo-rule{display:flex;align-items:center;gap:1.5rem;margin:3rem 0 0}
-.logo-rule .line{flex:1;height:1px;background:var(--ink-200)}
-.logo-rule svg{width:50px;height:auto;flex:none}
+/* ==========================================================================
+   Abschnitte
+   ========================================================================== */
+section{padding:clamp(3.5rem,8vw,7rem) 0;scroll-margin-top:calc(var(--kopf) + 8px)}
+.hell{background:var(--weiss)}
+.grau{background:var(--ink-50)}
+.dunkel{background:var(--ink-900);color:#fff}
+.dunkel h2,.dunkel h3{color:#fff}
+.dunkel p{color:rgba(255,255,255,.72)}
+.kopfzeile{max-width:760px;margin-bottom:clamp(2rem,4vw,3.25rem)}
+.augbraue{display:block;font-size:.72rem;font-weight:700;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--violett);margin-bottom:.9rem}
+.dunkel .augbraue{color:var(--stahl)}
+.fuehrer{font-size:clamp(1.02rem,1.4vw,1.18rem);color:var(--ink-700);max-width:64ch;margin-top:1.1rem}
+.dunkel .fuehrer{color:rgba(255,255,255,.72)}
 
-/* Leistungsblöcke */
-.service{background:var(--surface);border:1px solid var(--ink-200);border-radius:var(--radius-lg);
-  padding:1.5rem;margin-top:1rem;scroll-margin-top:96px}
-@media(min-width:768px){.service{padding:1.9rem}}
-.service h3{font-size:1.2rem;margin-bottom:1.1rem}
-.dl{display:grid;gap:1.25rem;margin:0}
-@media(min-width:768px){.dl{grid-template-columns:repeat(3,1fr)}}
-.dl dt{font-size:.68rem;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-500);margin-bottom:.4rem}
-.dl dd{margin:0;font-size:.91rem;color:var(--ink-800);line-height:1.6}
+/* Kachelraster */
+.raster{display:grid;gap:1rem}
+@media(min-width:640px){.raster.k2{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:900px){
+  .raster.k3{grid-template-columns:repeat(3,1fr)}
+  .raster.k4{grid-template-columns:repeat(4,1fr)}
+}
+.kachel{position:relative;display:flex;flex-direction:column;background:var(--ink-50);
+  border-radius:var(--r-lg);padding:1.75rem;text-decoration:none;color:inherit;overflow:hidden;
+  transition:transform .35s var(--ease),box-shadow .35s var(--ease),background .3s}
+.hell .kachel{background:var(--ink-50)}
+.grau .kachel{background:#fff}
+.dunkel .kachel{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10)}
+a.kachel:hover{transform:translateY(-6px);box-shadow:0 22px 50px -22px rgba(18,21,26,.35);text-decoration:none}
+.dunkel a.kachel:hover{background:rgba(255,255,255,.11)}
+.kachel h3{margin-bottom:.6rem}
+.kachel p{font-size:.95rem;color:var(--ink-700);margin-bottom:0}
+.dunkel .kachel p{color:rgba(255,255,255,.7)}
+.kachel .mehr{margin-top:1.4rem}
+.kachel .nr{font-size:.75rem;font-weight:700;letter-spacing:.16em;color:var(--violett);
+  margin-bottom:.9rem;display:block}
+.dunkel .kachel .nr{color:var(--stahl)}
 
-/* Ablauf-Schritte */
-ol.steps{list-style:none;margin:1.75rem 0 0;padding:0;display:grid;gap:.8rem}
-ol.steps li{display:flex;gap:1.25rem;align-items:flex-start;background:var(--surface);
-  border:1px solid var(--ink-200);border-radius:var(--radius-lg);padding:1.4rem 1.5rem}
-ol.steps .num{flex:none;font-variant-numeric:tabular-nums;font-weight:700;font-size:.88rem;
-  color:var(--violett);min-width:2rem;padding-top:.15rem}
-ol.steps h3{margin-bottom:.3rem}
-ol.steps p{margin:0;font-size:.91rem;color:var(--ink-700);max-width:62ch}
+/* Wer-Leiste */
+.chips{display:flex;flex-wrap:wrap;gap:.6rem;list-style:none;margin:0;padding:0}
+.chips li{padding:.7rem 1.15rem;border-radius:999px;background:var(--ink-50);
+  border:1px solid var(--ink-200);font-size:.92rem;font-weight:500}
+.grau .chips li{background:#fff}
 
-/* Hinweisboxen */
-.note{background:var(--ink-100);border:1px solid var(--ink-200);border-radius:var(--radius);
-  padding:1.15rem 1.35rem;font-size:.91rem;color:var(--ink-700);line-height:1.6;margin-top:1.75rem}
-.note strong{color:var(--anthrazit)}
-.draft{border:1px solid rgba(144,11,111,.35);background:rgba(144,11,111,.05);color:var(--magenta);
-  border-radius:var(--radius);padding:.9rem 1.1rem;font-size:.9rem;line-height:1.55;margin:0 0 1.75rem}
-.draft strong{color:var(--magenta)}
+/* Kennzahlen */
+.kennzahlen{display:grid;gap:1rem;grid-template-columns:1fr}
+@media(min-width:640px){.kennzahlen{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:1000px){.kennzahlen{grid-template-columns:repeat(4,1fr)}}
+.kz{padding:1.75rem;border-radius:var(--r-lg);background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.10)}
+.kz b{display:block;font-size:clamp(1.5rem,2.6vw,2rem);font-weight:700;letter-spacing:-.03em;color:#fff}
+.kz span{display:block;margin-top:.5rem;font-size:.92rem;color:rgba(255,255,255,.66);line-height:1.5}
 
-/* CTA-Band */
-.band{margin-top:3rem;background:var(--anthrazit);color:#fff;border-radius:var(--radius-lg);padding:2rem}
-@media(min-width:768px){.band{padding:2.5rem}}
-.band h2{color:#fff}
-.band p{color:var(--ink-300);max-width:56ch;margin-top:.75rem}
-.band .btn-primary{background:var(--violett)}
-.band .btn-primary:hover{background:#4a30ef}
+/* Leistungs-Detail */
+.leistung{background:#fff;border-radius:var(--r-lg);padding:1.75rem;
+  border:1px solid var(--ink-200);scroll-margin-top:calc(var(--kopf) + 20px)}
+@media(min-width:768px){.leistung{padding:2.25rem}}
+.grau .leistung{background:#fff}
+.leistung h3{font-size:clamp(1.15rem,1.9vw,1.5rem);margin-bottom:1.3rem}
+.dreispalt{display:grid;gap:1.5rem;margin:0}
+@media(min-width:820px){.dreispalt{grid-template-columns:repeat(3,1fr);gap:2rem}}
+.dreispalt dt{font-size:.68rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;
+  color:var(--ink-500);margin-bottom:.5rem}
+.dreispalt dd{margin:0;font-size:.93rem;color:var(--ink-700);line-height:1.65}
+
+/* Ablauf */
+.schritte{list-style:none;margin:0;padding:0;display:grid;gap:1rem}
+@media(min-width:768px){.schritte{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:1200px){.schritte{grid-template-columns:repeat(3,1fr)}}
+.schritt{background:#fff;border:1px solid var(--ink-200);border-radius:var(--r-lg);padding:1.75rem;
+  transition:transform .3s var(--ease),box-shadow .3s var(--ease)}
+.schritt:hover{transform:translateY(-4px);box-shadow:0 18px 40px -20px rgba(18,21,26,.28)}
+.schritt .nr{display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;
+  border-radius:12px;background:var(--violett);color:#fff;font-weight:700;font-size:.92rem;
+  font-variant-numeric:tabular-nums;margin-bottom:1.1rem}
+.schritt h3{margin-bottom:.5rem}
+.schritt p{font-size:.93rem;color:var(--ink-700);margin:0}
+
+/* FAQ */
+.faq{border-top:1px solid var(--ink-200)}
+.faq details{border-bottom:1px solid var(--ink-200)}
+.faq summary{display:flex;align-items:flex-start;justify-content:space-between;gap:1.5rem;
+  padding:1.5rem 0;cursor:pointer;list-style:none;font-size:clamp(1rem,1.5vw,1.18rem);
+  font-weight:600;letter-spacing:-.015em}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";flex:none;font-size:1.6rem;font-weight:400;line-height:1;
+  color:var(--violett);transition:transform .25s var(--ease)}
+.faq details[open] summary::after{transform:rotate(45deg)}
+.faq .antwort{padding:0 0 1.6rem;max-width:70ch}
+.faq .antwort p{font-size:.97rem;color:var(--ink-700)}
+.faq .antwort p:last-child{margin-bottom:0}
+
+/* Zweispalter */
+.zwei{display:grid;gap:2.5rem}
+@media(min-width:1000px){.zwei{grid-template-columns:1.45fr 1fr;gap:3.5rem;align-items:start}}
+.karte{background:var(--ink-50);border-radius:var(--r-lg);padding:1.75rem}
+.hell .karte{background:var(--ink-50)}
+.grau .karte{background:#fff}
+.karte h3{font-size:.72rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;
+  color:var(--ink-500);margin-bottom:1rem}
+.karte p{font-size:.93rem;color:var(--ink-700)}
+.karte p:last-child{margin-bottom:0}
+.karte .betont{font-weight:600;color:var(--ink-900);margin-bottom:.3rem}
+.fliess h3{font-size:clamp(1.05rem,1.6vw,1.28rem);margin:2rem 0 .6rem}
+.fliess h3:first-child{margin-top:0}
+.fliess p,.fliess li{color:var(--ink-700)}
+.fliess ul{padding-left:1.25rem;margin:0 0 1rem}
+.fliess li{margin-bottom:.45rem}
 
 /* Formular */
-.form-card{background:var(--surface);border:1px solid var(--ink-200);border-radius:var(--radius-lg);padding:1.5rem}
-@media(min-width:768px){.form-card{padding:1.9rem}}
-.form-card h2{font-size:1.15rem}
-.field{display:block;margin-bottom:1.1rem}
-.field>span{display:block;font-size:.86rem;font-weight:500;color:var(--anthrazit);margin-bottom:.35rem}
-.field input,.field textarea,.field select{width:100%;padding:.65rem .8rem;border:1px solid var(--ink-300);
-  border-radius:var(--radius);background:#fff;color:var(--anthrazit);font:inherit;font-size:.93rem}
-.field input:focus,.field textarea:focus,.field select:focus{outline:2px solid var(--violett);outline-offset:0;border-color:var(--violett)}
-.field ::placeholder{color:var(--ink-500)}
-.row{display:grid;gap:0}
-@media(min-width:600px){.row{grid-template-columns:1fr 1fr;gap:1rem}}
-@media(min-width:600px){.row-3{grid-template-columns:repeat(3,1fr)}}
-.req{color:var(--violett)}
-.consent{display:flex;gap:.65rem;align-items:flex-start;font-size:.88rem;color:var(--ink-700);
-  line-height:1.55;margin:.25rem 0 1.4rem}
-.consent input{width:auto;margin-top:.28rem;flex:none;accent-color:var(--violett)}
+.formkarte{background:#fff;border:1px solid var(--ink-200);border-radius:var(--r-lg);padding:1.75rem}
+@media(min-width:768px){.formkarte{padding:2.25rem}}
+.feld{display:block;margin-bottom:1.15rem}
+.feld>span{display:block;font-size:.85rem;font-weight:600;color:var(--ink-800);margin-bottom:.4rem}
+.feld input,.feld textarea,.feld select{width:100%;padding:.8rem 1rem;border:1.5px solid var(--ink-200);
+  border-radius:var(--r);background:var(--ink-50);color:var(--ink-900);font:inherit;font-size:.95rem;
+  transition:border-color .2s,background .2s}
+.feld input:focus,.feld textarea:focus,.feld select:focus{outline:none;border-color:var(--violett);
+  background:#fff;box-shadow:0 0 0 4px rgba(51,23,233,.10)}
+.feld ::placeholder{color:var(--ink-400)}
+.reihe{display:grid;gap:0}
+@media(min-width:620px){.reihe{grid-template-columns:1fr 1fr;gap:1rem}
+  .reihe.r3{grid-template-columns:repeat(3,1fr)}}
+.pflicht{color:var(--violett)}
+.zustimmung{display:flex;gap:.7rem;align-items:flex-start;font-size:.9rem;color:var(--ink-700);
+  line-height:1.6;margin:.4rem 0 1.5rem}
+.zustimmung input{width:auto;margin-top:.3rem;flex:none;accent-color:var(--violett);
+  width:18px;height:18px}
 .hp{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
   clip:rect(0 0 0 0);white-space:nowrap;border:0}
-.form-foot{font-size:.78rem;color:var(--ink-500);margin:.9rem 0 0}
+.formfuss{font-size:.8rem;color:var(--ink-500);margin:1rem 0 0}
 
-/* Kontakt-Aside */
-.contact-card{background:var(--surface);border:1px solid var(--ink-200);border-radius:var(--radius-lg);padding:1.5rem}
-.contact-card h3{font-size:.7rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-500);margin-bottom:.9rem}
-.contact-card dl{margin:0}
-.contact-card dt{font-size:.8rem;color:var(--ink-500);margin-top:.9rem}
-.contact-card dt:first-of-type{margin-top:0}
-.contact-card dd{margin:.15rem 0 0;font-size:.93rem;color:var(--ink-800)}
-.contact-card address{font-style:normal}
-.dark-card{background:var(--anthrazit);color:var(--ink-200);border-color:var(--anthrazit)}
-.dark-card h3{color:var(--ink-300)}
-.dark-card p{margin:0;font-size:.91rem;line-height:1.6}
+/* Kontaktdaten */
+.kontaktliste{margin:0}
+.kontaktliste dt{font-size:.78rem;color:var(--ink-500);margin-top:1.1rem}
+.kontaktliste dt:first-of-type{margin-top:0}
+.kontaktliste dd{margin:.2rem 0 0;font-size:.98rem;font-weight:500}
+.kontaktliste address{font-style:normal;font-weight:400;color:var(--ink-700);line-height:1.7}
 
-/* Danke-Sektion: nur sichtbar, wenn per #danke angesprungen */
-#danke{display:none;padding-top:2.5rem}
+/* Bestaetigung nach Formularversand */
+#danke{display:none}
 #danke:target{display:block}
-.danke-inner{max-width:62ch;margin:0 auto;text-align:center;background:var(--surface);
-  border:1px solid var(--ink-200);border-radius:var(--radius-lg);padding:2.25rem 1.75rem}
-.danke-inner svg{width:60px;height:auto;margin:0 auto .5rem;display:block}
-.danke-inner .brandline{font-size:1.6rem;font-weight:600;letter-spacing:-0.02em;color:var(--anthrazit)}
-.danke-inner .brandsub{font-size:.62rem;font-weight:700;letter-spacing:.24em;text-transform:uppercase;color:var(--ink-500);margin-top:.2rem}
+.dankekarte{max-width:640px;margin:0 auto;text-align:center;background:#fff;
+  border:1px solid var(--ink-200);border-radius:var(--r-xl);padding:3rem 2rem;
+  box-shadow:0 30px 70px -35px rgba(18,21,26,.30)}
+.dankekarte svg{width:64px;height:auto;margin:0 auto 1.25rem;display:block}
 
 /* Rechtstexte */
-.legal{max-width:68ch;margin:0 auto;color:var(--ink-800)}
-.legal h3{font-size:1.05rem;margin:1.9rem 0 .6rem;color:var(--anthrazit)}
-.legal ul{padding-left:1.2rem;margin:0 0 1rem}
-.legal li{margin-bottom:.4rem}
-.legal p{font-size:.95rem}
+.recht{max-width:70ch;margin:0 auto}
+.recht h3{font-size:1.08rem;margin:2rem 0 .6rem}
+.recht p,.recht li{font-size:.95rem;color:var(--ink-700)}
+.recht ul{padding-left:1.2rem;margin:0 0 1rem}
+.recht li{margin-bottom:.4rem}
+.entwurf{border:1px solid rgba(144,11,111,.3);background:rgba(144,11,111,.05);color:var(--magenta);
+  border-radius:var(--r);padding:1rem 1.2rem;font-size:.92rem;line-height:1.6;margin:0 0 1.75rem}
+.entwurf strong{color:var(--magenta)}
 
-/* Footer */
-footer.site{margin-top:3rem;border-top:1px solid var(--ink-200);background:var(--surface)}
-.foot-grid{display:grid;gap:2rem;padding:3rem 0 2rem;grid-template-columns:1fr}
-@media(min-width:768px){.foot-grid{grid-template-columns:2fr 1fr 1fr}}
-footer h2{font-size:.7rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-500);margin:0 0 .8rem}
-footer ul{list-style:none;margin:0;padding:0}
-footer li{margin-bottom:.45rem;font-size:.9rem}
-footer li a{color:var(--ink-700);text-decoration:none}
-footer li a:hover{color:var(--violett)}
-footer address{font-style:normal;font-size:.9rem;color:var(--ink-700);margin-top:1rem}
-.copy{border-top:1px solid var(--ink-100);padding:1.2rem 0;display:flex;flex-wrap:wrap;
-  gap:.6rem;justify-content:space-between;font-size:.78rem;color:var(--ink-500)}
+/* Fusszeile */
+footer.fuss{background:var(--ink-900);color:rgba(255,255,255,.72);padding:clamp(3rem,6vw,4.5rem) 0 2rem}
+.fussraster{display:grid;gap:2.5rem;grid-template-columns:1fr}
+@media(min-width:820px){.fussraster{grid-template-columns:2fr 1fr 1fr}}
+footer.fuss h2{font-size:.72rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;
+  color:var(--stahl);margin:0 0 1rem}
+footer.fuss ul{list-style:none;margin:0;padding:0}
+footer.fuss li{margin-bottom:.55rem;font-size:.93rem}
+footer.fuss a{color:rgba(255,255,255,.72);text-decoration:none}
+footer.fuss a:hover{color:#fff}
+footer.fuss address{font-style:normal;font-size:.93rem;line-height:1.7;margin-top:1.1rem}
+.fussende{border-top:1px solid rgba(255,255,255,.12);margin-top:2.5rem;padding-top:1.5rem;
+  display:flex;flex-wrap:wrap;gap:.7rem;justify-content:space-between;font-size:.8rem;
+  color:rgba(255,255,255,.5)}
 
+/* Sprungmarke */
 .skip{position:absolute;left:-9999px}
-.skip:focus{position:fixed;left:1rem;top:1rem;z-index:60;background:var(--anthrazit);color:#fff;
-  padding:.55rem .8rem;border-radius:6px}
+.skip:focus{position:fixed;left:1rem;top:1rem;z-index:99;background:var(--ink-900);color:#fff;
+  padding:.7rem 1.1rem;border-radius:var(--r)}
+
+/* Scroll-Einblendung */
+.zeig{opacity:0;transform:translateY(28px);
+  transition:opacity .7s var(--ease),transform .7s var(--ease)}
+.zeig.da{opacity:1;transform:none}
+
+/* Bewegungsreduktion respektieren */
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;
+    transition-duration:.001ms!important;scroll-behavior:auto!important}
+  .zeig{opacity:1;transform:none}
+  .folie .folie-inhalt>*{opacity:1;transform:none}
+}
 </style>
 </head>
 <body>
-<a class="skip" href="#main">Zum Inhalt springen</a>
+<a class="skip" href="#inhalt">Zum Inhalt springen</a>
 
-<!-- Bildmarke als wiederverwendbares SVG-Symbol -->
-<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
-  <defs>
-    <linearGradient id="ekSteel" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#C9CDD6"/><stop offset="0.28" stop-color="#8A90A0"/>
-      <stop offset="0.62" stop-color="#4A505E"/><stop offset="1" stop-color="#20242D"/>
-    </linearGradient>
-    <linearGradient id="ekBolt" x1="1" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#D3D7DE"/><stop offset="0.45" stop-color="#6E7484"/>
-      <stop offset="1" stop-color="#1A1E26"/>
-    </linearGradient>
-    <symbol id="ekMark" viewBox="0 0 200 210">
-      <polygon points="100,14 176,58 176,152 100,196 24,152 24,58"
-               fill="none" stroke="url(#ekSteel)" stroke-width="11" stroke-linejoin="round"/>
-      <path d="M 30 106 L 52 106 C 57 106 58 93 63 93 C 68 93 69 106 74 106 L 80 106
-               C 87 106 88 58 97 58 C 106 58 107 112 113 126 C 119 140 123 152 130 152
-               C 136 152 138 122 144 122 C 150 122 152 146 158 146"
-            fill="none" stroke="url(#ekSteel)" stroke-width="7.5"
-            stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M 157 40 L 116 116 L 131 121 L 84 184 L 103 118 L 90 113 Z" fill="url(#ekBolt)"/>
-    </symbol>
-  </defs>
-</svg>
+<!-- Bildmarke als wiederverwendbares Symbol -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+  <linearGradient id="stahlV" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#C9CDD6"/><stop offset=".28" stop-color="#8A90A0"/>
+    <stop offset=".62" stop-color="#4A505E"/><stop offset="1" stop-color="#20242D"/>
+  </linearGradient>
+  <linearGradient id="boltV" x1="1" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#D3D7DE"/><stop offset=".45" stop-color="#6E7484"/>
+    <stop offset="1" stop-color="#1A1E26"/>
+  </linearGradient>
+  <symbol id="mark" viewBox="0 0 200 210">
+    <polygon points="100,14 176,58 176,152 100,196 24,152 24,58" fill="none"
+             stroke="url(#stahlV)" stroke-width="11" stroke-linejoin="round"/>
+    <path d="M 30 106 L 52 106 C 57 106 58 93 63 93 C 68 93 69 106 74 106 L 80 106
+             C 87 106 88 58 97 58 C 106 58 107 112 113 126 C 119 140 123 152 130 152
+             C 136 152 138 122 144 122 C 150 122 152 146 158 146"
+          fill="none" stroke="url(#stahlV)" stroke-width="7.5"
+          stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M 157 40 L 116 116 L 131 121 L 84 184 L 103 118 L 90 113 Z" fill="url(#boltV)"/>
+  </symbol>
+  <symbol id="welle" viewBox="0 0 600 200">
+    <path d="M0 100 L90 100 C110 100 114 56 130 56 C146 56 150 144 168 144
+             C186 144 190 40 210 40 C232 40 236 160 258 160 C278 160 282 68 302 68
+             C322 68 326 132 346 132 C364 132 368 88 386 88 C404 88 408 116 426 116
+             C444 116 448 96 466 96 L600 96"
+          fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+  </symbol>
+</defs></svg>
 
-<header class="site">
-  <div class="wrap bar">
+<header class="top" id="kopf">
+  <div class="wrap topbar">
     <a class="brand" href="#start" aria-label="Engineering.Kabuu — zum Seitenanfang">
-      <svg class="mark" viewBox="0 0 200 210" aria-hidden="true"><use href="#ekMark"/></svg>
-      <span class="words">
-        <span class="name">kabuu</span>
-        <span class="sub">Engineering</span>
-      </span>
+      <svg viewBox="0 0 200 210" aria-hidden="true"><use href="#mark"/></svg>
+      <span><span class="wort">kabuu</span><span class="eng-sub">Engineering</span></span>
     </a>
-    <nav class="primary" aria-label="Hauptnavigation">
+    <nav class="haupt" aria-label="Hauptnavigation">
       <ul>
-        <li><a href="#start">Start</a></li>
         <li><a href="#leistungen">Leistungen</a></li>
         <li><a href="#ablauf">Ablauf</a></li>
         <li><a href="#faq">Häufige Fragen</a></li>
@@ -324,322 +470,392 @@ footer address{font-style:normal;font-size:.9rem;color:var(--ink-700);margin-top
         <li><a href="#kontakt">Kontakt</a></li>
       </ul>
     </nav>
-    <a class="btn btn-primary" href="#kontakt">Erstgespräch anfragen</a>
-  </div>
-  <details class="menu">
-    <div class="wrap">
-      <summary>Menü</summary>
-      <ul>
-        <li><a href="#start">Start</a></li>
-        <li><a href="#leistungen">Leistungen</a></li>
-        <li><a href="#ablauf">Ablauf</a></li>
-        <li><a href="#faq">Häufige Fragen</a></li>
-        <li><a href="#ueber">Über mich</a></li>
-        <li><a href="#kontakt">Kontakt</a></li>
-        <li><a href="#impressum">Kontakt / Impressum</a></li>
-        <li><a href="#datenschutz">Datenschutz</a></li>
-        <li><a href="#agb">AGB</a></li>
-      </ul>
+    <div style="display:flex;align-items:center;gap:.4rem">
+      <a class="kopf-cta" href="#kontakt">Erstgespräch anfragen</a>
+      <button class="burger" id="burger" aria-expanded="false" aria-controls="mobilnav" aria-label="Menü öffnen">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <path d="M3 6h18M3 12h18M3 18h18"/>
+        </svg>
+      </button>
     </div>
-  </details>
+  </div>
+  <div id="mobilnav">
+    <ul>
+      <li><a href="#leistungen">Leistungen</a></li>
+      <li><a href="#ablauf">Ablauf</a></li>
+      <li><a href="#faq">Häufige Fragen</a></li>
+      <li><a href="#ueber">Über mich</a></li>
+      <li><a href="#kontakt">Kontakt</a></li>
+      <li><a href="#impressum">Kontakt / Impressum</a></li>
+      <li><a href="#datenschutz">Datenschutz</a></li>
+      <li><a href="#agb">AGB</a></li>
+    </ul>
+  </div>
 </header>
 
-<main id="main">
-<div class="wrap">
+<main id="inhalt">
 
-  <!-- ===================== START ===================== -->
-  <section id="start" aria-labelledby="h-start">
-    <p class="kicker">Power Quality &amp; EMV</p>
-    <div class="grid split">
-      <div>
-        <h1 id="h-start">Netzqualität und EMV messen, bevor investiert wird.</h1>
-        <p class="lead" style="margin-top:1.25rem">
-          Unabhängige Messungen, verständliche Berichte, klare Empfehlungen. Damit Entscheidungen über
-          Filter, Kompensation, Netzausbau oder EMV-Massnahmen auf Messwerten stehen, nicht auf Vermutung.
-        </p>
-        <div class="btn-row">
-          <a class="btn btn-primary" href="#kontakt">Erstgespräch anfragen</a>
-          <a class="btn btn-outline" href="#ablauf">So läuft eine Messung ab</a>
+<!-- ===================== BÜHNE ===================== -->
+<div class="buehne" id="start" role="region" aria-roledescription="Karussell" aria-label="Höhepunkte">
+  <div class="folien" id="folien">
+
+    <div class="folie bg-1 aktiv" role="group" aria-roledescription="Folie" aria-label="1 von 4">
+      <div class="welle" aria-hidden="true"><svg viewBox="0 0 600 200"><use href="#welle"/></svg></div>
+      <div class="wrap eng"><div class="folie-inhalt">
+        <span class="kicker">Power Quality &amp; EMV</span>
+        <h1>Netzqualität und EMV messen, bevor investiert wird.</h1>
+        <p>Unabhängige Messungen, verständliche Berichte, klare Empfehlungen. Damit Entscheidungen über
+          Filter, Kompensation, Netzausbau oder EMV-Massnahmen auf Messwerten stehen, nicht auf Vermutung.</p>
+        <div class="knopfreihe">
+          <a class="btn btn-hell" href="#kontakt">Erstgespräch anfragen</a>
+          <a class="btn btn-linie-hell" href="#ablauf">So läuft eine Messung ab</a>
         </div>
-      </div>
-      <aside class="facts">
-        <h2>Grundlage</h2>
-        <ul>
-          <li><strong>Messgerät Klasse A</strong>Eingesetzt werden Messgeräte, welche die Genauigkeitsklasse A nach IEC 61000-4-30 erfüllen.</li>
-          <li><strong>Bezugsrahmen EN 50160</strong>Bewertung der Spannungsmerkmale am Übergabepunkt.</li>
-          <li><strong>Unabhängig</strong>Kein Geräteverkauf, keine Provisionsbindung. Herstellerneutral.</li>
-        </ul>
-      </aside>
+      </div></div>
     </div>
 
-    <div class="logo-rule" aria-hidden="true">
-      <span class="line"></span>
-      <svg viewBox="0 0 200 210"><use href="#ekMark"/></svg>
-      <span class="line"></span>
+    <div class="folie bg-2" role="group" aria-roledescription="Folie" aria-label="2 von 4">
+      <div class="welle" aria-hidden="true"><svg viewBox="0 0 600 200"><use href="#welle"/></svg></div>
+      <div class="wrap eng"><div class="folie-inhalt">
+        <span class="kicker">Messgrundlage</span>
+        <h2>Klasse A nach IEC 61000-4-30.</h2>
+        <p>Eingesetzt werden Messgeräte, welche die Genauigkeitsklasse A erfüllen. Bewertung im
+          Bezugsrahmen EN 50160 am Übergabepunkt. Alle Messmittel alle zwei Jahre kalibriert,
+          das Kalibrierdatum steht in jedem Bericht.</p>
+        <div class="knopfreihe">
+          <a class="btn btn-hell" href="#leistungen">Leistungen ansehen</a>
+        </div>
+      </div></div>
     </div>
 
-    <div style="margin-top:3rem">
-      <h2>Für wen</h2>
-      <p style="margin-top:.6rem;max-width:62ch;color:var(--ink-700)">
-        Wer eine belastbare Aussage über sein Netz braucht, bekommt sie hier, ohne Verkaufsdruck.
-      </p>
-      <ul class="pills">
-        <li>Industrie und produzierendes Gewerbe</li>
-        <li>KMU mit sensiblen Prozessen</li>
-        <li>Immobilienverwaltungen</li>
-        <li>Gemeinden und öffentliche Betriebe</li>
-        <li>Netzbetreiber und Elektroinstallateure</li>
-        <li>Anwälte und Sachverständige (Beweissicherung)</li>
-      </ul>
+    <div class="folie bg-3" role="group" aria-roledescription="Folie" aria-label="3 von 4">
+      <div class="welle" aria-hidden="true"><svg viewBox="0 0 600 200"><use href="#welle"/></svg></div>
+      <div class="wrap eng"><div class="folie-inhalt">
+        <span class="kicker">Erfahrung</span>
+        <h2>Über fünfzehn Jahre Messpraxis.</h2>
+        <p>Von Kleinelektronik bis zu grossen, komplexen Systemen. Baugruppen, Geräte, Anlagen,
+          Fahrzeugtechnik, Funk- und Radioanwendungen. Ein Symptom wird zuerst messbar gemacht,
+          dann eingeordnet.</p>
+        <div class="knopfreihe">
+          <a class="btn btn-hell" href="#ueber">Über mich</a>
+        </div>
+      </div></div>
     </div>
 
-    <div style="margin-top:3rem">
-      <h2>Woher die Einschätzung kommt</h2>
-      <p style="margin-top:.75rem;max-width:62ch;color:var(--ink-700)">
-        Über fünfzehn Jahre Messpraxis in EMV und Netzqualität, von Kleinelektronik bis zu grossen Systemen.
-        Eigene Messmittel der Genauigkeitsklasse A nach IEC 61000-4-30, alle zwei Jahre kalibriert.
-        Berufshaftpflichtversicherung vorhanden. Lizenzierter Funkamateur.
-        Kein Gerätehandel, keine Provisionsbindung.
-      </p>
+    <div class="folie bg-4" role="group" aria-roledescription="Folie" aria-label="4 von 4">
+      <div class="welle" aria-hidden="true"><svg viewBox="0 0 600 200"><use href="#welle"/></svg></div>
+      <div class="wrap eng"><div class="folie-inhalt">
+        <span class="kicker">Beweissicherung</span>
+        <h2>Wenn die Messung Bestand haben muss.</h2>
+        <p>Rechtsfest dokumentierte Messungen für Streitfall, Versicherung oder Verhandlungen mit
+          Netzbetreiber und Hersteller. Sauber getrennt: gemessener Befund und fachliche Würdigung.</p>
+        <div class="knopfreihe">
+          <a class="btn btn-hell" href="#svc-gutachten">Gutachten und Beweissicherung</a>
+        </div>
+      </div></div>
     </div>
 
-    <div style="margin-top:3rem">
-      <h2>Leistungen im Überblick</h2>
-      <p style="margin-top:.6rem;max-width:62ch;color:var(--ink-700)">Vier Kernleistungen. Alle Details weiter unten.</p>
-      <ul class="tiles">
-        <li><a href="#svc-pq"><h3>PQ-Messkampagne</h3><p>Siebentägige Messung mit Klasse-A-Gerät, Auswertung nach EN 50160.</p><span class="more">Mehr erfahren &rarr;</span></a></li>
-        <li><a href="#svc-stoerung"><h3>Störungs- und Ursachenanalyse</h3><p>Flicker, Oberschwingungen, Spannungseinbrüche, Resonanzen nach dem Prinzip der Differentialdiagnose.</p><span class="more">Mehr erfahren &rarr;</span></a></li>
-        <li><a href="#svc-emv"><h3>EMV- und Installationsberatung</h3><p>Vor der Beschaffung. Vor dem Umbau. Vor der Eskalation.</p><span class="more">Mehr erfahren &rarr;</span></a></li>
-        <li><a href="#svc-gutachten"><h3>Gutachten und Beweissicherung</h3><p>Rechtsfest dokumentierte Messungen als Grundlage für Klärung und Entscheidung.</p><span class="more">Mehr erfahren &rarr;</span></a></li>
-      </ul>
+  </div>
+
+  <div class="steuerung">
+    <div class="wrap eng steuerleiste">
+      <div class="punkte" id="punkte" role="tablist" aria-label="Folie wählen"></div>
+      <button class="s-knopf" id="pause" aria-label="Automatischen Wechsel pausieren">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== FÜR WEN ===================== -->
+<section class="hell" id="fuerwen">
+  <div class="wrap eng">
+    <div class="kopfzeile zeig">
+      <span class="augbraue">Für wen</span>
+      <h2>Wer eine belastbare Aussage über sein Netz braucht.</h2>
+      <p class="fuehrer">Ohne Verkaufsdruck, ohne Gerätehandel im Hintergrund.</p>
+    </div>
+    <ul class="chips zeig">
+      <li>Industrie und produzierendes Gewerbe</li>
+      <li>KMU mit sensiblen Prozessen</li>
+      <li>Immobilienverwaltungen</li>
+      <li>Gemeinden und öffentliche Betriebe</li>
+      <li>Netzbetreiber und Elektroinstallateure</li>
+      <li>Anwälte und Sachverständige</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================== KENNZAHLEN ===================== -->
+<section class="dunkel" id="grundlage">
+  <div class="wrap eng">
+    <div class="kopfzeile zeig">
+      <span class="augbraue">Woher die Einschätzung kommt</span>
+      <h2>Gemessen statt behauptet.</h2>
+    </div>
+    <div class="kennzahlen">
+      <div class="kz zeig"><b>15+ Jahre</b><span>Messpraxis in EMV und Netzqualität, von Kleinelektronik bis zu grossen Systemen.</span></div>
+      <div class="kz zeig"><b>Klasse A</b><span>Eigene Messmittel nach IEC 61000-4-30, alle zwei Jahre kalibriert.</span></div>
+      <div class="kz zeig"><b>Unabhängig</b><span>Kein Gerätehandel, keine Provisionsbindung, herstellerneutral.</span></div>
+      <div class="kz zeig"><b>Abgesichert</b><span>Berufshaftpflichtversicherung vorhanden. Lizenzierter Funkamateur.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== LEISTUNGEN ===================== -->
+<section class="grau" id="leistungen">
+  <div class="wrap eng">
+    <div class="kopfzeile zeig">
+      <span class="augbraue">Leistungen</span>
+      <h2>Messung, Analyse, Beratung. Sauber getrennt.</h2>
+      <p class="fuehrer">Jede Leistung mit klarer Antwort auf drei Fragen: Was wird gemacht, wann ist sie
+        sinnvoll, was haben Sie am Ende in der Hand. Kein Marketing-Sprech, keine Pauschalversprechen.</p>
     </div>
 
-    <div class="band">
-      <h2>Erst messen, dann dimensionieren.</h2>
-      <p>Nennen Sie das Symptom: Flicker, ausgelöste Schutzeinrichtungen, Prozessstörungen, EMV-Verdacht.
-         Gemeinsam legen wir einen Messplan fest, und Sie erhalten eine Einschätzung, ob eine Messung
-         überhaupt lohnt.</p>
-      <div class="btn-row"><a class="btn btn-primary" href="#kontakt">Erstgespräch anfragen</a></div>
+    <div class="raster k3" style="margin-bottom:1rem">
+      <a class="kachel zeig" href="#svc-pq"><span class="nr">01</span><h3>PQ-Messkampagne</h3>
+        <p>Siebentägige Messung mit Klasse-A-Gerät, Auswertung im Bezugsrahmen EN 50160.</p>
+        <span class="mehr">Details</span></a>
+      <a class="kachel zeig" href="#svc-en50160"><span class="nr">02</span><h3>EN-50160-Bewertung</h3>
+        <p>Konformitätsbewertung am Übergabepunkt als Grundlage für Gespräche mit dem Netzbetreiber.</p>
+        <span class="mehr">Details</span></a>
+      <a class="kachel zeig" href="#svc-stoerung"><span class="nr">03</span><h3>Ursachenanalyse</h3>
+        <p>Flicker, Oberschwingungen, Spannungseinbrüche, Resonanzen nach dem Prinzip der Differentialdiagnose.</p>
+        <span class="mehr">Details</span></a>
+      <a class="kachel zeig" href="#svc-emv"><span class="nr">04</span><h3>EMV-Beratung</h3>
+        <p>Vor der Beschaffung. Vor dem Umbau. Vor der Eskalation.</p>
+        <span class="mehr">Details</span></a>
+      <a class="kachel zeig" href="#svc-nrw"><span class="nr">05</span><h3>Netzrückwirkung</h3>
+        <p>Beurteilung für Umrichter, Ladestationen, PV und BESS auf technischer Basis D-A-CH-CZ.</p>
+        <span class="mehr">Details</span></a>
+      <a class="kachel zeig" href="#svc-gutachten"><span class="nr">06</span><h3>Gutachten</h3>
+        <p>Rechtsfest dokumentierte Messungen als Grundlage für Klärung und Entscheidung.</p>
+        <span class="mehr">Details</span></a>
     </div>
-  </section>
 
-  <!-- ===================== LEISTUNGEN ===================== -->
-  <section id="leistungen" aria-labelledby="h-leistungen">
-    <p class="kicker">Leistungen</p>
-    <h2 id="h-leistungen">Messung, Analyse, Beratung. Sauber getrennt.</h2>
-    <p class="lead" style="margin-top:.85rem">
-      Jede Leistung mit klarer Antwort auf drei Fragen: Was wird gemacht, wann ist sie sinnvoll, was haben Sie
-      am Ende in der Hand. Kein Marketing-Sprech, keine Pauschalversprechen.
+    <div style="display:grid;gap:1rem;margin-top:2.5rem">
+      <article class="leistung zeig" id="svc-pq">
+        <h3>PQ-Messkampagne nach IEC 61000-4-30 Klasse A</h3>
+        <dl class="dreispalt">
+          <div><dt>Wann sinnvoll</dt><dd>Wenn eine belastbare Aussage über die Spannungsqualität am Übergabepunkt oder an einer Unterverteilung nötig ist, typischerweise über sieben Tage.</dd></div>
+          <div><dt>Was gemacht wird</dt><dd>Kontinuierliche Messung der Spannungsmerkmale (Frequenz, Spannungshöhe, Flicker, Unsymmetrie, Oberschwingungen, Ereignisse). Bewertung im Bezugsrahmen EN 50160, üblicherweise mittels 95-Perzentil-Betrachtung.</dd></div>
+          <div><dt>Was Sie erhalten</dt><dd>Nachvollziehbarer Bericht mit Messkurven, Bewertung gegen den gewählten Bezugsrahmen und einer klaren Aussage: auffällig, unauffällig oder grenzwertig.</dd></div>
+        </dl>
+      </article>
+      <article class="leistung zeig" id="svc-en50160">
+        <h3>EN-50160-Konformitätsbewertung am Übergabepunkt</h3>
+        <dl class="dreispalt">
+          <div><dt>Wann sinnvoll</dt><dd>Wenn zwischen Anschlussnehmer und Netzbetreiber Klärungsbedarf über die Einhaltung der Spannungsmerkmale am Übergabepunkt besteht.</dd></div>
+          <div><dt>Was gemacht wird</dt><dd>Auswertung einer normkonformen Messung gegen die Merkmale der EN 50160, inklusive Einordnung von Ereignissen und Perzentil-Betrachtung.</dd></div>
+          <div><dt>Was Sie erhalten</dt><dd>Konkrete Aussage zur Norm-Referenz. Grundlage für Gespräche mit dem Netzbetreiber.</dd></div>
+        </dl>
+      </article>
+      <article class="leistung zeig" id="svc-stoerung">
+        <h3>Störungs- und Ursachenanalyse</h3>
+        <dl class="dreispalt">
+          <div><dt>Wann sinnvoll</dt><dd>Bei wiederkehrenden Symptomen wie Flicker, unerklärten Auslösungen von Schutzeinrichtungen, IT-Aussetzern, Antriebsstörungen oder Verdacht auf Oberschwingungs- oder Resonanzprobleme.</dd></div>
+          <div><dt>Was gemacht wird</dt><dd>Systematische Suche nach der Ursache: Symptomaufnahme, Messplan, gezielte Messung an mehreren Punkten wenn nötig, Auswertung nach dem Prinzip der Differentialdiagnose. Erst Fakten trennen, dann Hypothesen ausschliessen.</dd></div>
+          <div><dt>Was Sie erhalten</dt><dd>Begründete Aussage zur wahrscheinlichsten Ursache mit klarer Angabe der Sicherheit und Empfehlungen für die nächsten Schritte. Keine Ursache wird behauptet, wo nur eine Korrelation belegt ist.</dd></div>
+        </dl>
+      </article>
+      <article class="leistung zeig" id="svc-emv">
+        <h3>EMV-Beratung und Installationsberatung</h3>
+        <dl class="dreispalt">
+          <div><dt>Wann sinnvoll</dt><dd>Vor Beschaffung, Umbau oder Erweiterung, oder wenn EMV-Symptome auftreten: Datenfehler, Störungen in benachbarter Elektronik, Erdungsprobleme.</dd></div>
+          <div><dt>Was gemacht wird</dt><dd>Beurteilung von Aufbau, Verkabelung, Schirmung, Erdung und Filterkonzept im Kontext der geplanten oder bestehenden Anlage.</dd></div>
+          <div><dt>Was Sie erhalten</dt><dd>Priorisierte Empfehlungen. Was muss gemacht werden, was hilft, was ist Zusatzaufwand ohne Nutzen.</dd></div>
+        </dl>
+      </article>
+      <article class="leistung zeig" id="svc-nrw">
+        <h3>Netzrückwirkungs-Beurteilung</h3>
+        <dl class="dreispalt">
+          <div><dt>Wann sinnvoll</dt><dd>Bei Anschluss oder Erweiterung nicht-linearer Verbraucher, Umrichter-Antriebe, Ladestationen, PV oder BESS, oder wenn der Netzbetreiber eine Beurteilung verlangt.</dd></div>
+          <div><dt>Was gemacht wird</dt><dd>Beurteilung auf technischer Basis nach dem Rahmen D-A-CH-CZ. Massgebend sind im Einzelfall stets die Werkvorschriften des zuständigen Netzbetreibers.</dd></div>
+          <div><dt>Was Sie erhalten</dt><dd>Aussagefähige Grundlage für die Anmeldung beim Netzbetreiber und für die Auswahl von Filter- oder Kompensationsmassnahmen.</dd></div>
+        </dl>
+      </article>
+      <article class="leistung zeig" id="svc-gutachten">
+        <h3>Gutachten und Beweissicherung</h3>
+        <dl class="dreispalt">
+          <div><dt>Wann sinnvoll</dt><dd>Wenn eine Messung als Beweismittel dienen soll, etwa im Streitfall, für die Versicherung oder für Verhandlungen mit Netzbetreiber oder Hersteller.</dd></div>
+          <div><dt>Was gemacht wird</dt><dd>Rechtsfest dokumentierte Messung: Messaufbau, Gerätekonfiguration, Rohdaten, Auswertung, Fotos, Zeitachse. Formale Dokumentation, damit die Messung Bestand hat.</dd></div>
+          <div><dt>Was Sie erhalten</dt><dd>Nachvollziehbares Gutachten. Trennt sauber zwischen gemessenem Befund und fachlicher Würdigung.</dd></div>
+        </dl>
+      </article>
+    </div>
+
+    <p class="zeig" style="margin-top:2rem;font-size:.92rem;color:var(--ink-500);max-width:70ch">
+      <strong style="color:var(--ink-900)">Zu Zahlen und Grenzwerten:</strong> Konkrete Grenz- oder
+      Perzentil-Werte werden im Bericht immer gegen die im Einzelfall geltende Normfassung geprüft und dort
+      ausgewiesen. Auf dieser Seite werden Normen nur als Bezugsrahmen genannt.
     </p>
+  </div>
+</section>
 
-    <article class="service" id="svc-pq">
-      <h3>PQ-Messkampagne nach IEC 61000-4-30 Klasse A</h3>
-      <dl class="dl">
-        <div><dt>Wann sinnvoll</dt><dd>Wenn eine belastbare Aussage über die Spannungsqualität am Übergabepunkt oder an einer Unterverteilung nötig ist, typischerweise über sieben Tage.</dd></div>
-        <div><dt>Was gemacht wird</dt><dd>Kontinuierliche Messung der Spannungsmerkmale (Frequenz, Spannungshöhe, Flicker, Unsymmetrie, Oberschwingungen, Ereignisse). Bewertung im Bezugsrahmen EN 50160, üblicherweise mittels 95-Perzentil-Betrachtung.</dd></div>
-        <div><dt>Was Sie erhalten</dt><dd>Nachvollziehbarer Bericht mit Messkurven, Bewertung gegen den gewählten Bezugsrahmen und einer klaren Aussage: auffällig, unauffällig oder grenzwertig.</dd></div>
-      </dl>
-    </article>
-
-    <article class="service" id="svc-en50160">
-      <h3>EN-50160-Konformitätsbewertung am Übergabepunkt</h3>
-      <dl class="dl">
-        <div><dt>Wann sinnvoll</dt><dd>Wenn zwischen Anschlussnehmer und Netzbetreiber Klärungsbedarf über die Einhaltung der Spannungsmerkmale am Übergabepunkt besteht.</dd></div>
-        <div><dt>Was gemacht wird</dt><dd>Auswertung einer normkonformen Messung gegen die Merkmale der EN 50160, inklusive Einordnung von Ereignissen und Perzentil-Betrachtung.</dd></div>
-        <div><dt>Was Sie erhalten</dt><dd>Konkrete Aussage zur Norm-Referenz. Grundlage für Gespräche mit dem Netzbetreiber.</dd></div>
-      </dl>
-    </article>
-
-    <article class="service" id="svc-stoerung">
-      <h3>Störungs- und Ursachenanalyse</h3>
-      <dl class="dl">
-        <div><dt>Wann sinnvoll</dt><dd>Bei wiederkehrenden Symptomen wie Flicker, unerklärten Auslösungen von Schutzeinrichtungen, IT-Aussetzern, Antriebsstörungen oder Verdacht auf Oberschwingungs- oder Resonanzprobleme.</dd></div>
-        <div><dt>Was gemacht wird</dt><dd>Systematische Suche nach der Ursache: Symptomaufnahme, Messplan, gezielte Messung an mehreren Punkten wenn nötig, Auswertung nach dem Prinzip der Differentialdiagnose. Erst Fakten trennen, dann Hypothesen ausschliessen.</dd></div>
-        <div><dt>Was Sie erhalten</dt><dd>Begründete Aussage zur wahrscheinlichsten Ursache mit klarer Angabe der Sicherheit und Empfehlungen für die nächsten Schritte. Keine Ursache wird behauptet, wo nur eine Korrelation belegt ist.</dd></div>
-      </dl>
-    </article>
-
-    <article class="service" id="svc-emv">
-      <h3>EMV-Beratung und Installationsberatung</h3>
-      <dl class="dl">
-        <div><dt>Wann sinnvoll</dt><dd>Vor Beschaffung, Umbau oder Erweiterung, oder wenn EMV-Symptome auftreten: Datenfehler, Störungen in benachbarter Elektronik, Erdungsprobleme.</dd></div>
-        <div><dt>Was gemacht wird</dt><dd>Beurteilung von Aufbau, Verkabelung, Schirmung, Erdung und Filterkonzept im Kontext der geplanten oder bestehenden Anlage.</dd></div>
-        <div><dt>Was Sie erhalten</dt><dd>Priorisierte Empfehlungen. Was muss gemacht werden, was hilft, was ist Zusatzaufwand ohne Nutzen.</dd></div>
-      </dl>
-    </article>
-
-    <article class="service" id="svc-nrw">
-      <h3>Netzrückwirkungs-Beurteilung</h3>
-      <dl class="dl">
-        <div><dt>Wann sinnvoll</dt><dd>Bei Anschluss oder Erweiterung nicht-linearer Verbraucher, Umrichter-Antriebe, Ladestationen, PV oder BESS, oder wenn der Netzbetreiber eine Beurteilung verlangt.</dd></div>
-        <div><dt>Was gemacht wird</dt><dd>Beurteilung auf technischer Basis nach dem Rahmen D-A-CH-CZ. Massgebend sind im Einzelfall stets die Werkvorschriften des zuständigen Netzbetreibers.</dd></div>
-        <div><dt>Was Sie erhalten</dt><dd>Aussagefähige Grundlage für die Anmeldung beim Netzbetreiber und für die Auswahl von Filter- oder Kompensationsmassnahmen.</dd></div>
-      </dl>
-    </article>
-
-    <article class="service" id="svc-gutachten">
-      <h3>Gutachten und Beweissicherung</h3>
-      <dl class="dl">
-        <div><dt>Wann sinnvoll</dt><dd>Wenn eine Messung als Beweismittel dienen soll, etwa im Streitfall, für die Versicherung oder für Verhandlungen mit Netzbetreiber oder Hersteller.</dd></div>
-        <div><dt>Was gemacht wird</dt><dd>Rechtsfest dokumentierte Messung: Messaufbau, Gerätekonfiguration, Rohdaten, Auswertung, Fotos, Zeitachse. Formale Dokumentation, damit die Messung Bestand hat.</dd></div>
-        <div><dt>Was Sie erhalten</dt><dd>Nachvollziehbares Gutachten. Trennt sauber zwischen gemessenem Befund und fachlicher Würdigung.</dd></div>
-      </dl>
-    </article>
-
-    <p class="note">
-      <strong>Zu Zahlen und Grenzwerten:</strong> Konkrete Grenz- oder Perzentil-Werte werden im Bericht immer
-      gegen die im Einzelfall geltende Normfassung geprüft und dort ausgewiesen. Auf dieser Seite werden Normen
-      nur als Bezugsrahmen genannt.
-    </p>
-  </section>
-
-  <!-- ===================== ABLAUF ===================== -->
-  <section id="ablauf" aria-labelledby="h-ablauf">
-    <p class="kicker">Ablauf und Methodik</p>
-    <h2 id="h-ablauf">Messen bevor dimensionieren.</h2>
-    <p class="lead" style="margin-top:.85rem">
-      Ein einfaches Prinzip: erst Augenschein, dann Messung, dann Auslegung. In sechs Schritten von der ersten
-      Symptomaufnahme bis zum belastbaren Bericht. Nachvollziehbar, unabhängig, dokumentiert.
-    </p>
-    <ol class="steps">
-      <li><span class="num">01</span><div><h3>Erstgespräch und Symptomaufnahme</h3><p>Kurzes Gespräch per Telefon oder Video. Was ist das Symptom, seit wann tritt es auf, was wurde bereits versucht. Ergebnis: Einschätzung, ob eine Messung überhaupt lohnt.</p></div></li>
-      <li><span class="num">02</span><div><h3>Messplan</h3><p>Klärung von Messort, Dauer, benötigten Zugängen, Sicherheitsanforderungen und dem Bezugsrahmen, zum Beispiel EN 50160. Fixierung des Berichtsformats.</p></div></li>
-      <li><span class="num">03</span><div><h3>Messung vor Ort</h3><p>Aufbau und Inbetriebnahme des Messgeräts, das die Genauigkeitsklasse A nach IEC 61000-4-30 erfüllt. Dokumentation von Ort, Anschlusspunkt und Konfiguration. Betrieb üblicherweise sieben Tage.</p></div></li>
-      <li><span class="num">04</span><div><h3>Auswertung und Normvergleich</h3><p>Auswertung der Rohdaten. Perzentil-Betrachtung, Ereignis-Auszug, Vergleich gegen den vereinbarten Bezugsrahmen. Trennung von Befund und Interpretation.</p></div></li>
-      <li><span class="num">05</span><div><h3>Bericht mit Befund und Empfehlung</h3><p>Nachvollziehbarer Bericht in deutscher Sprache. Was wurde gemessen, wie wurde bewertet, was ist die begründete Empfehlung. Kein Bericht ohne Klartext.</p></div></li>
-      <li><span class="num">06</span><div><h3>Optional: Massnahmenbegleitung</h3><p>Begleitung bei Auswahl, Auslegung und Wirksamkeitsprüfung, zum Beispiel Filter, Kompensation oder EMV-Massnahmen. Herstellerneutral.</p></div></li>
+<!-- ===================== ABLAUF ===================== -->
+<section class="hell" id="ablauf">
+  <div class="wrap eng">
+    <div class="kopfzeile zeig">
+      <span class="augbraue">Ablauf und Methodik</span>
+      <h2>Messen bevor dimensionieren.</h2>
+      <p class="fuehrer">Erst Augenschein, dann Messung, dann Auslegung. In sechs Schritten von der ersten
+        Symptomaufnahme bis zum belastbaren Bericht.</p>
+    </div>
+    <ol class="schritte">
+      <li class="schritt zeig"><span class="nr">01</span><h3>Erstgespräch und Symptomaufnahme</h3>
+        <p>Kurzes Gespräch per Telefon oder Video. Was ist das Symptom, seit wann tritt es auf, was wurde bereits versucht. Ergebnis: Einschätzung, ob eine Messung überhaupt lohnt.</p></li>
+      <li class="schritt zeig"><span class="nr">02</span><h3>Messplan</h3>
+        <p>Klärung von Messort, Dauer, benötigten Zugängen, Sicherheitsanforderungen und dem Bezugsrahmen, zum Beispiel EN 50160. Fixierung des Berichtsformats.</p></li>
+      <li class="schritt zeig"><span class="nr">03</span><h3>Messung vor Ort</h3>
+        <p>Aufbau und Inbetriebnahme eines Messgeräts, das die Genauigkeitsklasse A nach IEC 61000-4-30 erfüllt. Dokumentation von Ort, Anschlusspunkt und Konfiguration. Betrieb üblicherweise sieben Tage.</p></li>
+      <li class="schritt zeig"><span class="nr">04</span><h3>Auswertung und Normvergleich</h3>
+        <p>Auswertung der Rohdaten. Perzentil-Betrachtung, Ereignis-Auszug, Vergleich gegen den vereinbarten Bezugsrahmen. Trennung von Befund und Interpretation.</p></li>
+      <li class="schritt zeig"><span class="nr">05</span><h3>Bericht mit Befund und Empfehlung</h3>
+        <p>Nachvollziehbarer Bericht in deutscher Sprache. Was wurde gemessen, wie wurde bewertet, was ist die begründete Empfehlung. Kein Bericht ohne Klartext.</p></li>
+      <li class="schritt zeig"><span class="nr">06</span><h3>Optional: Massnahmenbegleitung</h3>
+        <p>Begleitung bei Auswahl, Auslegung und Wirksamkeitsprüfung, zum Beispiel Filter, Kompensation oder EMV-Massnahmen. Herstellerneutral.</p></li>
     </ol>
 
-    <div class="grid two" style="margin-top:2rem">
-      <div class="card"><h3>Unabhängigkeit</h3><p>Kein Geräteverkauf, keine Provisionsbindung, kein Erfolgshonorar an bestimmte Massnahmen. Empfehlungen richten sich nach dem Messergebnis, nicht nach dem Katalog.</p></div>
-      <div class="card"><h3>Nachvollziehbarkeit</h3><p>Rohdaten, Gerätekonfiguration und Auswertelogik werden dokumentiert. Eine Zweitmeinung kann auf den gleichen Daten aufsetzen. Gemessen statt behauptet.</p></div>
+    <div class="raster k2 zeig" style="margin-top:2.5rem">
+      <div class="karte"><h3>Unabhängigkeit</h3><p>Kein Geräteverkauf, keine Provisionsbindung, kein Erfolgshonorar an bestimmte Massnahmen. Empfehlungen richten sich nach dem Messergebnis, nicht nach dem Katalog.</p></div>
+      <div class="karte"><h3>Nachvollziehbarkeit</h3><p>Rohdaten, Gerätekonfiguration und Auswertelogik werden dokumentiert. Eine Zweitmeinung kann auf den gleichen Daten aufsetzen. Gemessen statt behauptet.</p></div>
     </div>
-  </section>
+  </div>
+</section>
 
-  <!-- ===================== HAEUFIGE FRAGEN ===================== -->
-  <!--
-    Fragen ohne fertige Antwort stehen bewusst nicht auf der Seite, damit kein
-    sichtbarer Platzhalter erscheint. Noch offen, siehe OFFENE_PUNKTE.md:
-      - Wie schnell ist ein Messtermin moeglich?
-        TODO: Realistische Vorlaufzeit festlegen (abhaengig von der
-        Geraeteverfuegbarkeit) und die Frage danach wieder aufnehmen. Eine konkrete
-        Angabe wie "in der Regel innert zwei bis drei Wochen" wirkt stark, wenn sie
-        eingehalten wird.
+<!-- ===================== BAND ===================== -->
+<section class="dunkel" style="padding-block:clamp(3rem,6vw,5rem)">
+  <div class="wrap eng zeig" style="display:grid;gap:2rem;align-items:center">
+    <div style="max-width:56ch">
+      <h2>Erst messen, dann dimensionieren.</h2>
+      <p style="margin-top:1rem">Nennen Sie das Symptom: Flicker, ausgelöste Schutzeinrichtungen,
+        Prozessstörungen, EMV-Verdacht. Gemeinsam legen wir einen Messplan fest, und Sie erhalten eine
+        Einschätzung, ob eine Messung überhaupt lohnt.</p>
+      <div style="display:flex;flex-wrap:wrap;gap:.75rem;margin-top:2rem">
+        <a class="btn btn-hell" href="#kontakt">Erstgespräch anfragen</a>
+        <a class="btn btn-linie-hell" href="#faq">Häufige Fragen</a>
+      </div>
+    </div>
+  </div>
+</section>
 
-    TODO (zur Antwort "Was kostet eine Messung?"): Bestaetigen, dass das Erstgespraech
-    tatsaechlich kostenlos angeboten wird. Falls nicht, den entsprechenden Satz streichen.
-  -->
-  <section id="faq" aria-labelledby="h-faq">
-    <p class="kicker">Häufige Fragen</p>
-    <h2 id="h-faq">Was vor einer Anfrage meistens noch offen ist.</h2>
-    <p class="lead" style="margin-top:.85rem">
-      Wenn Ihre Frage hier nicht steht, stellen Sie sie einfach direkt. Eine kurze Nachricht genügt.
-    </p>
-    <dl style="margin:1.75rem 0 0;display:grid;gap:.8rem">
-      <div class="card">
-        <dt style="font-size:1.05rem;font-weight:600;color:var(--anthrazit)">Wie lange dauert eine Messung?</dt>
-        <dd style="margin:.5rem 0 0;font-size:.93rem;color:var(--ink-700);max-width:62ch">
-          Für eine Bewertung im Bezugsrahmen EN 50160 ist eine zusammenhängende Messung über
-          sieben Tage üblich. Für eine gezielte Störungssuche kann eine kürzere, dafür
-          engmaschigere Messung sinnvoller sein. Was passt, wird im Messplan festgelegt.
-        </dd>
-      </div>
-      <div class="card">
-        <dt style="font-size:1.05rem;font-weight:600;color:var(--anthrazit)">Muss die Anlage dafür abgeschaltet werden?</dt>
-        <dd style="margin:.5rem 0 0;font-size:.93rem;color:var(--ink-700);max-width:62ch">
-          <p>In aller Regel nicht. Die Messung erfolgt im laufenden Betrieb, ein Produktions-
-            oder Versorgungsunterbruch ist dafür nicht vorgesehen. Die Strommessung erfolgt
-            berührungslos über Stromwandler, die Anlage läuft während der gesamten Messdauer
-            weiter.</p>
-          <p style="margin-bottom:0">Für den Anschluss der Spannungspfade wird an aktiven Teilen gearbeitet. Diese
-            Arbeiten erfolgen nach den geltenden Sicherheitsvorschriften und in Absprache mit
-            der für die Anlage verantwortlichen Elektrofachkraft. Ob dafür eine kurzzeitige
-            Freischaltung nötig ist, hängt von der konkreten Verteilung ab und wird vorgängig
-            im Messplan geklärt, nicht erst am Messtag.</p>
-        </dd>
-      </div>
-      <div class="card">
-        <dt style="font-size:1.05rem;font-weight:600;color:var(--anthrazit)">Was kostet eine Messung?</dt>
-        <dd style="margin:.5rem 0 0;font-size:.93rem;color:var(--ink-700);max-width:62ch">
-          <p>Auf dieser Seite stehen bewusst keine Pauschalpreise. Der Aufwand hängt von Messort,
-            Dauer, Anzahl Messpunkte und der gewünschten Berichtstiefe ab, und eine Zahl ohne
-            diese Angaben wäre nicht belastbar.</p>
-          <p style="margin-bottom:0">Nach dem Erstgespräch erhalten Sie eine schriftliche Offerte mit festem Rahmen. Das
-            Erstgespräch selbst ist kostenlos. Wenn sich dabei zeigt, dass eine Messung in Ihrem
-            Fall nichts bringt, sage ich Ihnen das, bevor Kosten entstehen.</p>
-        </dd>
-      </div>
-      <div class="card">
-        <dt style="font-size:1.05rem;font-weight:600;color:var(--anthrazit)">In welchem Gebiet sind Sie im Einsatz?</dt>
-        <dd style="margin:.5rem 0 0;font-size:.93rem;color:var(--ink-700);max-width:62ch">
-          Sitz ist Thayngen im Kanton Schaffhausen. Der Einsatz erfolgt in der ganzen Schweiz.
-          Anreise und allfällige Übernachtung werden nach Vereinbarung abgerechnet und in der
-          Offerte transparent ausgewiesen.
-        </dd>
-      </div>
-      <div class="card">
-        <dt style="font-size:1.05rem;font-weight:600;color:var(--anthrazit)">Was passiert mit meinen Messdaten?</dt>
-        <dd style="margin:.5rem 0 0;font-size:.93rem;color:var(--ink-700);max-width:62ch">
-          Rohdaten und Bericht werden vertraulich behandelt und ausschliesslich für den
-          vereinbarten Auftrag verwendet. Sie werden für eine festgelegte Frist aufbewahrt,
-          damit Rückfragen und Zweitmeinungen auf derselben Datenbasis möglich bleiben.
-          Eine Weitergabe an Dritte erfolgt nur mit Ihrer schriftlichen Zustimmung.
-        </dd>
-      </div>
-    </dl>
-  </section>
+<!-- ===================== FAQ ===================== -->
+<!--
+  Eine Frage ohne fertige Antwort steht bewusst nicht auf der Seite, damit kein
+  sichtbarer Platzhalter erscheint. Siehe OFFENE_PUNKTE.md:
+    - Wie schnell ist ein Messtermin moeglich?
+      TODO: Realistische Vorlaufzeit festlegen (abhaengig von der
+      Geraeteverfuegbarkeit) und die Frage danach wieder aufnehmen.
+  TODO (zur Antwort "Was kostet eine Messung?"): Bestaetigen, dass das
+  Erstgespraech tatsaechlich kostenlos angeboten wird. Falls nicht, den Satz streichen.
+-->
+<section class="grau" id="faq">
+  <div class="wrap eng">
+    <div class="kopfzeile zeig">
+      <span class="augbraue">Häufige Fragen</span>
+      <h2>Was vor einer Anfrage meistens noch offen ist.</h2>
+      <p class="fuehrer">Wenn Ihre Frage hier nicht steht, stellen Sie sie einfach direkt.
+        Eine kurze Nachricht genügt.</p>
+    </div>
+    <div class="faq zeig">
+      <details>
+        <summary>Wie lange dauert eine Messung?</summary>
+        <div class="antwort"><p>Für eine Bewertung im Bezugsrahmen EN 50160 ist eine zusammenhängende
+          Messung über sieben Tage üblich. Für eine gezielte Störungssuche kann eine kürzere, dafür
+          engmaschigere Messung sinnvoller sein. Was passt, wird im Messplan festgelegt.</p></div>
+      </details>
+      <details>
+        <summary>Muss die Anlage dafür abgeschaltet werden?</summary>
+        <div class="antwort">
+          <p>In aller Regel nicht. Die Messung erfolgt im laufenden Betrieb, ein Produktions- oder
+            Versorgungsunterbruch ist dafür nicht vorgesehen. Die Strommessung erfolgt berührungslos über
+            Stromwandler, die Anlage läuft während der gesamten Messdauer weiter.</p>
+          <p>Für den Anschluss der Spannungspfade wird an aktiven Teilen gearbeitet. Diese Arbeiten erfolgen
+            nach den geltenden Sicherheitsvorschriften und in Absprache mit der für die Anlage
+            verantwortlichen Elektrofachkraft. Ob dafür eine kurzzeitige Freischaltung nötig ist, hängt von
+            der konkreten Verteilung ab und wird vorgängig im Messplan geklärt, nicht erst am Messtag.</p>
+        </div>
+      </details>
+      <details>
+        <summary>Was kostet eine Messung?</summary>
+        <div class="antwort">
+          <p>Auf dieser Seite stehen bewusst keine Pauschalpreise. Der Aufwand hängt von Messort, Dauer,
+            Anzahl Messpunkte und der gewünschten Berichtstiefe ab, und eine Zahl ohne diese Angaben wäre
+            nicht belastbar.</p>
+          <p>Nach dem Erstgespräch erhalten Sie eine schriftliche Offerte mit festem Rahmen. Das Erstgespräch
+            selbst ist kostenlos. Wenn sich dabei zeigt, dass eine Messung in Ihrem Fall nichts bringt, sage
+            ich Ihnen das, bevor Kosten entstehen.</p>
+        </div>
+      </details>
+      <details>
+        <summary>In welchem Gebiet sind Sie im Einsatz?</summary>
+        <div class="antwort"><p>Sitz ist Thayngen im Kanton Schaffhausen. Der Einsatz erfolgt in der ganzen
+          Schweiz. Anreise und allfällige Übernachtung werden nach Vereinbarung abgerechnet und in der
+          Offerte transparent ausgewiesen.</p></div>
+      </details>
+      <details>
+        <summary>Was passiert mit meinen Messdaten?</summary>
+        <div class="antwort"><p>Rohdaten und Bericht werden vertraulich behandelt und ausschliesslich für den
+          vereinbarten Auftrag verwendet. Sie werden für eine festgelegte Frist aufbewahrt, damit Rückfragen
+          und Zweitmeinungen auf derselben Datenbasis möglich bleiben. Eine Weitergabe an Dritte erfolgt nur
+          mit Ihrer schriftlichen Zustimmung.</p></div>
+      </details>
+    </div>
+  </div>
+</section>
 
-  <!-- ===================== UEBER MICH ===================== -->
-  <section id="ueber" aria-labelledby="h-ueber">
-    <p class="kicker">Über mich</p>
-    <h2 id="h-ueber">Burak Ücöz</h2>
-    <p class="lead" style="margin-top:.85rem">
-      Elektrotechnik, Netzqualität und EMV mit Fokus auf Feldpraxis. Messung als Werkzeug, um zwischen Symptom
-      und Ursache eine belastbare Brücke zu bauen.
-    </p>
+<!-- ===================== ÜBER MICH ===================== -->
+<section class="hell" id="ueber">
+  <div class="wrap eng">
+    <div class="kopfzeile zeig">
+      <span class="augbraue">Über mich</span>
+      <h2>Burak Ücöz</h2>
+      <p class="fuehrer">Elektrotechnik, Netzqualität und EMV mit Fokus auf Feldpraxis. Messung als Werkzeug,
+        um zwischen Symptom und Ursache eine belastbare Brücke zu bauen.</p>
+    </div>
 
-    <div class="grid split" style="margin-top:2rem">
-      <div style="max-width:62ch;color:var(--ink-800)">
-        <h3 style="margin-bottom:.5rem">Warum unabhängig</h3>
-        <p>Wer Filter, Kompensation oder EMV-Massnahmen verkauft, hat einen Interessenkonflikt. Wer nur misst und bewertet, kann ohne Rückwirkung auf den eigenen Katalog empfehlen, oder abraten.</p>
+    <div class="zwei">
+      <div class="fliess zeig">
+        <h3>Warum unabhängig</h3>
+        <p>Wer Filter, Kompensation oder EMV-Massnahmen verkauft, hat einen Interessenkonflikt. Wer nur misst
+          und bewertet, kann ohne Rückwirkung auf den eigenen Katalog empfehlen, oder abraten.</p>
 
-        <h3 style="margin:1.7rem 0 .5rem">Wie ich arbeite</h3>
-        <ul style="padding-left:1.2rem;margin:0 0 1rem">
+        <h3>Wie ich arbeite</h3>
+        <ul>
           <li>Erst das Symptom sauber aufnehmen, dann den Messplan bauen.</li>
           <li>Nur Messmittel einsetzen, die dem Zweck entsprechen, hier Klasse A nach IEC 61000-4-30.</li>
           <li>Zwischen gemessenem Befund und fachlicher Würdigung sauber trennen.</li>
           <li>Keine Ursache behaupten, wo nur eine Korrelation belegt ist.</li>
         </ul>
 
-        <h3 style="margin:1.7rem 0 .5rem">Sprachen und Region</h3>
+        <h3>Sprachen und Region</h3>
         <p>Deutsch (CH und DE), Englisch. Sitz und Einsatz Schweiz. Anreise auf Absprache.</p>
 
         <!--
-          TODO: Prüfen, ob die Nennung wehrtechnischer Anwendungen einer Geheimhaltungspflicht
-          gegenüber früheren Auftraggebern oder Arbeitgebern unterliegt. Die Formulierung nennt
+          TODO: Pruefen, ob die Nennung wehrtechnischer Anwendungen einer Geheimhaltungspflicht
+          gegenueber frueheren Auftraggebern oder Arbeitgebern unterliegt. Die Formulierung nennt
           bewusst keine Projekte, Typen oder Auftraggeber. Im Zweifel den Halbsatz streichen.
         -->
-        <h3 style="margin:1.7rem 0 .5rem">Hintergrund</h3>
-        <p>Über fünfzehn Jahre Praxis in EMV und Netzqualität. Der Schwerpunkt lag von Anfang an
-          auf der Messung: nicht auf der Theorie, sondern auf dem, was am Prüfplatz und in der
-          Anlage tatsächlich messbar ist.</p>
-        <p>Die Bandbreite reicht von Kleinelektronik bis zu grossen, komplexen Systemen, von
-          Baugruppen über Geräte und Anlagen bis hin zu Fahrzeugtechnik und wehrtechnischem
-          Gerät. Dazu kommt Erfahrung mit Funk- und Radioanwendungen, also mit genau den
-          Fällen, in denen Störaussendung und Empfangsqualität direkt aufeinandertreffen.</p>
-        <p>Aus dieser Breite folgt die Arbeitsweise: Ein Symptom wird zuerst messbar gemacht,
-          dann eingeordnet. Erst danach wird über Massnahmen gesprochen.</p>
+        <h3>Hintergrund</h3>
+        <p>Über fünfzehn Jahre Praxis in EMV und Netzqualität. Der Schwerpunkt lag von Anfang an auf der
+          Messung: nicht auf der Theorie, sondern auf dem, was am Prüfplatz und in der Anlage tatsächlich
+          messbar ist.</p>
+        <p>Die Bandbreite reicht von Kleinelektronik bis zu grossen, komplexen Systemen, von Baugruppen über
+          Geräte und Anlagen bis hin zu Fahrzeugtechnik und wehrtechnischem Gerät. Dazu kommt Erfahrung mit
+          Funk- und Radioanwendungen, also mit genau den Fällen, in denen Störaussendung und Empfangsqualität
+          direkt aufeinandertreffen.</p>
+        <p>Aus dieser Breite folgt die Arbeitsweise: Ein Symptom wird zuerst messbar gemacht, dann
+          eingeordnet. Erst danach wird über Massnahmen gesprochen.</p>
 
         <!--
-          TODO: Bestätigen, dass mit den genannten Kürzeln EMI (Störaussendung) und EMS
-          (Störfestigkeit) gemeint waren. Falls stattdessen ESD oder andere Prüfungen gemeint
+          TODO: Bestaetigen, dass mit den genannten Kuerzeln EMI (Stoeraussendung) und EMS
+          (Stoerfestigkeit) gemeint waren. Falls stattdessen ESD oder andere Pruefungen gemeint
           sind, Liste entsprechend korrigieren.
-          TODO: Falls konkrete Prüfnormen genannt werden sollen, diese erst gegen die
-          tatsächlich angewendeten Fassungen prüfen. Bis dahin keine Normnummern hier.
+          TODO: Falls konkrete Pruefnormen genannt werden sollen, diese erst gegen die
+          tatsaechlich angewendeten Fassungen pruefen. Bis dahin keine Normnummern hier.
         -->
-        <h3 style="margin:1.7rem 0 .5rem">EMV im Detail</h3>
+        <h3>EMV im Detail</h3>
         <p>EMV ist kein einzelner Messwert, sondern ein Bündel von Disziplinen. Abgedeckt sind:</p>
-        <ul style="padding-left:1.2rem;margin:0 0 1rem">
+        <ul>
           <li>Leitungsgebundene Störaussendung</li>
           <li>Gestrahlte Störaussendung</li>
           <li>Störfestigkeit gegen leitungsgebundene und gestrahlte Einwirkungen</li>
@@ -647,124 +863,121 @@ footer address{font-style:normal;font-size:.9rem;color:var(--ink-700);margin-top
           <li>Fahrzeug- und wehrtechnische Anwendungen</li>
           <li>Funk- und Radioanwendungen, inklusive der Wechselwirkung zwischen Störaussendung und Empfangsqualität</li>
         </ul>
-        <p>Diese Breite ist der Grund, warum eine EMV-Frage hier nicht auf ein einzelnes
-          Prüfverfahren reduziert wird. Zuerst wird geklärt, welche Kopplung überhaupt
-          in Frage kommt. Danach wird gemessen.</p>
+        <p>Diese Breite ist der Grund, warum eine EMV-Frage hier nicht auf ein einzelnes Prüfverfahren
+          reduziert wird. Zuerst wird geklärt, welche Kopplung überhaupt in Frage kommt. Danach wird
+          gemessen.</p>
       </div>
 
       <div style="display:grid;gap:1rem">
         <!--
-          TODO: Falls für Gutachten oder Beweissicherung ein Kalibrierzertifikat einer
-          akkreditierten Stelle vorliegt, hier ergänzen. Nur eintragen, was vorhanden ist.
+          TODO: Falls fuer Gutachten oder Beweissicherung ein Kalibrierzertifikat einer
+          akkreditierten Stelle vorliegt, hier ergaenzen. Nur eintragen, was vorhanden ist.
         -->
-        <div class="facts">
-          <h3>Ausstattung</h3>
-          <ul>
-            <li>Für Netzqualitätsmessungen stehen eigene Messgeräte zur Verfügung, welche die Genauigkeitsklasse A nach IEC 61000-4-30 erfüllen. Dazu kommt das benötigte Zubehör: Stromwandler, Adapter und Sicherheitsausrüstung für Messungen im Niederspannungsbereich.</li>
-            <li>Alle Messmittel werden alle zwei Jahre kalibriert. Das Kalibrierdatum wird in jedem Bericht ausgewiesen, damit die Messung auch Jahre später nachvollziehbar bleibt.</li>
-            <li>Fabrikate und Typenbezeichnungen werden bewusst nicht genannt. Massgebend ist die Eignung des Messmittels für den Zweck, nicht die Marke.</li>
-          </ul>
+        <div class="karte zeig"><h3>Ausstattung</h3>
+          <p>Für Netzqualitätsmessungen stehen eigene Messgeräte zur Verfügung, welche die Genauigkeitsklasse A
+            nach IEC 61000-4-30 erfüllen. Dazu kommt das benötigte Zubehör: Stromwandler, Adapter und
+            Sicherheitsausrüstung für Messungen im Niederspannungsbereich.</p>
+          <p>Alle Messmittel werden alle zwei Jahre kalibriert. Das Kalibrierdatum wird in jedem Bericht
+            ausgewiesen, damit die Messung auch Jahre später nachvollziehbar bleibt.</p>
+          <p>Fabrikate und Typenbezeichnungen werden bewusst nicht genannt. Massgebend ist die Eignung des
+            Messmittels für den Zweck, nicht die Marke.</p>
         </div>
-        <!--
-          TODO: Prüfen, ob Versicherer und Deckungssumme genannt werden sollen. Viele
-          Auftraggeber aus Industrie und Recht fragen danach; eine konkrete Deckungssumme
-          wirkt dort stärker als die blosse Erwähnung. Angabe erst nach Abgleich mit der Police.
-        -->
-        <div class="facts">
-          <h3>Absicherung</h3>
-          <ul><li>Für die Beratungs- und Gutachtertätigkeit besteht eine Berufshaftpflichtversicherung. Details zu Deckungssumme und Umfang werden auf Anfrage bekannt gegeben.</li></ul>
-        </div>
+
         <!--
           Lizenzklasse: Es steht bewusst Variante 1 (ohne Klassenangabe).
           TODO: Lizenzklasse verifizieren, bevor auf Variante 2 gewechselt wird
           ("Amateurfunkzeugnis Klasse A und Klasse E, Rufzeichen DO1BUU."). In
-          Deutschland ist das Rufzeichenpraefix DO der Klasse E zugeordnet; beim
-          Erwerb der Klasse A wird in der Regel ein Rufzeichen mit anderem Praefix
-          zugeteilt. Angabe im Amateurfunkzeugnis bzw. in der Zulassungsurkunde
-          pruefen. Eine falsche Klassenangabe faellt im Fachumfeld sofort auf.
-
-          TODO: Weitere Zertifikate, Qualifikationen und Mitgliedschaften ergaenzen,
-          sobald die Angaben feststehen. Struktur je Eintrag: Bezeichnung,
-          ausstellende Stelle, Jahr bzw. Gueltigkeit. Nichts erfinden.
+          Deutschland ist das Rufzeichenpraefix DO der Klasse E zugeordnet.
+          TODO: Weitere Zertifikate und Mitgliedschaften ergaenzen, sobald die Angaben
+          feststehen. Struktur: Bezeichnung, ausstellende Stelle, Jahr bzw. Gueltigkeit.
         -->
-        <div class="facts">
-          <h3>Qualifikationen</h3>
-          <ul>
-            <li><strong>Amateurfunk</strong>Amateurfunkzeugnis, Rufzeichen DO1BUU.</li>
-            <li>Amateurfunk ist in diesem Zusammenhang keine Randnotiz. Wer selbst sendet und
-              empfängt, arbeitet täglich mit genau den Effekten, um die es in der EMV geht:
-              Ausbreitung, Kopplung, Schirmung, Störabstand. Eine Störung im Funkempfang ist
-              messbar und unmittelbar hörbar. Diese Erfahrung fliesst direkt in die Beurteilung
-              von Störaussendung und Störfestigkeit ein.</li>
-          </ul>
+        <div class="karte zeig"><h3>Qualifikationen</h3>
+          <p class="betont">Amateurfunk</p>
+          <p>Amateurfunkzeugnis, Rufzeichen DO1BUU.</p>
+          <p>Amateurfunk ist in diesem Zusammenhang keine Randnotiz. Wer selbst sendet und empfängt, arbeitet
+            täglich mit genau den Effekten, um die es in der EMV geht: Ausbreitung, Kopplung, Schirmung,
+            Störabstand. Eine Störung im Funkempfang ist messbar und unmittelbar hörbar. Diese Erfahrung
+            fliesst direkt in die Beurteilung von Störaussendung und Störfestigkeit ein.</p>
         </div>
-        <div class="facts">
-          <h3>Referenzen</h3>
-          <ul><li>Bis zur schriftlichen Freigabe werden Referenzen ausschliesslich anonymisiert genannt, zum Beispiel &laquo;Industriebetrieb Ostschweiz&raquo;.</li></ul>
+
+        <!--
+          TODO: Pruefen, ob Versicherer und Deckungssumme genannt werden sollen. Viele
+          Auftraggeber aus Industrie und Recht fragen danach. Angabe erst nach Abgleich
+          mit der Police.
+        -->
+        <div class="karte zeig"><h3>Absicherung</h3>
+          <p>Für die Beratungs- und Gutachtertätigkeit besteht eine Berufshaftpflichtversicherung. Details zu
+            Deckungssumme und Umfang werden auf Anfrage bekannt gegeben.</p>
+        </div>
+
+        <div class="karte zeig"><h3>Referenzen</h3>
+          <p>Bis zur schriftlichen Freigabe werden Referenzen ausschliesslich anonymisiert genannt, zum
+            Beispiel &laquo;Industriebetrieb Ostschweiz&raquo;.</p>
         </div>
       </div>
     </div>
-  </section>
+  </div>
+</section>
 
-  <!-- ===================== KONTAKT ===================== -->
-  <section id="kontakt" aria-labelledby="h-kontakt">
-    <p class="kicker">Kontakt</p>
-    <h2 id="h-kontakt">Kurz beschreiben, was das Symptom ist. Der Rest ergibt sich im Gespräch.</h2>
-    <div class="lead" style="margin-top:1.1rem">
-      <p>Beschreiben Sie kurz, was Sie beobachten. Ein Symptom, ein Zeitpunkt, eine betroffene
+<!-- ===================== KONTAKT ===================== -->
+<section class="grau" id="kontakt">
+  <div class="wrap eng">
+    <div class="kopfzeile zeig">
+      <span class="augbraue">Kontakt</span>
+      <h2>Kurz beschreiben, was das Symptom ist.</h2>
+      <p class="fuehrer">Beschreiben Sie kurz, was Sie beobachten. Ein Symptom, ein Zeitpunkt, eine betroffene
         Anlage genügen für den Anfang. Alles Weitere klären wir im Gespräch.</p>
-      <p style="margin-bottom:0">Sie erhalten in der Regel innert zwei Werktagen eine Rückmeldung, entweder mit einer
-        ersten Einschätzung oder mit den Fragen, die für eine Einschätzung noch fehlen. Wenn
-        eine Messung aus meiner Sicht nichts bringt, sage ich Ihnen das ebenfalls.</p>
+      <p class="fuehrer">Sie erhalten in der Regel innert zwei Werktagen eine Rückmeldung, entweder mit einer
+        ersten Einschätzung oder mit den Fragen, die für eine Einschätzung noch fehlen. Wenn eine Messung aus
+        meiner Sicht nichts bringt, sage ich Ihnen das ebenfalls.</p>
     </div>
 
-    <div class="grid split" style="margin-top:2rem">
-      <div class="form-card">
-        <h3 id="form-h" style="font-size:1.15rem;letter-spacing:-0.015em;text-transform:none;color:var(--anthrazit)">Anfrage</h3>
-        <p style="font-size:.9rem;color:var(--ink-700);margin-top:.4rem">
-          Pflichtfelder mit <span class="req" aria-hidden="true">*</span> markiert. Rückmeldung in der Regel innert zwei Werktagen.
+    <div class="zwei">
+      <div class="formkarte zeig">
+        <h3 id="formtitel" style="font-size:1.2rem;letter-spacing:-.02em;color:var(--ink-900);text-transform:none">Anfrage</h3>
+        <p style="font-size:.9rem;color:var(--ink-500);margin-top:.4rem">
+          Pflichtfelder mit <span class="pflicht" aria-hidden="true">*</span> markiert.
         </p>
 
         <!--
           Netlify Forms: statisches HTML, damit Netlify das Formular beim Deploy erkennt.
           name="kontakt" + data-netlify="true" + verstecktes form-name-Feld sind Pflicht.
           Honeypot bot-field ist per CSS versteckt (nicht type="hidden"), mit tabindex=-1.
-          action="/#danke" führt zurück auf diese Seite; die Danke-Sektion wird per :target sichtbar.
+          action="/#danke" fuehrt zurueck auf diese Seite; die Bestaetigung wird per :target sichtbar.
         -->
         <form name="kontakt" method="POST" data-netlify="true" netlify-honeypot="bot-field"
-              action="/#danke" style="margin-top:1.4rem">
+              action="/#danke" style="margin-top:1.5rem" aria-labelledby="formtitel">
           <input type="hidden" name="form-name" value="kontakt">
-
           <p class="hp" aria-hidden="true">
             <label>Bitte dieses Feld leer lassen:
-              <input name="bot-field" tabindex="-1" autocomplete="off">
-            </label>
+              <input name="bot-field" tabindex="-1" autocomplete="off"></label>
           </p>
 
-          <div class="row">
-            <label class="field" for="f-name"><span>Name <span class="req" aria-hidden="true">*</span></span>
+          <div class="reihe">
+            <label class="feld" for="f-name"><span>Name <span class="pflicht" aria-hidden="true">*</span></span>
               <input id="f-name" name="name" required autocomplete="name" placeholder="Vor- und Nachname"></label>
-            <label class="field" for="f-firma"><span>Firma</span>
+            <label class="feld" for="f-firma"><span>Firma</span>
               <input id="f-firma" name="firma" autocomplete="organization" placeholder="optional"></label>
           </div>
-          <div class="row">
-            <label class="field" for="f-mail"><span>E-Mail <span class="req" aria-hidden="true">*</span></span>
+          <div class="reihe">
+            <label class="feld" for="f-mail"><span>E-Mail <span class="pflicht" aria-hidden="true">*</span></span>
               <input id="f-mail" name="email" type="email" required autocomplete="email" placeholder="name@firma.ch"></label>
-            <label class="field" for="f-tel"><span>Telefon</span>
+            <label class="feld" for="f-tel"><span>Telefon</span>
               <input id="f-tel" name="telefon" type="tel" autocomplete="tel" placeholder="optional"></label>
           </div>
-          <!-- Freiwillige Zusatzangaben. Bewusst optional, damit die Hemmschwelle niedrig bleibt. -->
-          <div class="row row-3">
-            <label class="field" for="f-ort"><span>Standort der Anlage</span>
+
+          <!-- Freiwillige Zusatzangaben, damit die Hemmschwelle niedrig bleibt. -->
+          <div class="reihe r3">
+            <label class="feld" for="f-ort"><span>Standort der Anlage</span>
               <input id="f-ort" name="standort" autocomplete="postal-code" placeholder="PLZ und Ort"></label>
-            <label class="field" for="f-spg"><span>Spannungsebene</span>
+            <label class="feld" for="f-spg"><span>Spannungsebene</span>
               <select id="f-spg" name="spannungsebene">
                 <option value="">Keine Angabe</option>
                 <option value="Niederspannung">Niederspannung</option>
                 <option value="Mittelspannung">Mittelspannung</option>
                 <option value="unbekannt">unbekannt</option>
               </select></label>
-            <label class="field" for="f-drg"><span>Dringlichkeit</span>
+            <label class="feld" for="f-drg"><span>Dringlichkeit</span>
               <select id="f-drg" name="dringlichkeit">
                 <option value="">Keine Angabe</option>
                 <option value="laufende Störung">laufende Störung</option>
@@ -773,113 +986,106 @@ footer address{font-style:normal;font-size:.9rem;color:var(--ink-700);margin-top
               </select></label>
           </div>
 
-          <label class="field" for="f-msg"><span>Nachricht <span class="req" aria-hidden="true">*</span></span>
-            <textarea id="f-msg" name="nachricht" rows="6" required placeholder="Kurz: Symptom, Standort, seit wann, was bereits versucht wurde."></textarea></label>
+          <label class="feld" for="f-msg"><span>Nachricht <span class="pflicht" aria-hidden="true">*</span></span>
+            <textarea id="f-msg" name="nachricht" rows="6" required
+              placeholder="Kurz: Symptom, Standort, seit wann, was bereits versucht wurde."></textarea></label>
 
-          <label class="consent" for="f-ok">
+          <label class="zustimmung" for="f-ok">
             <input id="f-ok" type="checkbox" name="einwilligung" value="ja" required>
-            <span>Ich willige ein, dass meine Angaben zur Bearbeitung meiner Anfrage bearbeitet werden. Details in der
-              <a href="#datenschutz">Datenschutzerklärung</a>. Die Einwilligung kann jederzeit widerrufen werden.
-              <span class="req" aria-hidden="true">*</span></span>
+            <span>Ich willige ein, dass meine Angaben zur Bearbeitung meiner Anfrage bearbeitet werden.
+              Details in der <a href="#datenschutz">Datenschutzerklärung</a>. Die Einwilligung kann jederzeit
+              widerrufen werden. <span class="pflicht" aria-hidden="true">*</span></span>
           </label>
 
-          <button type="submit" class="btn btn-primary">Anfrage senden</button>
-          <p class="form-foot">Keine Newsletter. Keine Weitergabe an Dritte ausser den zur Bearbeitung nötigen Auftragsbearbeitern.</p>
+          <button type="submit" class="btn btn-dunkel">Anfrage senden</button>
+          <p class="formfuss">Keine Newsletter. Keine Weitergabe an Dritte ausser den zur Bearbeitung
+            nötigen Auftragsbearbeitern.</p>
         </form>
       </div>
 
-      <aside style="display:grid;gap:1rem">
-        <div class="contact-card">
+      <div style="display:grid;gap:1rem">
+        <div class="karte zeig">
           <h3>Direktkontakt</h3>
-          <dl>
+          <dl class="kontaktliste">
             <dt>E-Mail</dt>
             <dd><a href="mailto:engineering.kabuu@gmail.com">engineering.kabuu@gmail.com</a></dd>
             <dt>Telefon</dt>
             <dd><a href="tel:+41795129807">079 512 98 07</a></dd>
             <dt>Anschrift</dt>
-            <dd><address>
-              Burak Ücöz<br>
-              Engineering.Kabuu<br>
-              Im Abt 9 A<br>
-              8240 Thayngen<br>
-              Schweiz
-            </address></dd>
+            <dd><address>Burak Ücöz<br>Engineering.Kabuu<br>Im Abt 9 A<br>8240 Thayngen<br>Schweiz</address></dd>
           </dl>
         </div>
-        <div class="contact-card dark-card">
-          <h3>Antwortzeit</h3>
-          <p>Antwort in der Regel innert zwei Werktagen. Bei akuten Prozessstörungen kurz per Telefon melden.</p>
+        <div class="karte zeig" style="background:var(--ink-900);color:#fff">
+          <h3 style="color:var(--stahl)">Antwortzeit</h3>
+          <p style="color:rgba(255,255,255,.72)">Antwort in der Regel innert zwei Werktagen. Bei akuten
+            Prozessstörungen kurz per Telefon melden.</p>
         </div>
-      </aside>
-    </div>
-  </section>
-
-  <!-- ===================== DANKE (nur nach Formularversand sichtbar) ===================== -->
-  <section id="danke" aria-labelledby="h-danke">
-    <div class="danke-inner">
-      <svg viewBox="0 0 200 210" aria-hidden="true"><use href="#ekMark"/></svg>
-      <div class="brandline">kabuu</div>
-      <div class="brandsub">Engineering</div>
-      <h2 id="h-danke" style="margin-top:1.5rem">Danke für Ihre Anfrage.</h2>
-      <p style="margin-top:.85rem;color:var(--ink-700)">
-        Ihre Nachricht ist eingegangen. Rückmeldung in der Regel innert zwei Werktagen.
-        Bei akuten Prozessstörungen bitte kurz per Telefon melden:
-        <a href="tel:+41795129807">079 512 98 07</a>.
-      </p>
-      <div class="btn-row" style="justify-content:center">
-        <a class="btn btn-outline" href="#start">Zum Seitenanfang</a>
-        <a class="btn btn-primary" href="#leistungen">Leistungen ansehen</a>
       </div>
     </div>
-  </section>
+  </div>
+</section>
 
-  <!-- ===================== KONTAKT / IMPRESSUM ===================== -->
-  <section id="impressum" aria-labelledby="h-impressum">
-    <p class="kicker">Rechtliches</p>
-    <h2 id="h-impressum">Kontakt und Anbieterangaben</h2>
-    <div class="legal" style="margin-top:1.5rem">
-      <p class="draft"><strong>Hinweis:</strong> Entwurf. Vor Live-Gang durch Anwalt bzw. Treuhänder prüfen lassen.</p>
+<!-- ===================== BESTÄTIGUNG ===================== -->
+<section class="hell" id="danke" aria-labelledby="h-danke">
+  <div class="wrap">
+    <div class="dankekarte">
+      <svg viewBox="0 0 200 210" aria-hidden="true"><use href="#mark"/></svg>
+      <h2 id="h-danke">Danke für Ihre Anfrage.</h2>
+      <p style="margin-top:1rem;color:var(--ink-700)">Ihre Nachricht ist eingegangen. Rückmeldung in der Regel
+        innert zwei Werktagen. Bei akuten Prozessstörungen bitte kurz per Telefon melden:
+        <a href="tel:+41795129807">079 512 98 07</a>.</p>
+      <div style="display:flex;flex-wrap:wrap;gap:.75rem;justify-content:center;margin-top:1.75rem">
+        <a class="btn btn-linie" href="#start">Zum Seitenanfang</a>
+        <a class="btn btn-dunkel" href="#leistungen">Leistungen ansehen</a>
+      </div>
+    </div>
+  </div>
+</section>
 
+<!-- ===================== KONTAKT / IMPRESSUM ===================== -->
+<section class="grau" id="impressum">
+  <div class="wrap eng">
+    <div class="kopfzeile zeig"><span class="augbraue">Rechtliches</span><h2>Kontakt und Anbieterangaben</h2></div>
+    <div class="recht zeig">
+      <p class="entwurf"><strong>Hinweis:</strong> Entwurf. Vor Live-Gang durch Anwalt bzw. Treuhänder prüfen lassen.</p>
       <p>In der Schweiz besteht keine allgemeine Impressumspflicht. Für Anbieter im elektronischen
         Geschäftsverkehr verlangt das Bundesgesetz gegen den unlauteren Wettbewerb (UWG) jedoch klare Angaben
         zur Identität und zur Kontaktaufnahme. Diese Angaben finden Sie hier.</p>
-
       <h3>Anbieterin</h3>
       <p>Engineering.Kabuu<br>Inhaber: Burak Ücöz<br>Rechtsform: Einzelunternehmen</p>
-
       <h3>Anschrift</h3>
       <p>Im Abt 9 A<br>8240 Thayngen<br>Schweiz</p>
-
       <h3>Kontakt</h3>
       <p>Telefon: <a href="tel:+41795129807">079 512 98 07</a><br>
          E-Mail: <a href="mailto:engineering.kabuu@gmail.com">engineering.kabuu@gmail.com</a></p>
-
       <h3>Verantwortlich für den Inhalt</h3>
       <p>Burak Ücöz, Anschrift wie oben.</p>
-      <!-- TODO: Firmenrechtlich prüfen. Bei einer Einzelfirma muss nach Art. 945 OR der Familienname wesentlicher Bestandteil der Firma sein. &laquo;Engineering.Kabuu&raquo; ist damit eher Geschäftsbezeichnung bzw. Marke als eingetragene Firma. Mit Treuhänder klären, ob und wie die Firma im Handelsregister geführt wird, und diesen Abschnitt entsprechend anpassen oder streichen. -->
-
+      <!--
+        Kein Handelsregister-Feld auf der Seite, siehe BRIEF Abschnitt 7.1.
+        TODO: Firmenrechtlich pruefen. Bei einer Einzelfirma muss nach Art. 945 OR der
+        Familienname wesentlicher Bestandteil der Firma sein. "Engineering.Kabuu" ist
+        damit eher Geschaeftsbezeichnung bzw. Marke als eingetragene Firma.
+      -->
       <h3>Haftung für Inhalte</h3>
       <p>Die Inhalte dieser Website werden mit Sorgfalt erstellt. Für Richtigkeit, Vollständigkeit und
         Aktualität wird jedoch keine Gewähr übernommen. Die Nutzung erfolgt auf eigene Verantwortung.</p>
-
       <h3>Haftung für Links</h3>
       <p>Verweise und Links auf Websites Dritter liegen ausserhalb des Verantwortungsbereichs der Anbieterin.
         Für deren Inhalte lehnt die Anbieterin jede Verantwortung ab.</p>
-
       <h3>Urheberrecht</h3>
       <p>Die Urheber- und alle anderen Rechte an Inhalten, Bildern und weiteren Dateien auf dieser Website
         gehören ausschliesslich der Anbieterin oder den namentlich genannten Rechteinhabern. Für die
         Reproduktion jeglicher Elemente ist die schriftliche Zustimmung im Voraus einzuholen.</p>
     </div>
-  </section>
+  </div>
+</section>
 
-  <!-- ===================== DATENSCHUTZ ===================== -->
-  <section id="datenschutz" aria-labelledby="h-datenschutz">
-    <p class="kicker">Rechtliches</p>
-    <h2 id="h-datenschutz">Datenschutzerklärung</h2>
-    <div class="legal" style="margin-top:1.5rem">
-      <p class="draft"><strong>Hinweis:</strong> Entwurf. Vor Live-Gang durch Anwalt bzw. Treuhänder prüfen lassen.</p>
-
+<!-- ===================== DATENSCHUTZ ===================== -->
+<section class="hell" id="datenschutz">
+  <div class="wrap eng">
+    <div class="kopfzeile zeig"><span class="augbraue">Rechtliches</span><h2>Datenschutzerklärung</h2></div>
+    <div class="recht zeig">
+      <p class="entwurf"><strong>Hinweis:</strong> Entwurf. Vor Live-Gang durch Anwalt bzw. Treuhänder prüfen lassen.</p>
       <p>Der Schutz Ihrer Personendaten ist der Anbieterin ein wichtiges Anliegen. Diese Erklärung informiert
         Sie über die Bearbeitung von Personendaten im Zusammenhang mit dem Besuch dieser Website und der
         Nutzung des Kontaktformulars. Die Bearbeitung erfolgt in Übereinstimmung mit dem revidierten
@@ -892,8 +1098,11 @@ footer address{font-style:normal;font-size:.9rem;color:var(--ink-700);margin-top
 
       <h3>2. Bearbeitete Personendaten</h3>
       <ul>
-        <li><strong>Kontaktformular:</strong> Name, Firma (fakultativ), E-Mail-Adresse, Telefonnummer (fakultativ), Nachricht, Einwilligung.</li>
-        <li><strong>Server-Logdaten:</strong> Beim Aufruf der Website werden vom Hosting-Anbieter automatisch technische Angaben erfasst, unter anderem Datum und Uhrzeit, aufgerufene Ressource, übertragene Datenmenge, Referrer, User-Agent, IP-Adresse.</li>
+        <li><strong>Kontaktformular:</strong> Name, Firma (fakultativ), E-Mail-Adresse, Telefonnummer
+          (fakultativ), Standort, Spannungsebene, Dringlichkeit, Nachricht, Einwilligung.</li>
+        <li><strong>Server-Logdaten:</strong> Beim Aufruf der Website werden vom Hosting-Anbieter automatisch
+          technische Angaben erfasst, unter anderem Datum und Uhrzeit, aufgerufene Ressource, übertragene
+          Datenmenge, Referrer, User-Agent, IP-Adresse.</li>
       </ul>
 
       <h3>3. Zwecke der Bearbeitung</h3>
@@ -907,19 +1116,24 @@ footer address{font-style:normal;font-size:.9rem;color:var(--ink-700);margin-top
       <p>Für Hosting und Formularverarbeitung wird <strong>Netlify, Inc.</strong> eingesetzt (Sitz USA).
         Netlify betreibt die Infrastruktur, auf der diese Website ausgeliefert wird, und verarbeitet die über
         das Kontaktformular eingehenden Daten.</p>
-      <!-- TODO: Auftragsbearbeitungsvertrag (Data Processing Addendum) mit Netlify abschliessen bzw. dessen Annahme dokumentieren. Grundlage der Bekanntgabe ins Ausland in Übereinstimmung mit revDSG prüfen und hier konkret nennen. Aktuellen Stand abklären, keine Behauptung ohne Prüfung. -->
+      <!--
+        TODO: Auftragsbearbeitungsvertrag (Data Processing Addendum) mit Netlify
+        abschliessen bzw. dessen Annahme dokumentieren. Aktuellen Stand abklaeren.
+      -->
 
       <h3>5. Bekanntgabe ins Ausland</h3>
+      <!--
+        TODO: Konkrete Grundlage der Bekanntgabe ins Ausland nach revDSG pruefen und im
+        Absatz unten benennen, z.B. Standardvertragsklauseln.
+      -->
       <p>Durch die Nutzung von Netlify können Personendaten in die USA und allenfalls weitere Länder bekannt
-        gegeben werden. Die Bekanntgabe erfolgt auf einer nach revDSG zulässigen Grundlage.
-        <!-- TODO: konkrete Grundlage nach Prüfung eintragen. --></p>
+        gegeben werden. Die Bekanntgabe erfolgt auf einer nach revDSG zulässigen Grundlage.</p>
 
       <h3>6. Aufbewahrungsdauer</h3>
+      <!-- TODO: Konkrete Dauer festlegen und hier einsetzen. -->
       <p>Anfragen über das Kontaktformular werden bis zur endgültigen Erledigung Ihrer Angelegenheit
-        aufbewahrt, danach nach den gesetzlichen Vorgaben und anschliessend gelöscht.
-        <!-- TODO: Konkrete Dauer festlegen. -->
-        Server-Logdaten werden nach den Standardvorgaben des Hosters aufbewahrt und anschliessend gelöscht
-        oder anonymisiert.</p>
+        aufbewahrt, danach nach den gesetzlichen Vorgaben und anschliessend gelöscht. Server-Logdaten werden
+        nach den Standardvorgaben des Hosters aufbewahrt und anschliessend gelöscht oder anonymisiert.</p>
 
       <h3>7. Cookies und Tracking</h3>
       <p>Diese Website setzt keine Tracking- oder Marketing-Cookies und keine Web-Analyse ein. Ein
@@ -937,29 +1151,35 @@ footer address{font-style:normal;font-size:.9rem;color:var(--ink-700);margin-top
 
       <h3>9. Aufsichtsbehörde</h3>
       <p>Zuständige Aufsichtsbehörde ist der Eidgenössische Datenschutz- und Öffentlichkeitsbeauftragte
-        (EDOEB), Feldeggweg 1, 3003 Bern, Schweiz.</p>
+        (EDÖB), Feldeggweg 1, 3003 Bern, Schweiz.</p>
 
       <h3>10. Datensicherheit</h3>
       <p>Die Übertragung dieser Website erfolgt verschlüsselt über HTTPS. Die Anbieterin und ihre
         Auftragsbearbeiter treffen angemessene technische und organisatorische Massnahmen zum Schutz der
         Personendaten.</p>
-      <!-- TODO: Prüfen, ob durch Kunden oder Websitebesucher aus der EU zusätzlich europäisches Datenschutzrecht greift und diese Erklärung entsprechend zu ergänzen ist. Mit Fachperson klären, nicht selbst entscheiden. -->
 
+      <!--
+        TODO: Pruefen, ob durch Kunden oder Websitebesucher aus der EU zusaetzlich
+        europaeisches Datenschutzrecht greift. Falls ja, hier einen eigenen Abschnitt
+        aufnehmen. Mit Fachperson klaeren, nicht selbst entscheiden.
+      -->
       <h3>11. Änderungen dieser Erklärung</h3>
       <p>Die Anbieterin behält sich vor, diese Datenschutzerklärung anzupassen. Für Ihren erneuten Besuch
         gilt die jeweils aktuelle Fassung.</p>
 
       <!-- TODO: Beim Inkraftsetzen das Datum eintragen und diesen Hinweis ersetzen. -->
-      <p style="margin-top:1.75rem;font-style:italic;color:var(--ink-500)">Stand: Entwurf. Dieser Text ist vor Live-Gang durch eine Fachperson zu prüfen und wird erst danach in Kraft gesetzt.</p>
+      <p style="font-style:italic;color:var(--ink-500);margin-top:1.75rem">Stand: Entwurf. Dieser Text ist vor
+        Live-Gang durch eine Fachperson zu prüfen und wird erst danach in Kraft gesetzt.</p>
     </div>
-  </section>
+  </div>
+</section>
 
-  <!-- ===================== AGB ===================== -->
-  <section id="agb" aria-labelledby="h-agb">
-    <p class="kicker">Rechtliches</p>
-    <h2 id="h-agb">Allgemeine Geschäftsbedingungen (Entwurf)</h2>
-    <div class="legal" style="margin-top:1.5rem">
-      <p class="draft"><strong>Hinweis:</strong> Entwurf. Rechtswahl, Gerichtsstand, Haftungsbegrenzung und
+<!-- ===================== AGB ===================== -->
+<section class="grau" id="agb">
+  <div class="wrap eng">
+    <div class="kopfzeile zeig"><span class="augbraue">Rechtliches</span><h2>Allgemeine Geschäftsbedingungen (Entwurf)</h2></div>
+    <div class="recht zeig">
+      <p class="entwurf"><strong>Hinweis:</strong> Entwurf. Rechtswahl, Gerichtsstand, Haftungsbegrenzung und
         MWST-Formulierung vor Live-Gang zwingend mit Anwalt und Treuhänder abstimmen.</p>
 
       <h3>1. Geltungsbereich</h3>
@@ -987,8 +1207,8 @@ footer address{font-style:normal;font-size:.9rem;color:var(--ink-700);margin-top
       <h3>4. Termine, Verschiebung, Annullation</h3>
       <p>Termine werden verbindlich vereinbart. Bei Verschiebung oder Annullation eines bestätigten
         Vor-Ort-Termins durch den Auftraggeber weniger als fünf Arbeitstage vor Beginn kann der bereits
-        entstandene Aufwand in Rechnung gestellt werden.
-        <!-- TODO: Frist und allfällige Pauschale mit Anwalt abstimmen. --></p>
+        entstandene Aufwand in Rechnung gestellt werden.</p>
+      <!-- TODO: Frist und allfaellige Pauschale mit Anwalt abstimmen. -->
 
       <h3>5. Vergütung und Zahlungskonditionen</h3>
       <p>Die Vergütung richtet sich nach dem Angebot oder der Auftragsbestätigung. Alle Preise verstehen sich
@@ -1002,8 +1222,11 @@ footer address{font-style:normal;font-size:.9rem;color:var(--ink-700);margin-top
         Verletzung wesentlicher Vertragspflichten nach den Bestimmungen des Schweizerischen
         Obligationenrechts (OR). Bei leichter Fahrlässigkeit ist die Haftung auf den bei Vertragsschluss
         vorhersehbaren, typischerweise eintretenden Schaden begrenzt. Für entgangenen Gewinn, indirekte
-        Schäden oder Folgeschäden wird, soweit gesetzlich zulässig, keine Haftung übernommen.
-        <!-- TODO: Konkrete Haftungshöchstsumme, Verjährung und Umgang mit Gutachten und Beweissicherung mit einem Anwalt formulieren. --></p>
+        Schäden oder Folgeschäden wird, soweit gesetzlich zulässig, keine Haftung übernommen.</p>
+      <!--
+        TODO: Konkrete Haftungshoechstsumme, Verjaehrung und Umgang mit Gutachten und
+        Beweissicherung mit einem Anwalt formulieren und hier ergaenzen.
+      -->
 
       <h3>7. Abgrenzung</h3>
       <p>Messungen, Analysen und Empfehlungen der Anbieterin stellen keine Garantie für einen bestimmten
@@ -1023,44 +1246,45 @@ footer address{font-style:normal;font-size:.9rem;color:var(--ink-700);margin-top
 
       <h3>10. Aufbewahrung von Messdaten</h3>
       <p>Rohdaten und Berichte werden von der Anbieterin für eine angemessene Frist zur Nachvollziehbarkeit
-        und für allfällige Rückfragen aufbewahrt.
-        <!-- TODO: Konkrete Frist mit Treuhänder abstimmen. --></p>
+        und für allfällige Rückfragen aufbewahrt.</p>
+      <!-- TODO: Konkrete Aufbewahrungsfrist mit Treuhaender abstimmen und hier einsetzen. -->
 
       <h3>11. Rechtswahl und Gerichtsstand</h3>
       <p>Auf das Vertragsverhältnis findet ausschliesslich Schweizer Recht Anwendung; das UN-Kaufrecht ist
         ausgeschlossen. Der Gerichtsstand wird vor Inkraftsetzung dieser Geschäftsbedingungen festgelegt.</p>
-      <!-- TODO: Gerichtsstand festlegen, ueblicherweise am Sitz der Anbieterin.
-           Mit Anwalt bestaetigen und den Satz oben ersetzen. -->
+      <!--
+        TODO: Gerichtsstand festlegen, ueblicherweise am Sitz der Anbieterin. Mit Anwalt
+        bestaetigen und den Satz oben ersetzen.
+      -->
 
       <h3>12. Salvatorische Klausel</h3>
       <p>Sollten einzelne Bestimmungen dieser AGB unwirksam sein oder werden, bleibt die Wirksamkeit der
         übrigen Bestimmungen davon unberührt.</p>
 
       <!-- TODO: Beim Inkraftsetzen das Datum eintragen und diesen Hinweis ersetzen. -->
-      <p style="margin-top:1.75rem;font-style:italic;color:var(--ink-500)">Stand: Entwurf. Diese Geschäftsbedingungen sind vor Live-Gang durch eine Fachperson zu prüfen und werden erst danach in Kraft gesetzt.</p>
+      <p style="font-style:italic;color:var(--ink-500);margin-top:1.75rem">Stand: Entwurf. Diese
+        Geschäftsbedingungen sind vor Live-Gang durch eine Fachperson zu prüfen und werden erst danach in
+        Kraft gesetzt.</p>
     </div>
-  </section>
+  </div>
+</section>
 
-</div>
 </main>
 
-<footer class="site">
-  <div class="wrap">
-    <div class="foot-grid">
+<footer class="fuss">
+  <div class="wrap eng">
+    <div class="fussraster">
       <div>
-        <a class="brand" href="#start" style="text-decoration:none">
-          <svg class="mark" style="width:40px" viewBox="0 0 200 210" aria-hidden="true"><use href="#ekMark"/></svg>
-          <span class="words">
-            <span class="name" style="font-size:1.2rem">kabuu</span>
-            <span class="sub">Engineering</span>
-          </span>
+        <a class="brand" href="#start" style="color:#fff">
+          <svg viewBox="0 0 200 210" style="width:38px" aria-hidden="true"><use href="#mark"/></svg>
+          <span><span class="wort" style="font-size:1.25rem">kabuu</span>
+                <span class="eng-sub" style="color:var(--stahl)">Engineering</span></span>
         </a>
-        <p style="margin-top:1rem;max-width:38ch;font-size:.9rem;color:var(--ink-500)">
-          Unabhängige Messungen und Beratung für Netzqualität und EMV. Sitz Schweiz.
-        </p>
-        <address>
-          Burak Ücöz<br>Im Abt 9 A<br>8240 Thayngen
-        </address>
+        <p style="margin-top:1.1rem;max-width:40ch;font-size:.93rem;color:rgba(255,255,255,.6)">
+          Unabhängige Messungen und Beratung für Netzqualität und EMV. Sitz Schweiz.</p>
+        <address>Burak Ücöz<br>Im Abt 9 A<br>8240 Thayngen<br>
+          <a href="tel:+41795129807">079 512 98 07</a><br>
+          <a href="mailto:engineering.kabuu@gmail.com">engineering.kabuu@gmail.com</a></address>
       </div>
       <div>
         <h2>Navigation</h2>
@@ -1082,13 +1306,155 @@ footer address{font-style:normal;font-size:.9rem;color:var(--ink-700);margin-top
         </ul>
       </div>
     </div>
-    <div class="copy">
+    <div class="fussende">
       <span>&copy; <span id="jahr">2026</span> Engineering.Kabuu. Alle Rechte vorbehalten.</span>
       <span>Inhaber: Burak Ücöz</span>
     </div>
   </div>
 </footer>
 
-<script>document.getElementById('jahr').textContent=new Date().getFullYear();</script>
+<script>
+(function () {
+  'use strict';
+  var ruhig = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  document.getElementById('jahr').textContent = new Date().getFullYear();
+
+  /* ---------- Kopfzeile: Rand ab dem ersten Scrollen ---------- */
+  var kopf = document.getElementById('kopf');
+  var beimScrollen = function () { kopf.classList.toggle('scrolled', window.scrollY > 8); };
+  beimScrollen();
+  window.addEventListener('scroll', beimScrollen, { passive: true });
+
+  /* ---------- Mobiles Menü ---------- */
+  var burger = document.getElementById('burger');
+  var mobil = document.getElementById('mobilnav');
+  burger.addEventListener('click', function () {
+    var offen = mobil.classList.toggle('offen');
+    burger.setAttribute('aria-expanded', String(offen));
+    burger.setAttribute('aria-label', offen ? 'Menü schliessen' : 'Menü öffnen');
+  });
+  mobil.addEventListener('click', function (e) {
+    if (e.target.tagName === 'A') {
+      mobil.classList.remove('offen');
+      burger.setAttribute('aria-expanded', 'false');
+    }
+  });
+
+  /* ---------- Bühne / Slider ---------- */
+  var DAUER = 6000;
+  var folien = Array.prototype.slice.call(document.querySelectorAll('.folie'));
+  var punkteBox = document.getElementById('punkte');
+  var pauseKnopf = document.getElementById('pause');
+  var aktuell = 0, timer = null, laeuft = !ruhig;
+
+  var ikonePause = '<path d="M6 4h4v16H6zM14 4h4v16h-4z"/>';
+  var ikoneStart = '<path d="M8 5v14l11-7z"/>';
+
+  folien.forEach(function (f, i) {
+    var b = document.createElement('button');
+    b.className = 'punkt';
+    b.type = 'button';
+    b.setAttribute('role', 'tab');
+    b.setAttribute('aria-label', 'Folie ' + (i + 1) + ' von ' + folien.length);
+    b.setAttribute('aria-current', i === 0 ? 'true' : 'false');
+    b.style.setProperty('--dauer', DAUER + 'ms');
+    b.innerHTML = '<span></span>';
+    b.addEventListener('click', function () { zeige(i); neustart(); });
+    punkteBox.appendChild(b);
+  });
+  var punkte = Array.prototype.slice.call(punkteBox.children);
+
+  function zeige(i) {
+    aktuell = (i + folien.length) % folien.length;
+    folien.forEach(function (f, k) {
+      var an = k === aktuell;
+      f.classList.toggle('aktiv', an);
+      f.setAttribute('aria-hidden', String(!an));
+    });
+    punkte.forEach(function (p, k) {
+      p.setAttribute('aria-current', String(k === aktuell));
+      // Fortschrittsbalken neu starten
+      var s = p.firstChild;
+      s.style.animation = 'none';
+      void s.offsetWidth;
+      s.style.animation = '';
+    });
+  }
+
+  function neustart() {
+    clearInterval(timer);
+    if (!laeuft) return;
+    timer = setInterval(function () { zeige(aktuell + 1); }, DAUER);
+  }
+
+  function setzeLauf(an) {
+    laeuft = an;
+    punkte.forEach(function (p) { p.classList.toggle('gestoppt', !an); });
+    pauseKnopf.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+      (an ? ikonePause : ikoneStart) + '</svg>';
+    pauseKnopf.setAttribute('aria-label',
+      an ? 'Automatischen Wechsel pausieren' : 'Automatischen Wechsel fortsetzen');
+    if (an) { neustart(); } else { clearInterval(timer); }
+  }
+
+  pauseKnopf.addEventListener('click', function () { setzeLauf(!laeuft); });
+
+  // Bei Tastaturfokus und Mauszeiger anhalten, danach fortsetzen
+  var buehne = document.querySelector('.buehne');
+  ['mouseenter', 'focusin'].forEach(function (ev) {
+    buehne.addEventListener(ev, function () { if (laeuft) clearInterval(timer); });
+  });
+  ['mouseleave', 'focusout'].forEach(function (ev) {
+    buehne.addEventListener(ev, function () { if (laeuft) neustart(); });
+  });
+
+  // Pfeiltasten
+  buehne.addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowRight') { zeige(aktuell + 1); neustart(); }
+    if (e.key === 'ArrowLeft')  { zeige(aktuell - 1); neustart(); }
+  });
+
+  // Wischen auf Touchgeräten
+  var startX = null;
+  buehne.addEventListener('touchstart', function (e) { startX = e.touches[0].clientX; }, { passive: true });
+  buehne.addEventListener('touchend', function (e) {
+    if (startX === null) return;
+    var d = e.changedTouches[0].clientX - startX;
+    if (Math.abs(d) > 45) { zeige(aktuell + (d < 0 ? 1 : -1)); neustart(); }
+    startX = null;
+  }, { passive: true });
+
+  // Im Hintergrundtab nicht weiterlaufen
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) { clearInterval(timer); } else if (laeuft) { neustart(); }
+  });
+
+  zeige(0);
+  if (ruhig) { setzeLauf(false); } else { neustart(); }
+
+  /* ---------- Einblenden beim Scrollen ---------- */
+  var ziele = document.querySelectorAll('.zeig');
+  if (ruhig || !('IntersectionObserver' in window)) {
+    Array.prototype.forEach.call(ziele, function (el) { el.classList.add('da'); });
+  } else {
+    var io = new IntersectionObserver(function (eintraege) {
+      eintraege.forEach(function (e, i) {
+        if (!e.isIntersecting) return;
+        e.target.style.transitionDelay = Math.min(i * 60, 240) + 'ms';
+        e.target.classList.add('da');
+        io.unobserve(e.target);
+      });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.05 });
+    Array.prototype.forEach.call(ziele, function (el) { io.observe(el); });
+  }
+
+  /* ---------- Nach Formularversand zur Bestätigung springen ---------- */
+  if (location.hash === '#danke') {
+    var d = document.getElementById('danke');
+    if (d) { d.scrollIntoView({ behavior: ruhig ? 'auto' : 'smooth', block: 'center' }); }
+  }
+})();
+</script>
 </body>
 </html>
