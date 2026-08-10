@@ -1081,10 +1081,16 @@ ex.print_area = f"'📑 Executive PDF'!$A$1:$H${EX_ENDE}"
 # --- 📑 Executive PDF: Top-5-Liste mit Projektzeitraum statt Marge -------
 # Spalte E zeigte den groben Startmonat, Spalte H die Marge. Neu stehen dort
 # Projektstart und Projektende; fehlt das Datum, bleibt der Monat sichtbar.
+# Segment wandert auf die frei gewordene Margenspalte, damit Projektstart und
+# Projektende nebeneinander stehen.
 ex['E13'].value = 'Projektstart'
-ex['H13'].value = 'Projektende'
+ex['F13'].value = 'Projektende'
+ex['H13'].value = 'Segment'
 for i in range(1, 6):
     xr = 13 + i
+    ex[f'H{xr}']._style = copy(ex[f'F{xr}']._style)
+    ex[f'H{xr}'].value = ex[f'F{xr}'].value
+    ex[f'H{xr}'].number_format = 'General'
     # Leere Zellen liefern über INDEX eine 0 - mit Datumsformat stuende dort
     # sonst der 00.01.1900. Deshalb jede Rueckgabe ausdruecklich auf leer pruefen.
     ziel = f'MATCH(LARGE({PQ}!$AK$6:$AK${LAST},{i}),{PQ}!$AK$6:$AK${LAST},0)'
@@ -1093,7 +1099,7 @@ for i in range(1, 6):
     von = f'=IFERROR(IF(ISNUMBER({dat}),{dat},IF({grob}="","",{grob})),"")'
     ende = f'INDEX({PQ}!$P$6:$P${LAST},{ziel})'
     bis = f'=IFERROR(IF(ISNUMBER({ende}),{ende},""),"")'
-    for co, formel in ((f'E{xr}', von), (f'H{xr}', bis)):
+    for co, formel in ((f'E{xr}', von), (f'F{xr}', bis)):
         c = ex[co]
         c.value = formel
         c.number_format = 'DD.MM.YYYY'

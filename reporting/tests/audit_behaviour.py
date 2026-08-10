@@ -435,6 +435,120 @@ def s17x(V):
         m.append(f'Gew.Wert erwartet {vol*0.5}, ist {p[f"Q{ziel}"].value}')
     return m
 
+def _monatszeile(V, blatt, name):
+    """Zeile der Monatsauswertung anhand des Monatsnamens finden."""
+    vs = V[blatt]
+    return next(r for r in range(200, 262) if vs[f'A{r}'].value == name)
+
+
+def s18(wb):
+    """Projektzeiträume erfassen: Monat, Quartal und Dauer müssen folgen."""
+    ws = wb[P]
+    dt = __import__('datetime')
+    # drei Deals in drei Quartalen desselben Jahres, einer im Vorjahr
+    ws['O9'], ws['P9'] = dt.datetime(2026, 2, 10), dt.datetime(2026, 2, 19)
+    ws['O10'], ws['P10'] = dt.datetime(2026, 5, 1), dt.datetime(2026, 5, 31)
+    ws['O12'], ws['P12'] = dt.datetime(2026, 11, 3), dt.datetime(2026, 11, 3)
+    ws['O13'], ws['P13'] = dt.datetime(2025, 7, 1), dt.datetime(2025, 7, 10)
+
+
+def s18x(V):
+    m = []
+    p = V[P]
+    for r, tage in ((9, 10), (10, 31), (12, 1), (13, 10)):
+        if p[f'G{r}'].value != tage:
+            m.append(f'Dauer G{r} erwartet {tage}, ist {p[f"G{r}"].value!r}')
+        if p[f'AY{r}'].value != 1:
+            m.append(f'AY{r} müsste 1 sein')
+    # Monatszeilen im Dashboard
+    for blatt in ('Dashboard', 'CEO Report'):
+        vs = V[blatt]
+        for monat, anzahl in (('Februar', 1), ('Mai', 1), ('November', 1)):
+            r = _monatszeile(V, blatt, monat)
+            if vs[f'E{r}'].value != anzahl:
+                m.append(f'{blatt} {monat}: erwartet {anzahl} Deal, '
+                         f'ist {vs[f"E{r}"].value!r}')
+        r = _monatszeile(V, blatt, 'andere Jahre')
+        if vs[f'E{r}'].value != 1:
+            m.append(f'{blatt}: «andere Jahre» erwartet 1, ist {vs[f"E{r}"].value!r}')
+        r = _monatszeile(V, blatt, 'ohne erfassten Zeitraum')
+        if vs[f'E{r}'].value != 42:
+            m.append(f'{blatt}: «ohne Zeitraum» erwartet 42, ist {vs[f"E{r}"].value!r}')
+        # Quartalsspalte muss zum Monat passen
+        for monat, quartal in (('Februar', 'Q1'), ('Mai', 'Q2'), ('November', 'Q4')):
+            r = _monatszeile(V, blatt, monat)
+            if vs[f'D{r}'].value != quartal:
+                m.append(f'{blatt} {monat}: Quartal {vs[f"D{r}"].value!r} statt {quartal}')
+    # Die Summe der Monatszeilen muss die aktive Pipeline treffen
+    vs = V['Dashboard']
+    r = _monatszeile(V, 'Dashboard', 'ohne erfassten Zeitraum') + 1
+    if abs((vs[f'F{r}'].value or 0) - 6862149.23) > 1:
+        m.append(f'Monats-Total erwartet 6862149, ist {vs[f"F{r}"].value!r}')
+    return m
+
+
+def s19(wb):
+    """Nur der Projektstart erfasst - der Zeitraum bleibt offen."""
+    ws = wb[P]
+    ws['O6'] = __import__('datetime').datetime(2026, 6, 1)
+
+
+def s19x(V):
+    m = []
+    p = V[P]
+    if p['AY6'].value != 0:
+        m.append('AY6 müsste 0 sein, solange das Ende fehlt')
+    if p['G6'].value != 365:
+        m.append(f'Dauer G6 müsste der erfasste Wert 365 bleiben, ist {p["G6"].value!r}')
+    if 'Zeitraum' not in str(p['AH6'].value):
+        m.append(f'Prüfstatus müsste den Zeitraum nennen: {p["AH6"].value!r}')
+    r = _monatszeile(V, 'Dashboard', 'Juni')
+    if V['Dashboard'][f'E{r}'].value != 0:
+        m.append('Halber Zeitraum darf nicht in die Monatsauswertung zählen')
+    return m
+
+
+def s20(wb):
+    """Bezugsjahr der Monatsauswertung umstellen."""
+    dt = __import__('datetime')
+    ws = wb[P]
+    ws['O9'], ws['P9'] = dt.datetime(2027, 3, 1), dt.datetime(2027, 3, 15)
+    d = wb['Dashboard']
+    zeile = next(r for r in range(200, 262) if d[f'A{r}'].value == 'Bezugsjahr')
+    d[f'D{zeile}'] = 2027
+
+
+def s20x(V):
+    m = []
+    r = _monatszeile(V, 'Dashboard', 'März')
+    if V['Dashboard'][f'E{r}'].value != 1:
+        m.append(f'Nach Umstellung auf 2027 müsste März 1 Deal zeigen, '
+                 f'ist {V["Dashboard"][f"E{r}"].value!r}')
+    r = _monatszeile(V, 'Dashboard', 'andere Jahre')
+    if V['Dashboard'][f'E{r}'].value != 0:
+        m.append('«andere Jahre» müsste 0 sein, wenn 2027 das Bezugsjahr ist')
+    return m
+
+
+def s21(wb):
+    """Gewonnener Auftrag auf 90 % - die Regel muss anschlagen."""
+    wb[P]['S9'] = 0.9
+
+
+def s21x(V):
+    m = []
+    zeile = wrow(V, 'Gewonnene Aufträge (WON) nicht auf 100 %')
+    W = V['⚖️ Wahrscheinlichkeit']
+    if W[f'E{zeile}'].value != 1:
+        m.append(f'Zähler «WON ohne 100 %» erwartet 1, ist {W[f"E{zeile}"].value!r}')
+    if '⚠' not in str(W[f'E{zeile+2}'].value):
+        m.append(f'Warnung zur 100-%-Regel fehlt: {W[f"E{zeile+2}"].value!r}')
+    # Der Gew.Wert der Zeile sinkt auf 90 % des Volumens
+    if abs((V[P]['Q9'].value or 0) - 342000) > 0.01:
+        m.append(f'Gew.Wert erwartet 342000, ist {V[P]["Q9"].value!r}')
+    return m
+
+
 SZENARIEN = [
     ('neuer_deal', s1, s1x),
     ('won_wird_lost', s2, s2x),
@@ -453,6 +567,10 @@ SZENARIEN = [
     ('mwst_schalter_netto', s15, s15x),
     ('einstand_unvollstaendig', s16, s16x),
     ('fuenfzig_auf_sechzig', s17, s17x),
+    ('zeitraum_erfassen', s18, s18x),
+    ('nur_startdatum', s19, s19x),
+    ('bezugsjahr_umstellen', s20, s20x),
+    ('won_ohne_hundert', s21, s21x),
 ]
 
 for name, mut, ex in SZENARIEN:

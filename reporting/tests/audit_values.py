@@ -458,8 +458,9 @@ for i in range(5):
         _von if isinstance(_von, datetime.datetime) else (raw[first]['H'] or ''),
         EX[f'E{r}'].value)
     _bis = raw[first]['P']
-    chk(f'ExecPDF!H{r} Projektende',
-        _bis if isinstance(_bis, datetime.datetime) else '', EX[f'H{r}'].value)
+    chk(f'ExecPDF!F{r} Projektende',
+        _bis if isinstance(_bis, datetime.datetime) else '', EX[f'F{r}'].value)
+    chk(f'ExecPDF!H{r} Segment', raw[first]['D'] or '', EX[f'H{r}'].value)
 
 # ================================================== 6) _data
 for r in range(2, 12):
@@ -495,11 +496,9 @@ for r in raw:
     # Hinweis: dass jeder Wert auf der Skala liegt, gilt fuer den Auslieferungs-
     # stand und wird in audit_struktur geprueft. Hier nicht, weil die
     # Verhaltenstests bewusst Werte ausserhalb der Skala setzen.
-    # Der bisherige Wert muss erhalten und der Faktor konsistent sein
-    alt = raw[r]['AI']
-    if isnum(alt) and isnum(sv):
-        chk(f'Pipeline!AI{r} Faktorlogik', True,
-            (faktor(alt) == faktor(sv)) or (round(alt, 6) == 0.5))
+    # Dass die Umschluesselung den Gewichtungsfaktor erhaelt, gilt fuer den
+    # Auslieferungsstand. Es wird deshalb in audit_struktur geprueft, nicht
+    # hier - die Verhaltenstests aendern Wahrscheinlichkeiten absichtlich.
 
 # Zuordnung bisher -> neu. Gewonnene Auftraege gehen auf 100 %, alle anderen
 # auf die naechste Aggreko-Stufe mit demselben Gewichtungsfaktor.

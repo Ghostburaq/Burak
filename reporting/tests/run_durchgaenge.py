@@ -18,7 +18,7 @@ STUFEN = ['build_master.py', 'build_governance.py',
           'build_erklaerung.py', 'build_umschluesselung.py']
 LAYOUT = 'build_layout.py'
 PRUEF = ['audit_static.py', 'audit_values.py', 'audit_struktur.py',
-         'audit_fragen.py', 'audit_layout.py']
+         'audit_fragen.py', 'audit_layout.py', 'audit_abnahme.py']
 PASSES = 5
 BEHAVIOUR_IN = {1, PASSES}          # der lange Verhaltenslauf im ersten und letzten Durchgang
 

@@ -235,6 +235,18 @@ for r in range(6, 861):
     alt = Vp[f'AI{r}'].value
     if isinstance(alt, (int, float)) and not isinstance(sv, (int, float)):
         note('UMSCHLUESSELUNG', f'AI{r} hat einen Altwert, S{r} ist aber leer')
+    # Die Umschluesselung darf den Gewichtungsfaktor nur dort aendern, wo es
+    # unvermeidlich ist: bei 50 % (kein Skalenwert im Band 45-59 %) und bei
+    # gewonnenen Auftraegen, die neu voll zaehlen.
+    if isinstance(alt, (int, float)) and isinstance(sv, (int, float)):
+        def _fk(x):
+            x = x if x <= 1 else x / 100
+            return 0.0 if x < 0.45 else 0.3 if x < 0.6 else 0.5 if x < 0.9 else (
+                0.9 if x < 1.0 else 1.0)
+        if _fk(alt) != _fk(sv) and round(alt, 6) != 0.5 and Vp[f'R{r}'].value != 'WON':
+            note('UMSCHLUESSELUNG',
+                 f'Zeile {r}: Faktor ändert sich von {_fk(alt):.0%} auf {_fk(sv):.0%} '
+                 f'ohne zulässigen Grund (bisher {alt}, neu {sv})')
 _AUSSER = next(r for r in range(_BD_TOT, 60)
                if isinstance(_WV[f'A{r}'].value, str)
                and _WV[f'A{r}'].value.startswith('Aktive Deals mit Wahrscheinlichkeit'))
