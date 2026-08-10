@@ -241,9 +241,9 @@ die einzelne Läufe nicht zeigen:
 - **Idempotenz** — ein zweites Neuberechnen der fertigen Datei darf nichts mehr
   verändern.
 
-Letzter vollständiger Lauf der Einzelprüfungen: **alle sechs ohne Befund** —
-0 Fehlerwerte in 25'847 Formeln, 20'099 unabhängig nachgerechnete Werte ohne
-Abweichung, 17 / 17 Verhaltenstests.
+Letzter Lauf: **5 / 5 Durchgänge fehlerfrei**, identischer Fingerabdruck
+`18a70c3c540f5fc0`, idempotent — 0 Fehlerwerte in 25'847 Formeln, 20'099
+unabhängig nachgerechnete Werte ohne Abweichung, 17 / 17 Verhaltenstests.
 
 Die Mappe enthält zusätzlich eine **eingebaute Selbstkontrolle** (⚖️-Blatt,
 Abschnitt 3): sie rechnet die gewichtete Pipeline auf zwei unabhängigen Wegen
