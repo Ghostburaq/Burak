@@ -46,7 +46,7 @@ NAVY      = 'FF1F3864'
 LIGHT     = 'FFF8FAFC'
 LIGHTG    = 'FFF0FDF4'
 AMBER     = 'FFFFF3CD'
-BAND_FILL = ['FFF1F5F9', 'FFFEF3C7', 'FFDBEAFE', 'FFDCFCE7']
+BAND_FILL = ['FFF1F5F9', 'FFFEF3C7', 'FFDBEAFE', 'FFDCFCE7', 'FFBBF7D0']
 
 thin = Side(style='thin', color='FFCBD5E1')
 BOX = Border(left=thin, right=thin, top=thin, bottom=thin)
@@ -174,9 +174,24 @@ SKALA = [
      'Commitment. Das Fleet-Team erfüllt die Quote auf dieser Stufe im OF.',
      'We are sure that we will get the order but wating on PO or documented commitment. The fleet team will fulfil '
      'the Quote at this stage in OF.'),
+    (6, 1.00,
+     'Auftrag erhalten. Unterschriebene Bestellung oder gültige PO liegt vor, Auftrags-/PO-Nummer und Belegdatum '
+     'sind erfasst. Der Auftrag ist gewonnen und zählt voll — er wird nicht mehr abgewertet. '
+     'Diese Stufe gilt ausschliesslich für Zeilen mit Status WON und ist eine Ergänzung von MiT CH '
+     'zur Aggreko-Liste, die bei 90 % endet.',
+     'Order received. A signed order or a valid PO is in place, order/PO number and document date are recorded. '
+     'The deal is won and counts in full. This step applies to rows with status WON only and is an addition by '
+     'MiT CH to the Aggreko list, which ends at 90%.'),
 ]
+S_FIRST = 6                       # erste Skalenzeile
+S_LAST = S_FIRST + len(SKALA) - 1  # letzte Skalenzeile
+R_INFO = S_LAST + 1                # Hinweiszeile unter der Skala
+R_SEC2 = R_INFO + 2                # Ueberschrift Abschnitt 2
+R_NOTE = R_SEC2 + 1                # Erklaerzeile
+R_BH = R_SEC2 + 2                  # Kopfzeile der Bandtabelle
+
 for i, (nr, val, de, en) in enumerate(SKALA):
-    r = 6 + i
+    r = S_FIRST + i
     put(ws, f'A{r}', nr, A(9, False, 'FF64748B'), LIGHT, align='center', border=True)
     put(ws, f'B{r}', val, A(14, True, NAVY), AMBER, fmt='0%', align='center', border=True)
     put(ws, f'C{r}', de, A(9), LIGHT, align='left', wrap=True, border=True)
@@ -188,43 +203,47 @@ for i, (nr, val, de, en) in enumerate(SKALA):
     put(ws, f'H{r}', None, fillc=LIGHT, border=True)
     ws.merge_cells(f'C{r}:E{r}')
     ws.merge_cells(f'F{r}:H{r}')
-    ws.row_dimensions[r].height = {0: 18, 1: 76, 2: 30, 3: 56, 4: 56}[i]
+    ws.row_dimensions[r].height = {0: 18, 1: 76, 2: 30, 3: 56, 4: 56, 5: 68}[i]
 
-put(ws, 'A11', 'ℹ️  Diese fünf Werte stehen in «MiT Strom Pipeline», Spalte S (Effektive Wahrscheinlichkeit) '
-               'als Dropdown zur Verfügung. Abweichende Werte werden dort orange markiert.',
+put(ws, f'A{R_INFO}', 'ℹ️  Diese sechs Werte stehen in «MiT Strom Pipeline», Spalte S (Effektive Wahrscheinlichkeit) '
+                      'als Dropdown zur Verfügung. Abweichende Werte werden dort orange markiert. '
+                      'Die Stufe 100 % ist ausschliesslich für gewonnene Aufträge (Status WON) vorgesehen.',
     Font(name='Arial', size=9, italic=True, color='FF64748B'), align='left')
-ws.merge_cells('A11:H11')
+ws.merge_cells(f'A{R_INFO}:H{R_INFO}')
 
 # ---- 2) Gewichtungsfaktoren + Live-Auswertung ---------------------------
-ws.merge_cells('A13:H13')
-put(ws, 'A13', '2️⃣   Pipeline (Weighted)  —  Gewichtungsfaktoren und Live-Auswertung',
+ws.merge_cells(f'A{R_SEC2}:H{R_SEC2}')
+put(ws, f'A{R_SEC2}', '2️⃣   Pipeline (Weighted)  —  Gewichtungsfaktoren und Live-Auswertung',
     A(11, True, 'FFFFFFFF'), GREEN, align='left')
-ws.row_dimensions[13].height = 22
+ws.row_dimensions[R_SEC2].height = 22
 
-put(ws, 'A14', 'Pipeline (Weighted) = Umsatz («total revenue») × Gewichtungsfaktor. '
-               'Der Faktor wird aus dem Feld «Effective Probability» abgeleitet:',
+put(ws, f'A{R_NOTE}', 'Pipeline (Weighted) = Umsatz («total revenue») × Gewichtungsfaktor. '
+                      'Der Faktor wird aus dem Feld «Effective Probability» abgeleitet:',
     Font(name='Arial', size=9, italic=True, color='FF64748B'), align='left')
-ws.merge_cells('A14:H14')
+ws.merge_cells(f'A{R_NOTE}:H{R_NOTE}')
 
-bh = [('A15', 'Band'), ('B15', 'Effective\nProbability von'), ('C15', 'bis'),
-      ('D15', 'Gewichtungs-\nfaktor'), ('E15', 'Anzahl\nDeals'),
-      ('F15', 'Umsatz CHF'), ('G15', 'Gewichtet CHF'), ('H15', 'Anteil am\ngew. Total')]
+bh = [('A', 'Band'), ('B', 'Effective\nProbability von'), ('C', 'bis'),
+      ('D', 'Gewichtungs-\nfaktor'), ('E', 'Anzahl\nDeals'),
+      ('F', 'Umsatz CHF'), ('G', 'Gewichtet CHF'), ('H', 'Anteil am\ngew. Total')]
 for co, t in bh:
-    put(ws, co, t, A(9, True, 'FFFFFFFF'), SLATE, align='center', wrap=True, border=True)
-ws.row_dimensions[15].height = 32
+    put(ws, f'{co}{R_BH}', t, A(9, True, 'FFFFFFFF'), SLATE, align='center', wrap=True, border=True)
+ws.row_dimensions[R_BH].height = 32
 
+# Die vier Aggreko-Baender plus die Stufe fuer gewonnene Auftraege: ein
+# gewonnener Auftrag wird nicht mehr abgewertet, er zaehlt voll.
 BANDS = [('0 – 44 %', 0.00, 0.4499999, 0.00),
          ('45 – 59 %', 0.45, 0.5999999, 0.30),
          ('60 – 89 %', 0.60, 0.8999999, 0.50),
-         ('≥ 90 %', 0.90, 1.00, 0.90)]
+         ('90 – 99 %', 0.90, 0.9999999, 0.90),
+         ('100 %  ·  WON', 1.00, 1.00, 1.00)]
 
-R0 = 16                      # erste Bandzeile
+R0 = R_BH + 1                # erste Bandzeile
 RT = R0 + len(BANDS)         # Totalzeile  = 20
 
 # Aktiv-Status-Liste (Systemliste, rechts daneben)
-put(ws, 'J15', 'Aktiv-Status (System)', A(9, True, 'FFFFFFFF'), SLATE, align='center', border=True)
+put(ws, f'J{R_BH}', 'Aktiv-Status (System)', A(9, True, 'FFFFFFFF'), SLATE, align='center', border=True)
 for i, s in enumerate(AKTIV):
-    put(ws, f'J{16+i}', s, A(9, False, 'FF64748B'), LIGHT, align='center', border=True)
+    put(ws, f'J{R0+i}', s, A(9, False, 'FF64748B'), LIGHT, align='center', border=True)
 ws.column_dimensions['J'].hidden = True
 
 JR = f'$J${R0}:$J${R0+len(AKTIV)-1}'      # $J$16:$J$23
@@ -285,7 +304,7 @@ checks = [
     ('Aktive Deals mit Wahrscheinlichkeit ausserhalb der Aggreko-Skala',
      f'=SUMPRODUCT({AKTIV_MASK},--({PQ}!$AF$6:$AF$860=0))', '0'),
     ('Handlungsbedarf Skala',
-     f'=IF(E{RC+5}=0,"✔  Alle aktiven Deals sind auf der Skala 0/10/30/60/90 %",'
+     f'=IF(E{RC+5}=0,"✔  Alle aktiven Deals sind auf der Skala 0/10/30/60/90/100 %",'
      f'"⚠  "&E{RC+5}&" Deal(s) auf einen Skalenwert setzen — orange markiert in Spalte S der Pipeline")',
      'General'),
     (f'Deals unterhalb des Pipeline-Druckbereichs (ab Zeile {PRINT_LAST+1})',
@@ -293,6 +312,17 @@ checks = [
     ('Status Druckbereich',
      f'=IF(E{RC+7}=0,"✔  Alle Deals liegen im Druckbereich (Zeilen 6–{PRINT_LAST})",'
      f'"⚠  "&E{RC+7}&" Deal(s) unterhalb Zeile {PRINT_LAST} — Druckbereich der Pipeline erweitern")',
+     'General'),
+    # Die Stufe 100 % gehoert ausschliesslich gewonnenen Auftraegen. Beide
+    # Richtungen werden geprueft: WON ohne 100 %, und 100 % ohne WON.
+    ('Gewonnene Aufträge (WON) nicht auf 100 %',
+     f'=SUMPRODUCT(--({PQ}!$B$6:$B$860<>""),--({PQ}!$R$6:$R$860="WON"),--({PQ}!$S$6:$S$860<>1))', '0'),
+    ('Wahrscheinlichkeit 100 % ohne Status WON',
+     f'=SUMPRODUCT(--({PQ}!$B$6:$B$860<>""),--({PQ}!$S$6:$S$860=1),--({PQ}!$R$6:$R$860<>"WON"))', '0'),
+    ('Status 100-%-Regel',
+     f'=IF(AND(E{RC+9}=0,E{RC+10}=0),'
+     f'"✔  Jeder gewonnene Auftrag steht auf 100 %, und 100 % steht nur bei gewonnenen Aufträgen",'
+     f'"⚠  "&E{RC+9}&" WON ohne 100 %  ·  "&E{RC+10}&" mal 100 % ohne WON — Spalte S der Pipeline prüfen")',
      'General'),
 ]
 # Beschriftung ueber A:D, Ergebnis ueber E:H
@@ -315,12 +345,15 @@ put(ws, f'A{RL}', '4️⃣   Was wurde umgestellt', A(11, True, 'FFFFFFFF'), GRE
 ws.row_dimensions[RL].height = 22
 
 LOG = [
-    ('Skala', 'Probability to Win % neu verbindlich 0 / 10 / 30 / 60 / 90 % (Dropdown in Pipeline Spalte S, '
-              'Begründungen siehe Abschnitt 1).'),
+    ('Skala', 'Probability to Win % neu verbindlich 0 / 10 / 30 / 60 / 90 % nach Aggreko, ergänzt um die Stufe '
+              '100 % für gewonnene Aufträge (Dropdown in Pipeline Spalte S, Begründungen siehe Abschnitt 1).'),
     ('Gewichtung', 'Gew.Wert CHF (Pipeline Spalte Q) = Volumen × Aggreko-Faktor statt Volumen × Wahrscheinlichkeit. '
-                   'Faktor: 0–44 % → 0 %, 45–59 % → 30 %, 60–89 % → 50 %, ab 90 % → 90 %.'),
-    ('Datenbestand', 'Die bestehenden Wahrscheinlichkeiten der einzelnen Deals wurden NICHT verändert — sie sind die '
-                     '«Effective Probability». Abweichungen von der Skala sind markiert und im Bewertungs-Meeting zu setzen.'),
+                   'Faktor: 0–44 % → 0 %, 45–59 % → 30 %, 60–89 % → 50 %, 90–99 % → 90 %, 100 % → 100 %.'),
+    ('Gewonnene Aufträge', 'Ein gewonnener Auftrag wird nicht mehr abgewertet: Status WON steht auf 100 % und zählt '
+                           'mit dem vollen Volumen in die gewichtete Pipeline. Vorher liefen gewonnene Aufträge mit '
+                           '90 % mit. Beide Richtungen der Regel werden in Abschnitt 3 laufend geprüft.'),
+    ('Datenbestand', 'Die bestehenden Wahrscheinlichkeiten der einzelnen Deals wurden auf die Skala umgeschlüsselt — '
+                     'das Protokoll steht in Abschnitt 5. Die Stufe 100 % ist gewonnenen Aufträgen vorbehalten.'),
     ('Berichte', 'Dashboard, CEO Report, 📄 Report, 📑 Executive PDF und 📊 Diagramme zeigen zusätzlich die gewichtete '
                  'Pipeline und die Verteilung über die vier Gewichtungsbänder.'),
     ('Technik', 'Der Faktor je Deal steht in der ausgeblendeten Hilfsspalte Y der Pipeline (bei Bedarf einblenden), '
@@ -348,20 +381,20 @@ ws.sheet_properties.pageSetUpPr.fitToPage = True
 
 # Benannter Bereich fuer das Dropdown
 wb.defined_names.add(DefinedName('Wahrscheinlichkeit_Skala',
-                                 attr_text=f'{WQ}!$B$6:$B$10'))
+                                 attr_text=f'{WQ}!$B${S_FIRST}:$B${S_LAST}'))
 
 # =========================================================================
 # 2) PIPELINE  --  Faktor-Helfer Y, neue Q-Formel, Dropdown, Markierung
 # =========================================================================
-BAND_LO = f'{WQ}!$B${R0}:$B${R0+3}'
-BAND_FK = f'{WQ}!$D${R0}:$D${R0+3}'
+BAND_LO = f'{WQ}!$B${R0}:$B${R0+len(BANDS)-1}'
+BAND_FK = f'{WQ}!$D${R0}:$D${R0+len(BANDS)-1}'
 
 for col, title in (('Y', '_GewFaktor'), ('AE', '_Aktiv'), ('AF', '_SkalaOK')):
     pipe[f'{col}5']._style = copy(pipe['Z5']._style)
     pipe[f'{col}5'].value = title
 
 AKTIV_LIST = f'{WQ}!$J${R0}:$J${R0+len(AKTIV)-1}'
-SKALA_LIST = f'{WQ}!$B$6:$B$10'
+SKALA_LIST = f'{WQ}!$B${S_FIRST}:$B${S_LAST}'
 
 for r in range(6, 861):
     # Gewichtungsfaktor gemaess Bandtabelle (Aggreko)
@@ -396,7 +429,8 @@ pipe['U4'] = '=' + '+'.join(
     [f'SUMIFS(Q$6:Q$860,R$6:R$860,"{s}")' for s in AKTIV])
 pipe['A2'] = ('  ✏️  Nur in diesem Sheet Daten erfassen — Dashboard, CEO Report, Report, Executive PDF und '
               'Diagramme aktualisieren sich automatisch.   ⚖️  Wahrscheinlichkeit (Spalte S) nach '
-              'Aggreko-Skala 0/10/30/60/90 % setzen — Modell siehe Blatt «⚖️ Wahrscheinlichkeit».')
+              'Aggreko-Skala 0/10/30/60/90 % setzen, gewonnene Aufträge auf 100 % — Modell siehe '
+              'Blatt «⚖️ Wahrscheinlichkeit».')
 
 # Verwaiste Restformeln weit unterhalb der Daten (Zeilen 862/864). Sie summierten
 # eine handverlesene Auswahl von Gew.Wert-Zellen, werden von nichts referenziert,
@@ -447,7 +481,7 @@ d = wb['_data']
 for co, t in [('K1', 'Wahrsch.-Band'), ('L1', 'Faktor'), ('M1', 'Umsatz CHF'),
               ('N1', 'Gewichtet CHF'), ('O1', 'Anzahl')]:
     d[co] = t
-for i in range(4):
+for i in range(len(BANDS)):
     r = 2 + i
     d[f'K{r}'] = f'={WQ}!$A${R0+i}'
     d[f'L{r}'] = f'={WQ}!$D${R0+i}'
@@ -468,8 +502,9 @@ ch.grouping = 'clustered'
 ch.gapWidth = 60
 ch.height = 8.5
 ch.width = 24
-data = Reference(d, min_col=13, max_col=14, min_row=1, max_row=5)   # M:N inkl. Header
-cats = Reference(d, min_col=11, min_row=2, max_row=5)               # K2:K5
+_DZ = 1 + len(BANDS)                                                # letzte Datenzeile
+data = Reference(d, min_col=13, max_col=14, min_row=1, max_row=_DZ)  # M:N inkl. Header
+cats = Reference(d, min_col=11, min_row=2, max_row=_DZ)              # K2:K…
 ch.add_data(data, titles_from_data=True)
 ch.set_categories(cats)
 ch.y_axis.numFmt = '#,##0'
@@ -523,8 +558,10 @@ def upgrade_report(sheet_name, last_col, foot_merge_old):
         put(sh, f'{col}207', t, A(9, True, 'FFFFFFFF'), SLATE, align='center', border=True)
     sh.row_dimensions[207].height = 20
 
-    for i in range(4):
-        r = 208 + i
+    RB0 = 208                       # erste Bandzeile im Bericht
+    RBT = RB0 + len(BANDS)          # Totalzeile
+    for i in range(len(BANDS)):
+        r = RB0 + i
         sh.merge_cells(f'A{r}:C{r}')
         sh.merge_cells(f'G{r}:H{r}')
         put(sh, f'A{r}', f'={WQ}!$A${R0+i}', A(10, True, NAVY), BAND_FILL[i],
@@ -541,37 +578,38 @@ def upgrade_report(sheet_name, last_col, foot_merge_old):
             align='center', border=True)
         sh.row_dimensions[r].height = 18
 
-    sh.merge_cells('A212:C212')
-    sh.merge_cells('G212:H212')
-    put(sh, 'A212', 'TOTAL aktive Pipeline', A(11, True, 'FFFFFFFF'), DARK,
+    sh.merge_cells(f'A{RBT}:C{RBT}')
+    sh.merge_cells(f'G{RBT}:H{RBT}')
+    put(sh, f'A{RBT}', 'TOTAL aktive Pipeline', A(11, True, 'FFFFFFFF'), DARK,
         align='left', border=True)
-    put(sh, 'D212', '', A(10), DARK, border=True)
-    put(sh, 'E212', f'={WQ}!$E${RT}', A(11, True, 'FFFFFFFF'), DARK, fmt='0',
+    put(sh, f'D{RBT}', '', A(10), DARK, border=True)
+    put(sh, f'E{RBT}', f'={WQ}!$E${RT}', A(11, True, 'FFFFFFFF'), DARK, fmt='0',
         align='center', border=True)
-    put(sh, 'F212', f'={WQ}!$F${RT}', A(12, True, 'FFFFFFFF'), DARK, fmt='#,##0',
+    put(sh, f'F{RBT}', f'={WQ}!$F${RT}', A(12, True, 'FFFFFFFF'), DARK, fmt='#,##0',
         align='right', border=True)
-    put(sh, 'G212', f'={WQ}!$G${RT}', A(13, True, GOLD), DARK, fmt='#,##0',
+    put(sh, f'G{RBT}', f'={WQ}!$G${RT}', A(13, True, GOLD), DARK, fmt='#,##0',
         align='right', border=True)
-    put(sh, 'I212', f'={WQ}!$H${RT}', A(11, True, 'FFFFFFFF'), DARK, fmt='0.0%',
+    put(sh, f'I{RBT}', f'={WQ}!$H${RT}', A(11, True, 'FFFFFFFF'), DARK, fmt='0.0%',
         align='center', border=True)
-    sh.row_dimensions[212].height = 26
+    sh.row_dimensions[RBT].height = 26
 
-    sh.merge_cells(f'A213:{lc}213')
-    put(sh, 'A213',
+    sh.merge_cells(f'A{RBT+1}:{lc}{RBT+1}')
+    put(sh, f'A{RBT+1}',
         f'="Gewichtungsgrad der Gesamtpipeline: "&TEXT({WQ}!$H${RT},"0.0%")'
-        f'&"   ·   Faktoren: 0–44 % → 0 %  |  45–59 % → 30 %  |  60–89 % → 50 %  |  ab 90 % → 90 %"',
+        f'&"   ·   Faktoren: 0–44 % → 0 %  |  45–59 % → 30 %  |  60–89 % → 50 %  |  90–99 % → 90 %  |  100 % → 100 %"',
         Font(name='Arial', size=9, italic=True, color='FF64748B'), align='left')
-    sh.row_dimensions[213].height = 16
+    sh.row_dimensions[RBT+1].height = 16
 
     # Fussnote neu
-    sh.merge_cells(f'A215:{lc}215')
-    sh['A215'].value = foot_val
-    sh['A215']._style = foot_style
-    sh.row_dimensions[215].height = 13.5
+    RFOOT = RBT + 3
+    sh.merge_cells(f'A{RFOOT}:{lc}{RFOOT}')
+    sh[f'A{RFOOT}'].value = foot_val
+    sh[f'A{RFOOT}']._style = foot_style
+    sh.row_dimensions[RFOOT].height = 13.5
 
     # Der neue Abschnitt soll nicht mitten auf einer Seite beginnen.
     sh.row_breaks.append(Break(id=205))
-    sh.print_area = f"'{sheet_name}'!$A$1:${lc}$215"
+    sh.print_area = f"'{sheet_name}'!$A$1:${lc}${RFOOT}"
 
 
 upgrade_report('Dashboard', 'K', 'A206:J206')
@@ -616,8 +654,10 @@ for col, t in [('A', 'Band'), ('B', 'Faktor'), ('C', 'Anzahl Deals'),
     rep[f'{col}44']._style = copy(rep['A14']._style)
     rep[f'{col}44'].value = t
 
-for i in range(4):
-    r = 45 + i
+RP0 = 45                        # erste Bandzeile im Report
+RPT = RP0 + len(BANDS)          # Totalzeile
+for i in range(len(BANDS)):
+    r = RP0 + i
     rep[f'A{r}'] = f'={WQ}!$A${R0+i}'
     rep[f'B{r}'] = f'={WQ}!$D${R0+i}'
     rep[f'C{r}'] = f'={WQ}!$E${R0+i}'
@@ -632,30 +672,31 @@ for i in range(4):
         c.border = BOX
         c.fill = fill(BAND_FILL[i])
 
-rep['A49'] = 'TOTAL aktiv'
-rep['B49'] = ''
-rep['C49'] = f'={WQ}!$E${RT}'
-rep['D49'] = f'={WQ}!$F${RT}'
-rep['E49'] = f'={WQ}!$G${RT}'
+rep[f'A{RPT}'] = 'TOTAL aktiv'
+rep[f'B{RPT}'] = ''
+rep[f'C{RPT}'] = f'={WQ}!$E${RT}'
+rep[f'D{RPT}'] = f'={WQ}!$F${RT}'
+rep[f'E{RPT}'] = f'={WQ}!$G${RT}'
 for col, fmt in (('A', 'General'), ('B', '0%'), ('C', '0'),
                  ('D', '#,##0" CHF"'), ('E', '#,##0" CHF"')):
-    c = rep[f'{col}49']
+    c = rep[f'{col}{RPT}']
     c.font = C(11, True, 'FFFFFFFF')
     c.number_format = fmt
     c.alignment = Alignment(horizontal='center', vertical='center')
     c.border = BOX
     c.fill = fill(NAVY)
-rep['A49'].alignment = Alignment(horizontal='left', vertical='center')
+rep[f'A{RPT}'].alignment = Alignment(horizontal='left', vertical='center')
 
-rep.merge_cells('A50:G50')
-rep['A50'] = (f'="Faktoren: 0–44 % → 0 %  |  45–59 % → 30 %  |  60–89 % → 50 %  |  ab 90 % → 90 %.   '
-              f'Gewichtungsgrad gesamt: "&TEXT({WQ}!$H${RT},"0.0%")&"   ·   Modell: Blatt «⚖️ Wahrscheinlichkeit»"')
-rep['A50'].font = Font(name='Calibri', size=9, italic=True, color='FF808080')
+rep.merge_cells(f'A{RPT+1}:G{RPT+1}')
+rep[f'A{RPT+1}'] = (f'="Faktoren: 0–44 % → 0 %  |  45–59 % → 30 %  |  60–89 % → 50 %  |  90–99 % → 90 %  |  100 % → 100 %.   '
+                    f'Gewichtungsgrad gesamt: "&TEXT({WQ}!$H${RT},"0.0%")&"   ·   Modell: Blatt «⚖️ Wahrscheinlichkeit»"')
+rep[f'A{RPT+1}'].font = Font(name='Calibri', size=9, italic=True, color='FF808080')
 
-rep.merge_cells('A52:H52')
-rep['A52'].value = foot_val
-rep['A52']._style = foot_style
-rep.print_area = "'📄 Report'!$A$1:$G$52"
+REP_FOOT = RPT + 3
+rep.merge_cells(f'A{REP_FOOT}:H{REP_FOOT}')
+rep[f'A{REP_FOOT}'].value = foot_val
+rep[f'A{REP_FOOT}']._style = foot_style
+rep.print_area = f"'📄 Report'!$A$1:$G${REP_FOOT}"
 
 # =========================================================================
 # 7) 📑 EXECUTIVE PDF
@@ -693,8 +734,10 @@ for co, t in [('B33', 'Wahrsch.-Band'), ('D33', 'Faktor'),
     ex[co].value = t
 
 body_style = copy(ex['D23']._style)
-for i in range(4):
-    r = 34 + i
+EX0 = 34                        # erste Bandzeile im Executive PDF
+EXT = EX0 + len(BANDS)          # Totalzeile
+for i in range(len(BANDS)):
+    r = EX0 + i
     ex.merge_cells(f'B{r}:C{r}')
     ex.merge_cells(f'E{r}:F{r}')
     ex.merge_cells(f'G{r}:H{r}')
@@ -708,13 +751,13 @@ for i in range(4):
         c.number_format = fmt
         c.fill = fill(BAND_FILL[i])
 
-ex.merge_cells('B38:C38')
-ex.merge_cells('E38:F38')
-ex.merge_cells('G38:H38')
-for co, formula, fmt in [('B38', 'TOTAL aktiv', 'General'),
-                         ('D38', '', 'General'),
-                         ('E38', f'={WQ}!$F${RT}', '#,##0'),
-                         ('G38', f'={WQ}!$G${RT}', '#,##0')]:
+ex.merge_cells(f'B{EXT}:C{EXT}')
+ex.merge_cells(f'E{EXT}:F{EXT}')
+ex.merge_cells(f'G{EXT}:H{EXT}')
+for co, formula, fmt in [(f'B{EXT}', 'TOTAL aktiv', 'General'),
+                         (f'D{EXT}', '', 'General'),
+                         (f'E{EXT}', f'={WQ}!$F${RT}', '#,##0'),
+                         (f'G{EXT}', f'={WQ}!$G${RT}', '#,##0')]:
     c = ex[co]
     c._style = copy(body_style)
     c.value = formula
@@ -722,15 +765,16 @@ for co, formula, fmt in [('B38', 'TOTAL aktiv', 'General'),
     c.font = Font(name='Cambria', size=11, bold=True, color='FFFFFFFF')
     c.fill = fill(NAVY)
 
-ex.merge_cells('B39:H39')
-ex['B39'] = (f'="Faktoren: 0–44 % → 0 %  |  45–59 % → 30 %  |  60–89 % → 50 %  |  ab 90 % → 90 %   ·   '
-             f'Gewichtungsgrad: "&TEXT({WQ}!$H${RT},"0.0%")')
-ex['B39'].font = Font(name='Cambria', size=9, italic=True, color='FF808080')
+ex.merge_cells(f'B{EXT+1}:H{EXT+1}')
+ex[f'B{EXT+1}'] = (f'="Faktoren: 0–44 % → 0 %  |  45–59 % → 30 %  |  60–89 % → 50 %  |  90–99 % → 90 %  |  100 % → 100 %   ·   '
+                   f'Gewichtungsgrad: "&TEXT({WQ}!$H${RT},"0.0%")')
+ex[f'B{EXT+1}'].font = Font(name='Cambria', size=9, italic=True, color='FF808080')
 
-ex.merge_cells('A41:H41')
-ex['A41'].value = foot_val
-ex['A41']._style = foot_style
-ex.print_area = "'📑 Executive PDF'!$A$1:$H$41"
+EX_FOOT = EXT + 3
+ex.merge_cells(f'A{EX_FOOT}:H{EX_FOOT}')
+ex[f'A{EX_FOOT}'].value = foot_val
+ex[f'A{EX_FOOT}']._style = foot_style
+ex.print_area = f"'📑 Executive PDF'!$A$1:$H${EX_FOOT}"
 ex.page_setup.fitToHeight = 1
 ex.page_setup.fitToWidth = 1
 ex.sheet_properties.pageSetUpPr.fitToPage = True

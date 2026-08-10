@@ -152,10 +152,12 @@ FAK, WON_S, INUM = f'{PQ}!$AJ$6:$AJ${LAST}', f'{PQ}!$AK$6:$AK${LAST}', f'{PQ}!$A
 AKT = f'{PQ}!$AP$6:$AP${LAST}'
 VOL, STA, KUN = f'{PQ}!$I$6:$I${LAST}', f'{PQ}!$R$6:$R${LAST}', f'{PQ}!$B$6:$B${LAST}'
 ABW, VART, VARI = f'{PQ}!$AA$6:$AA${LAST}', f'{PQ}!$AB$6:$AB${LAST}', f'{PQ}!$AD$6:$AD${LAST}'
-EINOK, KALK, AUFT = f'{PQ}!$AR$6:$AR${LAST}', f'{PQ}!$AS$6:$AS${LAST}', f'{PQ}!$AT$6:$AT${LAST}'
-NEGM, BELOK, WONB = f'{PQ}!$AU$6:$AU${LAST}', f'{PQ}!$AV$6:$AV${LAST}', f'{PQ}!$AW$6:$AW${LAST}'
-ZAEHLT, MEHRF = f'{PQ}!$AX$6:$AX${LAST}', f'{PQ}!$AY$6:$AY${LAST}'
-MARGN, NETTN = f'{PQ}!$AZ$6:$AZ${LAST}', f'{PQ}!$BA$6:$BA${LAST}'
+EINOK = f'{PQ}!$AR$6:$AR${LAST}'
+BELOK, WONB = f'{PQ}!$AS$6:$AS${LAST}', f'{PQ}!$AT$6:$AT${LAST}'
+ZAEHLT, MEHRF = f'{PQ}!$AU$6:$AU${LAST}', f'{PQ}!$AV$6:$AV${LAST}'
+MONAT, ZEITOK = f'{PQ}!$AX$6:$AX${LAST}', f'{PQ}!$AY$6:$AY${LAST}'
+NETTN = f'{PQ}!$AZ$6:$AZ${LAST}'
+VON, BIS = f'{PQ}!$O$6:$O${LAST}', f'{PQ}!$P$6:$P${LAST}'
 OFFNR, AUFNR = f'{PQ}!$AE$6:$AE${LAST}', f'{PQ}!$AF$6:$AF${LAST}'
 ALTW, SKOK = f'{PQ}!$AI$6:$AI${LAST}', f'{PQ}!$AQ$6:$AQ${LAST}'
 IST_OFFERTE = f'--(({STA}="offered")+({STA}="to be offered")>0)'
@@ -174,13 +176,16 @@ d.merge_cells(f'G{row}:H{row}')
 row += 1
 
 ANTWORT = [
-    ('Margenplanung: warum negative Margen?',
-     'Die MwSt war als Kostenposition erfasst und wurde vom Umsatz abgezogen — das drückte jede betroffene '
-     'Marge um den vollen MwSt-Betrag. Zusätzlich wurde bei einem Teil der Zeilen gar nicht kalkuliert: '
-     'dort wurde nur der Verkaufspreis in netto und MwSt aufgeteilt. Neu gilt: Marge = Nettoumsatz − Einstand, '
-     'ohne MwSt. Wo keine echte Kalkulation vorliegt, wird bewusst KEINE Marge ausgewiesen.',
-     f'="Zeilen ohne echte Kalkulation: "&SUMPRODUCT({AKT},{AUFT})&"  ·  Kosten über Umsatz: "'
-     f'&SUMPRODUCT({AKT},{NEGM})&"  ·  sauber kalkuliert: "&SUMPRODUCT({AKT},{KALK})'),
+    ('Margenplanung: warum keine Marge mehr im Bericht steht',
+     'Die negativen Margen kamen daher, dass die MwSt als Kostenposition erfasst und vom Umsatz abgezogen '
+     'wurde, und dass bei einem Teil der Zeilen gar nicht kalkuliert, sondern nur der Verkaufspreis in netto '
+     'und MwSt aufgeteilt wurde. Auf dieser Datengrundlage stiftet eine ausgewiesene Marge mehr '
+     'Verunsicherung als Klarheit. Die Marge ist deshalb aus dem gesamten Reporting entfernt — Spalten, '
+     'Kennzahlen, Diagramme und Prüfstatus-Meldungen. Die Kostenspalten J–N bleiben in der Pipeline als '
+     'Arbeitsgrundlage erhalten, werden aber in keinem Bericht mehr ausgewertet. Der Bericht zeigt '
+     'stattdessen Volumen, Status, Nachweis und Projektzeitraum.',
+     f'="Kostenspalten weiterhin gepflegt: "&SUMPRODUCT({AKT},{EINOK})&" von "&SUM({AKT})'
+     f'&" aktiven Deals  ·  Marge im Bericht: nicht ausgewiesen"'),
     ('Verantwortung der Kalkulation',
      'Der Einstand wird vom zuständigen Verkäufer erfasst und vor dem Statuswechsel auf WON durch den '
      'Innendienst gegengeprüft. Die Spalte «Prüfstatus» (AH in der Pipeline) zeigt für jede Zeile, ob das '
@@ -266,10 +271,11 @@ GAPS = [
     ('WON ohne vollständigen Einstand',
      f'=SUMPRODUCT(--({STA}="WON"),--({EINOK}=0))',
      f'=SUMPRODUCT(--({STA}="WON"),--({EINOK}=0),{INUM})'),
-    ('Aktive Deals ohne Kostenkalkulation (nur Preis-Aufteilung)',
-     f'=SUMPRODUCT({AKT},{AUFT})', f'=SUMPRODUCT({AKT},{AUFT},{INUM})'),
-    ('Aktive Deals mit Einstand über dem Nettoumsatz',
-     f'=SUMPRODUCT({AKT},{NEGM})', f'=SUMPRODUCT({AKT},{NEGM},{INUM})'),
+    ('Aktive Deals ohne erfassten Projektzeitraum',
+     f'=SUMPRODUCT({AKT},--({ZEITOK}=0))', f'=SUMPRODUCT({AKT},--({ZEITOK}=0),{INUM})'),
+    ('WON ohne erfassten Projektzeitraum',
+     f'=SUMPRODUCT(--({STA}="WON"),--({ZEITOK}=0))',
+     f'=SUMPRODUCT(--({STA}="WON"),--({ZEITOK}=0),{INUM})'),
     ('WON ohne Vertragsart (Einzelauftrag / Rahmenabruf / Abrufbereitschaft)',
      f'=SUMPRODUCT(--({STA}="WON"),--({VART}=""))',
      f'=SUMPRODUCT(--({STA}="WON"),--({VART}=""),{INUM})'),
@@ -408,8 +414,8 @@ ANN = [
      'Erfassung ändert — alle Blätter rechnen automatisch nach.'),
     ('MwSt-Satz', 0.081, '0.0%', 'Schweizer Normalsatz seit 01.01.2024.'),
     ('Schwelle «Preis-Aufteilung»', 0.005, '0.0%',
-     'Liegt der Einstand näher als diese Schwelle am Nettoumsatz, ist das keine Kalkulation, sondern eine '
-     'Aufteilung des Verkaufspreises. Solche Zeilen weisen bewusst KEINE Marge aus.'),
+     'Ohne Bedeutung für die Berichte, seit die Marge nicht mehr ausgewiesen wird. Der Wert bleibt '
+     'als Annahme dokumentiert, falls die Margenbetrachtung später wieder aufgenommen wird.'),
 ]
 for label, val, fmt, why in ANN:
     put(d, f'B{row}', label, A(10, True, NAVY), LIGHT, align='left', border=True)
@@ -440,22 +446,23 @@ wb.defined_names.add(DefinedName('MwSt_Satz', attr_text=f'{DQ}!$C${ANN_ROW+1}'))
 wb.defined_names.add(DefinedName('Schwelle_Aufteilung', attr_text=f'{DQ}!$C${ANN_ROW+2}'))
 wb.defined_names.add(DefinedName('Netto_Faktor', attr_text=f'{DQ}!$C${FAKTOR_ROW}'))
 
-# ---- 4) Margendefinition ------------------------------------------------
-band(d, row, text='4️⃣   Margendefinition  —  wie gerechnet wird und was bewusst NICHT ausgewiesen wird')
+# ---- 4) Projektzeitraum --------------------------------------------------
+band(d, row, text='4️⃣   Projektzeitraum  —  wie Start, Ende und Dauer erfasst und gerechnet werden')
 row += 1
 MARGE = [
-    ('Nettoumsatz', 'Volumen CHF ÷ Umrechnungsfaktor  →  Pipeline Spalte Y'),
-    ('− Einstand', 'Equipment + Transport + Treibstoff + Personal/Technik + Übrige Kosten '
-                   '(Spalten J–N)  →  Summe in Spalte Z'),
-    ('⇒ Marge CHF', 'Pipeline Spalte O.  Marge % (Spalte P) = Marge ÷ Nettoumsatz — neu nicht mehr ÷ Bruttovolumen.'),
-    ('MwSt', 'Kommt auf keiner Seite der Rechnung vor. Sie war bisher als Kostenposition in Spalte N erfasst '
-             'und wurde vom Umsatz abgezogen. Genau das erzeugte die negativen Margen. Die Spalte heisst neu '
-             '«Übrige Kosten» und enthält keine MwSt mehr.'),
-    ('Kein Ausweis ohne Kalkulation', 'Ist der Einstand nicht erfasst oder entspricht er dem Nettoumsatz '
-                                      '(reine Preis-Aufteilung), bleibt die Marge leer und der Prüfstatus nennt den Grund. '
-                                      'So steht nie eine erfundene Zahl im Report.'),
-    ('Aggregate', 'Durchschnitts- und Summenmargen in den Berichten zählen ausschliesslich sauber kalkulierte '
-                  'Deals. Nicht kalkulierte Deals verwässern damit keine Kennzahl.'),
+    ('Projektstart (Spalte O)', 'Erster Tag des Projekts als echtes Datum TT.MM.JJJJ. Kein Text, keine '
+                                'Monatsangabe — die Zelle ist als Datum geprüft, damit sich damit rechnen '
+                                'und sortieren lässt.'),
+    ('Projektende (Spalte P)', 'Letzter Tag des Projekts, ebenfalls als echtes Datum.'),
+    ('⇒ Dauer (Spalte G)', 'Projektende − Projektstart + 1 Kalendertag; beide Tage zählen mit. '
+                           'Beispiel: 01.08.2026 bis 10.08.2026 ergibt 10 Tage.'),
+    ('Solange kein Datum steht', 'Steht nur eines der beiden Daten oder keines, bleibt der bisher von Hand '
+                                 'erfasste Dauerwert unverändert stehen (gesichert in der ausgeblendeten '
+                                 'Spalte AW). Überschrieben wird nichts.'),
+    ('«Auf Abruf» und «tbd»', 'Dort bleiben beide Datumsfelder leer, und der Prüfstatus meldet den fehlenden '
+                              'Zeitraum. Erst wenn der Abruf terminiert ist, werden die Daten erfasst.'),
+    ('Auswertung', 'Aus dem Projektstart wird der Monatsanfang gebildet (ausgeblendete Spalte AX). '
+                   'Darauf beruht die Auswertung nach Monat und Quartal in den Berichten.'),
 ]
 for k, v in MARGE:
     put(d, f'B{row}', k, A(10, True, NAVY), LIGHT, align='left', wrap=True, border=True)
@@ -569,6 +576,10 @@ DEF_LAST_ROW = row
 # =========================================================================
 # 3) Pipeline: neue Fachspalten, korrigierte Marge, Pruefstatus
 # =========================================================================
+def m_ok(bereich, zeile):
+    return bereich.min_row == zeile
+
+
 hdr_style = copy(pipe['X5']._style)
 data_style = copy(pipe['X6']._style)
 num_style = copy(pipe['I6']._style)
@@ -604,6 +615,27 @@ for r in range(6, LAST + 1):
 pipe['N5'].value = 'Übrige Kosten\nCHF'
 print(f'MwSt-Formeln aus Spalte N entfernt: {len(mwst_rows)} Zeilen')
 
+# --- Spalte O und P: aus Marge CHF / Marge % wird der Projektzeitraum.
+# Die Kostenspalten J bis N bleiben als Arbeitsgrundlage stehen, ausgewertet
+# wird die Marge nirgends mehr.
+ZEIT = [('O', 'Projektstart', 14), ('P', 'Projektende', 14)]
+for col, title, breite in ZEIT:
+    pipe.column_dimensions[col].width = breite
+    pipe.column_dimensions[col].hidden = False
+    h = pipe[f'{col}5']
+    h._style = copy(hdr_style)
+    h.value = title
+    h.comment = None
+
+# Die bisher von Hand erfasste Mietdauer wird gesichert, bevor Spalte G zur
+# Formel wird - sie bleibt stehen, solange kein Zeitraum erfasst ist.
+dauer_alt = {}
+for r in range(6, LAST + 1):
+    v = pipe[f'G{r}'].value
+    if (pipe[f'B{r}'].value not in (None, '') and v is not None
+            and not (isinstance(v, str) and v.startswith('='))):
+        dauer_alt[r] = v
+
 SCHW = 'Schwelle_Aufteilung'
 for r in range(6, LAST + 1):
     # --- sichtbare Fachspalten
@@ -611,40 +643,52 @@ for r in range(6, LAST + 1):
     pipe[f'Z{r}'] = f'=IF(B{r}="","",IF(COUNT(J{r}:N{r})=0,"",SUM(J{r}:N{r})))'
     # Sammelt ALLE Befunde einer Zeile - ein WON ohne Beleg darf ein
     # Margenproblem in derselben Zeile nicht verdecken.
-    pipe[f'BB{r}'] = (f'=IF(B{r}="","",'
-                      f'IF(AND(R{r}="WON",AV{r}=0),"⛔ Beleg fehlt · ","")'
+    # Sammelt ALLE Befunde einer Zeile - ein fehlender Beleg darf einen
+    # fehlenden Zeitraum in derselben Zeile nicht verdecken.
+    pipe[f'BA{r}'] = (f'=IF(B{r}="","",'
+                      f'IF(AND(R{r}="WON",AS{r}=0),"⛔ Beleg fehlt · ","")'
                       f'&IF(AND(R{r}="WON",AR{r}=0),"⛔ Einstand fehlt · ","")'
                       f'&IF(AND(R{r}<>"WON",AR{r}=0),"○ Einstand offen · ","")'
                       f'&IF(AND(R{r}="WON",AB{r}=""),"⛔ Vertragsart fehlt · ","")'
-                      f'&IF(AU{r}=1,"⚠ Kosten über Umsatz · ","")'
-                      f'&IF(AT{r}=1,"⚠ nur Preis-Aufteilung · ",""))')
-    pipe[f'BC{r}'] = (f'=IF(B{r}="","",'
-                      f'IF(AND(R{r}="WON",AV{r}=0),"⛔ Nachweis fehlt",'
-                      f'IF(AU{r}=1,"⚠ Marge negativ",'
-                      f'IF(AT{r}=1,"⚠ nicht kalkuliert",'
+                      f'&IF(AND(ISNUMBER(O{r}),ISNUMBER(P{r})),IF(P{r}<O{r},"⚠ Ende vor Start · ",""),"")'
+                      f'&IF(AND(R{r}="WON",AY{r}=0,NOT(AND(ISNUMBER(O{r}),ISNUMBER(P{r})))),"⛔ Zeitraum fehlt · ","")'
+                      f'&IF(AND(R{r}<>"WON",AY{r}=0,NOT(AND(ISNUMBER(O{r}),ISNUMBER(P{r})))),"○ Zeitraum offen · ",""))')
+    pipe[f'BB{r}'] = (f'=IF(B{r}="","",'
+                      f'IF(AND(R{r}="WON",AS{r}=0),"⛔ Nachweis fehlt",'
+                      f'IF(AND(ISNUMBER(O{r}),ISNUMBER(P{r}),P{r}<O{r}),"⚠ Ende vor Start",'
+                      f'IF(AND(R{r}="WON",AY{r}=0),"⛔ Zeitraum fehlt",'
                       f'IF(AR{r}=0,"○ Einstand offen",'
-                      f'IF(R{r}="WON","✅ belegt","✔ kalkuliert"))))))')
-    pipe[f'AH{r}'] = (f'=IF(B{r}="","",IF(BB{r}="",'
-                      f'IF(R{r}="WON","✅ belegt & kalkuliert","✔ kalkuliert"),'
-                      f'LEFT(BB{r},LEN(BB{r})-3)))')
-    # --- Marge neu: Nettoumsatz minus Einstand, nur bei echter Kalkulation
-    pipe[f'O{r}'] = f'=IF(OR(AS{r}=1,AU{r}=1),Y{r}-Z{r},"")'
-    pipe[f'P{r}'] = (f'=IFERROR(IF(AND(ISNUMBER(O{r}),ISNUMBER(Y{r}),Y{r}<>0),O{r}/Y{r},""),"")')
+                      f'IF(AY{r}=0,"○ Zeitraum offen",'
+                      f'IF(R{r}="WON","✅ belegt","✔ erfasst")))))))')
+    pipe[f'AH{r}'] = (f'=IF(B{r}="","",IF(BA{r}="",'
+                      f'IF(R{r}="WON","✅ belegt & vollständig","✔ vollständig"),'
+                      f'LEFT(BA{r},LEN(BA{r})-3)))')
+    # --- Projektzeitraum: Eingabefelder, keine Formeln
+    pipe[f'O{r}'] = None
+    pipe[f'P{r}'] = None
+    # --- Mietdauer: gerechnet, sobald beide Daten stehen. Sonst bleibt der
+    #     bisher von Hand erfasste Wert stehen (gesichert in AW).
+    pipe[f'G{r}'] = (f'=IF(B{r}="","",IF(AY{r}=1,P{r}-O{r}+1,'
+                     f'IF(AW{r}="","",AW{r})))')
     # --- Hilfsspalten
     pipe[f'AR{r}'] = f'=IF(B{r}="",0,IF(AND(COUNT(J{r}:M{r})=4,SUM(J{r}:M{r})>0),1,0))'
-    # AND() wertet in Excel jedes Argument aus - der ISNUMBER-Waechter muss
-    # deshalb geschachtelt sein, sonst rechnet die Formel mit Text weiter.
-    guard = (f'IF(AR{r}=0,0,IF(NOT(ISNUMBER(Y{r})),0,IF(NOT(ISNUMBER(Z{r})),0,'
-             f'IF(Y{r}<=0,0,{{inner}}))))')
-    pipe[f'AS{r}'] = '=' + guard.format(inner=f'IF(Z{r}<Y{r}*(1-{SCHW}),1,0)')
-    pipe[f'AT{r}'] = '=' + guard.format(inner=f'IF(ABS(Z{r}-Y{r})<=Y{r}*{SCHW},1,0)')
-    pipe[f'AU{r}'] = '=' + guard.format(inner=f'IF(Z{r}>Y{r}*(1+{SCHW}),1,0)')
-    pipe[f'AV{r}'] = f'=IF(B{r}="",0,IF(AND(AF{r}<>"",AG{r}<>""),1,0))'
-    pipe[f'AW{r}'] = f'=IF(AND(R{r}="WON",AV{r}=1,AR{r}=1),1,0)'
-    pipe[f'AX{r}'] = f'=IF(B{r}="",0,IF(AD{r}="Alternative – zählt nicht",0,1))'
-    pipe[f'AY{r}'] = f'=IF(B{r}="",0,IF(COUNTIF($B$6:$B${LAST},B{r})>1,1,0))'
-    pipe[f'AZ{r}'] = f'=IF(ISNUMBER(O{r}),O{r},0)'
-    pipe[f'BA{r}'] = f'=IF(ISNUMBER(Y{r}),Y{r},0)'
+    pipe[f'AS{r}'] = f'=IF(B{r}="",0,IF(AND(AF{r}<>"",AG{r}<>""),1,0))'
+    pipe[f'AT{r}'] = f'=IF(AND(R{r}="WON",AS{r}=1,AR{r}=1),1,0)'
+    pipe[f'AU{r}'] = f'=IF(B{r}="",0,IF(AD{r}="Alternative – zählt nicht",0,1))'
+    pipe[f'AV{r}'] = f'=IF(B{r}="",0,IF(COUNTIF($B$6:$B${LAST},B{r})>1,1,0))'
+    pipe[f'AW{r}'] = dauer_alt.get(r)
+    # Monatsanfang des Projektstarts - Grundlage der zeitlichen Auswertung.
+    pipe[f'AX{r}'] = f'=IF(AY{r}=1,DATE(YEAR(O{r}),MONTH(O{r}),1),"")'
+    pipe[f'AY{r}'] = (f'=IF(B{r}="",0,IF(AND(ISNUMBER(O{r}),ISNUMBER(P{r})),'
+                      f'IF(P{r}>=O{r},1,0),0))')
+    pipe[f'AZ{r}'] = f'=IF(ISNUMBER(Y{r}),Y{r},0)'
+    for _co in ('O', 'P'):
+        _c = pipe[f'{_co}{r}']
+        _c._style = copy(num_style)
+        _c.number_format = 'DD.MM.YYYY'
+        _c.alignment = Alignment(horizontal='center', vertical='center')
+        _c.fill = fill(INPUT_FILL)
+    pipe[f'AX{r}'].number_format = 'MMM YYYY'
     # --- Formate der neuen sichtbaren Spalten
     for col, _t, _w, fmt in NEU:
         c = pipe[f'{col}{r}']
@@ -653,13 +697,18 @@ for r in range(6, LAST + 1):
         if col in ('AA', 'AB', 'AC', 'AD', 'AE', 'AF', 'AH'):
             c.alignment = Alignment(horizontal='left', vertical='center')
 
-for col in ('AR', 'AS', 'AT', 'AU', 'AV', 'AW', 'AX', 'AY', 'AZ', 'BA', 'BB', 'BC'):
+for col in ('AR', 'AS', 'AT', 'AU', 'AV', 'AW', 'AX', 'AY', 'AZ', 'BA', 'BB'):
     pipe.column_dimensions[col].hidden = True
     pipe.column_dimensions[col].width = 12
-HELP_HDR = {'AR': '_EinstandOK', 'AS': '_Kalkuliert', 'AT': '_Aufteilung', 'AU': '_KostenUeber',
-            'AV': '_BelegOK', 'AW': '_WONbelegt', 'AX': '_Zaehlt', 'AY': '_Mehrfachkunde',
-            'AZ': '_MargeNum', 'BA': '_NettoNum', 'BB': '_Befunde',
-            'BC': '_KurzStatus'}
+# Spalte BC trug fruher den Kurzstatus. Mit dem Wegfall der Margen-Hilfsspalten
+# ruecken alle Hilfsspalten auf; BC wird geleert, damit keine Reste bleiben.
+for r in range(5, LAST + 1):
+    pipe[f'BC{r}'] = None
+pipe.column_dimensions['BC'].hidden = True
+HELP_HDR = {'AR': '_EinstandOK', 'AS': '_BelegOK', 'AT': '_WONbelegt', 'AU': '_Zaehlt',
+            'AV': '_Mehrfachkunde', 'AW': '_DauerErfasst', 'AX': '_MonatStart',
+            'AY': '_ZeitraumOK', 'AZ': '_NettoNum', 'BA': '_Befunde',
+            'BB': '_KurzStatus'}
 for col, t in HELP_HDR.items():
     pipe[f'{col}5']._style = copy(pipe['AK5']._style)
     pipe[f'{col}5'].value = t
@@ -685,6 +734,18 @@ dv_dat.errorTitle = 'Belegdatum'
 pipe.add_data_validation(dv_dat)
 dv_dat.add('AG6:AG860')
 
+# Projektstart und Projektende sind echte Datumsfelder - Text wird abgewiesen,
+# damit sich damit rechnen und sortieren laesst.
+dv_zeit = DataValidation(type='date', operator='greaterThan', formula1='DATE(2000,1,1)',
+                         allow_blank=True, showErrorMessage=True, errorStyle='stop')
+dv_zeit.error = ('Bitte ein echtes Datum im Format TT.MM.JJJJ erfassen — keine Monatsangabe '
+                 'und kein «tbd». Ist der Zeitraum noch offen, das Feld leer lassen; '
+                 'der Prüfstatus meldet ihn dann als fehlend.')
+dv_zeit.errorTitle = 'Projektzeitraum'
+pipe.add_data_validation(dv_zeit)
+dv_zeit.add('O6:O860')
+dv_zeit.add('P6:P860')
+
 # --- Bedingte Formatierung auf den Pruefstatus und die Marge
 pipe.conditional_formatting.add('AH6:AH860', FormulaRule(
     formula=['LEFT($AH6,1)="⛔"'], fill=fill('FFFECACA'),
@@ -695,20 +756,31 @@ pipe.conditional_formatting.add('AH6:AH860', FormulaRule(
 pipe.conditional_formatting.add('AH6:AH860', FormulaRule(
     formula=['LEFT($AH6,1)="✅"'], fill=fill(MINT),
     font=Font(name='Arial', size=10, bold=True, color=GREEN), stopIfTrue=True))
-pipe.conditional_formatting.add('O6:O860', FormulaRule(
-    formula=['AND(ISNUMBER($O6),$O6<0)'], fill=fill('FFFECACA'),
-    font=Font(name='Arial', size=10, bold=True, color=RED), stopIfTrue=False))
+# Ende vor Start ist ein Erfassungsfehler und wird rot markiert.
+pipe.conditional_formatting.add('O6:P860', FormulaRule(
+    formula=['AND(ISNUMBER($O6),ISNUMBER($P6),$P6<$O6)'], fill=fill('FFFECACA'),
+    font=Font(name='Arial', size=10, bold=True, color=RED), stopIfTrue=True))
+# Aktive Zeile ohne Zeitraum bleibt dezent markiert, bis das Datum steht.
+pipe.conditional_formatting.add('O6:P860', FormulaRule(
+    formula=['AND($B6<>"",$O6="")'], fill=fill('FFFEF3C7'), stopIfTrue=False))
 
 # --- Kopfzeile: Hinweis auf die neue Margendefinition
-pipe['A2'] = ('  ✏️  Nur in diesem Sheet Daten erfassen.   ⚖️  Wahrscheinlichkeit (S) nach Aggreko-Skala 0/10/30/60/90 %.   '
-              '💰  Marge (O) = Nettoumsatz (Y) − Einstand (Z), ohne MwSt.   '
+pipe['A2'] = ('  ✏️  Nur in diesem Sheet Daten erfassen.   ⚖️  Wahrscheinlichkeit (S) nach Aggreko-Skala '
+              '0/10/30/60/90 %, gewonnene Aufträge auf 100 %.   '
+              '📅  Projektstart (O) und Projektende (P) als echtes Datum TT.MM.JJJJ — die Dauer (G) rechnet sich daraus.   '
               '📋  WON verlangt Auftrags-/PO-Nr. (AF) und Belegdatum (AG) — Definitionen im Blatt «📋 Definitionen & Klärung».')
-c = pipe['O5']
-c.comment = Comment('Marge = Nettoumsatz (Spalte Y) − Einstand (Spalte Z).\n'
-                    'Ohne MwSt auf beiden Seiten.\n'
-                    'Leer, wenn nicht kalkuliert wurde — Grund siehe Spalte AH «Prüfstatus».',
-                    'Reporting')
-pipe['P5'].comment = Comment('Marge % = Marge ÷ Nettoumsatz (nicht ÷ Bruttovolumen).', 'Reporting')
+pipe['O5'].comment = Comment('Erster Tag des Projekts als echtes Datum (TT.MM.JJJJ).\n'
+                            'Solange leer, meldet der Prüfstatus den fehlenden Zeitraum.\n'
+                            'Aus Projektstart und Projektende rechnet sich die Dauer in Spalte G.',
+                            'Reporting')
+pipe['P5'].comment = Comment('Letzter Tag des Projekts als echtes Datum (TT.MM.JJJJ).\n'
+                            'Dauer = Projektende − Projektstart + 1, beide Tage zählen mit.',
+                            'Reporting')
+pipe['G5'].value = 'Dauer\nTage'
+pipe['G5'].comment = Comment('Kalendertage, gerechnet als Projektende − Projektstart + 1.\n'
+                            'Solange kein Zeitraum erfasst ist, steht hier der bisher von Hand\n'
+                            'eingetragene Wert (gesichert in der ausgeblendeten Spalte AW).',
+                            'Reporting')
 
 pipe.print_area = f"'{PIPE}'!$A$1:$AH${PRINT_LAST}"
 pipe.page_setup.fitToWidth = 2
@@ -722,14 +794,17 @@ WON_NETTO = f'SUMPRODUCT(--({STA}="WON"),{NETTN})'
 WON_BELEGT = f'SUMPRODUCT({WONB},{INUM})'
 AKT_BRUTTO = f'SUMPRODUCT({AKT},{INUM})'
 AKT_BEREIN = f'SUMPRODUCT({AKT},{ZAEHLT},{INUM})'
-MARGE_KALK = f'SUMPRODUCT({AKT},{KALK},{MARGN})'
-NETTO_KALK = f'SUMPRODUCT({AKT},{KALK},{NETTN})'
+AKT_CNT = f'SUMPRODUCT({AKT})'
+NACHWEISQUOTE = f'IFERROR({WON_BELEGT}/{WON_BRUTTO},0)'
+ZEIT_ERF = f'SUMPRODUCT({AKT},{ZEITOK})'
+ZEIT_OFFEN = f'SUMPRODUCT({AKT},--({ZEITOK}=0))'
+ZEIT_VOL = f'SUMPRODUCT({AKT},--({ZEITOK}=0),{INUM})'
 
 KENN = [
     ('WON gemeldet (Status = WON, brutto wie erfasst)', f'={WON_BRUTTO}', '#,##0',
      'Summe aller Zeilen mit Status WON — inkl. MwSt, so wie erfasst.'),
     ('WON netto (ohne MwSt)', f'={WON_NETTO}', '#,##0',
-     'Massgeblich für Umsatz- und Margenbetrachtung.'),
+     'Der Umsatz, der uns tatsächlich zusteht — ohne MwSt.'),
     ('davon belegt (Auftrags-/PO-Nr. + Datum + Einstand)', f'={WON_BELEGT}', '#,##0',
      'Nur dieser Teil ist im Sinne der Statusdefinition berichtsfähig.'),
     ('noch zu belegen', f'={WON_BRUTTO}-{WON_BELEGT}', '#,##0',
@@ -738,15 +813,39 @@ KENN = [
      'Alle aktiven Status, ohne LOST und Declined.'),
     ('Aktive Pipeline bereinigt um Varianten', f'={AKT_BEREIN}', '#,##0',
      'Ohne Zeilen, die als «Alternative – zählt nicht» markiert sind.'),
-    ('Marge aus sauber kalkulierten Deals', f'={MARGE_KALK}', '#,##0',
-     'Nettoumsatz minus Einstand. Nicht kalkulierte Deals bleiben aussen vor.'),
-    ('Marge % auf diesen Deals', f'=IFERROR({MARGE_KALK}/{NETTO_KALK},0)', '0.0%',
-     'Bezogen auf den Nettoumsatz der kalkulierten Deals.'),
-    ('Deals ohne Kostenkalkulation', f'=SUMPRODUCT({AKT},{AUFT})', '0',
-     'Nur Preis-Aufteilung statt Kalkulation — für diese wird keine Marge ausgewiesen.'),
-    ('Deals mit Einstand über Nettoumsatz', f'=SUMPRODUCT({AKT},{NEGM})', '0',
-     'Echte Prüffälle: Kosten übersteigen den Umsatz.'),
+    ('Nachweisquote des Auftragseingangs', f'={NACHWEISQUOTE}', '0.0%',
+     'Belegtes WON im Verhältnis zum gemeldeten WON.'),
+    ('Deals mit erfasstem Projektzeitraum', f'={ZEIT_ERF}', '0',
+     'Projektstart und Projektende stehen als echtes Datum in den Spalten O und P.'),
+    ('Deals ohne Projektzeitraum', f'={ZEIT_OFFEN}', '0',
+     'Ohne Zeitraum lässt sich weder planen noch nach Monat auswerten.'),
+    ('Volumen ohne Projektzeitraum', f'={ZEIT_VOL}', '#,##0',
+     'Dieser Teil der Pipeline ist zeitlich noch nicht eingeordnet.'),
 ]
+
+
+MONATE = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
+          'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember']
+
+
+def monat_formeln(jahr, m):
+    """Anzahl, Volumen und Anteil der aktiven Deals mit Start in diesem Monat."""
+    treffer = f'{AKT},--({MONAT}=DATE({jahr},{m},1))'
+    return (f'=SUMPRODUCT({treffer})',
+            f'=SUMPRODUCT({treffer},{INUM})',
+            f'=IFERROR(SUMPRODUCT({treffer},{INUM})/{AKT_BRUTTO},0)')
+
+
+def monat_rest(jahr):
+    """Zeilen ausserhalb des Bezugsjahrs und Zeilen ohne Zeitraum."""
+    ausser = (f'{AKT},{ZEITOK},--({MONAT}<DATE({jahr},1,1))+--({MONAT}>DATE({jahr},12,1))')
+    ohne = f'{AKT},--({ZEITOK}=0)'
+    return [('andere Jahre', '—',
+             f'=SUMPRODUCT({ausser})', f'=SUMPRODUCT({ausser},{INUM})',
+             f'=IFERROR(SUMPRODUCT({ausser},{INUM})/{AKT_BRUTTO},0)'),
+            ('ohne erfassten Zeitraum', '—',
+             f'=SUMPRODUCT({ohne})', f'=SUMPRODUCT({ohne},{INUM})',
+             f'=IFERROR(SUMPRODUCT({ohne},{INUM})/{AKT_BRUTTO},0)')]
 
 
 def qualitaetsblock(sheet, lastcol, start, footer_from):
@@ -760,7 +859,7 @@ def qualitaetsblock(sheet, lastcol, start, footer_from):
     sh[f'A{footer_from}'].value = None
 
     r = start
-    put(sh, f'A{r}', '📋  5. QUALITÄT & NACHWEIS — Marge, Auftragsstatus und Volumen im Klartext',
+    put(sh, f'A{r}', '📋  5. QUALITÄT & NACHWEIS — Auftragsstatus, Nachweis und Projektzeitraum',
         A(11, True, 'FFFFFFFF'), GREEN, align='left', border=True)
     sh.merge_cells(f'A{r}:{lastcol}{r}')
     sh.row_dimensions[r].height = 24
@@ -794,6 +893,72 @@ def qualitaetsblock(sheet, lastcol, start, footer_from):
     sh.merge_cells(f'A{r}:{lastcol}{r}')
     sh.row_dimensions[r].height = 16
     r += 2
+
+    # --- 6. Zeitliche Verteilung nach Monat des Projektstarts ------------
+    put(sh, f'A{r}', '📅  6. ZEITLICHE VERTEILUNG — aktive Pipeline nach Monat des Projektstarts',
+        A(11, True, 'FFFFFFFF'), GREEN, align='left', border=True)
+    sh.merge_cells(f'A{r}:{lastcol}{r}')
+    sh.row_dimensions[r].height = 24
+    r += 1
+    jahr_row = r
+    put(sh, f'A{r}', 'Bezugsjahr', A(10, True, NAVY), LIGHT, align='left', border=True)
+    for co in 'BC':
+        put(sh, f'{co}{r}', None, fillc=LIGHT, border=True)
+    sh.merge_cells(f'A{r}:C{r}')
+    put(sh, f'D{r}', '=YEAR(TODAY())', A(11, True, NAVY), INPUT_FILL, fmt='0',
+        align='center', border=True)
+    put(sh, f'E{r}', 'Jahr hier ändern, die Tabelle rechnet nach.',
+        A(9, italic=True, color='FF64748B'), LIGHT, align='left', border=True)
+    for co in [chr(x) for x in range(ord('F'), ord(lastcol) + 1)]:
+        put(sh, f'{co}{r}', None, fillc=LIGHT, border=True)
+    sh.merge_cells(f'E{r}:{lastcol}{r}')
+    sh.row_dimensions[r].height = 18
+    r += 1
+    for co, t in ((f'A{r}', 'Monat'), (f'D{r}', 'Quartal'), (f'E{r}', 'Anzahl'),
+                  (f'F{r}', 'Volumen CHF'), (f'G{r}', 'Anteil')):
+        put(sh, co, t, A(9, True, 'FFFFFFFF'), SLATE, align='center', border=True)
+    for co in 'BC':
+        put(sh, f'{co}{r}', None, fillc=SLATE, border=True)
+    for co in [chr(x) for x in range(ord('H'), ord(lastcol) + 1)]:
+        put(sh, f'{co}{r}', None, fillc=SLATE, border=True)
+    sh.merge_cells(f'A{r}:C{r}')
+    sh.merge_cells(f'G{r}:{lastcol}{r}')
+    sh.row_dimensions[r].height = 20
+    r += 1
+    monat_first = r
+    jahr = f'$D${jahr_row}'
+    zeilen = [(MONATE[m - 1], f'Q{(m - 1) // 3 + 1}') + monat_formeln(jahr, m)
+              for m in range(1, 13)] + monat_rest(jahr)
+    for name, quartal, anz, vol, ant in zeilen:
+        bg = AMBER if quartal == '—' else LIGHT
+        put(sh, f'A{r}', name, A(10), bg, align='left', border=True)
+        for co in 'BC':
+            put(sh, f'{co}{r}', None, fillc=bg, border=True)
+        put(sh, f'D{r}', quartal, A(10), bg, align='center', border=True)
+        put(sh, f'E{r}', anz, A(10, True, NAVY), bg, fmt='0', align='center', border=True)
+        put(sh, f'F{r}', vol, A(10, True, NAVY), bg, fmt='#,##0', align='right', border=True)
+        put(sh, f'G{r}', ant, A(10), bg, fmt='0.0%', align='center', border=True)
+        for co in [chr(x) for x in range(ord('H'), ord(lastcol) + 1)]:
+            put(sh, f'{co}{r}', None, fillc=bg, border=True)
+        sh.merge_cells(f'A{r}:C{r}')
+        sh.merge_cells(f'G{r}:{lastcol}{r}')
+        sh.row_dimensions[r].height = 17
+        r += 1
+    put(sh, f'A{r}', 'TOTAL aktive Pipeline', A(11, True, 'FFFFFFFF'), DARK, align='left', border=True)
+    for co in 'BCD':
+        put(sh, f'{co}{r}', None, fillc=DARK, border=True)
+    sh.merge_cells(f'A{r}:D{r}')
+    put(sh, f'E{r}', f'=SUM(E{monat_first}:E{r-1})', A(11, True, 'FFFFFFFF'), DARK,
+        fmt='0', align='center', border=True)
+    put(sh, f'F{r}', f'=SUM(F{monat_first}:F{r-1})', A(12, True, GOLD), DARK,
+        fmt='#,##0', align='right', border=True)
+    put(sh, f'G{r}', f'=SUM(G{monat_first}:G{r-1})', A(11, True, 'FFFFFFFF'), DARK,
+        fmt='0.0%', align='center', border=True)
+    for co in [chr(x) for x in range(ord('H'), ord(lastcol) + 1)]:
+        put(sh, f'{co}{r}', None, fillc=DARK, border=True)
+    sh.merge_cells(f'G{r}:{lastcol}{r}')
+    sh.row_dimensions[r].height = 22
+    r += 2
     sh[f'A{r}'].value = foot_val
     sh[f'A{r}']._style = foot_style
     sh.merge_cells(f'A{r}:{lastcol}{r}')
@@ -802,51 +967,92 @@ def qualitaetsblock(sheet, lastcol, start, footer_from):
     return r
 
 
-qualitaetsblock('Dashboard', 'K', 217, 215)
-qualitaetsblock('CEO Report', 'L', 217, 215)
+qualitaetsblock('Dashboard', 'K', 218, 216)
+qualitaetsblock('CEO Report', 'L', 218, 216)
 
-# --- CEO Report: Nachweis und Prüfstatus je Deal --------------------------
+# --- CEO Report: Projektzeitraum, Nachweis und Prüfstatus je Deal --------
+# Die Margenspalte faellt weg. An ihre Stelle rueckt «Leistung / Fleet»,
+# und die beiden Datumsspalten stehen direkt hinter dem Segment.
 ceo = wb['CEO Report']
-ceo.column_dimensions['M'].width = 18
-ceo.column_dimensions['N'].width = 44
+CEO_SPALTEN = [
+    ('E', 'Projektstart', 'zeit_von'),
+    ('F', 'Projektende', 'zeit_bis'),
+    ('I', 'Leistung / Fleet', '$E'),
+    ('M', 'Auftrag / PO-Nr.', '$AF'),
+    ('N', 'Prüfstatus', '$BB'),
+]
 for blk in (10, 74, 138):
-    for co, t in ((f'M{blk}', 'Auftrag / PO-Nr.'), (f'N{blk}', 'Prüfstatus')):
-        ceo[co]._style = copy(ceo[f'L{blk}']._style)
-        ceo[co].value = t
+    for co, t, _src in CEO_SPALTEN:
+        ceo[f'{co}{blk}']._style = copy(ceo[f'L{blk}']._style)
+        ceo[f'{co}{blk}'].value = t
+
+
+def zeilenformel(src, xr):
+    """Wert der Pipeline-Spalte src fuer die im Block referenzierte Zeile."""
+    if src == 'zeit_von':
+        # Solange kein echtes Datum erfasst ist, bleibt die bisherige grobe
+        # Monatsangabe sichtbar - der Bericht verliert keine Information.
+        return (f'=IF($U{xr}="","",IF(ISNUMBER(INDEX({PQ}!$O$1:$O${LAST},$U{xr})),'
+                f'INDEX({PQ}!$O$1:$O${LAST},$U{xr}),'
+                f'IF(INDEX({PQ}!$H$1:$H${LAST},$U{xr})="","",INDEX({PQ}!$H$1:$H${LAST},$U{xr}))))')
+    if src == 'zeit_bis':
+        return (f'=IF($U{xr}="","",IF(ISNUMBER(INDEX({PQ}!$P$1:$P${LAST},$U{xr})),'
+                f'INDEX({PQ}!$P$1:$P${LAST},$U{xr}),""))')
+    return (f'=IF($U{xr}="","",IF(INDEX({PQ}!{src}$1:{src}${LAST},$U{xr})="","",'
+            f'INDEX({PQ}!{src}$1:{src}${LAST},$U{xr})))')
+
+
 for first, last in ((11, 72), (75, 136), (139, 200)):
     for xr in range(first, last + 1):
-        for co, src in ((f'M{xr}', '$AF'), (f'N{xr}', '$BC')):
-            ceo[co]._style = copy(ceo[f'L{xr}']._style)
-            ceo[co].value = (f'=IF($U{xr}="","",IF(INDEX({PQ}!{src}$1:{src}${LAST},$U{xr})="","",'
-                             f'INDEX({PQ}!{src}$1:{src}${LAST},$U{xr})))')
+        for co, _t, src in CEO_SPALTEN:
+            c = ceo[f'{co}{xr}']
+            c._style = copy(ceo[f'L{xr}']._style)
+            c.value = zeilenformel(src, xr)
+            if src in ('zeit_von', 'zeit_bis'):
+                c.number_format = 'DD.MM.YYYY'
+                c.alignment = Alignment(horizontal='center', vertical='center')
 ceo.print_area = ceo.print_area.replace('$L$', '$N$')
-for r in (5, 8, 9, 73, 137, 201, 202, 203, 204, 206, 213):
+for r in (5, 8, 9, 73, 137, 201, 202, 203, 204, 206, 214):
     for m in [str(x) for x in ceo.merged_cells.ranges if x.min_row == r and x.max_col == 12]:
         ceo.unmerge_cells(m)
         ceo.merge_cells(m.replace('L', 'N'))
 
+# --- Dashboard: aus «Start» wird der Projektstart ------------------------
+dash = wb['Dashboard']
+for blk in (10, 74, 138):
+    dash[f'E{blk}'].value = 'Projektstart'
+for first, last in ((11, 72), (75, 136), (139, 200)):
+    for xr in range(first, last + 1):
+        c = dash[f'E{xr}']
+        c.value = zeilenformel('zeit_von', xr)
+        c.number_format = 'DD.MM.YYYY'
+        c.alignment = Alignment(horizontal='center', vertical='center')
 
-# --- 📑 Executive PDF: Nachweis- und Margenzeilen ------------------------
+
+# --- 📑 Executive PDF: Nachweis und Projektzeitraum ----------------------
+# Die Bandtabelle hat eine Zeile mehr (Stufe 100 %), deshalb ruecken die
+# folgenden Bloecke um eine Zeile nach unten.
 ex = wb['📑 Executive PDF']
-if 'A41:H41' in [str(m) for m in ex.merged_cells.ranges]:
-    ex.unmerge_cells('A41:H41')
-ex_foot = ex['A41'].value
-ex_foot_style = copy(ex['A41']._style)
-ex['A41'].value = None
+EX_BLOCK = 42
+if f'A{EX_BLOCK}:H{EX_BLOCK}' in [str(m) for m in ex.merged_cells.ranges]:
+    ex.unmerge_cells(f'A{EX_BLOCK}:H{EX_BLOCK}')
+ex_foot = ex[f'A{EX_BLOCK}'].value
+ex_foot_style = copy(ex[f'A{EX_BLOCK}']._style)
+ex[f'A{EX_BLOCK}'].value = None
 
-ex['B41']._style = copy(ex['B32']._style)
-ex['B41'].value = '📋  Nachweis & Marge — wie die Zahlen zu lesen sind'
-ex.merge_cells('B41:G41')
+ex[f'B{EX_BLOCK}']._style = copy(ex['B32']._style)
+ex[f'B{EX_BLOCK}'].value = '📋  Nachweis & Zeitraum — wie die Zahlen zu lesen sind'
+ex.merge_cells(f'B{EX_BLOCK}:G{EX_BLOCK}')
 
 EX_KENN = [
     ('WON netto (ohne MwSt)', f'={WON_NETTO}', '#,##0'),
     ('davon durch Auftrag/PO belegt', f'={WON_BELEGT}', '#,##0'),
-    ('Marge aus kalkulierten Deals', f'={MARGE_KALK}', '#,##0'),
-    ('Marge % darauf', f'=IFERROR({MARGE_KALK}/{NETTO_KALK},0)', '0.0%'),
+    ('Nachweisquote', f'={NACHWEISQUOTE}', '0.0%'),
+    ('Deals mit erfasstem Projektzeitraum', f'={ZEIT_ERF}&" von "&{AKT_CNT}', 'General'),
 ]
 body = copy(ex['D23']._style)
 for i, (label, formula, fmt) in enumerate(EX_KENN):
-    r = 42 + i
+    r = EX_BLOCK + 1 + i
     for co, val, f_ in ((f'B{r}', label, 'General'), (f'E{r}', formula, fmt)):
         c = ex[co]
         c._style = copy(body)
@@ -861,16 +1067,39 @@ for i, (label, formula, fmt) in enumerate(EX_KENN):
     ex.merge_cells(f'E{r}:F{r}')
     ex.merge_cells(f'G{r}:H{r}')
 
-ex['B46'] = (f'="Offene Pflichtangaben: "&{DQ}!$C${GESAMT_ROW}'
-             f'&"  ·  Definitionen und offene Punkte: Blatt «📋 Definitionen & Klärung»"')
-ex['B46'].font = Font(name='Cambria', size=9, italic=True, color='FF808080')
-ex.merge_cells('B46:H46')
-ex['A48'].value = ex_foot
-ex['A48']._style = ex_foot_style
-ex.merge_cells('A48:H48')
-ex.print_area = "'📑 Executive PDF'!$A$1:$H$48"
+EX_HINWEIS = EX_BLOCK + 5
+ex[f'B{EX_HINWEIS}'] = (f'="Offene Pflichtangaben: "&{DQ}!$C${GESAMT_ROW}'
+                       f'&"  ·  Definitionen und offene Punkte: Blatt «📋 Definitionen & Klärung»"')
+ex[f'B{EX_HINWEIS}'].font = Font(name='Cambria', size=9, italic=True, color='FF808080')
+ex.merge_cells(f'B{EX_HINWEIS}:H{EX_HINWEIS}')
+EX_ENDE = EX_BLOCK + 7
+ex[f'A{EX_ENDE}'].value = ex_foot
+ex[f'A{EX_ENDE}']._style = ex_foot_style
+ex.merge_cells(f'A{EX_ENDE}:H{EX_ENDE}')
+ex.print_area = f"'📑 Executive PDF'!$A$1:$H${EX_ENDE}"
 
-# --- 📄 Report: KPI-Zeile "davon belegt" ---------------------------------
+# --- 📑 Executive PDF: Top-5-Liste mit Projektzeitraum statt Marge -------
+# Spalte E zeigte den groben Startmonat, Spalte H die Marge. Neu stehen dort
+# Projektstart und Projektende; fehlt das Datum, bleibt der Monat sichtbar.
+ex['E13'].value = 'Projektstart'
+ex['H13'].value = 'Projektende'
+for i in range(1, 6):
+    xr = 13 + i
+    # Leere Zellen liefern über INDEX eine 0 - mit Datumsformat stuende dort
+    # sonst der 00.01.1900. Deshalb jede Rueckgabe ausdruecklich auf leer pruefen.
+    ziel = f'MATCH(LARGE({PQ}!$AK$6:$AK${LAST},{i}),{PQ}!$AK$6:$AK${LAST},0)'
+    dat = f'INDEX({PQ}!$O$6:$O${LAST},{ziel})'
+    grob = f'INDEX({PQ}!$H$6:$H${LAST},{ziel})'
+    von = f'=IFERROR(IF(ISNUMBER({dat}),{dat},IF({grob}="","",{grob})),"")'
+    ende = f'INDEX({PQ}!$P$6:$P${LAST},{ziel})'
+    bis = f'=IFERROR(IF(ISNUMBER({ende}),{ende},""),"")'
+    for co, formel in ((f'E{xr}', von), (f'H{xr}', bis)):
+        c = ex[co]
+        c.value = formel
+        c.number_format = 'DD.MM.YYYY'
+        c.alignment = Alignment(horizontal='center', vertical='center')
+
+# --- 📄 Report: KPI-Zeilen und Top-WON-Liste -----------------------------
 rp = wb['📄 Report']
 for co, src in (('A12', 'A11'), ('B12', 'B11'), ('C12', 'C11'), ('D12', 'D11')):
     rp[co]._style = copy(rp[src]._style)
@@ -879,6 +1108,83 @@ rp['B12'] = f'={WON_BELEGT}'
 rp['C12'] = f'=SUMPRODUCT({WONB})'
 rp['D12'] = f'=IFERROR({WON_BELEGT}/SUMIFS({VOL},{STA},"WON"),0)'
 rp['A12'].font = Font(name='Calibri', size=11, bold=True, color=NAVY)
+rp['E12'] = f'={NACHWEISQUOTE}'
+rp['E12']._style = copy(rp['E11']._style)
+rp['E12'].number_format = '0.0%'
+
+# Spalte F zeigte die Marge, Spalte G den groben Startmonat.
+rp['F28'].value = 'Projektstart'
+rp['G28'].value = 'Projektende'
+for i in range(1, 11):
+    xr = 28 + i
+    # Leere Zellen liefern über INDEX eine 0 - mit Datumsformat stuende dort
+    # sonst der 00.01.1900. Deshalb jede Rueckgabe ausdruecklich auf leer pruefen.
+    ziel = f'MATCH(LARGE({PQ}!$AK$6:$AK${LAST},{i}),{PQ}!$AK$6:$AK${LAST},0)'
+    dat = f'INDEX({PQ}!$O$6:$O${LAST},{ziel})'
+    grob = f'INDEX({PQ}!$H$6:$H${LAST},{ziel})'
+    von = f'=IFERROR(IF(ISNUMBER({dat}),{dat},IF({grob}="","",{grob})),"")'
+    ende = f'INDEX({PQ}!$P$6:$P${LAST},{ziel})'
+    bis = f'=IFERROR(IF(ISNUMBER({ende}),{ende},""),"")'
+    for co, formel in ((f'F{xr}', von), (f'G{xr}', bis)):
+        c = rp[co]
+        c.value = formel
+        c.number_format = 'DD.MM.YYYY'
+        c.alignment = Alignment(horizontal='center', vertical='center')
+
+# --- 📄 Report: zeitliche Verteilung nach Monat des Projektstarts --------
+# Die Bandtabelle endet mit der Totalzeile; die Fussnote stand bisher direkt
+# darunter und wandert ans Ende des neuen Blocks.
+RPT_ROW = 50            # Totalzeile der Bandtabelle im Report
+RP_FOOT_ALT = 53
+for m in [str(x) for x in rp.merged_cells.ranges if m_ok(x, RP_FOOT_ALT)]:
+    rp.unmerge_cells(m)
+rp_foot = rp[f'A{RP_FOOT_ALT}'].value
+rp_foot_style = copy(rp[f'A{RP_FOOT_ALT}']._style)
+rp[f'A{RP_FOOT_ALT}'].value = None
+
+r = RP_FOOT_ALT
+rp[f'A{r}'] = '📅 Zeitliche Verteilung nach Monat des Projektstarts'
+rp[f'A{r}']._style = copy(rp['A27']._style)
+rp.merge_cells(f'A{r}:G{r}')
+r += 1
+jahr_row = r
+rp[f'A{r}'] = 'Bezugsjahr'
+rp[f'A{r}']._style = copy(rp['A28']._style)
+rp[f'B{r}'] = '=YEAR(TODAY())'
+rp[f'B{r}']._style = copy(rp['B29']._style)
+rp[f'B{r}'].number_format = '0'
+for co in 'CDE':
+    rp[f'{co}{r}']._style = copy(rp[f'{co}29']._style)
+r += 1
+for co, t in (('A', 'Monat'), ('B', 'Quartal'), ('C', 'Anzahl'),
+              ('D', 'Volumen CHF'), ('E', 'Anteil')):
+    rp[f'{co}{r}'] = t
+    rp[f'{co}{r}']._style = copy(rp[f'{co}28']._style)
+r += 1
+rp_first = r
+jahr = f'$B${jahr_row}'
+for name, quartal, anz, vol, ant in ([(MONATE[m - 1], f'Q{(m - 1) // 3 + 1}') + monat_formeln(jahr, m)
+                                      for m in range(1, 13)] + monat_rest(jahr)):
+    for co, val, fmt in (('A', name, 'General'), ('B', quartal, 'General'), ('C', anz, '0'),
+                         ('D', vol, '#,##0" CHF"'), ('E', ant, '0.0%')):
+        c = rp[f'{co}{r}']
+        c._style = copy(rp[f'{co}29']._style)
+        c.value = val
+        c.number_format = fmt
+    r += 1
+for co, val, fmt in (('A', 'TOTAL aktiv', 'General'), ('B', None, 'General'),
+                     ('C', f'=SUM(C{rp_first}:C{r-1})', '0'),
+                     ('D', f'=SUM(D{rp_first}:D{r-1})', '#,##0" CHF"'),
+                     ('E', f'=SUM(E{rp_first}:E{r-1})', '0.0%')):
+    c = rp[f'{co}{r}']
+    c._style = copy(rp[f'{co}{RPT_ROW}']._style)
+    c.value = val
+    c.number_format = fmt
+r += 2
+rp[f'A{r}'].value = rp_foot
+rp[f'A{r}']._style = rp_foot_style
+rp.merge_cells(f'A{r}:H{r}')
+rp.print_area = f"'📄 Report'!$A$1:$G${r}"
 
 wb.save(F)
 print('Berichtsblöcke gesetzt')

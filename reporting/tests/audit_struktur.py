@@ -123,9 +123,17 @@ if not fonts <= {'Arial', 'Calibri', 'Cambria', 'Times New Roman', 'Consolas'}:
     note('SCHRIFT', f'unerwartete Schriftarten: {fonts}')
 
 # 8) Zahlenformate der neuen Bereiche
-FMT = [('⚖️ Wahrscheinlichkeit', ['B6', 'B10', 'D16', 'D19'], '0%'),
-       ('⚖️ Wahrscheinlichkeit', ['F16', 'G16', 'F20', 'G20'], '#,##0'),
-       ('⚖️ Wahrscheinlichkeit', ['H16', 'H20'], '0.0%'),
+# Zeilen der Skala und der Bandtabelle werden gesucht, damit die Pruefung
+# nicht bricht, sobald eine Stufe oder ein Band dazukommt.
+_WV = V['⚖️ Wahrscheinlichkeit']
+_SK_VON = 6
+_SK_BIS = next(r for r in range(_SK_VON, 30)
+               if not isinstance(_WV[f'B{r}'].value, (int, float))) - 1
+_BD_VON = next(r for r in range(_SK_BIS + 1, 40) if _WV[f'A{r}'].value == '0 – 44 %')
+_BD_TOT = next(r for r in range(_BD_VON, 40) if _WV[f'A{r}'].value == 'TOTAL aktiv')
+FMT = [('⚖️ Wahrscheinlichkeit', [f'B{_SK_VON}', f'B{_SK_BIS}', f'D{_BD_VON}', f'D{_BD_TOT-1}'], '0%'),
+       ('⚖️ Wahrscheinlichkeit', [f'F{_BD_VON}', f'G{_BD_VON}', f'F{_BD_TOT}', f'G{_BD_TOT}'], '#,##0'),
+       ('⚖️ Wahrscheinlichkeit', [f'H{_BD_VON}', f'H{_BD_TOT}'], '0.0%'),
        ('Dashboard', ['F208', 'G208', 'F212', 'G212'], '#,##0'),
        ('Dashboard', ['D208', 'I208'], None),
        ('CEO Report', ['F208', 'G208'], '#,##0')]
@@ -135,15 +143,23 @@ for sheet, cells, want in FMT:
         if want and got != want:
             note('FORMAT', f'{sheet}!{co}: Zahlenformat {got!r} statt {want!r}')
 
-# 9) Prozentwerte muessen als Bruch gespeichert sein
-for r in range(6, 11):
-    v = V['⚖️ Wahrscheinlichkeit'][f'B{r}'].value
+# 9) Prozentwerte muessen als Bruch gespeichert sein.
+#    Skala und Bandtabelle werden gesucht statt fest verdrahtet - die Zahl der
+#    Stufen und Baender kann sich aendern.
+_W = V['⚖️ Wahrscheinlichkeit']
+_skala_von = 6
+_skala_bis = next(r for r in range(_skala_von, 30)
+                  if not isinstance(_W[f'B{r}'].value, (int, float))) - 1
+_band_von = next(r for r in range(_skala_bis + 1, 40) if _W[f'A{r}'].value == '0 – 44 %')
+_band_bis = next(r for r in range(_band_von, 40) if _W[f'A{r}'].value == 'TOTAL aktiv') - 1
+for r in range(_skala_von, _skala_bis + 1):
+    v = _W[f'B{r}'].value
     if not (0 <= v <= 1):
         note('WERT', f'Skalenwert B{r}={v} ist kein Bruch')
-for r in range(16, 20):
+for r in range(_band_von, _band_bis + 1):
     for col in ('B', 'C', 'D'):
-        v = V['⚖️ Wahrscheinlichkeit'][f'{col}{r}'].value
-        if not (0 <= v <= 1):
+        v = _W[f'{col}{r}'].value
+        if not isinstance(v, (int, float)) or not (0 <= v <= 1):
             note('WERT', f'{col}{r}={v} ist kein Bruch')
 
 # 10) Blattreihenfolge / Register
@@ -189,7 +205,7 @@ for r in range(6, 121):
     if isinstance(v, str) and '1.081' in v:
         note('MWST', f'N{r} enthält weiterhin eine MwSt-Formel')
 cf2 = [str(k.sqref) for k in P_.conditional_formatting._cf_rules]
-for need in ('AH6:AH860', 'O6:O860', 'AI6:AI860'):
+for need in ('AH6:AH860', 'O6:P860', 'AI6:AI860'):
     if need not in cf2:
         note('FORMAT', f'bedingte Formatierung {need} fehlt')
 
@@ -204,7 +220,8 @@ for r_ in E_.iter_rows():
             note('TEXT-ALS-FORMEL', f'Herleitung!{c_.coordinate}: {v_[:40]}')
 
 # 14) Auslieferungsstand: jede erfasste Wahrscheinlichkeit liegt auf der Skala
-SKALA_SET = {0, 0.1, 0.3, 0.6, 0.9}
+# 100 % gehoert zur Skala, ist aber gewonnenen Auftraegen vorbehalten.
+SKALA_SET = {0, 0.1, 0.3, 0.6, 0.9, 1.0}
 Vp = V['MiT Strom Pipeline']
 ab = 0
 for r in range(6, 861):
@@ -212,13 +229,16 @@ for r in range(6, 861):
         continue
     sv = Vp[f'S{r}'].value
     if isinstance(sv, (int, float)) and round(sv, 6) not in SKALA_SET:
-        note('SKALA', f'S{r} = {sv} liegt nicht auf 0/10/30/60/90 %')
+        note('SKALA', f'S{r} = {sv} liegt nicht auf 0/10/30/60/90/100 %')
         ab += 1
     # Der bisherige Wert muss erhalten geblieben sein, wo umgeschluesselt wurde
     alt = Vp[f'AI{r}'].value
     if isinstance(alt, (int, float)) and not isinstance(sv, (int, float)):
         note('UMSCHLUESSELUNG', f'AI{r} hat einen Altwert, S{r} ist aber leer')
-if ab == 0 and V['⚖️ Wahrscheinlichkeit']['E28'].value not in (0, None):
+_AUSSER = next(r for r in range(_BD_TOT, 60)
+               if isinstance(_WV[f'A{r}'].value, str)
+               and _WV[f'A{r}'].value.startswith('Aktive Deals mit Wahrscheinlichkeit'))
+if ab == 0 and _WV[f'E{_AUSSER}'].value not in (0, None):
     note('SKALA', 'Zaehler der Deals ausserhalb der Skala steht nicht auf 0')
 
 print('=' * 70)

@@ -29,11 +29,15 @@ MINT, ROSE, INPUT_FILL = 'FFDCFCE7', 'FFFEE2E2', 'FFFFF9C4'
 thin = Side(style='thin', color='FFCBD5E1')
 BOX = Border(left=thin, right=thin, top=thin, bottom=thin)
 
-SKALA = [0.0, 0.1, 0.3, 0.6, 0.9]
+SKALA = [0.0, 0.1, 0.3, 0.6, 0.9, 1.0]
 
 
 def faktor(p):
-    """Aggreko-Gewichtungsfaktor eines Wahrscheinlichkeitswerts."""
+    """Gewichtungsfaktor eines Wahrscheinlichkeitswerts.
+
+    Vier Baender nach Aggreko-Vorgabe, dazu die Stufe fuer gewonnene
+    Auftraege: 100 % zaehlt voll.
+    """
     p = p if p <= 1 else p / 100
     if p < 0.45:
         return 0.0
@@ -41,7 +45,9 @@ def faktor(p):
         return 0.30
     if p < 0.90:
         return 0.50
-    return 0.90
+    if p < 1.0:
+        return 0.90
+    return 1.00
 
 
 # Verbindliche Zuordnungstabelle. Die Begruendung steht im File.
@@ -58,9 +64,35 @@ UMSCHLUESSELUNG = {
                'On-/Off-Hire-Daten überwacht. Je Deal einzeln zu bestätigen.'),
     0.8: (0.6, 'Gleicher Gewichtungsfaktor (50 %). Der gewichtete Umsatz bleibt unverändert.'),
     0.9: (0.9, 'Bereits auf der Skala.'),
-    1.0: (0.9, 'Gleicher Gewichtungsfaktor (90 %). Die Skala endet bei 90 % — ein Auftrag, der '
-               'bereits erteilt ist, trägt den Status WON und nicht 100 %.'),
+    1.0: (0.9, 'Ohne Status WON gibt es keine 100 %: die Aggreko-Skala endet bei 90 %. '
+               'Ein Deal, der noch nicht gewonnen ist, steht deshalb höchstens auf 90 %.'),
 }
+
+# Gewonnene Auftraege sind keine Wahrscheinlichkeit mehr, sondern ein Fakt.
+# Sie stehen auf 100 % und zaehlen mit dem vollen Volumen.
+WON_WERT = 1.0
+WON_GRUND = ('Auftrag erhalten. Ein gewonnener Auftrag wird nicht mehr abgewertet: Status WON steht '
+             'auf 100 % und zählt mit dem vollen Volumen in die gewichtete Pipeline. Vorher liefen '
+             'gewonnene Aufträge mit 90 % mit.')
+
+
+def ziel(wert, status):
+    """Auf welche Stufe gehoert diese Zeile?"""
+    if status == 'WON':
+        return WON_WERT
+    if wert in UMSCHLUESSELUNG:
+        return UMSCHLUESSELUNG[wert][0]
+    gleich = [x for x in SKALA if x < 1.0 and abs(faktor(x) - faktor(wert)) < 1e-9]
+    return min(gleich or [x for x in SKALA if x < 1.0],
+               key=lambda x: (abs(x - wert), -x))
+
+
+def grund(alt, neu):
+    if abs(neu - WON_WERT) < 1e-9:
+        return WON_GRUND
+    if alt in UMSCHLUESSELUNG and abs(UMSCHLUESSELUNG[alt][0] - neu) < 1e-9:
+        return UMSCHLUESSELUNG[alt][1]
+    return 'Nächste Skalenstufe mit demselben Gewichtungsfaktor.'
 
 
 def A(sz=10, b=False, color='FF111111', italic=False):
@@ -97,8 +129,7 @@ pipe.column_dimensions['AI'].hidden = False
 pipe['AI5']._style = copy(pipe['S5']._style)
 pipe['AI5'].value = 'Wahr. %\nbisher'
 
-protokoll = {}
-unbekannt = []
+paare = {}                       # (alt, neu) -> Anzahl geaenderter Zeilen
 for r in range(6, LAST + 1):
     if pipe[f'B{r}'].value in (None, ''):
         continue
@@ -106,30 +137,21 @@ for r in range(6, LAST + 1):
     if not isinstance(s, (int, float)):
         continue
     s = round(float(s), 6)
-    if s in UMSCHLUESSELUNG:
-        neu = UMSCHLUESSELUNG[s][0]
-    else:
-        # Nicht vorgesehener Wert: Stufe mit demselben Faktor, sonst die naechste.
-        gleich = [x for x in SKALA if abs(faktor(x) - faktor(s)) < 1e-9]
-        neu = min(gleich or SKALA, key=lambda x: (abs(x - s), -x))
-        unbekannt.append((r, s, neu))
-    alt_style = copy(pipe[f'S{r}']._style)
-    pipe[f'AI{r}']._style = alt_style
+    status = pipe[f'R{r}'].value
+    neu = ziel(s, status)
+    pipe[f'AI{r}']._style = copy(pipe[f'S{r}']._style)
     pipe[f'AI{r}'].value = s
     pipe[f'AI{r}'].number_format = '0%'
+    eintrag = paare.setdefault((s, neu), 0)
     if abs(neu - s) > 1e-9:
         pipe[f'S{r}'].value = neu
-        protokoll.setdefault(s, [0, neu])[0] += 1
-    else:
-        protokoll.setdefault(s, [0, neu])[0] += 0
+        paare[(s, neu)] = eintrag + 1
 
 print('Umschlüsselung angewendet:')
-for alt in sorted(protokoll):
-    n, neu = protokoll[alt]
+for alt, neu in sorted(paare):
+    n = paare[(alt, neu)]
     kennz = 'unverändert' if abs(faktor(alt) - faktor(neu)) < 1e-9 else 'FAKTOR ÄNDERT SICH'
     print(f'   {alt:>5.0%} -> {neu:>4.0%}   {n:>3} Zeilen geändert   Gewicht {kennz}')
-if unbekannt:
-    print('   Nicht vorgesehene Werte automatisch zugeordnet:', unbekannt)
 
 pipe['AI5'].alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
 pipe.print_area = f"'{PIPE}'!$A$1:$AI${PRINT_LAST}"
@@ -151,6 +173,13 @@ VOL = f'{PQ}!$I$6:$I${LAST}'
 KUN = f'{PQ}!$B$6:$B${LAST}'
 AKT = f'{PQ}!$AP$6:$AP${LAST}'
 INUM = f'{PQ}!$AL$6:$AL${LAST}'
+STAT = f'{PQ}!$R$6:$R${LAST}'
+VON = f'{PQ}!$O$6:$O${LAST}'
+BIS = f'{PQ}!$P$6:$P${LAST}'
+GEW = f'{PQ}!$Q$6:$Q${LAST}'
+# Zeile der Totalzeile in der Bandtabelle - haengt an der Zahl der Baender
+# und wird deshalb gesucht statt fest eingetragen.
+RT = next(r for r in range(1, 40) if w[f'A{r}'].value == 'TOTAL aktiv')
 
 w.merge_cells(f'A{row}:H{row}')
 put(w, f'A{row}', '5️⃣   Umschlüsselung auf die Aggreko-Skala  —  was geändert wurde und was es bewirkt',
@@ -161,7 +190,8 @@ row += 1
 w.merge_cells(f'A{row}:H{row}')
 put(w, f'A{row}', 'Wichtig: kein Wert der Skala 0/10/30/60/90 % fällt in das Gewichtungsband 45–59 % (Faktor 30 %). '
                   'Wer die Skala einhält, kann dieses Band nie treffen — es ist in der Aggreko-Vorgabe angelegt, '
-                  'aber nicht erreichbar. Genau dort lagen bisher die 50 %-Deals.',
+                  'aber nicht erreichbar. Genau dort lagen bisher die 50 %-Deals. '
+                  'Gewonnene Aufträge stehen neu auf 100 % und zählen voll.',
     A(9, True, 'FF9A3412'), AMBER, align='left', wrap=True)
 w.row_dimensions[row].height = 30
 row += 1
@@ -173,21 +203,20 @@ w.row_dimensions[row].height = 26
 row += 1
 tab_first = row
 
-for alt in sorted(UMSCHLUESSELUNG):
-    neu, _ = UMSCHLUESSELUNG[alt]
+for alt, neu in sorted(paare):
     gleich = abs(faktor(alt) - faktor(neu)) < 1e-9
     bg = MINT if gleich else ROSE
+    # Jede Zeile des Protokolls ist ein tatsaechlich vorgekommenes Paar
+    # «bisher → neu». Der Filter zaehlt genau diese Zeilen.
+    filt = f'--({KUN}<>""),--({ALT}<>""),--(ROUND({ALT},6)={alt}),--({NEU}={neu})'
     put(w, f'A{row}', alt, A(10, True, NAVY), bg, fmt='0%', align='center')
     put(w, f'B{row}', neu, A(10, True, NAVY), bg, fmt='0%', align='center')
     put(w, f'C{row}', faktor(alt), A(10), bg, fmt='0%', align='center')
     put(w, f'D{row}', faktor(neu), A(10), bg, fmt='0%', align='center')
-    # Nur Zeilen mit Kunde zaehlen - sonst wuerden die leeren Vorratszeilen
-    # beim Wert 0 % mitgezaehlt (leer wird zu 0 gerundet).
-    put(w, f'E{row}', f'=SUMPRODUCT(--({KUN}<>""),--({ALT}<>""),--(ROUND({ALT},6)={alt}))',
-        A(10), bg, fmt='0', align='center')
-    put(w, f'F{row}', f'=SUMPRODUCT(--({KUN}<>""),--({ALT}<>""),--(ROUND({ALT},6)={alt}),{INUM})*{faktor(alt)}',
+    put(w, f'E{row}', f'=SUMPRODUCT({filt})', A(10), bg, fmt='0', align='center')
+    put(w, f'F{row}', f'=SUMPRODUCT({filt},{INUM})*{faktor(alt)}',
         A(10), bg, fmt='#,##0', align='right')
-    put(w, f'G{row}', f'=SUMPRODUCT(--({KUN}<>""),--({ALT}<>""),--(ROUND({ALT},6)={alt}),{INUM})*{faktor(neu)}',
+    put(w, f'G{row}', f'=SUMPRODUCT({filt},{INUM})*{faktor(neu)}',
         A(10, True), bg, fmt='#,##0', align='right')
     put(w, f'H{row}', 'unverändert' if gleich else 'Faktor ändert sich',
         A(9, True, GREEN if gleich else 'FF991B1B'), bg, align='center', wrap=True)
@@ -219,7 +248,13 @@ KONTROLLE = [
     ('Volumen der noch zu bestätigenden Deals',
      f'=SUMPRODUCT(--({KUN}<>""),--({ALT}<>""),--(ROUND({ALT},6)=0.5),--({NEU}=0.3),{INUM})', '#,##0'),
     ('Gewichtete Pipeline, wenn alle davon auf 60 % gehen',
-     f'={WQ}!$G$20+SUMPRODUCT(--({KUN}<>""),--({ALT}<>""),--(ROUND({ALT},6)=0.5),--({NEU}=0.3),{INUM})*0.5', '#,##0'),
+     f'={WQ}!$G${RT}+SUMPRODUCT(--({KUN}<>""),--({ALT}<>""),--(ROUND({ALT},6)=0.5),--({NEU}=0.3),{INUM})*0.5', '#,##0'),
+    ('Gewonnene Aufträge (WON) auf 100 %',
+     f'=SUMPRODUCT(--({KUN}<>""),--({STAT}="WON"),--({NEU}=1))', '0'),
+    ('Volumen dieser gewonnenen Aufträge',
+     f'=SUMPRODUCT(--({KUN}<>""),--({STAT}="WON"),--({NEU}=1),{INUM})', '#,##0'),
+    ('Mehrgewicht gegenüber der bisherigen Bewertung mit 90 %',
+     f'=SUMPRODUCT(--({KUN}<>""),--({STAT}="WON"),--({NEU}=1),{INUM})*0.1', '#,##0'),
 ]
 for label, formel, fmt in KONTROLLE:
     put(w, f'A{row}', label, A(10), LIGHT, align='left', wrap=True)
@@ -277,18 +312,82 @@ put(w, f'H{row}', f'=SUM(H{row-len(fuenfzig)}:H{row-1})', A(11, True, GOLD), DAR
 w.row_dimensions[row].height = 20
 row += 1
 
+# ---- Liste der gewonnenen Auftraege ------------------------------------
+row += 1
+w.merge_cells(f'A{row}:H{row}')
+put(w, f'A{row}', '6️⃣   Gewonnene Aufträge (WON)  —  100 % und Projektzeitraum',
+    A(11, True, 'FFFFFFFF'), GREEN, align='left', border=False)
+w.row_dimensions[row].height = 22
+row += 1
+
+w.merge_cells(f'A{row}:H{row}')
+put(w, f'A{row}', 'Diese Aufträge sind gewonnen und stehen deshalb auf 100 %: sie zählen mit dem vollen '
+                  'Volumen in die gewichtete Pipeline und werden nicht mehr abgewertet. '
+                  'Projektstart und Projektende werden in der Pipeline in den Spalten O und P erfasst; '
+                  'solange sie leer sind, meldet der Prüfstatus den fehlenden Zeitraum.',
+    A(9, True, NAVY), AMBER, align='left', wrap=True)
+w.row_dimensions[row].height = 30
+row += 1
+
+for co, t in (('A', 'Zeile'), ('B', 'Kunde'), ('D', 'Volumen CHF'), ('E', 'Wahr. %'),
+              ('F', 'Projektstart'), ('G', 'Projektende'), ('H', 'Gewichtet CHF')):
+    put(w, f'{co}{row}', t, A(9, True, 'FFFFFFFF'), SLATE, align='center', wrap=True)
+put(w, f'C{row}', None, bg=SLATE)
+w.merge_cells(f'B{row}:C{row}')
+w.row_dimensions[row].height = 18
+row += 1
+
+gewonnen = [r for r in range(6, LAST + 1) if pipe[f'R{r}'].value == 'WON'
+            and pipe[f'B{r}'].value not in (None, '')]
+won_first = row
+for r in gewonnen:
+    put(w, f'A{row}', r, A(9, color='FF64748B'), LIGHT, fmt='0', align='center')
+    put(w, f'B{row}', f'=INDEX({KUN},{r}-5)', A(10), LIGHT, align='left')
+    put(w, f'C{row}', None, bg=LIGHT)
+    put(w, f'D{row}', f'=INDEX({VOL},{r}-5)', A(10), LIGHT, fmt='#,##0', align='right')
+    put(w, f'E{row}', f'=INDEX({NEU},{r}-5)', A(10, True, NAVY), MINT, fmt='0%', align='center')
+    # Leere Datumszellen sollen leer bleiben und nicht als 00.01.1900 erscheinen.
+    put(w, f'F{row}', f'=IF(INDEX({VON},{r}-5)="","",INDEX({VON},{r}-5))',
+        A(10), INPUT_FILL, fmt='DD.MM.YYYY', align='center')
+    put(w, f'G{row}', f'=IF(INDEX({BIS},{r}-5)="","",INDEX({BIS},{r}-5))',
+        A(10), INPUT_FILL, fmt='DD.MM.YYYY', align='center')
+    put(w, f'H{row}', f'=INDEX({GEW},{r}-5)', A(10), LIGHT, fmt='#,##0', align='right')
+    w.merge_cells(f'B{row}:C{row}')
+    w.row_dimensions[row].height = 16
+    row += 1
+
+put(w, f'A{row}', 'Summe', A(10, True, 'FFFFFFFF'), DARK, align='center')
+for co in 'BC':
+    put(w, f'{co}{row}', None, bg=DARK)
+w.merge_cells(f'A{row}:C{row}')
+put(w, f'D{row}', f'=SUM(D{won_first}:D{row-1})', A(11, True, GOLD), DARK, fmt='#,##0', align='right')
+put(w, f'E{row}', None, bg=DARK)
+put(w, f'F{row}', f'=SUMPRODUCT(--({KUN}<>""),--({STAT}="WON"),--({VON}<>""))',
+    A(10, True, 'FFFFFFFF'), DARK, fmt='0', align='center')
+put(w, f'G{row}', f'=SUMPRODUCT(--({KUN}<>""),--({STAT}="WON"),--({BIS}<>""))',
+    A(10, True, 'FFFFFFFF'), DARK, fmt='0', align='center')
+put(w, f'H{row}', f'=SUM(H{won_first}:H{row-1})', A(11, True, GOLD), DARK, fmt='#,##0', align='right')
+w.row_dimensions[row].height = 20
+row += 1
+w.merge_cells(f'A{row}:H{row}')
+put(w, f'A{row}', f'ℹ️  In den Spalten Projektstart und Projektende steht die Anzahl der Aufträge, '
+                  f'bei denen das Datum bereits erfasst ist (von {len(gewonnen)}).',
+    A(9, italic=True, color='FF64748B'), align='left', border=False)
+w.row_dimensions[row].height = 16
+row += 1
+
 # Begruendungen der Zuordnung
 row += 1
 w.merge_cells(f'A{row}:H{row}')
 put(w, f'A{row}', 'Begründung je Zuordnung', A(11, True, 'FFFFFFFF'), SLATE, align='left', border=False)
 w.row_dimensions[row].height = 20
 row += 1
-for alt in sorted(UMSCHLUESSELUNG):
-    neu, grund = UMSCHLUESSELUNG[alt]
-    if abs(neu - alt) < 1e-9 and 'Skala' in grund:
+for alt, neu in sorted(paare):
+    text = grund(alt, neu)
+    if abs(neu - alt) < 1e-9 and 'Bereits auf der Skala' in text:
         continue
     put(w, f'A{row}', f'{alt:.0%} → {neu:.0%}', A(10, True, NAVY), LIGHT, align='center')
-    put(w, f'B{row}', grund, A(9), LIGHT, align='left', wrap=True)
+    put(w, f'B{row}', text, A(9), LIGHT, align='left', wrap=True)
     for co in 'CDEFGH':
         put(w, f'{co}{row}', None, bg=LIGHT)
     w.merge_cells(f'B{row}:H{row}')

@@ -41,10 +41,11 @@ FEST = {
 # Ausdruck auf die Haelfte verkleinert und damit unlesbar wird. Mit Umbruch
 # steht der ganze Text da und das Blatt bleibt eine Seite breit.
 ZIEL = {
-    'CEO Report': {'B': (29.0, True), 'D': (20.0, True), 'F': (26.0, True),
-                   'L': (24.0, True), 'M': (15.0, True), 'N': (17.0, True)},
-    'Dashboard': {'B': (29.0, True), 'D': (20.0, True), 'F': (26.0, True),
-                  'K': (24.0, True)},
+    'CEO Report': {'B': (27.0, True), 'D': (18.0, True), 'E': (12.0, False),
+                   'F': (14.0, False), 'I': (24.0, True), 'L': (22.0, True),
+                   'M': (14.0, True), 'N': (16.0, True)},
+    'Dashboard': {'B': (29.0, True), 'D': (20.0, True), 'E': (12.0, False),
+                  'F': (26.0, True), 'K': (24.0, True)},
     'MiT Strom Pipeline': {'E': (24.0, True), 'V': (45.0, True), 'X': (45.0, True)},
 }
 
@@ -87,7 +88,9 @@ DIAGRAMM_TITEL = [('A28', 'A50'), ('J28', 'J50')]
 DIAGRAMM_DRUCK = '$A$1:$R$140' 
 # Feste Seitenumbrueche: so faellt der Schnitt zwischen zwei Diagrammreihen
 # und nicht mitten durch ein Diagramm.
-SEITEN_UMBRUCH = {'📊 Diagramme': [48, 94]}
+SEITEN_UMBRUCH = {'📊 Diagramme': [48, 94],
+                  # Die Monatsauswertung beginnt auf einer eigenen Seite.
+                  '📄 Report': [52]}
 
 # Einheitliche Kopf- und Fusszeile fuer jedes Blatt. Vorher hatten drei
 # Blaetter gar keine, drei weitere je eine andere.

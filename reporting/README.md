@@ -20,6 +20,7 @@ Ab sofort ist **diese Datei die einzige gültige Version**. Alle weiteren
 | 30 % | Die Opportunität lebt und ist gesund, es ist aber offen, ob sie tatsächlich on-hire geht. |
 | 60 % | Sehr gute Gewinnchance, der Kunde committet sich aber nicht mit einer PO. Das Fleet-Team überwacht die On-/Off-Hire-Daten. |
 | 90 % | Auftrag ist sicher, es fehlt nur PO oder dokumentiertes Commitment. Das Fleet-Team erfüllt die Quote in dieser Stufe im OF. |
+| **100 %** | **Ergänzung MiT CH, nicht Teil der Aggreko-Liste:** Auftrag erhalten. Unterschriebene Bestellung oder gültige PO liegt vor. Der Auftrag zählt voll und wird nicht mehr abgewertet. Gilt ausschliesslich für Status WON. |
 
 **2. Pipeline (Weighted) = Umsatz × Gewichtungsfaktor**
 
@@ -30,7 +31,8 @@ Der Faktor wird aus dem Feld *Effective Probability* abgeleitet:
 | 0 – 44 %              | 0 %    |
 | 45 – 59 %             | 30 %   |
 | 60 – 89 %             | 50 %   |
-| ab 90 %               | 90 %   |
+| 90 – 99 %             | 90 %   |
+| **100 % (WON)**       | **100 %** |
 
 ---
 
@@ -52,8 +54,8 @@ ist, entscheidet die Aggreko-Definition.
 | **50 %** | **30 %** | **30 %** | **0 %** | **22** | **717'509** | **0** | **Faktor ändert sich** |
 | 80 %  | 60 % | 50 % | 50 % | 2  | 134'250 | 134'250 | unverändert |
 | 90 %  | 90 % | 90 % | 90 % | 2  | 65'622 | 65'622 | unverändert |
-| 100 % | 90 % | 90 % | 90 % | 12 | 1'285'698 | 1'285'698 | unverändert |
-| **Total** | | | | **66** | **2'203'080** | **1'485'570** | **−717'509** |
+| **100 %** | **100 %** | **90 %** | **100 %** | **12** | **1'285'698** | **1'428'553** | **gewonnener Auftrag zählt voll** |
+| **Total** | | | | **66** | **2'203'080** | **1'628'426** | **−574'654** |
 
 ### Der strukturelle Befund
 
@@ -102,7 +104,7 @@ stellt sicher, dass keine Frage ohne Antwort und ohne rechnende Zahl bleibt.
 
 | Rückfrage | Was im File passiert |
 |-----------|----------------------|
-| **Negative Margen in Spalte I** | Ursache gefunden: die **MwSt war als Kostenposition erfasst** und wurde vom Umsatz abgezogen. Neu gilt `Marge = Nettoumsatz − Einstand`, ohne MwSt auf beiden Seiten. Zusätzlich zeigte sich: bei 36 Zeilen wurde gar nicht kalkuliert, sondern nur der Verkaufspreis in netto + MwSt zerlegt. Dort wird jetzt **bewusst keine Marge ausgewiesen** — mit Begründung in der Spalte «Prüfstatus». |
+| **Negative Margen in Spalte I** | Ursache gefunden: die **MwSt war als Kostenposition erfasst** und wurde vom Umsatz abgezogen. Zusätzlich zeigte sich: bei 36 Zeilen wurde gar nicht kalkuliert, sondern nur der Verkaufspreis in netto + MwSt zerlegt. Auf dieser Datengrundlage trägt keine Margenzahl — **die Marge ist inzwischen ganz aus dem Reporting genommen** (siehe «Was in dieser Runde geändert wurde»). Die Kostenspalten bleiben in der Pipeline erfasst. |
 | **Wer verantwortet die Kalkulation?** | Der Einstand wird vom Verkäufer erfasst und vor dem Statuswechsel auf WON vom Innendienst gegengeprüft. Die Regel steht im Definitionsblatt, der Erfüllungsstand pro Zeile in Spalte AH. |
 | **Laufen alle Projekte über MiT CH?** | Ja — MiT CH ist die Standardabwicklung. Abweichungen werden in der neuen Spalte **AA «Abwicklung»** erfasst (Aggreko intl. / Partner–Dritte). Eine leere Zelle heisst ausdrücklich MiT CH, nicht «unbekannt». |
 | **Wie ist das WON-Volumen zu verstehen?** | Neu dreifach ausgewiesen: **brutto wie erfasst**, **netto ohne MwSt**, und **davon belegt** — belegt heisst Auftrags-/PO-Nr. + Belegdatum + vollständiger Einstand. Aktuell: 1'428'553 brutto, 1'321'511 netto, **0 belegt**. |
@@ -124,12 +126,13 @@ stellt sicher, dass keine Frage ohne Antwort und ohne rechnende Zahl bleibt.
 | WON ohne Auftrags-/PO-Nr. und Datum | 12 | 1'428'553 |
 | WON ohne vollständigen Einstand | 2 | 10'000 |
 | WON ohne Vertragsart | 12 | 1'428'553 |
-| Aktive Deals ohne Kostenkalkulation | 10 | 606'942 |
-| Aktive Deals mit Einstand über Nettoumsatz | 12 | 3'843'342 |
+| Aktive Deals ohne erfassten Projektzeitraum | 46 | 6'862'149 |
+| WON ohne erfassten Projektzeitraum | 12 | 1'428'553 |
 | Kunden mehrfach in der Pipeline, Variante offen | 17 | 3'368'728 |
 
-Sauber kalkuliert sind aktuell **16 von 46** aktiven Deals; darauf beträgt die
-Marge **363'396 CHF (17.5 %)**.
+Insgesamt **101 offene Pflichtangaben**. Bis sie erfasst sind, ist das
+WON-Volumen als «gemeldet» zu lesen, nicht als «belegt» — die Nachweisquote
+steht aktuell bei **0 %**.
 
 ---
 
@@ -185,14 +188,14 @@ es gibt keine fest eingetippten Prozentsätze in den Berichtsblättern.
 
 | Blatt | Änderung |
 |-------|----------|
-| `MiT Strom Pipeline` | `Gew.Wert CHF` (Spalte Q) = **Volumen × Aggreko-Faktor**. Spalte S mit Dropdown 0/10/30/60/90 %. Neue Fachspalten Y–AH: Nettoumsatz, Einstand, Abwicklung, Vertragsart, Deal-Gruppe, Variante, Offert-Nr., Auftrag/PO-Nr., Beleg-Datum, Prüfstatus. Spalte N heisst neu «Übrige Kosten» und enthält keine MwSt mehr. Hilfsspalten liegen ausgeblendet ab AJ. |
+| `MiT Strom Pipeline` | `Gew.Wert CHF` (Spalte Q) = **Volumen × Aggreko-Faktor**. Spalte S mit Dropdown 0/10/30/60/90 %, gewonnene Aufträge 100 %. Spalten O/P neu «Projektstart» und «Projektende» als echtes Datum, Spalte G rechnet daraus die Dauer. Neue Fachspalten Y–AH: Nettoumsatz, Einstand, Abwicklung, Vertragsart, Deal-Gruppe, Variante, Offert-Nr., Auftrag/PO-Nr., Beleg-Datum, Prüfstatus. Spalte N heisst neu «Übrige Kosten» und enthält keine MwSt mehr. Hilfsspalten liegen ausgeblendet ab AJ. |
 | `⚖️ Wahrscheinlichkeit` | neu — Aggreko-Bewertungsmodell |
 | `📋 Definitionen & Klärung` | neu — beantwortet jede Rückfrage mit Live-Zahl, enthält Annahmen, Margendefinition, Status- und Vertragsartendefinitionen, Variantenregel, Klärungsliste und die Liste der offenen Pflichtangaben |
 | `🔍 Herleitung & Formeln` | neu — der Rechenweg in sieben Stufen, zwei komplett durchgerechnete Beispiele, die Herkunft jeder Berichtszahl, das Verzeichnis aller 54 Spalten mit ihren Formeln, die Begründung jedes Designentscheids und ein Funktionslexikon |
-| `Dashboard` | Info-Zeile mit gewichteter Pipeline, Abschnitt 4 «Gewichtete Pipeline», Abschnitt 5 «Qualität & Nachweis» |
+| `Dashboard` | Info-Zeile mit gewichteter Pipeline, Abschnitt 4 «Gewichtete Pipeline», Abschnitt 5 «Qualität & Nachweis», Abschnitt 6 «Zeitliche Verteilung» |
 | `CEO Report` | dito, zusätzlich je Deal die Spalten «Auftrag / PO-Nr.» und «Prüfstatus». Der Prüfstatus zeigt hier den Kurzbefund (⛔ Nachweis fehlt · ⚠ Marge negativ · ⚠ nicht kalkuliert · ○ Einstand offen · ✅ belegt · ✔ kalkuliert); die vollständige Aufzählung aller offenen Punkte einer Zeile steht in der Pipeline in Spalte AH |
-| `📄 Report` | KPI-Zeilen «⚖️ Gewichtet» und «📋 WON belegt», Abschnitt «Wahrscheinlichkeits-Bewertung» |
-| `📑 Executive PDF` | gewichteter Wert, Bandtabelle und Block «Nachweis & Marge» (WON netto, davon belegt, Marge kalkuliert) |
+| `📄 Report` | KPI-Zeilen «⚖️ Gewichtet» und «📋 WON belegt» mit Nachweisquote, Abschnitt «Wahrscheinlichkeits-Bewertung», Block «Zeitliche Verteilung nach Monat des Projektstarts» |
+| `📑 Executive PDF` | gewichteter Wert, Bandtabelle und Block «Nachweis & Zeitraum» (WON netto, davon belegt, Nachweisquote, Deals mit Projektzeitraum) |
 | `📊 Diagramme` | neues Diagramm «Umsatz vs. gewichtet je Band» |
 | `_data` | Bandtabelle als Diagramm-Quelle |
 
@@ -218,12 +221,12 @@ Die Skripte in [`tests/`](tests/) prüfen die Mappe vollständig:
 
 | Skript | Was es prüft | Ergebnis |
 |--------|--------------|----------|
-| `audit_static.py` | jede der 28'159 Formeln: Funktionsnamen, Blattbezüge, Anführungszeichen, externe Verweise, Fehlerwerte | 0 Befunde |
-| `audit_values.py` | rechnet **das gesamte Modell unabhängig in Python nach** — nur aus den Roheingaben — und vergleicht Zelle für Zelle | 22'627 Werte, 0 Abweichungen |
+| `audit_static.py` | jede der 25'847 Formeln: Funktionsnamen, Blattbezüge, Anführungszeichen, externe Verweise, Fehlerwerte | 0 Befunde |
+| `audit_values.py` | rechnet **das gesamte Modell unabhängig in Python nach** — nur aus den Roheingaben — und vergleicht Zelle für Zelle | 20'099 Werte, 0 Abweichungen |
 | `audit_struktur.py` | benannte Bereiche, Dropdowns, bedingte Formatierung, Diagrammquellen, Druckbereiche, verbundene Zellen, Zahlenformate, Schriften | 0 Befunde |
 | `audit_fragen.py` | prüft, ob **jede** Rückfrage von Maria und Oliver eine Antwortzeile mit einer Live-Zahl hat und ob die Antwort die zugesagten Begriffe nennt | 8 / 8 abgedeckt |
 | `audit_layout.py` | misst **jede sichtbare Zelle**: passt der Text in die Spalte, passt die Zahl (sonst zeigt Excel `####`), reicht die Zeilenhöhe, und druckt das Blatt lesbar auf sein Papier | 0 Befunde |
-| `audit_behaviour.py` | 17 Szenarien mit veränderten Daten — u. a. neuer Deal, Statuswechsel, fehlende Wahrscheinlichkeit, alle Bandgrenzen, leere Pipeline, betragsgleiche Deals, LOST mit 90 %, **WON vollständig belegen**, **Variante ausschliessen**, **MwSt-Schalter auf netto**, **unvollständiger Einstand** | 17 / 17 bestanden |
+| `audit_behaviour.py` | 17 Szenarien mit veränderten Daten — u. a. **neuer Deal mit Projektzeitraum**, Statuswechsel, fehlende Wahrscheinlichkeit, **alle Bandgrenzen inkl. 100 %**, leere Pipeline, betragsgleiche Deals, LOST mit 90 %, **WON vollständig belegen (PO, Datum, Vertragsart, Zeitraum)**, **Variante ausschliessen**, **MwSt-Schalter auf netto**, **unvollständiger Einstand** | 17 / 17 bestanden |
 
 ```bash
 cd reporting/tests && python3 run_durchgaenge.py
@@ -244,6 +247,139 @@ Letzter Lauf: **5 / 5 Durchgänge fehlerfrei**, identischer Fingerabdruck
 Die Mappe enthält zusätzlich eine **eingebaute Selbstkontrolle** (⚖️-Blatt,
 Abschnitt 3): sie rechnet die gewichtete Pipeline auf zwei unabhängigen Wegen
 und meldet jede Abweichung — auch nachdem jemand Daten geändert hat.
+
+---
+
+## Was in dieser Runde geändert wurde
+
+Drei Dinge: der Projektzeitraum wird neu als echtes Datum erfasst, die Marge
+verschwindet aus dem gesamten Reporting, und gewonnene Aufträge stehen auf
+100 %.
+
+### 1. Projektzeitraum als echte Daten
+
+Bisher stand in Spalte H nur eine grobe Monatsangabe wie «Aug» oder «Auf Abruf».
+Damit lässt sich weder rechnen noch sortieren.
+
+| Spalte | Was drin steht |
+|--------|----------------|
+| **O «Projektstart»** | Erster Tag als echtes Datum TT.MM.JJJJ. Die Zelle ist als Datum geprüft — Text und Monatsangaben werden abgewiesen. |
+| **P «Projektende»** | Letzter Tag, ebenfalls als echtes Datum. |
+| **G «Dauer Tage»** | Neu eine Formel: Projektende − Projektstart + 1. Beide Tage zählen mit — 01.08.2026 bis 10.08.2026 ergibt 10 Tage. |
+| AW `_DauerErfasst` (ausgeblendet) | Steht nur eines der beiden Daten oder keines, zeigt Spalte G unverändert den **bisher von Hand erfassten Wert**. Überschrieben wird nichts. |
+| AX `_MonatStart` (ausgeblendet) | Monatsanfang des Projektstarts — Grundlage der Auswertung nach Monat und Quartal. |
+| AY `_ZeitraumOK` (ausgeblendet) | 1, wenn beide Daten echte Datumswerte sind und das Ende nicht vor dem Start liegt. |
+
+Wo «Auf Abruf» oder «tbd» steht, bleiben beide Datumsfelder leer und der
+Prüfstatus meldet den fehlenden Zeitraum: **⛔ Zeitraum fehlt** bei WON,
+**○ Zeitraum offen** bei allen anderen. Liegt das Ende vor dem Start, meldet er
+**⚠ Ende vor Start**, die Dauer fällt auf den erfassten Wert zurück und die Zeile
+zählt nicht in die Monatsauswertung. Die grobe Monatsangabe in Spalte H bleibt
+stehen und erscheint in den Berichten als Anhaltspunkt, solange kein Datum
+erfasst ist.
+
+Aktuell hat **kein einziger** der 46 aktiven Deals einen Zeitraum — die Spalten
+sind neu und müssen gefüllt werden. Genau das steht im Bericht: 46 Deals über
+6'862'149 CHF unter «ohne erfassten Zeitraum».
+
+### 2. Marge vollständig aus dem Reporting entfernt
+
+| Wo | Was weg ist |
+|----|-------------|
+| Pipeline | Spalten O «Marge CHF» und P «Marge %» — an ihrer Stelle stehen jetzt Projektstart und Projektende. Hilfsspalten `_Kalkuliert`, `_Aufteilung`, `_KostenUeber`, `_MargeNum`. |
+| CEO Report | Spalte «Marge CHF» |
+| 📄 Report | Spalte «Marge CHF» in der Top-WON-Liste |
+| 📑 Executive PDF | Spalte «Marge» in der Top-5-Liste, Kennzahlen «Marge aus kalkulierten Deals» und «Marge % darauf» |
+| Dashboard + CEO Report | Kennzahlen «Marge aus sauber kalkulierten Deals», «Marge % auf diesen Deals», «Deals ohne Kostenkalkulation», «Deals mit Einstand über Nettoumsatz» |
+| Prüfstatus | Meldungen «⚠ Kosten über Umsatz», «⚠ nur Preis-Aufteilung», «⚠ Marge negativ», «⚠ nicht kalkuliert» |
+| 📋 Definitionen | Abschnitt «Margendefinition», die beiden margenbezogenen offenen Punkte |
+| 🔍 Herleitung | Stufe «Marge rechnen», Stufe «Kalkulation prüfen», die Margenzeilen beider Beispiele, die Margen-Kennzahlen der Landkarte |
+| Diagramme | keine Änderung nötig — es gab keine Margenreihe |
+
+**Die Kostenspalten J–N bleiben in der Pipeline** als Arbeitsgrundlage erhalten,
+ebenso der Einstand in Spalte Z. Ausgewertet wird daraus im Bericht nichts mehr.
+
+Es bleiben keine leeren Spalten und keine Lücken: die beiden Margenspalten sind
+durch die beiden Datumsspalten ersetzt, die Hilfsspalten rücken lückenlos auf
+(AR–BB), Spalte BC ist geleert. Nach dem Umbau rechnet die Mappe mit **0
+Fehlerwerten** — kein `#BEZUG!`, kein `#WERT!`.
+
+Warum die Marge nicht einfach korrigiert wurde, steht weiterhin im File: die
+Antwort auf Marias Rückfrage ist nicht gelöscht, sondern ersetzt worden. Sie
+erklärt jetzt, dass die MwSt als Kostenposition erfasst war, dass bei einem Teil
+der Zeilen nur der Verkaufspreis aufgeteilt wurde — und dass auf dieser
+Datengrundlage keine Margenzahl trägt.
+
+### 3. Gewonnene Aufträge auf 100 %
+
+Ein unterschriebener Auftrag ist keine Wahrscheinlichkeit mehr, sondern ein
+Fakt. Die Aggreko-Skala endet bei 90 %, weil sie offene Opportunitäten bewertet.
+Die Stufe **100 %** ist als Ergänzung von MiT CH gekennzeichnet und gilt
+ausschliesslich für Status WON.
+
+Das Blatt prüft beide Richtungen laufend: **WON ohne 100 %** und **100 % ohne
+WON** — beide müssen 0 sein.
+
+Wirkung auf die Kennzahl: die gewichtete Pipeline steigt von **1'485'570 CHF**
+auf **1'628'426 CHF**. Die Differenz von 142'855 CHF ist genau der Anteil, mit
+dem die zwölf gewonnenen Aufträge (1'428'553 CHF) bisher abgewertet wurden.
+
+Die Liste der gewonnenen Aufträge steht neu auf dem Blatt `⚖️ Wahrscheinlichkeit`
+als Abschnitt 6 — mit Volumen, Wahrscheinlichkeit, **Projektstart und
+Projektende** je Auftrag. Dieselben beiden Datumsspalten stehen jetzt auch im
+CEO Report, in der Top-WON-Liste des 📄 Reports und in der Top-5-Liste des
+📑 Executive PDF.
+
+### 4. Was der Bericht stattdessen zeigt
+
+| Bereich | Wo |
+|---------|-----|
+| Auftragseingang und Pipeline nach Status | unverändert in allen Berichten |
+| **Nachweisquote** — wie viel des Auftragseingangs durch PO-Nummer und Belegdatum gestützt ist | neue Kennzahl in Dashboard, CEO Report, 📄 Report und 📑 Executive PDF |
+| Auswertung nach Kanton und Segment | unverändert |
+| **Auswertung nach Monat des Projektstarts** | neuer Abschnitt 6 in Dashboard und CEO Report, neuer Block im 📄 Report: zwölf Monate eines wählbaren Bezugsjahrs, dazu «andere Jahre» und «ohne erfassten Zeitraum», je mit Anzahl, Volumen und Anteil |
+| Offene Pflichtangaben mit Anzahl und Volumen | erweitert um «Aktive Deals ohne erfassten Projektzeitraum» und «WON ohne erfassten Projektzeitraum» |
+
+### Spaltenübersicht der Änderung
+
+**Entfernt**
+
+| Blatt | Spalte |
+|-------|--------|
+| MiT Strom Pipeline | O «Marge CHF», P «Marge %» |
+| MiT Strom Pipeline | Hilfsspalten `_Kalkuliert`, `_Aufteilung`, `_KostenUeber`, `_MargeNum` |
+| CEO Report | «Marge CHF» |
+| 📄 Report | «Marge CHF» |
+| 📑 Executive PDF | «Marge» |
+
+**Neu angelegt**
+
+| Blatt | Spalte |
+|-------|--------|
+| MiT Strom Pipeline | O «Projektstart» (Datum), P «Projektende» (Datum) |
+| MiT Strom Pipeline | Hilfsspalten `_DauerErfasst`, `_MonatStart`, `_ZeitraumOK` |
+| CEO Report | «Projektstart», «Projektende» |
+| Dashboard | «Projektstart» (ersetzt «Start») |
+| 📄 Report | «Projektstart», «Projektende» in der Top-WON-Liste |
+| 📑 Executive PDF | «Projektstart», «Projektende» in der Top-5-Liste |
+| ⚖️ Wahrscheinlichkeit | Abschnitt 6 «Gewonnene Aufträge (WON)» mit Zeitraum |
+
+**Geändert**
+
+| Blatt | Spalte |
+|-------|--------|
+| MiT Strom Pipeline | G «Dauer Tage» — war Eingabe, ist neu eine Formel aus dem Zeitraum |
+| MiT Strom Pipeline | S «Effektive Wahr. %» — Dropdown neu mit 100 % für gewonnene Aufträge |
+| MiT Strom Pipeline | AH «Prüfstatus» — margenbezogene Meldungen raus, Zeitraum-Meldungen rein |
+
+### Zwei Punkte, die offen geblieben sind
+
+- Der **Umrechnungsfaktor** steht weiterhin auf 1.081. Er wirkt nur noch auf die
+  Spalte «Nettoumsatz» und auf die Kennzahl «WON netto», nicht mehr auf eine
+  Kernzahl. Die Umstellung bleibt eine Zelle im Definitionsblatt.
+- Die **grobe Monatsangabe** in Spalte H bleibt vorerst stehen, damit die
+  Berichte nicht ohne jede Zeitangabe dastehen, solange keine Daten erfasst
+  sind. Sie kann entfallen, sobald der Zeitraum flächendeckend gepflegt ist.
 
 ---
 
@@ -311,14 +447,16 @@ Aggreko-Skala:
 
 | Band | Faktor | Deals | Umsatz CHF | Gewichtet CHF |
 |------|--------|-------|------------|---------------|
-| 0 – 44 %  | 0 %  | 30 | 5'092'182 | 0 |
-| 45 – 59 % | 30 % | 0  | 0 | 0 |
-| 60 – 89 % | 50 % | 2  | 268'500 | 134'250 |
-| ab 90 %   | 90 % | 14 | 1'501'467 | 1'351'320 |
-| **Total** |      | **46** | **6'862'149** | **1'485'570** |
+| 0 – 44 %  | 0 %   | 30 | 5'092'182 | 0 |
+| 45 – 59 % | 30 %  | 0  | 0 | 0 |
+| 60 – 89 % | 50 %  | 2  | 268'500 | 134'250 |
+| 90 – 99 % | 90 %  | 2  | 72'914 | 65'622 |
+| 100 % (WON) | 100 % | 12 | 1'428'553 | 1'428'553 |
+| **Total** |       | **46** | **6'862'149** | **1'628'426** |
 
-Gewichtungsgrad **21.6 %**. Vor der Umschlüsselung waren es 2'203'080 CHF
-(32.1 %), nach der alten Rechnung (Umsatz × Wahrscheinlichkeit) 3'294'922 CHF.
+Gewichtungsgrad **23.7 %**. Mit gewonnenen Aufträgen zu 90 % wären es
+1'485'570 CHF, vor der Umschlüsselung 2'203'080 CHF, nach der alten Rechnung
+(Umsatz × Wahrscheinlichkeit) 3'294'922 CHF.
 
 Das Band 45–59 % ist leer, und das bleibt es: **keine Stufe der Aggreko-Skala
 fällt in dieses Band.** Die Zeile steht trotzdem in der Tabelle, weil sie zur

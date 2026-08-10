@@ -14,7 +14,7 @@ bad = []
 
 # Jede Frage: (Wer, Stichwort in der Frage, Begriffe die in der Antwort stehen muessen)
 FRAGEN = [
-    ('Maria', 'Margenplanung', ['MwSt', 'Nettoumsatz', 'Einstand']),
+    ('Maria', 'Margenplanung', ['MwSt', 'entfernt', 'Kostenspalten']),
     ('Maria', 'Verantwortung', ['Innendienst', 'Einstand']),
     ('Maria', 'MiT CH', ['Abwicklung', 'Standard']),
     ('Maria', 'WON-Volumen', ['netto', 'belegt']),

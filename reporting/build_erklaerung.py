@@ -41,6 +41,9 @@ def fill(rgb):
 
 wb = openpyxl.load_workbook(F)
 pipe = wb[PIPE]
+# Totalzeile der Bandtabelle suchen statt fest eintragen - sie haengt an der
+# Zahl der Gewichtungsbaender.
+RT = next(r for r in range(1, 40) if wb[PROB][f'A{r}'].value == 'TOTAL aktiv')
 if ERK in wb.sheetnames:
     del wb[ERK]
 e = wb.create_sheet(ERK, wb.sheetnames.index(DEF) + 1)
@@ -110,29 +113,30 @@ STUFEN = [
      'Stellen unterschiedlich gepflegt werden.'),
     ('② Netto machen',
      'Nettoumsatz = Volumen ÷ Umrechnungsfaktor.',
-     'Spalte Y', f'=SUMPRODUCT({PQ}!$AP$6:$AP${LAST},{PQ}!$BA$6:$BA${LAST})', '#,##0',
+     'Spalte Y', f'=SUMPRODUCT({PQ}!$AP$6:$AP${LAST},{PQ}!$AZ$6:$AZ${LAST})', '#,##0',
      'Die MwSt gehört weder in den Umsatz noch in die Kosten. Der Faktor steht als eine einzige '
      'Zelle im Definitionsblatt — umschaltbar, falls künftig netto erfasst wird.'),
     ('③ Einstand bilden',
      'Einstand = Equipment + Transport + Treibstoff + Personal + Übrige.',
      'Spalte Z', None, None,
-     'Eine Summe statt fünf Einzelabzüge in der Margenformel: der Einstand ist damit sichtbar und '
-     'prüfbar, nicht in einer langen Formel versteckt.'),
-    ('④ Marge rechnen',
-     'Marge = Nettoumsatz − Einstand.   Marge % = Marge ÷ Nettoumsatz.',
-     'Spalte O / P', f'=SUMPRODUCT({PQ}!$AP$6:$AP${LAST},{PQ}!$AS$6:$AS${LAST},{PQ}!$AZ$6:$AZ${LAST})', '#,##0',
-     'Beide Seiten ohne MwSt. Der Prozentsatz bezieht sich auf den Nettoumsatz — sonst wäre er '
-     'systematisch um 8.1 % zu tief.'),
-    ('⑤ Kalkulation prüfen',
-     'Ist der Einstand vollständig? Liegt er plausibel unter dem Nettoumsatz? '
-     'Sonst wird keine Marge ausgewiesen.',
+     'Die Kosten bleiben als Arbeitsgrundlage in der Pipeline erfasst und als Summe sichtbar. '
+     'Ausgewertet wird daraus im Bericht nichts mehr — die Marge ist bewusst nicht Teil des Reportings.'),
+    ('④ Projektzeitraum',
+     'Projektstart (O) und Projektende (P) als echtes Datum.   Dauer (G) = Ende − Start + 1 Tag.',
+     'Spalte O / P / G', f'=SUMPRODUCT({PQ}!$AP$6:$AP${LAST},{PQ}!$AY$6:$AY${LAST})', '0',
+     'Eine Monatsangabe wie «Aug» lässt sich weder sortieren noch summieren. Mit echten Daten '
+     'entsteht die zeitliche Verteilung von selbst; der Live-Wert zeigt, wie viele aktive Deals '
+     'einen Zeitraum haben.'),
+    ('⑤ Nachweis prüfen',
+     'Liegt Auftrags-/PO-Nummer mit Belegdatum vor? Ist der Einstand erfasst? Steht der Zeitraum? '
+     'Jeder offene Punkt landet im Prüfstatus.',
      'Spalte AH', f'=SUMPRODUCT({PQ}!$AP$6:$AP${LAST},{PQ}!$AS$6:$AS${LAST})', '0',
-     'Eine Marge aus nicht kalkulierten Kosten ist keine Information, sondern eine Falle. '
-     'Lieber ein leeres Feld mit Begründung.'),
+     'Ein gemeldeter Auftrag ohne Beleg ist keine Zahl, auf die man planen kann. Der Prüfstatus '
+     'nennt für jede Zeile, was fehlt — statt die Lücke im Bericht verschwinden zu lassen.'),
     ('⑥ Wahrscheinlichkeit gewichten',
      'Effektive Wahrscheinlichkeit (S) → Aggreko-Faktor über die Bandtabelle → '
      'Gew.Wert = Volumen × Faktor.',
-     'Spalte Q', f'={WQ}!$G$20', '#,##0',
+     'Spalte Q', f'={WQ}!$G${RT}', '#,##0',
      'Der Faktor kommt aus einer Tabelle, nicht aus verschachtelten Bedingungen. Ändert Aggreko '
      'die Bänder, ist es eine Zeile im Blatt «⚖️ Wahrscheinlichkeit» und keine Formelarbeit.'),
     ('⑦ Verdichten',
@@ -150,7 +154,7 @@ for nr, was, wo, live, fmt, warum in STUFEN:
     cell(f'F{row}', warum, A(9, italic=True, color='FF475569'), STEP, align='left', wrap=True)
     e.row_dimensions[row].height = 42
     row += 1
-cell(f'B{row}', 'Die Live-Werte oben sind: Nettoumsatz aktiv · Marge kalkuliert · Anzahl kalkulierter Deals · '
+cell(f'B{row}', 'Die Live-Werte oben sind: Nettoumsatz aktiv · Deals mit Projektzeitraum · Deals mit Beleg · '
                 'gewichtete Pipeline · aktives Volumen brutto.',
      A(9, italic=True, color='FF64748B'), align='left', wrap=True, border=False)
 e.merge_cells(f'B{row}:F{row}')
@@ -166,8 +170,10 @@ def wasserfall(titel, kunde, farbe, extra=None):
             ('E', 'Wert CHF'), ('F', 'Erklärung')])
 
     def liv(col, fmt='#,##0'):
-        return (f'=IFERROR(INDEX({PQ}!${col}$6:${col}${LAST},'
-                f'MATCH("{kunde}",{KUN},0)),"")')
+        # INDEX auf eine leere Zelle liefert 0 - bei einer Datumsspalte stuende
+        # dort sonst der 00.01.1900. Deshalb ausdruecklich auf leer pruefen.
+        idx = f'INDEX({PQ}!${col}$6:${col}${LAST},MATCH("{kunde}",{KUN},0))'
+        return f'=IFERROR(IF({idx}="","",{idx}),"")'
 
     SCHRITTE = [
         ('Volumen wie erfasst (brutto)', 'Eingabe', 'I', liv('I'), '#,##0',
@@ -183,12 +189,15 @@ def wasserfall(titel, kunde, farbe, extra=None):
         ('Übrige Kosten', 'Eingabe', 'N', liv('N'), '#,##0',
          'Alles Weitere — neu ohne MwSt, die Spalte hiess früher «Übrige / MwSt».'),
         ('⇒ Einstand', 'Z = SUMME(J:N)', 'Z', liv('Z'), '#,##0', 'Die Summe aller Kostenarten.'),
-        ('⇒ Marge', 'O = Y − Z', 'O', liv('O'), '#,##0',
-         'Nettoumsatz minus Einstand. Leer, wenn nicht kalkuliert wurde.'),
-        ('⇒ Marge %', 'P = O ÷ Y', 'P', liv('P'), '0.0%', 'Bezogen auf den Nettoumsatz.'),
-        ('Wahrscheinlichkeit', 'Eingabe', 'S', liv('S'), '0%', 'Aggreko-Skala 0/10/30/60/90 %.'),
+        ('Projektstart', 'Eingabe', 'O', liv('O'), 'DD.MM.YYYY',
+         'Echtes Datum. Leer, solange der Zeitraum nicht feststeht.'),
+        ('Projektende', 'Eingabe', 'P', liv('P'), 'DD.MM.YYYY', 'Echtes Datum.'),
+        ('⇒ Dauer in Tagen', 'G = P − O + 1', 'G', liv('G'), '0',
+         'Beide Tage zählen mit. Ohne Zeitraum bleibt der bisher erfasste Wert stehen.'),
+        ('Wahrscheinlichkeit', 'Eingabe', 'S', liv('S'), '0%',
+         'Aggreko-Skala 0/10/30/60/90 %, gewonnene Aufträge 100 %.'),
         ('→ Gewichtungsfaktor', 'AJ = LOOKUP über die Bandtabelle', 'AJ', liv('AJ'), '0%',
-         'Band 0–44 → 0 %, 45–59 → 30 %, 60–89 → 50 %, ab 90 → 90 %.'),
+         'Band 0–44 → 0 %, 45–59 → 30 %, 60–89 → 50 %, 90–99 → 90 %, 100 % → 100 %.'),
         ('⇒ Gewichteter Wert', 'Q = I × AJ', 'Q', liv('Q'), '#,##0',
          'Bewusst auf das Volumen, nicht auf den Nettoumsatz — so verlangt es die Aggreko-Vorgabe.'),
         ('Prüfstatus', 'AH = Sammelbefund der Zeile', 'AH', liv('AH'), 'General',
@@ -230,17 +239,19 @@ def wasserfall(titel, kunde, farbe, extra=None):
     row += 1
 
 
-wasserfall('2️⃣   Beispiel A: sauber kalkuliert  —  «Wincasa Solothurn»', 'Wincasa Solothurn', GREEN,
-           extra=[('Früher gerechnet: Volumen − alle Kosten inkl. MwSt-Position', 118000, '#,##0',
-                   'Die alte Formel zog vom Bruttoumsatz ab. Die Differenz zur neuen Marge ist genau die '
-                   'MwSt auf dem Volumen — der Umsatz war um diesen Betrag zu hoch angesetzt.')])
+wasserfall('2️⃣   Beispiel A: laufende Offerte  —  «Wincasa Solothurn»', 'Wincasa Solothurn', GREEN,
+           extra=[('Warum hier keine Marge steht', None, 'General',
+                   'Die Kostenspalten sind erfasst und bleiben als Arbeitsgrundlage stehen. Ausgewertet '
+                   'werden sie im Bericht nicht: auf der heutigen Datengrundlage stiftet eine ausgewiesene '
+                   'Marge mehr Verunsicherung als Klarheit. Der Bericht zeigt Volumen, Status, Nachweis '
+                   'und Zeitraum.')])
 
-wasserfall('3️⃣   Beispiel B: Kosten über Umsatz  —  «DPR Heat Loadbank» (die Datacenter-Position)',
-           'DPR Heat Loadbank', 'FF991B1B',
-           extra=[('Warum das kein Rechenfehler ist', None, 'General',
-                   'Das Equipment wurde hier in voller Höhe des Verkaufspreises erfasst. Die Zeile sagt damit: '
-                   'Einkauf = Verkauf. Solange das so dasteht, ist die Marge zwangsläufig negativ. Die Mappe '
-                   'rechnet richtig — die Kostendaten müssen geprüft werden. Genau das meldet der Prüfstatus.')])
+wasserfall('3️⃣   Beispiel B: gewonnener Auftrag  —  «DPR Heat Loadbank» (die Datacenter-Position)',
+           'DPR Heat Loadbank', NAVY,
+           extra=[('Was diese Zeile noch braucht', None, 'General',
+                   'Status WON steht, damit gehört die Zeile auf 100 % und zählt mit dem vollen Volumen. '
+                   'Fehlen Auftrags-/PO-Nummer, Belegdatum oder der Projektzeitraum, nennt der Prüfstatus '
+                   'jeden dieser Punkte einzeln — und die Zeile zählt nicht zum belegten Auftragseingang.')])
 
 
 # =========================================================================
@@ -250,15 +261,14 @@ FAELLE = [
     ('A — Spalte N enthielt die MwSt',
      'Vom Bruttoumsatz wurden die Kosten UND die MwSt abgezogen. Die MwSt war also doppelt drin: '
      'einmal im Bruttoumsatz enthalten, einmal als Kostenposition abgezogen.',
-     36, 'Betrag bleibt gleich',
-     'Brutto minus MwSt ergibt netto — rechnerisch dasselbe. Geändert hat sich, dass die Rechnung jetzt '
-     'erklärbar ist und die Zeile korrekt als «Kosten über Umsatz» oder «nur Preis-Aufteilung» markiert '
-     'wird, statt als geplante Negativmarge dazustehen.'),
+     36, 'Einstand bleibt gleich',
+     'Brutto minus MwSt ergibt netto — rechnerisch dasselbe. Geändert hat sich, dass die MwSt nicht mehr '
+     'als Kostenposition mitläuft: der Einstand in Spalte Z enthält jetzt ausschliesslich echte Kosten.'),
     ('B — Spalte N war eine echte Kostenposition',
      'Der Bruttoumsatz wurde als Umsatz behandelt, obwohl darin 8.1 % MwSt stecken.',
-     30, 'Marge sinkt um die MwSt',
-     'Das ist die eigentliche Korrektur. Beispiel Wincasa: 118 000 → 88 777, die Differenz von 29 223 ist '
-     'exakt die MwSt auf 390 000. Die alte Zahl war zu hoch, nicht die neue zu tief.'),
+     30, 'Nettoumsatz sinkt um die MwSt',
+     'Das ist die eigentliche Korrektur. Beispiel Wincasa: 390 000 brutto sind 360 777 netto, die Differenz '
+     'von 29 223 ist exakt die MwSt. Der Umsatz war um diesen Betrag zu hoch angesetzt.'),
 ]
 for fall, vorher, n, wirkung, warum in FAELLE:
     cell(f'B{row}', fall, A(10, True, NAVY), LIGHT, align='left', wrap=True)
@@ -283,27 +293,31 @@ KPI = [
      'Spalte I + R', f'=SUMIFS({PQ}!$I$6:$I${LAST},{PQ}!$R$6:$R${LAST},"WON")', '#,##0',
      'Brutto wie erfasst. Ohne Nachweisprüfung — deshalb daneben immer «davon belegt».'),
     ('WON netto', 'Summe der Nettoumsätze der WON-Zeilen',
-     'Spalte BA', f'=SUMPRODUCT(--({PQ}!$R$6:$R${LAST}="WON"),{PQ}!$BA$6:$BA${LAST})', '#,##0',
-     'BA ist der Nettoumsatz als reine Zahl (leere Zellen werden 0), damit SUMMENPRODUKT nicht über Text stolpert.'),
+     'Spalte AZ', f'=SUMPRODUCT(--({PQ}!$R$6:$R${LAST}="WON"),{PQ}!$AZ$6:$AZ${LAST})', '#,##0',
+     'AZ ist der Nettoumsatz als reine Zahl (leere Zellen werden 0), damit SUMMENPRODUKT nicht über Text stolpert.'),
     ('WON belegt', 'Summe Volumen der Zeilen, die WON sind UND Beleg UND Einstand haben',
-     'Spalte AW', f'=SUMPRODUCT({PQ}!$AW$6:$AW${LAST},{INUM})', '#,##0',
-     'AW ist 1 nur wenn alle drei Bedingungen zugleich erfüllt sind.'),
+     'Spalte AT', f'=SUMPRODUCT({PQ}!$AT$6:$AT${LAST},{INUM})', '#,##0',
+     'AT ist 1 nur wenn alle drei Bedingungen zugleich erfüllt sind.'),
     ('Aktive Pipeline', 'Summe Volumen über alle aktiven Status',
      'Spalte AP', f'=SUMPRODUCT({AKT},{INUM})', '#,##0',
      'Aktiv = die acht Status ohne LOST und Declined. Die Liste steht ausgeblendet im Blatt «⚖️ Wahrscheinlichkeit».'),
     ('Bereinigt um Varianten', 'wie oben, aber ohne als Alternative markierte Zeilen',
-     'Spalte AX', f'=SUMPRODUCT({AKT},{PQ}!$AX$6:$AX${LAST},{INUM})', '#,##0',
-     'AX ist 0 nur bei ausdrücklicher Markierung «Alternative – zählt nicht».'),
+     'Spalte AU', f'=SUMPRODUCT({AKT},{PQ}!$AU$6:$AU${LAST},{INUM})', '#,##0',
+     'AU ist 0 nur bei ausdrücklicher Markierung «Alternative – zählt nicht».'),
     ('Gewichtete Pipeline', 'Summe der Gew.Werte über die aktiven Status',
-     'Spalte Q', f'={WQ}!$G$20', '#,##0',
+     'Spalte Q', f'={WQ}!$G${RT}', '#,##0',
      'Wird auf zwei Wegen gerechnet und im Blatt «⚖️ Wahrscheinlichkeit» gegeneinander geprüft.'),
-    ('Marge (Bericht)', 'Summe der Margen, nur über sauber kalkulierte aktive Deals',
-     'Spalte AZ', f'=SUMPRODUCT({AKT},{PQ}!$AS$6:$AS${LAST},{PQ}!$AZ$6:$AZ${LAST})', '#,##0',
-     'Nicht kalkulierte Deals sind ausgeschlossen — sie würden die Kennzahl sonst verwässern.'),
-    ('Marge %', 'Marge ÷ Nettoumsatz derselben Deals',
-     'AZ ÷ BA', f'=IFERROR(SUMPRODUCT({AKT},{PQ}!$AS$6:$AS${LAST},{PQ}!$AZ$6:$AZ${LAST})/'
-                f'SUMPRODUCT({AKT},{PQ}!$AS$6:$AS${LAST},{PQ}!$BA$6:$BA${LAST}),0)', '0.0%',
-     'Zähler und Nenner über exakt dieselbe Auswahl — sonst wäre der Prozentsatz nicht interpretierbar.'),
+    ('Nachweisquote', 'belegtes WON ÷ gemeldetes WON',
+     'AT ÷ I', f'=IFERROR(SUMPRODUCT({PQ}!$AT$6:$AT${LAST},{INUM})/'
+               f'SUMIFS({PQ}!$I$6:$I${LAST},{PQ}!$R$6:$R${LAST},"WON"),0)', '0.0%',
+     'Zähler und Nenner über dieselbe Statusauswahl — die Quote sagt, wie viel des gemeldeten '
+     'Auftragseingangs wirklich durch Auftrag oder PO gestützt ist.'),
+    ('Deals mit Projektzeitraum', 'aktive Zeilen mit Projektstart UND Projektende',
+     'Spalte AY', f'=SUMPRODUCT({AKT},{PQ}!$AY$6:$AY${LAST})', '0',
+     'AY ist 1, wenn beide Daten echte Datumswerte sind und das Ende nicht vor dem Start liegt.'),
+    ('Auswertung nach Monat', 'Volumen und Anzahl je Monat des Projektstarts',
+     'Spalte AX', None, None,
+     'AX ist der Monatsanfang des Projektstarts. Darüber gruppieren die Berichte nach Monat und Quartal.'),
     ('Top-Listen WON', 'GRÖSSTE über den Sortierschlüssel, dann Zeile über VERGLEICH holen',
      'Spalte AK', None, None,
      'AK trägt einen winzigen zeilenabhängigen Zuschlag, damit zwei betragsgleiche Deals nicht beide '
@@ -335,19 +349,22 @@ ZWECK = {
     'D': 'Segment — Grundlage der Segmentauswertung.',
     'E': 'Was geliefert wird.',
     'F': 'Leistung in kW.',
-    'G': 'Mietdauer.',
-    'H': 'Startmonat.',
+    'G': 'Mietdauer in Kalendertagen. Gerechnet als Projektende − Projektstart + 1, sobald beide '
+         'Daten stehen; sonst der bisher von Hand erfasste Wert aus AW.',
+    'H': 'Grobe Monatsangabe aus der Alterfassung. Bleibt als Anhaltspunkt stehen, solange kein '
+         'echtes Datum erfasst ist.',
     'I': 'Volumen brutto, wie gegenüber dem Kunden offeriert. Die zentrale Eingabe.',
     'J': 'Einstand Equipment.',
     'K': 'Einstand Transport.',
     'L': 'Einstand Treibstoff.',
     'M': 'Einstand Personal / Technik.',
     'N': 'Übrige Kosten. Enthielt früher die MwSt — die ist entfernt.',
-    'O': 'Marge in CHF. Leer, wenn nicht kalkuliert wurde.',
-    'P': 'Marge in Prozent des Nettoumsatzes.',
+    'O': 'Projektstart als echtes Datum TT.MM.JJJJ. Eingabefeld, als Datum geprüft.',
+    'P': 'Projektende als echtes Datum TT.MM.JJJJ. Eingabefeld, als Datum geprüft.',
     'Q': 'Gewichteter Wert nach Aggreko-Faktor.',
     'R': 'Status. Bestimmt, ob die Zeile aktiv ist und in welchem Block sie erscheint.',
-    'S': 'Effektive Wahrscheinlichkeit. Dropdown mit der Aggreko-Skala.',
+    'S': 'Effektive Wahrscheinlichkeit. Dropdown mit der Aggreko-Skala; 100 % ist gewonnenen '
+         'Aufträgen vorbehalten.',
     'T': 'Akquisetyp.',
     'U': 'USP-Argument.',
     'V': 'Nächster Schritt.',
@@ -372,16 +389,16 @@ ZWECK = {
     'AP': '1 = zählt zur aktiven Pipeline.',
     'AQ': '1 = Wahrscheinlichkeit liegt auf der Aggreko-Skala.',
     'AR': '1 = alle vier Kostenarten sind erfasst und die Summe ist grösser als null.',
-    'AS': '1 = sauber kalkuliert (Einstand plausibel unter dem Nettoumsatz).',
-    'AT': '1 = Einstand entspricht dem Nettoumsatz — reine Preis-Aufteilung.',
-    'AU': '1 = Einstand über dem Nettoumsatz.',
-    'AV': '1 = Auftrags-/PO-Nummer und Belegdatum vorhanden.',
-    'AW': '1 = WON und belegt und kalkuliert.',
-    'AX': '1 = zählt ins bereinigte Volumen.',
-    'AY': '1 = dieser Kunde kommt mehrfach in der Pipeline vor.',
-    'AZ': 'Marge als reine Zahl für die Summenbildung.',
-    'BA': 'Nettoumsatz als reine Zahl für die Summenbildung.',
-    'BB': 'Sammeltext der Befunde, aus dem der Prüfstatus gebildet wird.',
+    'AS': '1 = Auftrags-/PO-Nummer und Belegdatum vorhanden.',
+    'AT': '1 = WON und belegt und Einstand erfasst.',
+    'AU': '1 = zählt ins bereinigte Volumen.',
+    'AV': '1 = dieser Kunde kommt mehrfach in der Pipeline vor.',
+    'AW': 'Bisher von Hand erfasste Mietdauer. Bleibt stehen, solange kein Zeitraum erfasst ist.',
+    'AX': 'Monatsanfang des Projektstarts — Grundlage der Auswertung nach Monat und Quartal.',
+    'AY': '1 = Projektstart und Projektende sind erfasst und das Ende liegt nicht vor dem Start.',
+    'AZ': 'Nettoumsatz als reine Zahl für die Summenbildung.',
+    'BA': 'Sammeltext der Befunde, aus dem der Prüfstatus gebildet wird.',
+    'BB': 'Kurzform des Prüfstatus für den CEO Report.',
 }
 for idx in range(1, 55):
     col = get_column_letter(idx)
@@ -423,14 +440,21 @@ WARUM = [
      'Eine Bedingung wird einmal je Zeile gerechnet und danach nur noch multipliziert. Das ist schneller, '
      'und vor allem: jede Kennzahl filtert nachweislich über dieselbe Bedingung. Zwei Berichte können '
      'nicht auseinanderlaufen.'),
-    ('Marge leer lassen statt eine unbelegte Zahl zu zeigen',
-     'Immer Nettoumsatz minus Einstand ausweisen.',
-     'Wo der Verkaufspreis nur in netto und MwSt zerlegt wurde, ist die «Marge» ein Rechenartefakt. Eine '
-     'leere Zelle mit Begründung ist ehrlicher als eine Zahl, die niemand halten kann.'),
-    ('Schwelle 0.5 % für die Erkennung «Preis-Aufteilung»',
-     'Auf exakte Gleichheit prüfen.',
-     'Rundungen auf Rappen machen exakte Gleichheit unzuverlässig. Eine echte Kalkulation mit unter '
-     '0.5 % Marge wäre ohnehin ein Prüffall. Die Schwelle steht als Zelle im Definitionsblatt.'),
+    ('Marge ganz aus dem Reporting genommen',
+     'Die Marge weiter ausweisen und die Prüffälle daneben markieren.',
+     'Bei einem Teil der Zeilen wurde nicht kalkuliert, sondern nur der Verkaufspreis aufgeteilt. Auf '
+     'dieser Datengrundlage trägt keine Margenzahl. Die Kostenspalten bleiben als Arbeitsgrundlage in der '
+     'Pipeline stehen — im Bericht steht dafür, was belastbar ist: Volumen, Status, Nachweis und Zeitraum.'),
+    ('Projektzeitraum als zwei echte Datumsfelder',
+     'Die grobe Monatsangabe beibehalten und daraus ein Datum ableiten.',
+     'Aus «Aug» lässt sich kein Zeitraum rechnen und keine Dauer prüfen. Zwei geprüfte Datumsfelder '
+     'liefern Dauer, Monat und Quartal von selbst — und ein leeres Feld ist eine ehrliche Aussage, '
+     'während ein erfundenes Datum eine falsche wäre.'),
+    ('Gewonnene Aufträge auf 100 %',
+     'Gewonnene Aufträge weiter mit 90 % gewichten, wie es die Aggreko-Skala vorgibt.',
+     'Ein unterschriebener Auftrag ist keine Wahrscheinlichkeit mehr, sondern ein Fakt. Die Aggreko-Skala '
+     'endet bei 90 %, weil sie offene Opportunitäten bewertet. Die Stufe 100 % ist als Ergänzung '
+     'gekennzeichnet und gilt ausschliesslich für Status WON.'),
     ('Keine harte Sperre auf dem Statusfeld',
      'Eine Gültigkeitsregel, die WON ohne Beleg blockiert.',
      'Eine Gültigkeitsprüfung greift nur beim Tippen — nicht beim Einfügen und nicht beim Import. Die '
@@ -450,7 +474,7 @@ WARUM = [
      'Die Aggreko-Vorgabe lautet «total revenue × probability». Wir folgen ihr wörtlich, damit die Zahl '
      'mit der Gruppenauswertung vergleichbar bleibt.'),
     ('MwSt-Formeln aus Spalte N entfernt statt stehen gelassen',
-     'Die Spalte unverändert lassen und nur die Margenformel ändern.',
+     'Die Spalte unverändert lassen.',
      'Sonst wäre die MwSt weiterhin im Einstand enthalten und würde doppelt wirken. Die Spalte heisst '
      'jetzt «Übrige Kosten» und enthält ausschliesslich echte Kosten.'),
     ('Ganzspalten-Bezüge auf Zeile 860 begrenzt',

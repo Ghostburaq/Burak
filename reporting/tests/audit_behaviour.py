@@ -59,9 +59,12 @@ P = 'MiT Strom Pipeline'
 def s1(wb):
     """Neuer Deal in der ersten freien Zeile (72)."""
     ws = wb[P]
+    dt = __import__('datetime')
+    # Die Dauer wird nicht mehr getippt, sie ergibt sich aus dem Zeitraum.
     vals = dict(A=999, B='Testkunde Neu AG', C='ZH', D='Industrie', E='2x 500 kVA',
-                F=1000, G=90, H='Sep', I=250000, J=100000, K=5000, L=2000,
-                M=3000, N=0, R='offered', S=0.6, T='Warm', U='Test',
+                F=1000, H='Sep', I=250000, J=100000, K=5000, L=2000,
+                M=3000, N=0, O=dt.datetime(2026, 9, 1), P=dt.datetime(2026, 10, 1),
+                R='offered', S=0.6, T='Warm', U='Test',
                 V='Nächster Schritt Test', W='Sep', X='Testzeile')
     for k, v in vals.items():
         ws[f'{k}72'] = v
@@ -78,8 +81,13 @@ def s1x(V):
     names = [V['Dashboard'][f'B{r}'].value for r in range(75, 137)]
     if 'Testkunde Neu AG' not in names:
         m.append('neuer Deal fehlt im Offerte-Block des Dashboards')
-    if V['⚖️ Wahrscheinlichkeit']['E18'].value != 3:
-        m.append(f'Band 60-89% erwartet 3 Deals, ist {V["⚖️ Wahrscheinlichkeit"]["E18"].value}')
+    _b6089 = wrow(V, '60 – 89 %')
+    if V['⚖️ Wahrscheinlichkeit'][f'E{_b6089}'].value != 3:
+        m.append(f'Band 60-89% erwartet 3 Deals, '
+                 f'ist {V["⚖️ Wahrscheinlichkeit"][f"E{_b6089}"].value}')
+    # Der Zeitraum des neuen Deals muss die Dauer rechnen.
+    if p['G72'].value != 31:
+        m.append(f'Dauer erwartet 31 Tage, ist {p["G72"].value!r}')
     return m
 
 
@@ -133,7 +141,7 @@ def s4x(V):
 BOUND = [(0.0, 0.0), (0.10, 0.0), (0.30, 0.0), (0.44, 0.0), (0.4499, 0.0),
          (0.45, 0.3), (0.50, 0.3), (0.59, 0.3), (0.5999, 0.3),
          (0.60, 0.5), (0.75, 0.5), (0.89, 0.5), (0.8999, 0.5),
-         (0.90, 0.9), (0.95, 0.9), (1.00, 0.9)]
+         (0.90, 0.9), (0.95, 0.9), (0.9999, 0.9), (1.00, 1.0)]
 
 
 def s5(wb):
@@ -173,15 +181,25 @@ def s6(wb):
         ws[f'N{r}'] = None
 
 
+def wrow(V, text, col='A'):
+    """Zeile auf dem Blatt «Wahrscheinlichkeit» anhand der Beschriftung finden."""
+    W = V['⚖️ Wahrscheinlichkeit']
+    return next(r for r in range(1, 60)
+                if str(W[f'{col}{r}'].value or '').startswith(text))
+
+
 def s6x(V):
     m = []
+    _W = V['⚖️ Wahrscheinlichkeit']
+    _tot = wrow(V, 'TOTAL aktiv')
+    _ktrl = wrow(V, 'Gewichtete Pipeline laut Bandtabelle')
     if V['Dashboard']['I6'].value not in (0, None):
         m.append(f'Gesamtpipeline erwartet 0, ist {V["Dashboard"]["I6"].value}')
-    if V['⚖️ Wahrscheinlichkeit']['G20'].value not in (0, None):
+    if _W[f'G{_tot}'].value not in (0, None):
         m.append('gewichtetes Total muss 0 sein')
-    if V['⚖️ Wahrscheinlichkeit']['E28'].value not in (0, None):
+    if _W[f'E{_ktrl+4}'].value not in (0, None):
         m.append('Skala-Zaehler muss 0 sein')
-    if '✔' not in str(V['⚖️ Wahrscheinlichkeit']['E27'].value):
+    if '✔' not in str(_W[f'E{_ktrl+3}'].value):
         m.append('Selbstkontrolle muss auch bei leerer Pipeline gruen sein')
     if V['Dashboard']['B11'].value not in (None, ''):
         m.append('WON-Block muss leer sein')
@@ -197,8 +215,6 @@ def s7x(V):
     m = []
     if V[P]['Q6'].value != 'tbd':
         m.append(f'Q6 erwartet "tbd", ist {V[P]["Q6"].value!r}')
-    if V[P]['O6'].value not in (None, ''):
-        m.append(f'Marge O6 muss leer sein, ist {V[P]["O6"].value!r}')
     if V[P]['AL6'].value != 0:
         m.append('AL6 muss 0 sein bei Text-Volumen')
     return m
@@ -280,10 +296,11 @@ def s11(wb):
 def s11x(V):
     m = []
     W = V['⚖️ Wahrscheinlichkeit']
-    if W['E30'].value != 1:
-        m.append(f'Zaehler erwartet 1, ist {W["E30"].value}')
-    if '⚠' not in str(W['E31'].value):
-        m.append(f'Warnung fehlt: {W["E31"].value!r}')
+    dr = wrow(V, 'Deals unterhalb des Pipeline-Druckbereichs')
+    if W[f'E{dr}'].value != 1:
+        m.append(f'Zaehler erwartet 1, ist {W[f"E{dr}"].value}')
+    if '⚠' not in str(W[f'E{dr+1}'].value):
+        m.append(f'Warnung fehlt: {W[f"E{dr+1}"].value!r}')
     if V['Dashboard']['I7'].value != 47:
         m.append('Deal zaehlt trotzdem korrekt zur Pipeline (I7 erwartet 47)')
     return m
@@ -299,33 +316,40 @@ def s12(wb):
 def s12x(V):
     m = []
     u4 = V[P]['U4'].value
-    g20 = V['⚖️ Wahrscheinlichkeit']['G20'].value
-    if abs((u4 or 0) - (g20 or 0)) > 0.01:
-        m.append(f'U4={u4} weicht von der gewichteten Pipeline {g20} ab')
+    tot = V['⚖️ Wahrscheinlichkeit'][f'G{wrow(V, "TOTAL aktiv")}'].value
+    if abs((u4 or 0) - (tot or 0)) > 0.01:
+        m.append(f'U4={u4} weicht von der gewichteten Pipeline {tot} ab')
     if abs((V[P]['Q6'].value or 0) - 351000) > 0.01:
         m.append(f'Q6 des LOST-Deals erwartet 351000, ist {V[P]["Q6"].value}')
     return m
 
 
 def s13(wb):
-    """WON-Deal vollstaendig belegen: PO-Nr., Datum, Einstand, Vertragsart."""
+    """WON-Deal vollstaendig belegen: PO-Nr., Datum, Vertragsart, Zeitraum."""
     ws = wb[P]
+    dt = __import__('datetime')
     ws['AF9'] = 'PO-2026-0815'
-    ws['AG9'] = __import__('datetime').date(2026, 5, 12)
+    ws['AG9'] = dt.date(2026, 5, 12)
     ws['AB9'] = 'Einzelauftrag'
+    ws['O9'] = dt.datetime(2026, 8, 1)
+    ws['P9'] = dt.datetime(2026, 8, 10)
 
 
 def s13x(V):
     m = []
     p = V[P]
-    if p['AV9'].value != 1:
-        m.append('Beleg-Kennzeichen AV9 muesste 1 sein')
-    if p['AW9'].value != 1:
-        m.append('WON-belegt AW9 muesste 1 sein')
-    if p['AH9'].value != '✅ belegt & kalkuliert':
+    if p['AS9'].value != 1:
+        m.append('Beleg-Kennzeichen AS9 muesste 1 sein')
+    if p['AT9'].value != 1:
+        m.append('WON-belegt AT9 muesste 1 sein')
+    if p['AY9'].value != 1:
+        m.append('Zeitraum-Kennzeichen AY9 muesste 1 sein')
+    if p['G9'].value != 10:
+        m.append(f'Dauer erwartet 10 Tage, ist {p["G9"].value!r}')
+    if p['AH9'].value != '✅ belegt & vollständig':
         m.append(f'Pruefstatus erwartet belegt, ist {p["AH9"].value!r}')
-    if abs((V['Dashboard']['E221'].value or 0) - 380000) > 1:
-        m.append(f'belegtes WON erwartet 380000, ist {V["Dashboard"]["E221"].value}')
+    if abs((V['Dashboard']['E222'].value or 0) - 380000) > 1:
+        m.append(f'belegtes WON erwartet 380000, ist {V["Dashboard"]["E222"].value}')
     return m
 
 
@@ -340,12 +364,12 @@ def s14(wb):
 
 def s14x(V):
     m = []
-    brutto = V['Dashboard']['E223'].value or 0
-    berein = V['Dashboard']['E224'].value or 0
+    brutto = V['Dashboard']['E224'].value or 0
+    berein = V['Dashboard']['E225'].value or 0
     if abs((brutto - berein) - 331889.15) > 1:
         m.append(f'Bereinigung erwartet -331889, ist {brutto - berein}')
-    if V[P]['AX63'].value != 0:
-        m.append('AX63 muesste 0 sein (Alternative)')
+    if V[P]['AU63'].value != 0:
+        m.append('AU63 muesste 0 sein (Alternative)')
     return m
 
 
@@ -363,13 +387,14 @@ def s15x(V):
     p = V[P]
     if abs((p['Y6'].value or 0) - 390000) > 0.01:
         m.append(f'Netto bei Schalter «netto» erwartet 390000, ist {p["Y6"].value}')
-    if abs((p['O6'].value or 0) - 118000) > 0.01:
-        m.append(f'Marge erwartet 118000, ist {p["O6"].value}')
+    # Der Schalter darf nur den Nettoumsatz bewegen, nicht das Volumen.
+    if abs((p['I6'].value or 0) - 390000) > 0.01:
+        m.append(f'Volumen darf sich nicht ändern, ist {p["I6"].value}')
     return m
 
 
 def s16(wb):
-    """Einstand unvollstaendig: keine Marge, aber Hinweis."""
+    """Einstand unvollstaendig: Prüfstatus muss ihn nennen."""
     ws = wb[P]
     ws['K6'] = None            # Transport loeschen
     ws['AF6'] = 'PO-X'
@@ -381,8 +406,6 @@ def s16x(V):
     p = V[P]
     if p['AR6'].value != 0:
         m.append('Einstand duerfte nicht als vollstaendig gelten')
-    if p['O6'].value not in (None, ''):
-        m.append(f'Marge muesste leer sein, ist {p["O6"].value!r}')
     if 'Einstand' not in str(p['AH6'].value):
         m.append(f'Pruefstatus muesste den Einstand nennen: {p["AH6"].value!r}')
     return m

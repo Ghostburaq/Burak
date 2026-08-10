@@ -12,6 +12,7 @@ problems = []
 
 # von LibreOffice/Excel ohne Prefix evaluierbare Funktionen
 KNOWN = {
+    'DATE', 'YEAR', 'MONTH', 'DAY', 'EOMONTH',
     'IF', 'IFERROR', 'AND', 'OR', 'NOT', 'SUM', 'SUMIF', 'SUMIFS', 'COUNT',
     'COUNTIF', 'COUNTIFS', 'INDEX', 'MATCH', 'LARGE', 'SMALL', 'LOOKUP',
     'VLOOKUP', 'TEXT', 'LEFT', 'RIGHT', 'MID', 'LEN', 'ROW', 'COLUMN',
