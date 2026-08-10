@@ -20,5 +20,11 @@ Anschliessend:
 
     python3 build_layout.py         # Stufe 5: Breiten, Umbrüche, Höhen, Seiten
 
-und danach noch einmal neu berechnen und speichern. Dann ist die Mappe fertig.
+danach noch einmal neu berechnen und speichern, und zum Schluss:
+
+    python3 bereinige_datei.py      # Stufe 6: Doppeleinträge entfernen
+
+Stufe 6 ist nicht optional. Ohne sie steht derselbe eingebaute Name zweimal in
+der Datei; Excel meldet sie beim Öffnen als beschädigt, repariert sie und wirft
+dabei die benannten Bereiche weg — danach rechnet nichts mehr.
 HINWEIS

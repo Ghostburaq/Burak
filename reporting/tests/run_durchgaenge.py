@@ -17,8 +17,12 @@ RECALC = os.environ.get('RECALC', '/root/.claude/skills/xlsx/scripts/recalc.py')
 STUFEN = ['build_master.py', 'build_governance.py',
           'build_erklaerung.py', 'build_umschluesselung.py']
 LAYOUT = 'build_layout.py'
+# Nach der letzten Neuberechnung raeumt diese Stufe auf, was LibreOffice und
+# openpyxl an Doppeleintraegen hinterlassen - sonst repariert Excel die Datei.
+BEREINIGUNG = 'bereinige_datei.py'
 PRUEF = ['audit_static.py', 'audit_values.py', 'audit_struktur.py',
-         'audit_fragen.py', 'audit_layout.py', 'audit_abnahme.py']
+         'audit_fragen.py', 'audit_layout.py', 'audit_abnahme.py',
+         'audit_excel.py']
 PASSES = 5
 BEHAVIOUR_IN = {1, PASSES}          # der lange Verhaltenslauf im ersten und letzten Durchgang
 
@@ -78,6 +82,13 @@ for p in range(1, PASSES + 1):
         else:
             print(f'  ✔ {LAYOUT}')
         neu_berechnen(2)
+        rc, out, err = run([BEREINIGUNG])
+        kurz = [l for l in out.splitlines() if l.strip()][-1] if out.strip() else '?'
+        if rc != 0:
+            fehler.append(f'D{p}: {BEREINIGUNG}: {err.strip()[-300:]}')
+            print(f'  ✗ {BEREINIGUNG}')
+        else:
+            print(f'  ✔ {BEREINIGUNG}: {kurz}')
 
         # --- Pruefungen
         for pruef in PRUEF:

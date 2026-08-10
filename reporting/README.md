@@ -214,6 +214,8 @@ Beim vollständigen Audit gefunden und korrigiert:
 | **Abgeschnittene Texte, ####-Zahlen und zu niedrige Zeilen** auf allen Blättern | 149 Stellen, u. a. Kundennamen, «Nächster Schritt», «Prüfstatus», Margenbeträge | Neue Stufe 5 (Layout), siehe unten |
 | **Blatt «⚖️ Wahrscheinlichkeit» druckte auf 25 % verkleinert** | 93 Zeilen wurden auf eine Seite gezwungen — unlesbar | Höhe nur noch dann auf eine Seite zwingen, wenn es den Massstab nicht kostet |
 | **Diagramme überlappten sich** und lagen teils ausserhalb des Druckbereichs | Diagramm 3 und 5 überschnitten sich um drei Zeilen | Festes Raster: zwei Reihen zu zweit, das Band-Diagramm über die volle Breite |
+| **Excel stufte die Datei als beschädigt ein und reparierte sie** | Der eingebaute Name `_xlnm.Print_Titles` stand zweimal für die Pipeline. Excel meldet «Wir haben ein Problem mit einigen Inhalten gefunden», repariert — und wirft dabei die **benannten Bereiche** weg. Danach liefern `Netto_Faktor` und `Wahrscheinlichkeit_Skala` `#NAME?`, und mit ihnen bricht jede Kennzahl, die darauf rechnet. In LibreOffice fiel das nie auf, weil LibreOffice den Doppeleintrag stillschweigend hinnimmt | Neue Stufe 6 [`bereinige_datei.py`](bereinige_datei.py) räumt Doppeleinträge aus der fertigen Datei; neue Prüfung [`tests/audit_excel.py`](tests/audit_excel.py) lässt sie nie wieder durch |
+| **Autofilter deckten nur einen Teil der Tabelle ab** | Pipeline `A5:X860` statt bis AI, CEO Report `A10:L72` statt bis N — beim Filtern wären die übrigen Spalten stehen geblieben und die Zeilen auseinandergelaufen | Filterbereich wird auf die tatsächliche Tabellenbreite gesetzt |
 
 ### Prüfung
 
@@ -226,6 +228,7 @@ Die Skripte in [`tests/`](tests/) prüfen die Mappe vollständig:
 | `audit_struktur.py` | benannte Bereiche, Dropdowns, bedingte Formatierung, Diagrammquellen, Druckbereiche, verbundene Zellen, Zahlenformate, Schriften | 0 Befunde |
 | `audit_fragen.py` | prüft, ob **jede** Rückfrage von Maria und Oliver eine Antwortzeile mit einer Live-Zahl hat und ob die Antwort die zugesagten Begriffe nennt | 8 / 8 abgedeckt |
 | `audit_layout.py` | misst **jede sichtbare Zelle**: passt der Text in die Spalte, passt die Zahl (sonst zeigt Excel `####`), reicht die Zeilenhöhe, und druckt das Blatt lesbar auf sein Papier | 0 Befunde |
+| `audit_excel.py` | prüft die **Datei selbst**, nicht das Rechenmodell: öffnet Excel sie unverändert? Doppelte benannte Bereiche, Namen auf nicht vorhandene Blätter, überlappende Verbundbereiche, Werte in überdeckten Zellen, Zeilenhöhen über 409.5 pt, Blattnamen, `_xlfn`-Präfixe, Verweise auf unbekannte Blätter, Diagrammbezüge | 28'570 Prüfungen, 0 Befunde |
 | `audit_abnahme.py` | nimmt die Umstellung selbst ab, mit eigenen Rechenwegen: sind Projektstart/Projektende **echte Datumszellen** mit Datumsprüfung, rechnet die **Dauer** aus dem Zeitraum (sonst der erfasste Wert), ist die **Marge** in allen Berichten verschwunden, gibt es **leere Spalten** oder Lücken in den Hilfsspalten, stimmen die **Berichtssummen mit der Summe der Pipeline-Zeilen**, steht jeder gewonnene Auftrag auf **100 %** | 13'894 Prüfungen, 0 Befunde |
 | `audit_behaviour.py` | 21 Szenarien mit veränderten Daten — u. a. **neuer Deal mit Projektzeitraum**, Statuswechsel, fehlende Wahrscheinlichkeit, **alle Bandgrenzen inkl. 100 %**, leere Pipeline, betragsgleiche Deals, LOST mit 90 %, **WON vollständig belegen (PO, Datum, Vertragsart, Zeitraum)**, **Variante ausschliessen**, **MwSt-Schalter auf netto**, **unvollständiger Einstand**, **Projektzeiträume erfassen (Monat, Quartal, Dauer)**, **nur Startdatum erfasst**, **Bezugsjahr umstellen**, **gewonnener Auftrag auf 90 %** | 21 / 21 bestanden |
 
@@ -427,6 +430,23 @@ Vorher stand der CEO Report auf 53 % und das Blatt «⚖️ Wahrscheinlichkeit»
 des CEO Reports («Leistung / Fleet» 79 Zeichen, «Nächster Schritt» 53 Zeichen)
 sind jetzt 26 bzw. 24 Zeichen breit und brechen um; dadurch passt das Blatt mit
 allen 14 Spalten auf eine Seitenbreite und ist um die Hälfte grösser gedruckt.
+
+### Warum es eine eigene Stufe «Dateibereinigung» gibt
+
+Alle anderen Prüfungen messen das **Rechenmodell**: stimmen die Formeln, stimmen
+die Werte, passt das Layout. Keine von ihnen beantwortet die Frage, ob **Excel
+die Datei überhaupt unverändert öffnet**. Genau dort lag der Fehler: die Mappe
+rechnete in jeder Prüfung richtig, aber Excel stufte sie beim Öffnen als
+beschädigt ein, reparierte sie — und im reparierten Zustand fehlten die
+benannten Bereiche. Für den Anwender sah es aus, als würde nichts mehr
+zusammenpassen.
+
+Deshalb gibt es jetzt zwei Dinge:
+
+- **Stufe 6 `bereinige_datei.py`** läuft als Letztes über die fertige Datei und
+  entfernt doppelte benannte Bereiche. Sie fasst sonst nichts an.
+- **`tests/audit_excel.py`** öffnet die Datei als ZIP und prüft ihr Inneres
+  gegen die Regeln, an denen Excel eine Datei ablehnt.
 
 ### Nachgemessen wird mit demselben Lineal
 

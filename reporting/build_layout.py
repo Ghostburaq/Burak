@@ -124,6 +124,9 @@ RAND = 0.3
 
 bericht = []
 
+# Bis zu welcher Spalte reicht die Tabelle je Blatt (fuer den Autofilter)?
+FILTERBREITE = {'MiT Strom Pipeline': (1, 35), 'CEO Report': (1, 14), 'Dashboard': (1, 11)}
+
 wb = openpyxl.load_workbook(F)
 V = openpyxl.load_workbook(F, data_only=True)
 
@@ -175,6 +178,17 @@ for ws in wb.worksheets:
                            f'→ Zeile {r1 + 1}–{r2 + 1}, Spalte {c1 + 1}–{c2 + 1}')
             a._from.row, a._from.col, a._from.rowOff, a._from.colOff = r1, c1, 0, 0
             a.to.row, a.to.col, a.to.rowOff, a.to.colOff = r2, c2, 0, 0
+
+    # ---------------------------------- Filterbereich auf die ganze Tabelle
+    # Ein Autofilter, der nur einen Teil der Spalten umfasst, sortiert beim
+    # Filtern die restlichen Spalten nicht mit - die Zeilen laufen auseinander.
+    if ws.auto_filter.ref and FILTERBREITE.get(ws.title):
+        von, bis = FILTERBREITE[ws.title]
+        a = range_boundaries(ws.auto_filter.ref)
+        neu = f'{get_column_letter(von)}{a[1]}:{get_column_letter(bis)}{a[3]}'
+        if neu != ws.auto_filter.ref:
+            bericht.append(f'{ws.title}: Filterbereich {ws.auto_filter.ref} → {neu}')
+            ws.auto_filter.ref = neu
 
     # ---------------------------------- Ein Deal ist kein «1 Deals»
     for row in ws.iter_rows():
