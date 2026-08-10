@@ -1,0 +1,565 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kaltakquise-Maschine · Burak Ücöz</title>
+<meta name="description" content="Kaltakquise-E-Mails für mobile Stromlösungen: erzeugen, gegen das Regelwerk prüfen, sendefertig machen.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+<style>
+  :root {
+    --bg: #f5f6f8;
+    --flaeche: #ffffff;
+    --flaeche-2: #eef0f4;
+    --linie: #d9dde4;
+    --text: #16202b;
+    --text-leise: #5b6673;
+    --akzent: #0f5c8c;
+    --akzent-text: #ffffff;
+    --fehler: #b3261e;
+    --fehler-bg: #fdecea;
+    --warnung: #8a5a00;
+    --warnung-bg: #fdf4e3;
+    --hinweis: #33506b;
+    --hinweis-bg: #eef2f7;
+    --gut: #1c6b45;
+    --gut-bg: #e8f4ee;
+    --radius: 10px;
+    --schrift: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #10161d;
+      --flaeche: #18212b;
+      --flaeche-2: #1f2a36;
+      --linie: #2c3844;
+      --text: #e8edf3;
+      --text-leise: #9aa8b6;
+      --akzent: #4da3d8;
+      --akzent-text: #0b1219;
+      --fehler: #ff8a80;
+      --fehler-bg: #3a1e1c;
+      --warnung: #f3c375;
+      --warnung-bg: #362b17;
+      --hinweis: #a8c2dd;
+      --hinweis-bg: #1e2a37;
+      --gut: #79d3a5;
+      --gut-bg: #16302a;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--schrift);
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .huelle { max-width: 1180px; margin: 0 auto; padding: 0 20px 72px; }
+
+  header {
+    border-bottom: 1px solid var(--linie);
+    background: var(--flaeche);
+    margin-bottom: 28px;
+  }
+  .kopf { max-width: 1180px; margin: 0 auto; padding: 26px 20px 22px; }
+  .marke { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--text-leise); }
+  h1 { font-size: clamp(24px, 3.4vw, 34px); margin: 6px 0 6px; letter-spacing: -.02em; }
+  .unterzeile { color: var(--text-leise); max-width: 62ch; margin: 0; }
+
+  nav { display: flex; gap: 6px; margin-top: 20px; flex-wrap: wrap; }
+  nav button {
+    font: inherit; font-size: 15px; cursor: pointer;
+    padding: 9px 16px; border-radius: 8px 8px 0 0;
+    border: 1px solid transparent; border-bottom: none;
+    background: transparent; color: var(--text-leise);
+  }
+  nav button:hover { color: var(--text); }
+  nav button[aria-selected="true"] {
+    background: var(--bg); color: var(--text);
+    border-color: var(--linie); font-weight: 600;
+    margin-bottom: -1px; padding-bottom: 10px;
+  }
+
+  .raster { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 22px; align-items: start; }
+  @media (max-width: 900px) { .raster { grid-template-columns: 1fr; } }
+
+  .karte {
+    background: var(--flaeche);
+    border: 1px solid var(--linie);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+  .karte h2 { font-size: 15px; margin: 0 0 4px; letter-spacing: -.01em; }
+  .karte p.hilfe { color: var(--text-leise); font-size: 13.5px; margin: 0 0 14px; }
+
+  label { display: block; font-size: 13px; font-weight: 600; margin: 14px 0 5px; }
+  label:first-of-type { margin-top: 0; }
+  textarea, input[type="text"], select {
+    width: 100%; font: inherit; color: var(--text);
+    background: var(--bg); border: 1px solid var(--linie);
+    border-radius: 8px; padding: 10px 12px;
+  }
+  textarea { min-height: 190px; resize: vertical; font-size: 15px; line-height: 1.5; }
+  textarea.klein { min-height: 96px; }
+  select { appearance: none; background-image: none; }
+  textarea:focus, input:focus, select:focus { outline: 2px solid var(--akzent); outline-offset: 1px; }
+
+  .reihe { display: flex; gap: 12px; flex-wrap: wrap; }
+  .reihe > div { flex: 1 1 150px; min-width: 0; }
+
+  .knopfleiste { display: flex; gap: 10px; align-items: center; margin-top: 18px; flex-wrap: wrap; }
+  button.aktion {
+    font: inherit; font-weight: 600; cursor: pointer;
+    background: var(--akzent); color: var(--akzent-text);
+    border: none; border-radius: 8px; padding: 10px 20px;
+  }
+  button.aktion:hover { filter: brightness(1.08); }
+  button.aktion:disabled { opacity: .55; cursor: progress; }
+  button.leise {
+    font: inherit; cursor: pointer; background: transparent;
+    color: var(--text-leise); border: 1px solid var(--linie);
+    border-radius: 8px; padding: 9px 14px;
+  }
+  button.leise:hover { color: var(--text); }
+
+  .fahne {
+    display: flex; align-items: center; gap: 10px;
+    padding: 11px 14px; border-radius: 8px; font-weight: 600; font-size: 14.5px;
+    margin-bottom: 14px;
+  }
+  .fahne.gut { background: var(--gut-bg); color: var(--gut); }
+  .fahne.schlecht { background: var(--fehler-bg); color: var(--fehler); }
+  .fahne.neutral { background: var(--flaeche-2); color: var(--text-leise); }
+
+  .kennzahlen { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+  .kennzahl {
+    background: var(--flaeche-2); border-radius: 8px;
+    padding: 8px 12px; font-size: 13px; color: var(--text-leise);
+  }
+  .kennzahl b { display: block; color: var(--text); font-size: 16px; font-weight: 600; }
+
+  ul.befunde { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; }
+  ul.befunde li {
+    display: grid; grid-template-columns: auto 1fr; gap: 10px;
+    padding: 10px 12px; border-radius: 8px; font-size: 14px; align-items: start;
+  }
+  li.fehler { background: var(--fehler-bg); }
+  li.warnung { background: var(--warnung-bg); }
+  li.hinweis { background: var(--hinweis-bg); }
+  .marker { font-size: 11px; font-weight: 700; letter-spacing: .06em; padding-top: 2px; }
+  li.fehler .marker { color: var(--fehler); }
+  li.warnung .marker { color: var(--warnung); }
+  li.hinweis .marker { color: var(--hinweis); }
+  .befunde .regel { font-weight: 600; }
+
+  pre.mail, pre.prompt {
+    background: var(--bg); border: 1px solid var(--linie);
+    border-radius: 8px; padding: 14px; overflow-x: auto;
+    font-family: var(--mono); font-size: 13px; line-height: 1.6;
+    white-space: pre-wrap; word-break: break-word; margin: 0;
+  }
+  pre.prompt { max-height: 65vh; overflow-y: auto; font-size: 12.5px; }
+
+  .variante { border-top: 1px solid var(--linie); padding-top: 18px; margin-top: 18px; }
+  .variante:first-child { border-top: none; padding-top: 0; margin-top: 0; }
+  .variante-kopf { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .variante-kopf h3 { font-size: 15px; margin: 0; }
+
+  .hinweisbox {
+    background: var(--flaeche-2); border-left: 3px solid var(--akzent);
+    border-radius: 0 8px 8px 0; padding: 12px 14px;
+    font-size: 13.5px; color: var(--text-leise); margin-top: 14px;
+  }
+  .hinweisbox code { font-family: var(--mono); font-size: 12.5px; color: var(--text); }
+
+  footer {
+    border-top: 1px solid var(--linie); margin-top: 44px; padding-top: 18px;
+    color: var(--text-leise); font-size: 13px;
+  }
+  footer a { color: var(--akzent); }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="kopf">
+    <div class="marke">Mobil in Time AG · An Aggreko Company</div>
+    <h1>Kaltakquise-Maschine</h1>
+    <p class="unterzeile">
+      Input rein, sendefertige Mail raus. Jede Mail läuft vor der Ausgabe durch das
+      Regelwerk: Preise, KI-Marker, Länge, Normen, Signatur, Personalisierung.
+      Was durchfällt, wird nicht verschickt.
+    </p>
+    <nav role="tablist">
+      <button role="tab" id="tab-pruefen" aria-selected="true" aria-controls="reiter-pruefen">Prüfen</button>
+      <button role="tab" id="tab-erzeugen" aria-selected="false" aria-controls="reiter-erzeugen">Erzeugen</button>
+      <button role="tab" id="tab-prompt" aria-selected="false" aria-controls="reiter-prompt">Systemprompt</button>
+    </nav>
+  </div>
+</header>
+
+<div class="huelle">
+
+  <!-- ---------------------------------------------------------------- Prüfen -->
+  <section id="reiter-pruefen" role="tabpanel" aria-labelledby="tab-pruefen">
+    <div class="raster">
+      <div class="karte">
+        <h2>Entwurf prüfen</h2>
+        <p class="hilfe">Mailtext einfügen, inklusive Betreffzeile und Signatur. Läuft vollständig im Browser.</p>
+
+        <label for="p-text">Mailtext</label>
+        <textarea id="p-text" spellcheck="false" placeholder="Betreff: ...&#10;&#10;Guten Tag Herr ...&#10;&#10;..."></textarea>
+
+        <div class="reihe">
+          <div>
+            <label for="p-region">Sprachregister</label>
+            <select id="p-region"></select>
+          </div>
+        </div>
+
+        <label for="p-quelle">Input, aus dem die Mail entstanden ist (optional)</label>
+        <textarea id="p-quelle" class="klein" spellcheck="false"
+          placeholder="LinkedIn-Post, News, Messenotiz ... prüft, ob überhaupt ein Detail daraus in der Mail steht."></textarea>
+
+        <div class="knopfleiste">
+          <button class="aktion" id="p-start">Prüfen</button>
+          <button class="leise" id="p-beispiel">Beispiel einsetzen</button>
+        </div>
+      </div>
+
+      <div class="karte" id="p-bericht">
+        <h2>Prüfbericht</h2>
+        <p class="hilfe">Noch nichts geprüft.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- -------------------------------------------------------------- Erzeugen -->
+  <section id="reiter-erzeugen" role="tabpanel" aria-labelledby="tab-erzeugen" hidden>
+    <div class="raster">
+      <div class="karte">
+        <h2>Mail erzeugen</h2>
+        <p class="hilfe">Beliebiger Input: LinkedIn-Profil, Firmenwebseite, News, Messenotiz, ein Firmenname.</p>
+
+        <label for="e-quelle">Input</label>
+        <textarea id="e-quelle" spellcheck="false"
+          placeholder="Implenia baut in Beringen ein Rechenzentrum für STACK, 36 MW, Baustart Q1. Ansprechpartner: Bauleiter ..."></textarea>
+
+        <div class="reihe">
+          <div>
+            <label for="e-region">Sprachregister</label>
+            <select id="e-region"></select>
+          </div>
+          <div>
+            <label for="e-effort">Denktiefe</label>
+            <select id="e-effort">
+              <option value="medium">medium</option>
+              <option value="high" selected>high</option>
+              <option value="xhigh">xhigh</option>
+            </select>
+          </div>
+          <div>
+            <label for="e-runden">Korrekturrunden</label>
+            <select id="e-runden">
+              <option value="1">1</option>
+              <option value="2" selected>2</option>
+              <option value="3">3</option>
+            </select>
+          </div>
+        </div>
+
+        <label for="e-zugang">Zugangswort (nur falls auf Netlify gesetzt)</label>
+        <input type="text" id="e-zugang" autocomplete="off" placeholder="leer lassen, wenn nicht konfiguriert">
+
+        <div class="knopfleiste">
+          <button class="aktion" id="e-start">Erzeugen und prüfen</button>
+          <span id="e-status" class="hilfe" style="margin:0"></span>
+        </div>
+
+        <div class="hinweisbox">
+          Der Schlüssel liegt ausschliesslich auf dem Server. Diese Seite ruft die
+          Netlify-Funktion <code>/.netlify/functions/mail</code> auf, nie die API direkt.
+        </div>
+      </div>
+
+      <div class="karte" id="e-ergebnis">
+        <h2>Ergebnis</h2>
+        <p class="hilfe">Noch nichts erzeugt.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------------------------------------------------------------- Prompt -->
+  <section id="reiter-prompt" role="tabpanel" aria-labelledby="tab-prompt" hidden>
+    <div class="karte">
+      <div class="variante-kopf">
+        <h2>Systemprompt, Version 2.0</h2>
+        <button class="leise" id="s-kopieren">Kopieren</button>
+      </div>
+      <p class="hilfe">
+        Genau dieser Text steuert die Erzeugung. 1:1 einsetzbar in Claude Projects,
+        als API-System-Prompt oder als Custom Instructions.
+      </p>
+      <pre class="prompt" id="s-text">Wird geladen ...</pre>
+    </div>
+  </section>
+
+  <footer>
+    Burak Ücöz · Sales Engineer Power · Mobil in Time AG, An Aggreko Company ·
+    <a href="tel:+41448061319">+41 44 806 13 19</a> ·
+    <a href="mailto:burak.ucoez@mobilintime.ch">burak.ucoez@mobilintime.ch</a>
+  </footer>
+</div>
+
+<script type="module">
+import {
+  FEHLER, WARNUNG, HINWEIS, REGIONEN, FLIESSTEXT_MIN, FLIESSTEXT_MAX,
+  pruefe, zerlege, bilanz, hatFehler, extrahiereVarianten,
+} from "./pruefer.js";
+
+const $ = (id) => document.getElementById(id);
+const MARKER = { [FEHLER]: "FEHLER", [WARNUNG]: "WARNUNG", [HINWEIS]: "HINWEIS" };
+
+const BEISPIEL = `Betreff: Baustrom und Commissioning Beringen
+
+Guten Tag Herr Meier
+
+36 MW für STACK in Beringen, Baustart im ersten Quartal: Die Bauphase entscheidet, ob der Zeitplan hält. Temporäre Stromversorgung wird auf solchen Baustellen erfahrungsgemäss erst dann zum Thema, wenn sie fehlt.
+
+Wir versorgen Grossbaustellen und Commissioning-Phasen mit Generatoren, Batteriespeichern und Lastbänken. Der Unterschied zu anderen Vermietern: Jede Versorgung wird nach IEC 61000-4-30 Klasse A gemessen und nach EN 50160 dokumentiert. Bei einem vergleichbaren Rechenzentrumsprojekt im Raum Zürich war genau dieser Bericht die Grundlage für die Abnahme der Lasttests.
+
+Passt Ihnen nächste Woche Dienstag oder Mittwoch für 15 Minuten am Telefon?
+
+Freundliche Grüsse
+Burak Ücöz
+Sales Engineer Power
+Mobil in Time AG, An Aggreko Company
++41 44 806 13 19
+burak.ucoez@mobilintime.ch`;
+
+const BEISPIEL_QUELLE =
+  "Implenia baut in Beringen ein Rechenzentrum für STACK, 36 MW, Baustart Q1.";
+
+// ---- Reiter --------------------------------------------------------------
+const reiter = ["pruefen", "erzeugen", "prompt"];
+reiter.forEach((name) => {
+  $("tab-" + name).addEventListener("click", () => {
+    reiter.forEach((n) => {
+      const aktiv = n === name;
+      $("tab-" + n).setAttribute("aria-selected", String(aktiv));
+      $("reiter-" + n).hidden = !aktiv;
+    });
+    if (name === "prompt") ladePrompt();
+  });
+});
+
+// ---- Auswahlfelder -------------------------------------------------------
+for (const feld of ["p-region", "e-region"]) {
+  $(feld).innerHTML = Object.entries(REGIONEN)
+    .map(([k, t]) => `<option value="${k}"${k === "ch" ? " selected" : ""}>${t}</option>`)
+    .join("");
+}
+
+// ---- Darstellung ---------------------------------------------------------
+const escape = (s) =>
+  String(s).replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+function fahne(befunde, leer = "Keine Beanstandungen. Sendefertig.") {
+  const z = bilanz(befunde);
+  if (!hatFehler(befunde) && !z[WARNUNG]) {
+    return `<div class="fahne gut">✓ ${leer}</div>`;
+  }
+  const klasse = hatFehler(befunde) ? "schlecht" : "neutral";
+  const zeichen = hatFehler(befunde) ? "✕" : "!";
+  return `<div class="fahne ${klasse}">${zeichen} ${z[FEHLER]} Fehler, ${z[WARNUNG]} Warnungen, ${z[HINWEIS]} Hinweise</div>`;
+}
+
+function liste(befunde) {
+  if (!befunde.length) return "";
+  return `<ul class="befunde">${befunde
+    .map(
+      (b) => `<li class="${b.schwere}">
+        <span class="marker">${MARKER[b.schwere]}</span>
+        <span><span class="regel">${escape(b.regel)}:</span> ${escape(b.text)}</span>
+      </li>`,
+    )
+    .join("")}</ul>`;
+}
+
+function kennzahlen(mail) {
+  const lang = mail.wortzahl > FLIESSTEXT_MAX;
+  const kurz = mail.wortzahl < FLIESSTEXT_MIN;
+  return `<div class="kennzahlen">
+    <div class="kennzahl"><b>${mail.betreff.length}</b>Zeichen Betreff</div>
+    <div class="kennzahl"><b>${mail.wortzahl}</b>Wörter Fliesstext${kurz ? " (zu kurz)" : lang ? " (zu lang)" : ""}</div>
+    <div class="kennzahl"><b>${mail.signatur.length}</b>Signaturzeilen</div>
+  </div>`;
+}
+
+async function kopiere(text, knopf) {
+  try {
+    await navigator.clipboard.writeText(text);
+    const alt = knopf.textContent;
+    knopf.textContent = "Kopiert";
+    setTimeout(() => (knopf.textContent = alt), 1400);
+  } catch {
+    knopf.textContent = "Kopieren nicht möglich";
+  }
+}
+
+// ---- Prüfen --------------------------------------------------------------
+$("p-beispiel").addEventListener("click", () => {
+  $("p-text").value = BEISPIEL;
+  $("p-quelle").value = BEISPIEL_QUELLE;
+  $("p-start").click();
+});
+
+$("p-start").addEventListener("click", () => {
+  const text = $("p-text").value.trim();
+  const ziel = $("p-bericht");
+  if (!text) {
+    ziel.innerHTML = `<h2>Prüfbericht</h2><p class="hilfe">Kein Mailtext eingefügt.</p>`;
+    return;
+  }
+  const region = $("p-region").value;
+  const quelle = $("p-quelle").value.trim() || null;
+  const mail = zerlege(text);
+  const befunde = pruefe(mail, { region, quelle });
+
+  ziel.innerHTML = `<h2>Prüfbericht</h2>${fahne(befunde)}${kennzahlen(mail)}${liste(befunde)}`;
+});
+
+// ---- Erzeugen ------------------------------------------------------------
+function korrekturauftrag(varianten) {
+  const zeilen = [
+    "Die Prüfung gegen das Regelwerk hat Verstösse gefunden. Schreibe beide Varianten neu, bis alle Punkte erfüllt sind.",
+    "",
+  ];
+  for (const v of varianten) {
+    const fehler = v.befunde.filter((b) => b.schwere === FEHLER);
+    if (!fehler.length) continue;
+    zeilen.push(`${v.name}:`);
+    fehler.forEach((b) => zeilen.push(`- ${b.regel}: ${b.text}`));
+    zeilen.push("");
+  }
+  zeilen.push("Gib erneut die vollständige Ausgabe im festgelegten Format aus. Keine Erklärung, was du geändert hast.");
+  return zeilen.join("\n");
+}
+
+function zeigeErgebnis(ausgabe, varianten, runde) {
+  const ziel = $("e-ergebnis");
+  if (!varianten.length) {
+    ziel.innerHTML = `<h2>Ergebnis</h2>
+      <div class="fahne neutral">Keine Varianten erkannt, Rohausgabe unten.</div>
+      <pre class="mail">${escape(ausgabe)}</pre>`;
+    return;
+  }
+  const alleSauber = varianten.every((v) => !hatFehler(v.befunde));
+  const kopf = alleSauber
+    ? `<div class="fahne gut">✓ Beide Varianten sind regelkonform und sendefertig (Runden: ${runde})</div>`
+    : `<div class="fahne schlecht">✕ Es sind Fehler offen (Runden: ${runde}). Vor dem Versand korrigieren.</div>`;
+
+  ziel.innerHTML = `<h2>Ergebnis</h2>${kopf}` +
+    varianten
+      .map(
+        (v, i) => `<div class="variante">
+          <div class="variante-kopf">
+            <h3>${escape(v.name)}</h3>
+            <button class="leise" data-kopie="${i}">Kopieren</button>
+          </div>
+          <pre class="mail">${escape(v.text)}</pre>
+          <div style="margin-top:12px">${fahne(v.befunde)}${liste(v.befunde)}</div>
+        </div>`,
+      )
+      .join("");
+
+  ziel.querySelectorAll("[data-kopie]").forEach((knopf) => {
+    knopf.addEventListener("click", () =>
+      kopiere(varianten[Number(knopf.dataset.kopie)].text, knopf));
+  });
+}
+
+$("e-start").addEventListener("click", async () => {
+  const quelle = $("e-quelle").value.trim();
+  const status = $("e-status");
+  if (!quelle) {
+    status.textContent = "Kein Input.";
+    return;
+  }
+  const region = $("e-region").value;
+  const effort = $("e-effort").value;
+  const maxRunden = Number($("e-runden").value);
+  const zugang = $("e-zugang").value.trim();
+
+  $("e-start").disabled = true;
+  let verlauf = null;
+
+  try {
+    for (let runde = 1; runde <= maxRunden; runde++) {
+      status.textContent = runde === 1 ? "Modell schreibt ..." : `Korrekturrunde ${runde} ...`;
+
+      const kopfzeilen = { "content-type": "application/json" };
+      if (zugang) kopfzeilen["x-zugang"] = zugang;
+
+      const antwort = await fetch("/.netlify/functions/mail", {
+        method: "POST",
+        headers: kopfzeilen,
+        body: JSON.stringify({ quelle, region, effort, verlauf }),
+      });
+
+      if ([404, 405, 501].includes(antwort.status)) {
+        throw new Error(
+          "Die Funktion ist auf dieser Seite nicht erreichbar (nur statisch deployed oder lokal ohne Netlify CLI). " +
+            "Der Prüfer im Reiter 'Prüfen' funktioniert unabhängig davon.",
+        );
+      }
+      const daten = await antwort.json().catch(() => ({}));
+      if (!antwort.ok) throw new Error(daten.fehler || `HTTP ${antwort.status}`);
+
+      const varianten = extrahiereVarianten(daten.ausgabe).map((v) => ({
+        ...v,
+        befunde: pruefe(v.text, { region, quelle }),
+      }));
+      zeigeErgebnis(daten.ausgabe, varianten, runde);
+
+      const sauber = varianten.length && varianten.every((v) => !hatFehler(v.befunde));
+      if (sauber || runde === maxRunden) {
+        status.textContent = sauber ? "Fertig." : "Fertig, mit offenen Fehlern.";
+        break;
+      }
+      verlauf = daten.verlauf.concat([{ role: "user", content: korrekturauftrag(varianten) }]);
+    }
+  } catch (e) {
+    status.textContent = "";
+    $("e-ergebnis").innerHTML =
+      `<h2>Ergebnis</h2><div class="fahne schlecht">✕ ${escape(e.message)}</div>`;
+  } finally {
+    $("e-start").disabled = false;
+  }
+});
+
+// ---- Systemprompt --------------------------------------------------------
+let promptGeladen = false;
+async function ladePrompt() {
+  if (promptGeladen) return;
+  try {
+    const antwort = await fetch("prompt.md");
+    if (!antwort.ok) throw new Error(`HTTP ${antwort.status}`);
+    $("s-text").textContent = await antwort.text();
+    promptGeladen = true;
+  } catch {
+    $("s-text").textContent =
+      "prompt.md konnte nicht geladen werden. Die Seite muss über einen Webserver laufen, nicht per Doppelklick aus dem Dateisystem.";
+  }
+}
+$("s-kopieren").addEventListener("click", (e) => kopiere($("s-text").textContent, e.target));
+</script>
+</body>
+</html>

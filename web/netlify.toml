@@ -1,0 +1,22 @@
+[build]
+  publish = "."
+  command = "npm install --omit=dev"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+# Der Prüfer läuft im Browser, die Seite ist statisch. Nur die Erzeugung
+# geht über die Funktion, damit der API-Schlüssel serverseitig bleibt.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    X-Frame-Options = "SAMEORIGIN"
+
+# Quelldateien der Funktion nicht als statische Dateien ausliefern.
+[[redirects]]
+  from = "/netlify/*"
+  to = "/index.html"
+  status = 404

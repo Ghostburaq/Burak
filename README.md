@@ -104,5 +104,25 @@ das Tool in Skripte hängen.
 | `src/kaltakquise/client.py` | Claude-API plus Korrekturschleife |
 | `src/kaltakquise/cli.py` | Kommandozeile |
 | `prompts/` | Systemprompt |
+| `web/` | Webfassung für Netlify |
 
 Tests: `python3 -m unittest discover -s tests`
+
+## Webfassung (Netlify)
+
+`web/` enthält die Seite zum Hochladen. Der Prüfer ist nach JavaScript portiert
+und läuft vollständig im Browser, ohne Server und ohne Schlüssel. Die Erzeugung
+geht über die Netlify-Funktion `netlify/functions/mail.mjs`, damit der
+API-Schlüssel serverseitig bleibt.
+
+```bash
+python3 src/sync_web.py                     # Systemprompt in die Webfassung spiegeln
+cd web && python3 -m http.server 8899       # lokal ansehen
+node --test tests/test_web_pruefer.mjs      # Regeln, inkl. Parität mit Python
+node --test tests/test_web_funktion.mjs     # Funktion: Methode, Zugang, Grenzen
+```
+
+Deploy-Anleitung und Umgebungsvariablen: [`web/README.md`](web/README.md).
+Der Paritätstest lässt dieselben Proben durch den Python- und den
+JavaScript-Prüfer laufen und vergleicht Befund für Befund, damit die
+Webfassung nicht unbemerkt vom Regelwerk abdriftet.

@@ -1,0 +1,10 @@
+{
+  "name": "kaltakquise-maschine-web",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Kaltakquise-Maschine: Regel-Prüfer im Browser plus Netlify-Funktion für die Erzeugung.",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.116.0"
+  }
+}
