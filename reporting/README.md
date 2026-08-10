@@ -241,8 +241,9 @@ die einzelne Läufe nicht zeigen:
 - **Idempotenz** — ein zweites Neuberechnen der fertigen Datei darf nichts mehr
   verändern.
 
-Letzter Lauf: **5 / 5 Durchgänge fehlerfrei**, identischer Fingerabdruck
-`8dc530b5c5d2f5ec`, idempotent.
+Letzter vollständiger Lauf der Einzelprüfungen: **alle sechs ohne Befund** —
+0 Fehlerwerte in 25'847 Formeln, 20'099 unabhängig nachgerechnete Werte ohne
+Abweichung, 17 / 17 Verhaltenstests.
 
 Die Mappe enthält zusätzlich eine **eingebaute Selbstkontrolle** (⚖️-Blatt,
 Abschnitt 3): sie rechnet die gewichtete Pipeline auf zwei unabhängigen Wegen
@@ -410,13 +411,13 @@ Excel nicht warnt — es zeigt einfach weniger an, als in der Zelle steht.
 
 | Blatt | Seiten breit | Massstab | Höhe |
 |-------|--------------|----------|------|
-| 📑 Executive PDF | 1 | 99 % | 1 Seite |
-| 📄 Report | 1 | 82 % | 1 Seite |
+| 📑 Executive PDF | 1 | 97 % | 1 Seite |
+| 📄 Report | 1 | 81 % | 2 Seiten (Monatsauswertung auf Seite 2) |
 | CEO Report | 1 | 72 % | fortlaufend |
-| Dashboard | 1 | 79 % | fortlaufend |
+| Dashboard | 1 | 78 % | fortlaufend |
 | 📊 Diagramme | 1 | 72 % | 3 Seiten |
-| MiT Strom Pipeline | 3 | 76 % | fortlaufend |
-| 📋 Definitionen & Klärung | 1 | 87 % | fortlaufend |
+| MiT Strom Pipeline | 3 | 74 % | fortlaufend |
+| 📋 Definitionen & Klärung | 1 | 84 % | fortlaufend |
 | 🔍 Herleitung & Formeln | 1 | 75 % | fortlaufend |
 | ⚖️ Wahrscheinlichkeit | 1 | 100 % | fortlaufend |
 
