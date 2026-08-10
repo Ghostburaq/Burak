@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Talia Fiege — IFBB Pro Athlete &amp; Online Fitness Coach</title>
+<meta name="description" content="Talia Fiege — IFBB Pro Athlete, online fitness coach and entrepreneur. Custom training plans, 1:1 online coaching and contest prep for women who want to get strong.">
+<meta name="theme-color" content="#0B0B0F">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Talia Fiege — IFBB Pro Athlete &amp; Online Fitness Coach">
+<meta property="og:description" content="IFBB Pro Athlete. Certified fitness trainer. Coaching women to build strength and unshakable confidence.">
+<meta property="og:image" content="https://static.wixstatic.com/media/9d4e53_b4bd65cbd58544e8aa73688ce312329b~mv2.jpeg">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://static.wixstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="preload" as="image" href="https://static.wixstatic.com/media/9d4e53_b4bd65cbd58544e8aa73688ce312329b~mv2.jpeg" fetchpriority="high">
+
+<script>document.documentElement.className = document.documentElement.className.replace('no-js', 'js');</script>
+
+<style>
+/* ==========================================================================
+   TOKENS
+   ========================================================================== */
+:root{
+  --bg:#0B0B0F;
+  --surface:#141419;
+  --surface-2:#1A1A21;
+  --text:#F5F5F7;
+  --text-2:#B4B4BC;      /* body grey — 9.4:1 on --bg */
+  --text-3:#8E8E97;      /* quiet grey — 5.6:1 on --bg */
+  --gold:#D9A441;
+  --gold-soft:#E5BC6E;
+  --line:rgba(255,255,255,.08);
+  --line-strong:rgba(255,255,255,.16);
+  --glass:rgba(255,255,255,.035);
+  --radius:20px;
+  --radius-sm:12px;
+  --pad:clamp(20px, 5vw, 48px);
+  --maxw:1200px;
+  --ease:cubic-bezier(.16,1,.3,1);
+  --nav-h:64px;
+}
+
+/* ==========================================================================
+   BASE
+   ========================================================================== */
+*,*::before,*::after{box-sizing:border-box}
+html{
+  -webkit-text-size-adjust:100%;
+  scroll-behavior:smooth;
+  scroll-padding-top:calc(var(--nav-h) + 16px);
+}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:"Inter",-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  font-size:17px;
+  line-height:1.6;
+  font-weight:400;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  overflow-x:hidden;
+}
+img{display:block;max-width:100%;height:auto}
+a{color:inherit;text-decoration:none}
+button,input,textarea{font:inherit;color:inherit}
+h1,h2,h3,h4{margin:0;font-weight:800;letter-spacing:-.02em;line-height:1.05}
+p{margin:0}
+ul{margin:0;padding:0;list-style:none}
+
+:focus-visible{
+  outline:2px solid var(--gold);
+  outline-offset:3px;
+  border-radius:6px;
+}
+
+.skip{
+  position:absolute;left:-9999px;top:0;z-index:200;
+  background:var(--gold);color:#0B0B0F;font-weight:700;
+  padding:12px 20px;border-radius:0 0 10px 0;
+}
+.skip:focus{left:0}
+
+/* ==========================================================================
+   LAYOUT
+   ========================================================================== */
+.wrap{width:100%;max-width:var(--maxw);margin-inline:auto;padding-inline:var(--pad)}
+section{position:relative}
+.section{padding-block:clamp(72px, 12vw, 140px)}
+.section--tight{padding-block:clamp(48px, 8vw, 88px)}
+
+.eyebrow{
+  font-size:.75rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--gold);margin-bottom:18px;
+}
+.h2{font-size:clamp(2rem, 5.2vw, 3.5rem)}
+.lede{
+  color:var(--text-2);
+  font-size:clamp(1rem, 1.6vw, 1.15rem);
+  max-width:60ch;
+  margin-top:20px;
+}
+.section-head{max-width:760px;margin-bottom:clamp(40px, 6vw, 64px)}
+
+.hr{height:1px;background:var(--line);border:0;margin:0}
+
+/* ==========================================================================
+   BUTTONS
+   ========================================================================== */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:14px 26px;border-radius:999px;border:1px solid transparent;
+  font-weight:600;font-size:.95rem;letter-spacing:-.01em;cursor:pointer;
+  transition:transform .25s var(--ease), background-color .25s var(--ease),
+             border-color .25s var(--ease), color .25s var(--ease), box-shadow .25s var(--ease);
+  will-change:transform;
+}
+.btn--gold{
+  background:var(--gold);color:#0B0B0F;
+  box-shadow:0 1px 0 rgba(255,255,255,.25) inset, 0 10px 30px -12px rgba(217,164,65,.6);
+}
+.btn--gold:hover{background:var(--gold-soft);transform:translateY(-2px)}
+.btn--ghost{border-color:var(--line-strong);color:var(--text);background:rgba(255,255,255,.02)}
+.btn--ghost:hover{border-color:rgba(255,255,255,.34);background:rgba(255,255,255,.06);transform:translateY(-2px)}
+.btn--sm{padding:10px 18px;font-size:.85rem}
+.btn--block{width:100%}
+
+.link-gold{
+  color:var(--gold);font-weight:600;
+  display:inline-flex;align-items:center;gap:6px;
+  transition:gap .25s var(--ease);
+}
+.link-gold:hover{gap:11px}
+
+/* ==========================================================================
+   GLASS CARD
+   ========================================================================== */
+.card{
+  position:relative;
+  background:linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.015));
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:clamp(24px, 3vw, 34px);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.05) inset,
+    0 2px 6px rgba(0,0,0,.3),
+    0 12px 28px rgba(0,0,0,.35),
+    0 40px 80px -30px rgba(0,0,0,.8);
+}
+
+/* ==========================================================================
+   NAV
+   ========================================================================== */
+.nav{
+  position:fixed;inset:0 0 auto 0;z-index:100;
+  height:var(--nav-h);
+  display:flex;align-items:center;
+  background:rgba(11,11,15,.62);
+  -webkit-backdrop-filter:saturate(180%) blur(20px);
+  backdrop-filter:saturate(180%) blur(20px);
+  border-bottom:1px solid transparent;
+  transition:background-color .3s var(--ease), border-color .3s var(--ease);
+}
+.nav.is-stuck{background:rgba(11,11,15,.82);border-bottom-color:var(--line)}
+.nav__inner{
+  width:100%;max-width:var(--maxw);margin-inline:auto;padding-inline:var(--pad);
+  display:flex;align-items:center;gap:24px;
+}
+.wordmark{
+  font-weight:700;font-size:.8rem;letter-spacing:.18em;text-transform:uppercase;
+  white-space:nowrap;
+}
+.nav__links{display:flex;gap:28px;margin-inline:auto}
+.nav__links a{
+  font-size:.875rem;color:var(--text-2);font-weight:500;
+  transition:color .2s var(--ease);
+}
+.nav__links a:hover{color:var(--text)}
+.nav__cta{margin-left:auto}
+.nav__toggle{
+  display:none;margin-left:auto;
+  background:none;border:1px solid var(--line-strong);border-radius:10px;
+  width:42px;height:38px;align-items:center;justify-content:center;cursor:pointer;
+}
+.nav__toggle span{display:block;width:17px;height:1.5px;background:var(--text);position:relative}
+.nav__toggle span::before,.nav__toggle span::after{
+  content:"";position:absolute;left:0;width:17px;height:1.5px;background:var(--text);
+  transition:transform .3s var(--ease);
+}
+.nav__toggle span::before{top:-5.5px}
+.nav__toggle span::after{top:5.5px}
+.nav__toggle[aria-expanded="true"] span{background:transparent}
+.nav__toggle[aria-expanded="true"] span::before{transform:translateY(5.5px) rotate(45deg)}
+.nav__toggle[aria-expanded="true"] span::after{transform:translateY(-5.5px) rotate(-45deg)}
+
+.mobile-menu{
+  position:fixed;top:var(--nav-h);left:0;right:0;z-index:99;
+  background:rgba(11,11,15,.94);
+  -webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px);
+  border-bottom:1px solid var(--line);
+  padding:12px var(--pad) 28px;
+  display:none;
+}
+.mobile-menu.is-open{display:block}
+.mobile-menu a{
+  display:block;padding:15px 0;font-size:1.1rem;font-weight:600;
+  border-bottom:1px solid var(--line);
+}
+.mobile-menu .btn{margin-top:22px}
+
+@media (max-width:940px){
+  .nav__links,.nav__cta{display:none}
+  .nav__toggle{display:flex}
+}
+
+/* ==========================================================================
+   HERO
+   ========================================================================== */
+.hero{
+  position:relative;
+  min-height:100svh;
+  display:flex;align-items:flex-end;
+  padding-top:calc(var(--nav-h) + 40px);
+  padding-bottom:clamp(48px, 8vh, 96px);
+  overflow:hidden;
+  isolation:isolate;
+}
+.hero__glow{
+  position:absolute;z-index:-2;
+  top:6%;left:50%;transform:translateX(-50%);
+  width:min(1100px, 130vw);aspect-ratio:1;
+  background:radial-gradient(circle at 50% 45%,
+    rgba(217,164,65,.30) 0%,
+    rgba(217,164,65,.13) 32%,
+    rgba(217,164,65,.03) 55%,
+    transparent 70%);
+  filter:blur(10px);
+  pointer-events:none;
+}
+.hero__media{
+  position:absolute;z-index:-1;inset:0;
+  display:flex;align-items:flex-start;justify-content:center;
+  pointer-events:none;
+}
+.hero__img{
+  width:min(760px, 108vw);
+  height:100%;
+  object-fit:cover;
+  object-position:50% 22%;
+  opacity:.92;
+  transform-origin:50% 20%;
+  will-change:transform;
+  -webkit-mask-image:
+    linear-gradient(to bottom, transparent 0%, #000 16%, #000 52%, transparent 88%),
+    radial-gradient(closest-side at 50% 42%, #000 55%, transparent 100%);
+  -webkit-mask-composite:source-in;
+  mask-image:
+    linear-gradient(to bottom, transparent 0%, #000 16%, #000 52%, transparent 88%),
+    radial-gradient(closest-side at 50% 42%, #000 55%, transparent 100%);
+  mask-composite:intersect;
+}
+.hero::after{
+  /* grounds the photo into pure black at the bottom so the type stays readable */
+  content:"";position:absolute;z-index:-1;inset:auto 0 0 0;height:62%;
+  background:linear-gradient(to top, var(--bg) 12%, rgba(11,11,15,.86) 45%, transparent 100%);
+  pointer-events:none;
+}
+.hero__inner{position:relative;width:100%;max-width:var(--maxw);margin-inline:auto;padding-inline:var(--pad)}
+
+.badge{
+  display:inline-flex;align-items:center;gap:9px;
+  padding:8px 16px;border-radius:999px;
+  border:1px solid rgba(217,164,65,.42);
+  background:rgba(217,164,65,.10);
+  color:var(--gold-soft);
+  font-size:.72rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+}
+.badge::before{
+  content:"";width:6px;height:6px;border-radius:50%;
+  background:var(--gold);box-shadow:0 0 12px 2px rgba(217,164,65,.9);
+}
+.hero h1{
+  font-size:clamp(3rem, 12vw, 6.5rem);
+  font-weight:800;letter-spacing:-.035em;
+  margin:22px 0 0;
+  background:linear-gradient(180deg, #FFFFFF 30%, #C9C9D1 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.hero__sub{
+  margin-top:20px;max-width:36ch;
+  font-size:clamp(1.02rem, 2.2vw, 1.3rem);
+  color:var(--text-2);font-weight:500;letter-spacing:-.01em;
+}
+.hero__cta{display:flex;flex-wrap:wrap;gap:14px;margin-top:36px}
+.hero__scroll{
+  margin-top:44px;display:inline-flex;align-items:center;gap:10px;
+  font-size:.75rem;letter-spacing:.14em;text-transform:uppercase;color:var(--text-3);
+}
+.hero__scroll svg{animation:nudge 2.4s var(--ease) infinite}
+@keyframes nudge{0%,100%{transform:translateY(0)}50%{transform:translateY(5px)}}
+
+/* ==========================================================================
+   CREDIBILITY BAR
+   ========================================================================== */
+.credbar{border-block:1px solid var(--line);background:rgba(255,255,255,.012)}
+.credbar ul{
+  display:flex;flex-wrap:wrap;justify-content:center;align-items:center;
+  gap:clamp(18px, 5vw, 64px);
+  padding-block:26px;
+  text-align:center;
+}
+.credbar li{
+  font-size:.82rem;font-weight:600;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--text-3);
+}
+.credbar li:first-child{color:var(--text)}
+
+/* ==========================================================================
+   ABOUT
+   ========================================================================== */
+.about__grid{
+  display:grid;gap:clamp(32px, 5vw, 72px);
+  grid-template-columns:1fr;align-items:center;
+}
+@media (min-width:900px){.about__grid{grid-template-columns:0.85fr 1fr}}
+.about__figure{position:relative;margin:0}
+.about__figure img{
+  width:100%;border-radius:var(--radius);
+  border:1px solid var(--line);
+  aspect-ratio:4/5;object-fit:cover;
+  box-shadow:0 40px 90px -40px rgba(0,0,0,.9);
+}
+.about__figure::before{
+  content:"";position:absolute;inset:-16% -10% 10% -10%;z-index:-1;
+  background:radial-gradient(circle at 50% 50%, rgba(217,164,65,.18), transparent 68%);
+  filter:blur(24px);
+}
+.about__body p + p{margin-top:20px}
+.about__body p{color:var(--text-2);font-size:1.05rem}
+.about__body strong{color:var(--text);font-weight:600}
+.about__facts{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+  gap:14px;margin-top:34px;
+}
+.fact{
+  border:1px solid var(--line);border-radius:var(--radius-sm);
+  padding:16px 18px;background:var(--glass);
+}
+.fact dt{font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:700}
+.fact dd{margin:6px 0 0;font-size:.95rem;color:var(--text);font-weight:500;line-height:1.35}
+
+/* ==========================================================================
+   COACHING
+   ========================================================================== */
+.plans{
+  display:grid;gap:22px;
+  grid-template-columns:1fr;
+  perspective:1400px;
+}
+@media (min-width:760px){.plans{grid-template-columns:repeat(2,1fr)}}
+@media (min-width:1060px){.plans{grid-template-columns:repeat(3,1fr)}}
+
+.plan{
+  display:flex;flex-direction:column;
+  transform-style:preserve-3d;
+  transition:transform .5s var(--ease), border-color .3s var(--ease);
+  will-change:transform;
+}
+.plan.is-tilting{transition:transform .12s linear}
+.plan--featured{border-color:rgba(217,164,65,.5)}
+.plan--featured::after{
+  content:"";position:absolute;inset:-1px;border-radius:var(--radius);
+  box-shadow:0 0 0 1px rgba(217,164,65,.35), 0 0 60px -18px rgba(217,164,65,.55);
+  pointer-events:none;
+}
+.plan__tag{
+  position:absolute;top:-11px;left:clamp(24px,3vw,34px);
+  background:var(--gold);color:#0B0B0F;
+  font-size:.65rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+  padding:5px 12px;border-radius:999px;
+}
+.plan__inner{transform:translateZ(28px);display:flex;flex-direction:column;height:100%}
+.plan h3{font-size:1.4rem;letter-spacing:-.02em}
+.plan__kicker{
+  margin-top:8px;font-size:.75rem;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--text-3);font-weight:600;
+}
+.plan__price{
+  display:flex;align-items:baseline;gap:8px;
+  margin:22px 0 4px;
+  font-size:2.6rem;font-weight:800;letter-spacing:-.03em;color:var(--text);
+}
+.plan__price .per{font-size:.95rem;font-weight:500;color:var(--text-3);letter-spacing:0}
+.plan__note{font-size:.78rem;color:var(--text-3)}
+.plan ul{margin:26px 0 30px;display:grid;gap:13px}
+.plan li{
+  display:grid;grid-template-columns:20px 1fr;gap:11px;align-items:start;
+  font-size:.95rem;color:var(--text-2);
+}
+.plan li svg{margin-top:5px;color:var(--gold);flex:none}
+.plan .btn{margin-top:auto}
+
+/* ==========================================================================
+   PROGRAMS
+   ========================================================================== */
+.programs{display:grid;gap:20px;grid-template-columns:1fr}
+@media (min-width:720px){.programs{grid-template-columns:repeat(3,1fr)}}
+.program{
+  display:flex;flex-direction:column;justify-content:space-between;gap:28px;
+  min-height:260px;
+  transition:transform .4s var(--ease), border-color .3s var(--ease);
+}
+.program:hover{transform:translateY(-5px);border-color:var(--line-strong)}
+.program__len{
+  font-size:.7rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);
+}
+.program h3{font-size:1.5rem;margin-top:14px;letter-spacing:-.025em}
+.program p{margin-top:12px;color:var(--text-2);font-size:.95rem}
+
+/* ==========================================================================
+   RESULTS
+   ========================================================================== */
+.quotes{display:grid;gap:20px;grid-template-columns:1fr}
+@media (min-width:820px){.quotes{grid-template-columns:repeat(3,1fr)}}
+.quote{display:flex;flex-direction:column;gap:22px}
+.quote__mark{font-size:2.6rem;line-height:.6;color:var(--gold);font-weight:800}
+.quote blockquote{margin:0;font-size:1.08rem;color:var(--text);line-height:1.5;letter-spacing:-.01em}
+.quote figcaption{margin-top:auto;font-size:.82rem;color:var(--text-3);letter-spacing:.04em}
+
+.transformations{margin-top:clamp(40px,6vw,64px)}
+.transformations h3{font-size:1.15rem;letter-spacing:-.01em}
+.transformations p{margin-top:8px;color:var(--text-3);font-size:.9rem;max-width:56ch}
+.frames{
+  display:grid;gap:18px;margin-top:26px;
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+}
+.frame{
+  aspect-ratio:4/5;border-radius:var(--radius-sm);
+  border:1px dashed rgba(255,255,255,.16);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0)),
+    repeating-linear-gradient(-45deg, rgba(255,255,255,.02) 0 10px, transparent 10px 20px);
+  display:flex;align-items:center;justify-content:center;text-align:center;
+  padding:20px;
+  font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text-3);
+}
+
+/* ==========================================================================
+   GALLERY
+   ========================================================================== */
+.gallery{overflow:hidden}
+.gallery__strip{
+  display:flex;gap:18px;
+  overflow-x:auto;
+  scroll-snap-type:x mandatory;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+  padding-block:6px 30px;
+  /* aligns the first card with the .wrap container without using vw (avoids
+     scrollbar-width overflow on desktop) */
+  padding-inline:max(var(--pad), calc((100% - var(--maxw)) / 2 + var(--pad)));
+}
+.gallery__strip::-webkit-scrollbar{display:none}
+.shot{
+  flex:none;scroll-snap-align:center;
+  width:min(300px, 74vw);aspect-ratio:4/5;
+  border-radius:var(--radius);overflow:hidden;
+  border:1px solid var(--line);
+  background:var(--surface);
+  box-shadow:0 30px 60px -30px rgba(0,0,0,.9);
+}
+.shot--wide{width:min(520px, 88vw);aspect-ratio:16/10}
+.shot img{
+  width:100%;height:100%;object-fit:cover;
+  transition:transform .7s var(--ease), filter .7s var(--ease);
+  filter:saturate(.95);
+}
+.shot:hover img{transform:scale(1.06);filter:saturate(1.05)}
+.gallery__hint{
+  font-size:.75rem;letter-spacing:.13em;text-transform:uppercase;color:var(--text-3);
+  margin-top:4px;
+}
+
+/* ==========================================================================
+   ESSENTIALS
+   ========================================================================== */
+.brands{
+  display:grid;gap:18px;
+  grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+}
+.brand{display:flex;flex-direction:column;gap:18px;transition:border-color .3s var(--ease),transform .4s var(--ease)}
+.brand:hover{border-color:var(--line-strong);transform:translateY(-4px)}
+.brand h3{font-size:1.25rem;letter-spacing:-.02em}
+.brand__cat{margin-top:6px;font-size:.78rem;color:var(--text-3);letter-spacing:.06em}
+.brand__code{
+  margin-top:auto; /* keeps code + Shop aligned across cards with 1- or 2-line names */
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  border:1px dashed var(--line-strong);border-radius:10px;
+  padding:10px 14px;
+  font-size:.82rem;color:var(--text-2);
+}
+.brand__code b{color:var(--gold);font-weight:700;letter-spacing:.06em}
+.brand .btn{align-self:flex-start}
+.disclosure{
+  margin-top:28px;font-size:.82rem;color:var(--text-3);
+  border-top:1px solid var(--line);padding-top:20px;
+}
+
+/* ==========================================================================
+   SHOP TEASER
+   ========================================================================== */
+.shop{
+  display:flex;flex-wrap:wrap;align-items:center;gap:24px;
+  justify-content:space-between;
+}
+.shop h2{font-size:clamp(1.5rem,3.4vw,2.1rem)}
+.shop p{color:var(--text-2);margin-top:10px;max-width:52ch;font-size:.98rem}
+
+/* ==========================================================================
+   EMAIL CAPTURE
+   ========================================================================== */
+.optin{
+  background:
+    radial-gradient(120% 140% at 50% 0%, rgba(217,164,65,.10), transparent 60%),
+    var(--surface);
+  border-block:1px solid var(--line);
+  text-align:center;
+}
+.optin h2{font-size:clamp(1.9rem,5vw,3rem)}
+.optin p{color:var(--text-2);margin:18px auto 0;max-width:48ch}
+.form-inline{
+  display:flex;flex-wrap:wrap;gap:12px;justify-content:center;
+  margin:34px auto 0;max-width:520px;
+}
+.form-inline label{position:absolute;left:-9999px}
+input[type="email"],input[type="text"],textarea{
+  width:100%;
+  background:rgba(255,255,255,.04);
+  border:1px solid var(--line-strong);
+  border-radius:12px;
+  padding:14px 16px;
+  color:var(--text);
+  transition:border-color .25s var(--ease), background-color .25s var(--ease);
+}
+input::placeholder,textarea::placeholder{color:var(--text-3)}
+input:focus,textarea:focus{border-color:rgba(217,164,65,.7);background:rgba(255,255,255,.06)}
+.form-inline input{flex:1 1 260px;width:auto}
+.form-inline .btn{flex:none}
+.form-note{margin-top:16px;font-size:.78rem;color:var(--text-3)}
+.form-status{
+  margin-top:16px;font-size:.9rem;color:var(--gold);min-height:1.4em;font-weight:500;
+}
+
+/* ==========================================================================
+   CONTACT
+   ========================================================================== */
+.contact__grid{display:grid;gap:clamp(36px,6vw,72px);grid-template-columns:1fr}
+@media (min-width:920px){.contact__grid{grid-template-columns:0.9fr 1.1fr}}
+.contact__mail{
+  display:inline-block;margin-top:22px;
+  font-size:clamp(1.1rem,2.6vw,1.55rem);font-weight:700;letter-spacing:-.02em;
+  color:var(--text);
+  border-bottom:1px solid rgba(217,164,65,.5);padding-bottom:4px;
+  transition:color .25s var(--ease),border-color .25s var(--ease);
+  word-break:break-word;
+}
+.contact__mail:hover{color:var(--gold)}
+.socials{display:flex;flex-wrap:wrap;gap:10px;margin-top:34px}
+.social{
+  display:inline-flex;align-items:center;gap:9px;
+  padding:10px 16px;border-radius:999px;
+  border:1px solid var(--line);background:var(--glass);
+  font-size:.85rem;font-weight:500;color:var(--text-2);
+  transition:border-color .25s var(--ease), color .25s var(--ease), transform .25s var(--ease);
+}
+.social:hover{border-color:var(--line-strong);color:var(--text);transform:translateY(-2px)}
+.social svg{flex:none;color:var(--gold)}
+.social--todo{opacity:.6;border-style:dashed}
+.form-grid{display:grid;gap:14px}
+@media (min-width:560px){.form-grid .row{display:grid;grid-template-columns:1fr 1fr;gap:14px}}
+textarea{resize:vertical;min-height:140px}
+
+/* ==========================================================================
+   FOOTER
+   ========================================================================== */
+.footer{border-top:1px solid var(--line);padding-block:36px}
+.footer__inner{
+  display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between;
+  font-size:.82rem;color:var(--text-3);
+}
+.footer nav{display:flex;flex-wrap:wrap;gap:20px}
+.footer nav a{transition:color .2s var(--ease)}
+.footer nav a:hover{color:var(--text)}
+
+/* ==========================================================================
+   REVEALS
+   ========================================================================== */
+.js .reveal{
+  opacity:0;transform:translateY(26px);
+  transition:opacity .6s var(--ease), transform .6s var(--ease);
+  transition-delay:var(--d, 0ms);
+}
+.js .reveal.is-in{opacity:1;transform:none}
+
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{
+    animation-duration:.001ms !important;animation-iteration-count:1 !important;
+    transition-duration:.001ms !important;scroll-behavior:auto !important;
+  }
+  .js .reveal{opacity:1 !important;transform:none !important}
+  .hero__img{transform:none !important}
+}
+</style>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<!-- ========================= NAV ========================= -->
+<header class="nav" id="nav">
+  <div class="nav__inner">
+    <a class="wordmark" href="#top" aria-label="Talia Fiege — back to top">Talia Fiege</a>
+
+    <nav class="nav__links" aria-label="Primary">
+      <a href="#about">About</a>
+      <a href="#coaching">Coaching</a>
+      <a href="#programs">Programs</a>
+      <a href="#results">Results</a>
+      <a href="#essentials">Essentials</a>
+      <a href="#contact">Contact</a>
+    </nav>
+
+    <a class="btn btn--gold btn--sm nav__cta" href="https://www.taliafiege.com/booking-calendar" target="_blank" rel="noopener">Free Consultation</a>
+
+    <button class="nav__toggle" id="navToggle" aria-expanded="false" aria-controls="mobileMenu" aria-label="Open menu">
+      <span></span>
+    </button>
+  </div>
+</header>
+
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#about">About</a>
+  <a href="#coaching">Coaching</a>
+  <a href="#programs">Programs</a>
+  <a href="#results">Results</a>
+  <a href="#essentials">Essentials</a>
+  <a href="#contact">Contact</a>
+  <a class="btn btn--gold btn--block" href="https://www.taliafiege.com/booking-calendar" target="_blank" rel="noopener">Free Consultation</a>
+</div>
+
+<main id="main">
+<span id="top"></span>
+
+<!-- ========================= HERO ========================= -->
+<section class="hero" aria-labelledby="hero-title">
+  <div class="hero__glow" aria-hidden="true"></div>
+  <div class="hero__media">
+    <!-- Hero portrait (DSC06191) — intentionally NOT lazy-loaded -->
+    <img class="hero__img" id="heroImg"
+         src="https://static.wixstatic.com/media/9d4e53_b4bd65cbd58544e8aa73688ce312329b~mv2.jpeg"
+         alt="Talia Fiege, IFBB Pro athlete, standing in a lit stage pose against a dark background."
+         fetchpriority="high" decoding="async">
+  </div>
+
+  <div class="hero__inner">
+    <p class="badge">IFBB Pro Athlete</p>
+    <h1 id="hero-title">Talia&nbsp;Fiege</h1>
+    <p class="hero__sub">Online Fitness Coach · Entrepreneur · Single Mom Who Rewrote the Rules</p>
+    <div class="hero__cta">
+      <a class="btn btn--gold" href="#coaching">Start Your Journey</a>
+      <a class="btn btn--ghost" href="https://www.taliafiege.com/booking-calendar" target="_blank" rel="noopener">Free Consultation</a>
+    </div>
+    <p class="hero__scroll" aria-hidden="true">
+      Scroll
+      <svg width="12" height="16" viewBox="0 0 12 16" fill="none" aria-hidden="true">
+        <path d="M6 1v13M1 9l5 5 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </p>
+  </div>
+</section>
+
+<!-- ========================= CREDIBILITY BAR ========================= -->
+<section class="credbar" aria-label="Credentials">
+  <div class="wrap">
+    <ul>
+      <li>IFBB Pro Athlete</li>
+      <li>Certified Fitness Trainer</li>
+      <li>Co-Owner, MomBodz Meal Prep</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ========================= ABOUT ========================= -->
+<section class="section" id="about" aria-labelledby="about-title">
+  <div class="wrap">
+    <div class="about__grid">
+      <figure class="about__figure reveal">
+        <img src="https://static.wixstatic.com/media/9d4e53_ad43cf96aa024b33938c99a48a5900cb~mv2.jpeg"
+             alt="Talia Fiege posing on stage in competition." loading="lazy" decoding="async">
+      </figure>
+
+      <div class="about__body reveal" style="--d:120ms">
+        <p class="eyebrow">The Story</p>
+        <h2 class="h2" id="about-title">I started late.<br>I didn't start small.</h2>
+
+        <p style="margin-top:26px">I came to sports the long way around. Volleyball in high school, then nothing that stuck — until I picked up a barbell at 24. That was it. That was the thing.</p>
+        <p>The years after weren't clean. There were injuries, setbacks, and comebacks that took longer than I wanted. I took up kickboxing. I ran a <strong>demolition derby</strong> car. I raised my kid on my own and kept training through all of it.</p>
+        <p>Then I stepped on a bodybuilding stage for the first time and walked off with <strong>two first-place finishes and a second</strong>. Today I'm an <strong>IFBB Pro</strong>, a certified fitness trainer, and co-owner of the meal prep company <strong>MomBodz</strong>.</p>
+        <p>What I care about now is simple: helping women build real strength and the kind of confidence that doesn't wobble when life gets loud.</p>
+
+        <dl class="about__facts">
+          <div class="fact"><dt>Started Lifting</dt><dd>Age 24 — after volleyball in high school</dd></div>
+          <div class="fact"><dt>First Show</dt><dd>Two 1st place wins, one 2nd place</dd></div>
+          <div class="fact"><dt>Also</dt><dd>Kickboxing &amp; demolition derby</dd></div>
+        </dl>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= COACHING ========================= -->
+<!--
+  PRICING: all three prices below are PLACEHOLDERS rendered as "$—".
+  The owner MUST replace them with real prices before launch:
+    [PRICE_PLAN]     -> Custom Training Plan (one-time)
+    [PRICE_COACHING] -> 1:1 Online Coaching (per month)
+    [PRICE_PREP]     -> Contest Prep (per month)
+  Each price sits in <span class="amount" data-placeholder="..."> — swap the text content only.
+-->
+<section class="section" id="coaching" aria-labelledby="coaching-title">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="eyebrow">Coaching</p>
+      <h2 class="h2" id="coaching-title">Work with me.</h2>
+      <p class="lede">Three ways in, depending on how much support you want. Every option is built around your body, your schedule, and where you actually are right now — not a template.</p>
+    </div>
+
+    <div class="plans">
+      <!-- Plan 1 -->
+      <article class="card plan reveal" data-tilt>
+        <div class="plan__inner">
+          <h3>Custom Training Plan</h3>
+          <p class="plan__kicker">One-time · Self-guided</p>
+          <p class="plan__price">
+            <span class="amount" data-placeholder="[PRICE_PLAN]">$—</span>
+          </p>
+          <p class="plan__note">One-time payment · price to be confirmed</p>
+          <ul>
+            <li><svg width="14" height="11" viewBox="0 0 14 11" fill="none" aria-hidden="true"><path d="M1 5.5 5 9.5 13 1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>A training program written for your goal and gym access</li>
+            <li><svg width="14" height="11" viewBox="0 0 14 11" fill="none" aria-hidden="true"><path d="M1 5.5 5 9.5 13 1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Exercise video library so every lift is clear</li>
+            <li><svg width="14" height="11" viewBox="0 0 14 11" fill="none" aria-hidden="true"><path d="M1 5.5 5 9.5 13 1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Strength, muscle building or fat loss focus</li>
+            <li><svg width="14" height="11" viewBox="0 0 14 11" fill="none" aria-hidden="true"><path d="M1 5.5 5 9.5 13 1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Yours to keep and repeat</li>
+          </ul>
+          <a class="btn btn--ghost btn--block" href="https://www.taliafiege.com/booking-calendar" target="_blank" rel="noopener">Apply Now</a>
+        </div>
+      </article>
+
+      <!-- Plan 2 — featured -->
+      <article class="card plan plan--featured reveal" data-tilt style="--d:100ms">
+        <span class="plan__tag">Most Popular</span>
+        <div class="plan__inner">
+          <h3>1:1 Online Coaching</h3>
+          <p class="plan__kicker">Monthly · Full support</p>
+          <p class="plan__price">
+            <span class="amount" data-placeholder="[PRICE_COACHING]">$—</span>
+            <span class="per">/mo</span>
+          </p>
+          <p class="plan__note">Billed monthly · price to be confirmed</p>
+          <ul>
+            <li><svg width="14" height="11" viewBox="0 0 14 11" fill="none" aria-hidden="true"><path d="M1 5.5 5 9.5 13 1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Training and nutrition built together, adjusted as you go</li>
+            <li><svg width="14" height="11" viewBox="0 0 14 11" fill="none" aria-hidden="true"><path d="M1 5.5 5 9.5 13 1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Weekly check-ins — we course-correct before you stall</li>
+            <li><svg width="14" height="11" viewBox="0 0 14 11" fill="none" aria-hidden="true"><path d="M1 5.5 5 9.5 13 1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>App support between sessions for form and questions</li>
+            <li><svg width="14" height="11" viewBox="0 0 14 11" fill="none" aria-hidden="true"><path d="M1 5.5 5 9.5 13 1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Cardio, strength and flexibility programmed around your week</li>
+          </ul>
+          <a class="btn btn--gold btn--block" href="https://www.taliafiege.com/booking-calendar" target="_blank" rel="noopener">Apply Now</a>
+        </div>
+      </article>
+
+      <!-- Plan 3 -->
+      <article class="card plan reveal" data-tilt style="--d:200ms">
+        <div class="plan__inner">
+          <h3>Contest Prep</h3>
+          <p class="plan__kicker">Monthly · Competition</p>
+          <p class="plan__price">
+            <span class="amount" data-placeholder="[PRICE_PREP]">$—</span>
+            <span class="per">/mo</span>
+          </p>
+          <p class="plan__note">Billed monthly · price to be confirmed</p>
+          <ul>
+            <li><svg width="14" height="11" viewBox="0 0 14 11" fill="none" aria-hidden="true"><path d="M1 5.5 5 9.5 13 1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Full prep from off-season through show day</li>
+            <li><svg width="14" height="11" viewBox="0 0 14 11" fill="none" aria-hidden="true"><path d="M1 5.5 5 9.5 13 1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Posing coaching for your division</li>
+            <li><svg width="14" height="11" viewBox="0 0 14 11" fill="none" aria-hidden="true"><path d="M1 5.5 5 9.5 13 1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Peak week handled step by step</li>
+            <li><svg width="14" height="11" viewBox="0 0 14 11" fill="none" aria-hidden="true"><path d="M1 5.5 5 9.5 13 1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Backstage guidance from an IFBB Pro who's been there</li>
+          </ul>
+          <a class="btn btn--ghost btn--block" href="https://www.taliafiege.com/booking-calendar" target="_blank" rel="noopener">Apply Now</a>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= PROGRAMS ========================= -->
+<section class="section section--tight" id="programs" aria-labelledby="programs-title">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="eyebrow">Programs</p>
+      <h2 class="h2" id="programs-title">Pick a challenge. Start today.</h2>
+      <p class="lede">Short, structured programs you can run on your own. No coaching application, no waiting.</p>
+    </div>
+
+    <div class="programs">
+      <a class="card program reveal" href="https://www.taliafiege.com/challenge-page/8a024d00-9ad7-4871-80b6-47211c411982?programId=8a024d00-9ad7-4871-80b6-47211c411982" target="_blank" rel="noopener">
+        <div>
+          <p class="program__len">30 Days</p>
+          <h3>Total Workout Challenge</h3>
+          <p>A full-body month. Train the whole system, build the habit, finish stronger than you started.</p>
+        </div>
+        <span class="link-gold">Join the challenge <span aria-hidden="true">→</span></span>
+      </a>
+
+      <a class="card program reveal" style="--d:100ms" href="https://www.taliafiege.com/challenge-page/b92160d3-af33-42f3-b44d-7ed877fa4107?programId=b92160d3-af33-42f3-b44d-7ed877fa4107" target="_blank" rel="noopener">
+        <div>
+          <p class="program__len">30 Days</p>
+          <h3>Flat Abs Challenge</h3>
+          <p>Thirty days of focused core work. Real training for your midsection, not a gimmick.</p>
+        </div>
+        <span class="link-gold">Join the challenge <span aria-hidden="true">→</span></span>
+      </a>
+
+      <a class="card program reveal" style="--d:200ms" href="https://www.taliafiege.com/challenge-page/2e5b8f3c-b3d9-4d16-9c24-49e964fe9b53?programId=2e5b8f3c-b3d9-4d16-9c24-49e964fe9b53" target="_blank" rel="noopener">
+        <div>
+          <p class="program__len">2 Weeks</p>
+          <h3>Push Up Challenge</h3>
+          <p>Two weeks to more push-ups. Simple progression, upper-body strength you can feel.</p>
+        </div>
+        <span class="link-gold">Join the challenge <span aria-hidden="true">→</span></span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= RESULTS ========================= -->
+<section class="section" id="results" aria-labelledby="results-title">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="eyebrow">Results</p>
+      <h2 class="h2" id="results-title">In their words.</h2>
+    </div>
+
+    <div class="quotes">
+      <figure class="card quote reveal">
+        <p class="quote__mark" aria-hidden="true">&ldquo;</p>
+        <blockquote>Talia really introduced me to nutrition and helped me lose 20 pounds and feel better than ever before!</blockquote>
+        <figcaption>Jessica — May 2023</figcaption>
+      </figure>
+
+      <figure class="card quote reveal" style="--d:100ms">
+        <p class="quote__mark" aria-hidden="true">&ldquo;</p>
+        <blockquote>I've always been intimidated by the gym, but Talia made it feel easy and fun!</blockquote>
+        <figcaption>Andrea — December 2022</figcaption>
+      </figure>
+
+      <figure class="card quote reveal" style="--d:200ms">
+        <p class="quote__mark" aria-hidden="true">&ldquo;</p>
+        <blockquote>Thanks to Talia, I am competing in my first swimsuit competition.</blockquote>
+        <figcaption>Sarah — June 2023</figcaption>
+      </figure>
+    </div>
+
+    <!--
+      TRANSFORMATION GALLERY — placeholder frames.
+      To go live: replace each <div class="frame">…</div> below with, e.g.
+        <img class="frame" src="URL_TO_BEFORE_AFTER" alt="Client transformation, 12 weeks" loading="lazy">
+      and add object-fit:cover in the .frame rule (or a dedicated .frame img rule).
+      Only publish client photos with written permission.
+    -->
+    <div class="transformations reveal">
+      <h3>Transformations</h3>
+      <p>Client before-and-afters go here once they're approved for sharing.</p>
+      <div class="frames">
+        <div class="frame">Transformation — coming soon</div>
+        <div class="frame">Transformation — coming soon</div>
+        <div class="frame">Transformation — coming soon</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= GALLERY ========================= -->
+<section class="section section--tight gallery" aria-labelledby="gallery-title">
+  <div class="wrap">
+    <div class="section-head reveal" style="margin-bottom:28px">
+      <p class="eyebrow">Gallery</p>
+      <h2 class="h2" id="gallery-title">On stage and off.</h2>
+      <p class="gallery__hint">Scroll sideways →</p>
+    </div>
+  </div>
+
+  <div class="gallery__strip" tabindex="0" role="region" aria-label="Photo gallery, scroll horizontally">
+    <figure class="shot"><img src="https://static.wixstatic.com/media/9d4e53_90edf75b9f4e4cd3bdf9bc34aa867b15~mv2.jpeg" alt="Talia Fiege in a competition pose." loading="lazy" decoding="async"></figure>
+    <figure class="shot"><img src="https://static.wixstatic.com/media/9d4e53_980d454e67984c69ad004dc08ad2cd1d~mv2.jpeg" alt="Talia Fiege photographed in competition suit." loading="lazy" decoding="async"></figure>
+    <figure class="shot"><img src="https://static.wixstatic.com/media/9d4e53_9a4a8d9b516947acba874a39d7d80347~mv2.jpeg" alt="Portrait of Talia Fiege." loading="lazy" decoding="async"></figure>
+    <figure class="shot"><img src="https://static.wixstatic.com/media/9d4e53_b6af93664a824df2ba45d74b75c1cb90~mv2.jpg" alt="Talia Fiege posing for the camera." loading="lazy" decoding="async"></figure>
+    <figure class="shot shot--wide"><img src="https://static.wixstatic.com/media/9d4e53_3caa6182f4974f2095be8ff4dc51c58e~mv2.jpeg" alt="Wide photo of Talia Fiege." loading="lazy" decoding="async"></figure>
+    <figure class="shot shot--wide"><img src="https://static.wixstatic.com/media/9d4e53_58c386c5d1444961af25c2215f96f1b2~mv2.jpeg" alt="Wide photo of Talia Fiege training." loading="lazy" decoding="async"></figure>
+  </div>
+</section>
+
+<!-- ========================= ESSENTIALS ========================= -->
+<!--
+  AFFILIATE HUB — every "Shop" link is href="#" and every code reads [CODE].
+  Owner: paste the real affiliate URL into each href and the real discount
+  code into each <b data-placeholder="[CODE]">. Brand logos are intentionally
+  omitted — do not hotlink third-party logo files.
+-->
+<section class="section" id="essentials" aria-labelledby="essentials-title">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="eyebrow">My Essentials</p>
+      <h2 class="h2" id="essentials-title">What I actually use.</h2>
+      <p class="lede">The brands that live in my gym bag, my kitchen and my prep. Codes below when I have them.</p>
+    </div>
+
+    <div class="brands">
+      <article class="card brand reveal">
+        <div>
+          <h3>Legion Supplements</h3>
+          <p class="brand__cat">Supplements</p>
+        </div>
+        <p class="brand__code">Code <b data-placeholder="[CODE]">[CODE]</b></p>
+        <a class="btn btn--ghost btn--sm" href="#" rel="nofollow sponsored noopener">Shop</a>
+      </article>
+
+      <article class="card brand reveal" style="--d:60ms">
+        <div>
+          <h3>Angel Competition Bikinis</h3>
+          <p class="brand__cat">Competition suits</p>
+        </div>
+        <p class="brand__code">Code <b data-placeholder="[CODE]">[CODE]</b></p>
+        <a class="btn btn--ghost btn--sm" href="#" rel="nofollow sponsored noopener">Shop</a>
+      </article>
+
+      <article class="card brand reveal" style="--d:120ms">
+        <div>
+          <h3>BodyKore</h3>
+          <p class="brand__cat">Gym equipment</p>
+        </div>
+        <p class="brand__code">Code <b data-placeholder="[CODE]">[CODE]</b></p>
+        <a class="btn btn--ghost btn--sm" href="#" rel="nofollow sponsored noopener">Shop</a>
+      </article>
+
+      <article class="card brand reveal" style="--d:180ms">
+        <div>
+          <h3>MuscleEgg</h3>
+          <p class="brand__cat">Protein food</p>
+        </div>
+        <p class="brand__code">Code <b data-placeholder="[CODE]">[CODE]</b></p>
+        <a class="btn btn--ghost btn--sm" href="#" rel="nofollow sponsored noopener">Shop</a>
+      </article>
+
+      <article class="card brand reveal" style="--d:240ms">
+        <div>
+          <h3>Bones Coffee</h3>
+          <p class="brand__cat">Coffee</p>
+        </div>
+        <p class="brand__code">Code <b data-placeholder="[CODE]">[CODE]</b></p>
+        <a class="btn btn--ghost btn--sm" href="#" rel="nofollow sponsored noopener">Shop</a>
+      </article>
+
+      <article class="card brand reveal" style="--d:300ms">
+        <div>
+          <h3>American Dream Nut Butter</h3>
+          <p class="brand__cat">Nut butters</p>
+        </div>
+        <p class="brand__code">Code <b data-placeholder="[CODE]">[CODE]</b></p>
+        <a class="btn btn--ghost btn--sm" href="#" rel="nofollow sponsored noopener">Shop</a>
+      </article>
+    </div>
+
+    <p class="disclosure">Some links are affiliate links. I may earn a commission at no extra cost to you.</p>
+  </div>
+</section>
+
+<!-- ========================= SHOP TEASER ========================= -->
+<section class="section section--tight" aria-labelledby="shop-title">
+  <div class="wrap">
+    <div class="card shop reveal">
+      <div>
+        <p class="eyebrow" style="margin-bottom:12px">Etsy</p>
+        <h2 id="shop-title">Shop My Creations on Etsy</h2>
+        <p>Handmade pieces and prints from my Etsy shop, TaliaFiegeCreations.</p>
+      </div>
+      <a class="btn btn--ghost" href="https://www.etsy.com/listing/1780487520/wall-calendar-2025" target="_blank" rel="noopener">Visit the shop</a>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= EMAIL CAPTURE ========================= -->
+<section class="section optin" aria-labelledby="optin-title">
+  <div class="wrap">
+    <div class="reveal">
+      <h2 id="optin-title">Get My Free Training Guide</h2>
+      <p>Where to start, what actually matters, and the mistakes that cost you months. Straight to your inbox.</p>
+
+      <form class="form-inline" id="optinForm" novalidate
+            data-todo="connect to email provider (Kit/Mailchimp/Klaviyo)">
+        <label for="optin-email">Email address</label>
+        <input id="optin-email" name="email" type="email" autocomplete="email" required placeholder="you@email.com">
+        <button class="btn btn--gold" type="submit">Send It to Me</button>
+      </form>
+
+      <p class="form-status" id="optinStatus" role="status" aria-live="polite"></p>
+      <p class="form-note">No spam. Unsubscribe anytime.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= CONTACT ========================= -->
+<section class="section" id="contact" aria-labelledby="contact-title">
+  <div class="wrap">
+    <div class="contact__grid">
+      <div class="reveal">
+        <p class="eyebrow">Contact</p>
+        <h2 class="h2" id="contact-title">Let's talk.</h2>
+        <p class="lede">Questions about coaching, prep, or collaborations — send a note or book a free call.</p>
+
+        <a class="contact__mail" href="mailto:taliafiege13@gmail.com">taliafiege13@gmail.com</a>
+
+        <div class="socials">
+          <a class="social" href="https://www.instagram.com/taliafiege13_ifbbpro/" target="_blank" rel="noopener">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <rect x="2.5" y="2.5" width="19" height="19" rx="5.5" stroke="currentColor" stroke-width="1.7"/>
+              <circle cx="12" cy="12" r="4.2" stroke="currentColor" stroke-width="1.7"/>
+              <circle cx="17.6" cy="6.4" r="1.2" fill="currentColor"/>
+            </svg>
+            Instagram
+          </a>
+
+          <a class="social" href="https://www.tiktok.com/@taliafiege13" target="_blank" rel="noopener">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M13.5 3v11.4a3.1 3.1 0 1 1-2.6-3.05" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M13.5 3c.4 2.6 2 4.2 4.7 4.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            TikTok
+          </a>
+
+          <a class="social" href="https://www.facebook.com/talia.fiegecreations/" target="_blank" rel="noopener">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M14.5 8.5V6.9c0-.8.3-1.2 1.2-1.2h1.6V3h-2.5c-2.4 0-3.6 1.4-3.6 3.6v1.9H9v2.8h2.2V21h3.3v-9.7h2.3l.4-2.8h-2.7Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+            </svg>
+            Facebook
+          </a>
+
+          <!-- YOUTUBE: the old site's YouTube link was broken. Replace href="#" with the real channel URL. -->
+          <a class="social social--todo" href="#" data-placeholder="[YOUTUBE_CHANNEL_URL]" aria-label="YouTube — channel link not set yet">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <rect x="2.5" y="5.5" width="19" height="13" rx="4" stroke="currentColor" stroke-width="1.7"/>
+              <path d="M10.4 9.4 15 12l-4.6 2.6V9.4Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+            </svg>
+            YouTube — [YOUTUBE_CHANNEL_URL]
+          </a>
+        </div>
+      </div>
+
+      <!-- CONTACT FORM: front-end only. Wire this up to a form backend
+           (Formspree / Netlify Forms / your own endpoint) before launch. -->
+      <div class="card reveal" style="--d:120ms">
+        <form class="form-grid" id="contactForm" novalidate
+              data-todo="connect to a form backend (Formspree/Netlify/custom endpoint)">
+          <div class="row">
+            <div>
+              <label for="c-name" style="display:block;font-size:.8rem;color:var(--text-3);margin-bottom:7px">Name</label>
+              <input id="c-name" name="name" type="text" autocomplete="name" required placeholder="Your name">
+            </div>
+            <div>
+              <label for="c-email" style="display:block;font-size:.8rem;color:var(--text-3);margin-bottom:7px">Email</label>
+              <input id="c-email" name="email" type="email" autocomplete="email" required placeholder="you@email.com">
+            </div>
+          </div>
+          <div>
+            <label for="c-msg" style="display:block;font-size:.8rem;color:var(--text-3);margin-bottom:7px">Message</label>
+            <textarea id="c-msg" name="message" required placeholder="Tell me your goal and where you're at right now."></textarea>
+          </div>
+          <button class="btn btn--gold" type="submit">Send Message</button>
+          <p class="form-status" id="contactStatus" role="status" aria-live="polite"></p>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<!-- ========================= FOOTER ========================= -->
+<footer class="footer">
+  <div class="wrap footer__inner">
+    <p>&copy; 2026 Talia Fiege — All Rights Reserved.</p>
+    <nav aria-label="Footer">
+      <a href="#coaching">Coaching</a>
+      <a href="#programs">Programs</a>
+      <a href="#essentials">Essentials</a>
+      <a href="https://www.taliafiege.com/booking-calendar" target="_blank" rel="noopener">Free Consultation</a>
+    </nav>
+  </div>
+</footer>
+
+<script>
+(function () {
+  "use strict";
+
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
+  var coarse = window.matchMedia("(hover: none), (pointer: coarse)");
+
+  /* ---------- Nav: shadow on scroll ---------- */
+  var nav = document.getElementById("nav");
+  function onScrollNav() {
+    nav.classList.toggle("is-stuck", window.scrollY > 12);
+  }
+  onScrollNav();
+
+  /* ---------- Mobile menu ---------- */
+  var toggle = document.getElementById("navToggle");
+  var menu = document.getElementById("mobileMenu");
+  function closeMenu() {
+    menu.classList.remove("is-open");
+    toggle.setAttribute("aria-expanded", "false");
+    toggle.setAttribute("aria-label", "Open menu");
+  }
+  toggle.addEventListener("click", function () {
+    var open = menu.classList.toggle("is-open");
+    toggle.setAttribute("aria-expanded", String(open));
+    toggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+  });
+  menu.addEventListener("click", function (e) {
+    if (e.target.closest("a")) closeMenu();
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") closeMenu();
+  });
+
+  /* ---------- Scroll reveals ---------- */
+  var revealables = document.querySelectorAll(".reveal");
+  if (reduce.matches || !("IntersectionObserver" in window)) {
+    revealables.forEach(function (el) { el.classList.add("is-in"); });
+  } else {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("is-in");
+          io.unobserve(entry.target);
+        }
+      });
+    }, { rootMargin: "0px 0px -12% 0px", threshold: 0.08 });
+    revealables.forEach(function (el) { io.observe(el); });
+  }
+
+  /* ---------- Hero parallax ---------- */
+  var heroImg = document.getElementById("heroImg");
+  var ticking = false;
+  function frame() {
+    ticking = false;
+    onScrollNav();
+    if (reduce.matches || !heroImg) return;
+    var y = window.scrollY;
+    if (y > window.innerHeight * 1.2) return;
+    var p = Math.min(y / (window.innerHeight || 1), 1);
+    heroImg.style.transform =
+      "translate3d(0," + (p * 42).toFixed(2) + "px,0) scale(" + (1 + p * 0.09).toFixed(4) + ")";
+  }
+  window.addEventListener("scroll", function () {
+    if (!ticking) { ticking = true; window.requestAnimationFrame(frame); }
+  }, { passive: true });
+
+  /* ---------- 3D tilt on coaching cards ---------- */
+  var MAX_DEG = 6;
+  function enableTilt() {
+    document.querySelectorAll("[data-tilt]").forEach(function (card) {
+      var raf = null;
+      function move(e) {
+        if (raf) return;
+        raf = window.requestAnimationFrame(function () {
+          raf = null;
+          var r = card.getBoundingClientRect();
+          var px = (e.clientX - r.left) / r.width - 0.5;
+          var py = (e.clientY - r.top) / r.height - 0.5;
+          card.style.transform =
+            "rotateY(" + (px * MAX_DEG * 2).toFixed(2) + "deg) rotateX(" +
+            (-py * MAX_DEG * 2).toFixed(2) + "deg) translateZ(6px)";
+        });
+      }
+      card.addEventListener("pointerenter", function (e) {
+        if (e.pointerType !== "mouse") return;
+        card.classList.add("is-tilting");
+      });
+      card.addEventListener("pointermove", function (e) {
+        if (e.pointerType !== "mouse") return;
+        move(e);
+      });
+      card.addEventListener("pointerleave", function () {
+        card.classList.remove("is-tilting");
+        card.style.transform = "";
+      });
+    });
+  }
+  if (!reduce.matches && !coarse.matches) enableTilt();
+
+  /* ---------- Smooth anchor scrolling (fallback for browsers without CSS smooth) ---------- */
+  var supportsSmooth = "scrollBehavior" in document.documentElement.style;
+  document.querySelectorAll('a[href^="#"]').forEach(function (a) {
+    a.addEventListener("click", function (e) {
+      var id = a.getAttribute("href");
+      if (!id || id === "#") return;
+      var target = document.querySelector(id);
+      if (!target) return;
+      e.preventDefault();
+      var top = target.getBoundingClientRect().top + window.scrollY - 80;
+      if (supportsSmooth) {
+        window.scrollTo({ top: top, behavior: reduce.matches ? "auto" : "smooth" });
+      } else {
+        window.scrollTo(0, top);
+      }
+      if (history.replaceState) history.replaceState(null, "", id);
+    });
+  });
+
+  /* ---------- Forms (front-end only, nothing is sent anywhere yet) ---------- */
+  function wireForm(formId, statusId, okMessage) {
+    var form = document.getElementById(formId);
+    var status = document.getElementById(statusId);
+    if (!form || !status) return;
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var invalid = form.querySelector(":invalid");
+      if (invalid) {
+        status.textContent = "Please check the highlighted field.";
+        invalid.focus();
+        return;
+      }
+      status.textContent = okMessage;
+      form.reset();
+    });
+  }
+  wireForm("optinForm", "optinStatus", "Thanks! The guide is on its way once the email list is connected.");
+  wireForm("contactForm", "contactStatus", "Thanks! Your message is saved locally — connect a form backend to deliver it.");
+})();
+</script>
+</body>
+</html>
