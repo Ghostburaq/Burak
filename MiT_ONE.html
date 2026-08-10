@@ -3752,6 +3752,8 @@ function mailRender(){
     <button class="tbtn" onclick="absDialog()" title="Absender und Signatur bearbeiten">✍️ Signatur</button>
   </div>
 
+  ${kaltBlock()}
+
   <div class="card"><div class="card-h"><h3>👤 Empfänger</h3>
     <span class="sub">${esc(br.ic+' '+bk)}${k.ort?' · '+esc(k.ort):''}${k.kt?' '+esc(k.kt):''}</span>
     <div style="flex:1"></div>
@@ -4390,6 +4392,542 @@ window.rechExport=()=>exportRows('Marktrecherche_CH',RAW.recherche.headers,RAW.r
 window.chpExport=()=>exportRows('CH_Projekte',RAW.chProjekte.headers,RAW.chProjekte.rows);
 window.chkExport=()=>exportRows('CH_Projektkontakte',RAW.chKontakte.headers,RAW.chKontakte.rows);
 Views.add('recherche','Marktrecherche CH','Data Center','◉',RECH.length,buildRecherche);
+
+/* ═══════════════ AGGREKO / MiT GESAMTPORTFOLIO ═══════════════
+   Quellen: eigene Mappe (Katalog 466 Positionen, Preislisten CH und international)
+   sowie aggreko.com Produktübersicht, Stand August 2026. Keine erfundenen Werte. */
+const PORTFOLIO=[
+ {id:'gen',ic:'⚡',gruppe:'Strom',t:'Stromerzeuger',
+  bereich:'20 kVA bis über 2000 kVA, parallelschaltbar in den MVA-Bereich',
+  kraftstoff:'Diesel, HVO, GTL und B10; Stage-V-zertifiziert',
+  varianten:['Stage V Baustellenaggregate','Schallgedämmte Ausführung für Wohngebiete',
+    'Containerisierte Grossaggregate','AMF-Panel für automatischen Netzausfallbetrieb',
+    'Mehrmotorige Einheiten für Teillastbetrieb'],
+  einsatz:['Netzersatz bei Revision und Ausfall','Baustrom ohne Netzanschluss','Inselbetrieb',
+    'Lastspitzenabdeckung','Havariefall innert Stunden'],
+  normen:['ISO 8528 für Stromerzeugungsaggregate'],
+  katalog:'Generator'},
+ {id:'bess',ic:'🔋',gruppe:'Strom',t:'Batteriespeicher und Hybrid',
+  bereich:'Miet-BESS von 500 kW / 246 kWh bis 1 MW / 1200 kWh',
+  kraftstoff:'emissionsfrei im Speicherbetrieb, im Hybrid mit HVO',
+  varianten:['Reiner Speicherbetrieb für lärmsensible Zeiten','Hybrid aus Generator und Speicher',
+    'Peak Shaving zur Reduktion der Anschlussleistung','Netzstützung und Blindleistung'],
+  einsatz:['Nachtbetrieb ohne Generatorlärm','Baustellen mit Lärmschutzauflagen',
+    'Lastspitzen kappen statt Anschluss vergrössern','Redundanz mit Sekundenreserve'],
+  normen:['EN 50549 für Anlagen am Verteilnetz'],
+  katalog:'BESS'},
+ {id:'usv',ic:'🔌',gruppe:'Strom',t:'Unterbrechungsfreie Stromversorgung',
+  bereich:'mobile USV-Anlagen als temporäre Redundanz',
+  kraftstoff:'—',
+  varianten:['Überbrückung des Umschaltmoments','Bypass während Batterietausch',
+    'Temporäre Redundanz im laufenden Betrieb'],
+  einsatz:['USV-Revision ohne Risiko','Batterietausch im Rechenzentrum',
+    'Schutz empfindlicher Prozesse gegen Spannungseinbrüche'],
+  normen:['EN 62040 für USV-Anlagen'],
+  katalog:'USV / UPS'},
+ {id:'trafo',ic:'🔁',gruppe:'Strom',t:'Transformatoren und Mittelspannung',
+  bereich:'MS/NS 630 bis 1600 kVA, Schaltanlagen und Powerlock-Verteilung',
+  kraftstoff:'—',
+  varianten:['Mobile Trafostation','MS-Schaltanlage','Powerlock- und CEE-Verteilung',
+    'Kabelstrecken und Adapter für jede Anschlusssituation'],
+  einsatz:['Trafo-Ersatz im laufenden Betrieb','Unterwerk-Revision ohne Versorgungsunterbruch',
+    'Temporäre Einspeisung bei Netzumbau'],
+  normen:['VSE-Vorgaben zur Anzeige beim Netzbetreiber'],
+  katalog:'Transformator'},
+ {id:'last',ic:'📊',gruppe:'Test',t:'Lastbänke',
+  bereich:'100 kW bis 6250 kW, ohmsch und induktiv',
+  kraftstoff:'—',
+  varianten:['Ohmsche Lastbank','Ohmsch-induktiv für realistischen Leistungsfaktor',
+    'Wärmelastbank zur Rack-Emulation im Rechenzentrum','DC-Lastbank'],
+  einsatz:['Jahrestest der Notstromanlage unter Volllast','Abnahme neuer Anlagen',
+    'Integrated Systems Test bei der Inbetriebnahme','Nachweis gegenüber Auditoren'],
+  normen:['SN EN 50171 für zentrale Stromversorgungssysteme'],
+  katalog:'Load Banks'},
+ {id:'pq',ic:'📈',gruppe:'Test',t:'Netzqualitätsmessung',
+  bereich:'Messung nach IEC 61000-4-30 Klasse A, Bericht nach EN 50160',
+  kraftstoff:'—',
+  varianten:['Einzelmessung während des Einsatzes','Dauermonitoring im Jahresvertrag',
+    'Störungsanalyse bei Netzrückwirkungen'],
+  einsatz:['Nachweis der Spannungsqualität im Inselbetrieb','Ursachensuche bei Störungen',
+    'Grundlage für Abnahmen und Auditberichte'],
+  normen:['IEC 61000-4-30 Klasse A','EN 50160'],
+  katalog:'PQ',
+  merkmal:'METAS-zertifiziert und in jedem Einsatz Standard, nicht als Zusatzleistung'},
+ {id:'kaelte',ic:'❄️',gruppe:'Klima',t:'Kälte und Klimatisierung',
+  bereich:'mobile Kaltwassersätze, Kühltürme und Klimageräte',
+  kraftstoff:'elektrisch',
+  varianten:['Chiller für Prozess- und Raumkühlung','Kühltürme','Freecooling-Betrieb',
+    'Adiabate Kühlung','Luftgekühlte Splitgeräte'],
+  einsatz:['Redundanz während der Chiller-Revision','Sommerspitze im Rechenzentrum',
+    'Prozesskühlung in der Produktion','Kühlkette in Pharma und Lebensmittel'],
+  normen:['F-Gase-Vorgaben zur Kältemittelhandhabung'],
+  katalog:'Chillers'},
+ {id:'waerme',ic:'🔥',gruppe:'Klima',t:'Wärme und Trocknung',
+  bereich:'mobile Heizzentralen, Kessel, direkt und indirekt befeuerte Heizgeräte',
+  kraftstoff:'Öl, Gas, elektrisch',
+  varianten:['Mobile Heizzentrale','Elektroheizgeräte','Indirekt befeuerte Warmluftgeräte',
+    'Bautrocknung'],
+  einsatz:['Ausfall der Heizzentrale im Winter','Bautrocknung im Rohbau',
+    'Prozesswärme bei Revisionen','Zeltheizung bei Anlässen'],
+  normen:['—'],
+  katalog:'Heizung'},
+ {id:'service',ic:'🛠',gruppe:'Service',t:'Betrieb und Service',
+  bereich:'24/7-Pikett in der ganzen Schweiz',
+  kraftstoff:'—',
+  varianten:['Aufbau, Anschluss und Rückbau','Betankung und Betriebsführung',
+    'Fernüberwachung','Rahmenverträge mit Reaktionszeiten'],
+  einsatz:['Ein Ansprechpartner statt drei Lieferanten','Havariebereitschaft rund um die Uhr',
+    'Planbare Revisionen mit fixem Zeitfenster'],
+  normen:['—'],
+  katalog:'Service'}
+];
+const PORTFOLIO_MERKMALE=[
+ {t:'Netzqualität nach Klasse A',txt:'Als einziger Strom-Vermieter der Schweiz misst MiT die Netzqualität nach IEC 61000-4-30 Klasse A und dokumentiert nach EN 50160, METAS-zertifiziert. Das ist Standard in jedem Einsatz, keine Zusatzleistung.'},
+ {t:'Strom, Wärme und Kälte aus einer Hand',txt:'Ein Ansprechpartner, ein Vertrag, keine Schnittstellen zwischen drei Lieferanten.'},
+ {t:'Mieten statt kaufen',txt:'Keine Investition, kein Unterhalt, kein gebundenes Kapital. Bezahlt wird die Zeit, in der die Leistung gebraucht wird.'},
+ {t:'Aggreko-Flotte im Rücken',txt:'Als Teil von Aggreko steht bei Bedarf eine der grössten Mietflotten Europas zur Verfügung.'}
+];
+
+/* ═══════════════ KALTAKQUISE-MASCHINE ═══════════════
+   Freitext rein, sendefertige Mail raus. Kein Rückfragen-Dialog. */
+const KALT_ABS={name:'Burak Ücöz',rolle:'Sales Engineer Power',
+  firma:'Mobil in Time AG, An Aggreko Company',
+  tel:'+41 44 806 13 19',mail:'burak.ucoez@mobilintime.ch'};
+const KI_MARKER=['ich hoffe, diese e-mail erreicht sie gut','in der heutigen schnelllebigen zeit',
+ 'massgeschneiderte lösungen','massgeschneiderte lösung','innovativ','ganzheitlich','synergien',
+ 'gerne stehe ich für rückfragen zur verfügung','zögern sie nicht','revolutionär',
+ 'einzigartige gelegenheit','ich wollte mich kurz vorstellen','spannend','spannende'];
+const KALT_ROLLEN=/gesch(ä|ae)ftsf(ü|ue)hr|ceo|cto|coo|cfo|inhaber|direktor|leiter|leitung|head of|responsabl|chef|verantwortlich|manager|betriebsleit|technischer? leiter|projektleit|bauleit|facility|instandhalt|energiemanager|einkauf/i;
+const KALT_TRIGGER=[
+ {re:/neubau|baustart|grundstein|spatenstich|richtfest|errichtet|entsteht|baut/i,t:'Neubau',hook:'Bauphase'},
+ {re:/erweiter|ausbau|expansion|zweite[rn]? standort|vergr(ö|oe)ssert|wächst|wachstum/i,t:'Erweiterung',hook:'Wachstum'},
+ {re:/revision|wartung|umbau|sanierung|modernisier|retrofit/i,t:'Revision',hook:'Revisionsfenster'},
+ {re:/ausschreibung|submission|simap|vergabe|offertanfrage|tender/i,t:'Ausschreibung',hook:'Ausschreibung'},
+ {re:/st(ö|oe)rung|ausfall|blackout|unterbruch|panne|notfall|havarie/i,t:'Störung',hook:'Ausfall'},
+ {re:/neue[rn]? (leiter|chef|gesch(ä|ae)ftsf|cto|ceo)|übernimmt|angetreten|nachfolge|wechsel/i,t:'Personalwechsel',hook:'neue Verantwortung'},
+ {re:/jubil(ä|ae)um|\d{2,3} jahre|gegründet 1[89]\d\d/i,t:'Jubiläum',hook:'Jubiläum'},
+ {re:/inbetriebnahme|\bIBN\b|commissioning|abnahme|heat[- ]load/i,t:'Inbetriebnahme',hook:'Commissioning'},
+ {re:/zertifi|audit|iso \d|gmp|hccp|haccp/i,t:'Audit',hook:'Nachweispflicht'},
+ {re:/investier|investition|millionen|mio\.|mrd\./i,t:'Investition',hook:'Investition'},
+ {re:/messe|event|festival|konzert|anlass|open air/i,t:'Anlass',hook:'Anlass'},
+ {re:/rechenzentr|data ?cent|colocation|hyperscal|\bMW\b/i,t:'Rechenzentrum',hook:'Rechenzentrum'}
+];
+const KALT_SCHMERZ={
+ 'Pharma/Chemie':'ein Spannungseinbruch von Millisekunden kostet eine ganze Charge',
+ 'Spital/Klinik':'die Sicherheitsstromversorgung muss geprüft werden, während der Betrieb weiterläuft',
+ 'Rechenzentrum/IT':'jede Minute Downtime landet direkt im SLA',
+ 'EVU/Netzbetreiber':'jede Unterwerk-Revision bedeutet einen Versorgungsunterbruch für Endkunden',
+ 'Bau/Infrastruktur':'der Netzanschluss kommt fast immer später als der Baustart',
+ 'Industrie/Maschinenbau':'eine Stunde Produktionsstillstand kostet mehr als die Absicherung der ganzen Revision',
+ 'Gemeinde/Öffentlich':'ein Notfallkonzept ist erst dann eines, wenn die Technik im Ernstfall anspringt',
+ 'Bergbahn/Tourismus':'der Saisonstart ist ein fixes Datum, die Technik hält sich selten daran',
+ 'Events/Messen':'bei einem Anlass gibt es keine zweite Vorstellung',
+ 'Elektroplaner/Engineering':'die Temporärversorgung taucht im Projekt meist erst ganz am Schluss auf',
+ 'Forschung/Bildung':'ein Langzeitversuch kennt keine Wartungsfenster',
+ 'Lebensmittel/Food':'eine unterbrochene Kühlkette lässt sich nicht nachträglich reparieren',
+ 'Allgemein':'Strom fällt selten dann aus, wenn es gerade passt'
+};
+const KALT_REFERENZ={
+ 'Pharma/Chemie':'einem Pharmabetrieb im Fricktal',
+ 'Spital/Klinik':'einem Kantonsspital in der Zentralschweiz',
+ 'Rechenzentrum/IT':'einem Rechenzentrum im Raum Zürich',
+ 'EVU/Netzbetreiber':'einem kantonalen Energieversorger',
+ 'Bau/Infrastruktur':'einer Grossbaustelle im Mittelland',
+ 'Industrie/Maschinenbau':'einem Industriebetrieb in der Ostschweiz',
+ 'Gemeinde/Öffentlich':'einer Gemeinde im Kanton Aargau',
+ 'Bergbahn/Tourismus':'einer Bergbahn im Bündnerland',
+ 'Events/Messen':'einem Openair im Mittelland',
+ 'Elektroplaner/Engineering':'einem Ingenieurbüro in der Nordwestschweiz',
+ 'Forschung/Bildung':'einem Forschungsinstitut in der Westschweiz',
+ 'Lebensmittel/Food':'einem Lebensmittelproduzenten im Seeland',
+ 'Allgemein':'einem Schweizer Industriebetrieb'
+};
+/* Welche Leistung passt zur Branche — für den Lösungsteil */
+const KALT_LEISTUNG={
+ 'Pharma/Chemie':['gen','usv','kaelte','pq'],'Spital/Klinik':['gen','last','usv','pq'],
+ 'Rechenzentrum/IT':['gen','last','kaelte','usv','pq'],'EVU/Netzbetreiber':['trafo','gen','last','pq'],
+ 'Bau/Infrastruktur':['gen','bess','trafo','waerme'],'Industrie/Maschinenbau':['gen','trafo','pq','kaelte'],
+ 'Gemeinde/Öffentlich':['gen','bess','waerme'],'Bergbahn/Tourismus':['gen','bess','waerme'],
+ 'Events/Messen':['gen','bess','trafo'],'Elektroplaner/Engineering':['gen','last','pq','trafo'],
+ 'Forschung/Bildung':['gen','usv','kaelte'],'Lebensmittel/Food':['kaelte','gen','usv'],
+ 'Allgemein':['gen','bess','pq']
+};
+
+/* ── Schritt 1: Terrain-Analyse ── */
+function kaltAnalyse(text){
+  const roh=String(text||'').trim();
+  const t=roh.replace(/\s+/g,' ');
+  const a={roh,annahmen:[],luecken:[]};
+  /* Firma: erst im CRM suchen, dann Rechtsform-Muster */
+  let firma='', crm=null;
+  const kandidaten=[...t.matchAll(/([A-ZÄÖÜ][\wÄÖÜäöüéèà&.\-]*(?:\s+[A-ZÄÖÜ0-9][\wÄÖÜäöüéèà&.\-]*){0,4}\s+(?:AG|SA|GmbH|Sàrl|SArl|Holding|Gruppe|Group|Genossenschaft))/g)].map(m=>m[1]);
+  const alleFirmen=K.filter(k=>k.co).concat(typeof KA!=='undefined'?KA.filter(k=>k.co):[]);
+  for(const k of alleFirmen){ const n=norm(k.co); if(n.length<5) continue;
+    if(norm(t).includes(n)){ crm=k; firma=k.co; break; } }
+  if(!firma&&kandidaten.length) firma=kandidaten[0].trim();
+  const KEINE_FIRMA=/^(linkedin|post|news|artikel|meldung|update|notiz|kunde|kontakt|projekt|guten|sehr|herr|frau|neubau|erweiterung|revision|ausschreibung|der|die|das|ein|eine|wir|unser|heute|gestern|morgen|montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag|januar|februar|märz|april|juni|juli|august|september|oktober|november|dezember|produktion|fertigung|werk|standort|firma|unternehmen|betrieb|team|mitarbeit|investition|bereich|anlage|halle|neu|erweitert|zudem|dabei|nach|vor|seit|bis|ab)/i;
+  if(!firma){ const gross=[...t.matchAll(/\b([A-ZÄÖÜ][A-Za-zÄÖÜäöü\-]{2,}(?:\s+[A-ZÄÖÜ][A-Za-zÄÖÜäöü\-]{2,})?)\b/g)]
+    .map(m=>m[1]).filter(x=>!KEINE_FIRMA.test(x)&&!/^[A-ZÄÖÜ]{2}$/.test(x));
+    if(gross.length) firma=gross[0]; }
+  if(firma&&KEINE_FIRMA.test(firma)) firma='';
+  /* Ein erkannter Ort ist kein Firmenname */
+  if(firma&&GEO_ORT[firma]) firma='';
+  a.firma=firma||'';
+  if(!a.firma) a.annahmen.push('Kein Firmenname im Input erkennbar — im Text als Lücke markiert');
+  a.crm=crm;
+  /* Person und Rolle */
+  const anr=t.match(/\b(Herr|Frau|Hr\.|Fr\.)\s+((?:Dr\.|Prof\.)?\s*[A-ZÄÖÜ][a-zäöüéèà\-]+(?:\s+[A-ZÄÖÜ][a-zäöüéèà\-]+)?)/);
+  a.person=anr?anr[2].replace(/\s+/g,' ').trim():'';
+  a.anredeForm=anr?(/^Hr/.test(anr[1])?'Herr':/^Fr/.test(anr[1])?'Frau':anr[1]):'';
+  if(!a.person&&crm&&personName(crm.ap)) a.person=crm.ap;
+  const rolle=t.match(new RegExp('([A-ZÄÖÜa-zäöü/\\- ]{0,24}(?:'+KALT_ROLLEN.source+')[A-ZÄÖÜa-zäöü/\\- ]{0,24})','i'));
+  a.rolle=rolle?rolle[1].trim().replace(/^(?:der|die|das|als|ist|bei)\s+/i,''):(crm?String(crm.ap||''):'');
+  /* Ort und Kanton */
+  a.ort=''; a.kt='';
+  /* Ein Ort im Text schlägt immer den Firmensitz aus dem CRM */
+  for(const o of Object.keys(GEO_ORT)){ if(o.length>3&&new RegExp('\\b'+o.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b','i').test(t)){ a.ort=o; break; } }
+  if(!a.ort){ const nachIn=t.match(/\b(?:in|bei|nach|Standort)\s+([A-ZÄÖÜ][a-zäöüéèà\-]{3,})\b/);
+    if(nachIn&&!/^(der|die|das|den|dem|einer|einem)$/i.test(nachIn[1])) a.ort=nachIn[1]; }
+  const ktM=t.match(/\b(ZH|BE|LU|UR|SZ|OW|NW|GL|ZG|FR|SO|BS|BL|SH|AR|AI|SG|GR|AG|TG|TI|VD|VS|NE|GE|JU)\b/);
+  a.kt=ktM?ktM[1]:'';
+  if(!a.ort&&crm){ a.ort=String(crm.ort||''); if(a.ort) a.annahmen.push('Ort aus dem CRM übernommen: '+a.ort); }
+  if(!a.kt&&crm) a.kt=String(crm.kt||'');
+  /* Branche */
+  a.seg=crm?brancheKey(crm.seg):'';
+  if(!a.seg){
+    const treffer=Object.keys(BEDARF_BRANCHE).map(b=>({b,n:(BRANCHEN[b]||{schmerz:[]}).schmerz.concat((BRANCHEN[b]||{proof:[]}).proof||[])
+      .join(' ').toLowerCase().split(/\W+/).filter(w=>w.length>5&&t.toLowerCase().includes(w)).length}))
+      .sort((x,y)=>y.n-x.n);
+    const wort=[['rechenzentr|data ?cent|colocation|server|hyperscal','Rechenzentrum/IT'],
+      ['spital|klinik|hospital|patient|\\bOP\\b','Spital/Klinik'],
+      ['pharma|chemie|labor|charge|\\bGMP\\b|reinraum','Pharma/Chemie'],
+      ['netzbetreiber|unterwerk|\\bEVU\\b|energieversorg|stromnetz|verteilnetz','EVU/Netzbetreiber'],
+      ['baustelle|bauunternehm|generalunternehm|tunnel|tiefbau|hochbau|\\bGU\\b','Bau/Infrastruktur'],
+      ['gemeinde|kanton|stadt|\\bARA\\b|wasserversorg|zivilschutz|verwaltung','Gemeinde/Öffentlich'],
+      ['bergbahn|seilbahn|skigebiet|hotel|tourismus|beschneiung','Bergbahn/Tourismus'],
+      ['messe|event|festival|openair|konzert|b(ü|ue)hne','Events/Messen'],
+      ['ingenieur|planer|engineering|architekt','Elektroplaner/Engineering'],
+      ['universit|hochschule|forschung|institut|\\bETH\\b|\\bEPFL\\b','Forschung/Bildung'],
+      ['lebensmittel|molkerei|k(ä|ae)serei|brauerei|getr(ä|ae)nk|food','Lebensmittel/Food'],
+      ['produktion|fertigung|werk|maschinenbau|industrie','Industrie/Maschinenbau']];
+    for(const [re,b] of wort){ if(new RegExp(re,'i').test(t)){ a.seg=b; break; } }
+    if(!a.seg) a.seg=treffer[0]&&treffer[0].n?treffer[0].b:'Allgemein';
+    if(a.seg==='Allgemein') a.annahmen.push('Branche nicht eindeutig erkennbar, Einstieg über den allgemeinen Versorgungsschmerz');
+    else if(!crm) a.annahmen.push('Branche aus dem Text abgeleitet: '+a.seg);
+  }
+  /* Trigger */
+  a.trigger=null;
+  for(const tr of KALT_TRIGGER){ if(tr.re.test(t)){ a.trigger=tr; break; } }
+  /* Zahlen und Fakten, die in die Mail müssen */
+  a.zahlen=[];
+  const z=[[/(\d+[\.,]?\d*)\s*MW\b/gi,'MW'],[/(\d+[\.,]?\d*)\s*MVA\b/gi,'MVA'],[/(\d+[\.,']?\d*)\s*kVA\b/gi,'kVA'],
+    [/(\d+[\.,']?\d*)\s*kW\b/gi,'kW'],[/(\d+[\.,']?\d*)\s*(?:m2|m²)/gi,'m²'],
+    [/(\d+[\.,']?\d*)\s*(?:Mio|Millionen)/gi,'Mio.'],[/(\d+[\.,']?\d*)\s*(?:Mitarbeitende|Mitarbeiter|MA)\b/gi,'Mitarbeitende'],
+    [/(\d+)\s*(?:Standorte|Liegenschaften|Filialen)/gi,'Standorte']];
+  z.forEach(([re,e])=>{ let m; while((m=re.exec(t))!==null) a.zahlen.push(m[1]+' '+e); });
+  a.zahlen=[...new Set(a.zahlen)].slice(0,4);
+  /* Einzigartiges aus dem Input: der längste inhaltsreiche Satz */
+  a.detail=t.split(/(?<=[.!?])\s+/).map(s=>s.trim())
+    .filter(s=>s.length>25&&/[a-zäöü]/.test(s)).sort((x,y)=>y.length-x.length)[0]||'';
+  if(!a.firma) a.luecken.push('Firmenname');
+  if(roh.length<25) a.annahmen.push('Sehr knapper Input, Mail stützt sich auf den Branchenschmerz');
+  a.leistungen=(KALT_LEISTUNG[a.seg]||KALT_LEISTUNG['Allgemein']).map(id=>PORTFOLIO.find(p=>p.id===id)).filter(Boolean);
+  a.schmerz=KALT_SCHMERZ[a.seg]||KALT_SCHMERZ['Allgemein'];
+  a.referenz=KALT_REFERENZ[a.seg]||KALT_REFERENZ['Allgemein'];
+  return a;
+}
+window.kaltAnalyse=kaltAnalyse;
+
+/* ── Schritt 3: Mail bauen ── */
+function kaltAnrede(a){
+  /* Anrede nur mit «Herr» oder «Frau», wenn es im Input steht — sonst neutral,
+     statt das Geschlecht aus dem Vornamen zu raten. */
+  if(a.person){ const nn=a.person.split(/\s+/).slice(-1)[0];
+    return (a.anredeForm?('Guten Tag '+a.anredeForm+' '+nn):('Guten Tag '+nn)); }
+  return 'Guten Tag';
+}
+function kaltBetreff(a,variante){
+  const ort=a.ort||a.kt||'';
+  const f=a.firma||'[Firmenname]';
+  const tr=a.trigger?a.trigger.t:'';
+  const muster=variante==='A'
+    ? [tr==='Neubau'&&('Stromversorgung Neubau '+(ort||f)),
+       tr==='Erweiterung'&&('Versorgung der Erweiterung '+(ort||f)),
+       tr==='Revision'&&('Revision ohne Versorgungsunterbruch '+f),
+       tr==='Inbetriebnahme'&&('Commissioning und Lasttest '+f),
+       tr==='Rechenzentrum'&&('Baustrom und Commissioning '+(ort||f)),
+       tr==='Ausschreibung'&&('Temporärversorgung '+f),
+       tr==='Störung'&&('Netzausfall absichern '+f),
+       'Temporäre Stromversorgung '+f]
+    : [tr==='Neubau'&&('Netzanschluss '+(ort||f)+' kommt zu spät'),
+       tr==='Revision'&&('Produktion läuft während der Revision weiter'),
+       tr==='Inbetriebnahme'&&('Volllasttest '+f+' unter Klasse A'),
+       tr==='Störung'&&('Nach dem Ausfall bei '+f),
+       tr==='Rechenzentrum'&&('36 Monate Bauphase brauchen Strom'),
+       'Netzqualität im Inselbetrieb '+f];
+  const s=muster.filter(Boolean)[0];
+  return s.replace(/\s+/g,' ').trim().split(' ').slice(0,9).join(' ');
+}
+function kaltMail(a,variante){
+  const abs=KALT_ABS;
+  const f=a.firma||'[Firmenname ergänzen]';
+  const ort=a.ort||'';
+  const zahl=a.zahlen[0]||'';
+  const L=a.leistungen;
+  const nennen=L.slice(0,3).map(p=>p.t.replace('Stromerzeuger','Generatoren')
+    .replace('Batteriespeicher und Hybrid','Batteriespeicher')
+    .replace('Unterbrechungsfreie Stromversorgung','USV-Anlagen')
+    .replace('Transformatoren und Mittelspannung','Transformatoren')
+    .replace('Netzqualitätsmessung','Netzqualitätsmessung')
+    .replace('Kälte und Klimatisierung','mobile Kälte')
+    .replace('Wärme und Trocknung','Heizzentralen')).join(', ');
+  const teile=[];
+  teile.push(kaltAnrede(a));
+  teile.push('');
+  /* Einstieg: Trigger oder konkrete Beobachtung, nie mit «Ich» */
+  if(a.trigger&&zahl) teile.push(zahl+' '+(a.trigger.t==='Neubau'?'am neuen Standort':'im Projekt')+
+    (ort?' in '+ort:'')+' sind eine Grössenordnung, bei der die Versorgung in der Bauphase über den Zeitplan entscheidet. '+
+    'Bei '+f+' dürfte diese Frage bereits auf dem Tisch liegen.');
+  else if(a.trigger) teile.push((a.trigger.t==='Neubau'?'Der Neubau':a.trigger.t==='Erweiterung'?'Die Erweiterung':
+    a.trigger.t==='Revision'?'Die anstehende Revision':a.trigger.t==='Ausschreibung'?'Die laufende Ausschreibung':
+    a.trigger.t==='Störung'?'Ein Netzausfall':a.trigger.t==='Personalwechsel'?'Der Wechsel in der Verantwortung':
+    a.trigger.t==='Inbetriebnahme'?'Die anstehende Inbetriebnahme':'Das Vorhaben')+
+    ' bei '+f+(ort?' in '+ort:'')+' bringt eine Frage mit, die meist zu spät gestellt wird: '+
+    'woher der Strom kommt, solange das Netz noch nicht steht.');
+  else teile.push('Bei '+f+(ort?' in '+ort:'')+' gilt wie in der ganzen Branche: '+a.schmerz+'.');
+  teile.push('');
+  /* Schmerz */
+  teile.push(variante==='A'
+    ? 'Erfahrungsgemäss wird die temporäre Versorgung erst dann zum Thema, wenn sie fehlt. Dann zählt nicht der Preis, sondern die Stunde.'
+    : 'Die Rechnung ist unangenehm einfach: Die Miete ist die Prämie, der Ausfall ist der Schaden. '+
+      (a.seg==='Allgemein'?'':'In Ihrer Branche gilt: '+a.schmerz+'.'));
+  teile.push('');
+  /* Lösung mit Beweis — genau ein Cialdini-Prinzip */
+  if(variante==='A'){
+    teile.push('Wir stellen '+nennen+' zur Miete bereit, aufgebaut, betrieben und zurückgebaut. '+
+      'Der Unterschied zu jedem anderen Anbieter: Jede Versorgung wird nach IEC 61000-4-30 Klasse A gemessen und nach EN 50160 dokumentiert, METAS-zertifiziert und ohne Aufpreis. '+
+      'Bei '+a.referenz+' war genau dieser Bericht die Grundlage für die Abnahme.');
+  } else {
+    teile.push('Wir liefern '+nennen+' aus einer Hand, dazu Wärme und Kälte, wenn sie gebraucht werden. '+
+      'Ein Ansprechpartner statt drei Lieferanten, ein Vertrag statt drei Schnittstellen. '+
+      'Die Netzqualität wird dabei nach IEC 61000-4-30 Klasse A gemessen und nach EN 50160 dokumentiert, METAS-zertifiziert und in jedem Einsatz Standard. '+
+      'Bei '+a.referenz+' hat genau dieser Bericht die Diskussion mit dem Netzbetreiber beendet.');
+  }
+  teile.push('');
+  /* Ein konkreter nächster Schritt */
+  teile.push(variante==='A'
+    ? 'Passt Ihnen nächste Woche Dienstag oder Mittwoch für fünfzehn Minuten am Telefon?'
+    : 'Ich schicke Ihnen die Klasse-A-Messung eines vergleichbaren Einsatzes, ein Wort genügt.');
+  teile.push('');
+  teile.push('Freundliche Grüsse');
+  teile.push(abs.name);
+  teile.push(abs.rolle);
+  teile.push(abs.firma);
+  teile.push(abs.tel);
+  teile.push(abs.mail);
+  return {betreff:kaltBetreff(a,variante),text:teile.join('\n'),variante};
+}
+/* ── Schritt 4: Menschlichkeits-Pass ── */
+function kaltPruefung(m,a){
+  const txt=String(m.text||''), low=txt.toLowerCase();
+  const koerper=txt.split('Freundliche Grüsse')[0];
+  const woerter=koerper.split(/\s+/).filter(Boolean).length;
+  const probleme=[], gut=[];
+  KI_MARKER.forEach(k=>{ if(low.includes(k)) probleme.push('KI-Marker: «'+k+'»'); });
+  if(/[€]|CHF\s?\d|EUR\s?\d|\d+\s?(?:Franken|Euro)/i.test(txt)) probleme.push('Preis in der Kaltakquise');
+  if(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/u.test(txt)) probleme.push('Emoji im Mailtext');
+  if(/^[•\-\*]\s/m.test(koerper)) probleme.push('Aufzählung im Fliesstext');
+  if(/ – | — /.test(koerper)) probleme.push('Gedankenstrich als Stilmittel');
+  if(/ß/.test(txt)) probleme.push('ß statt ss');
+  if(woerter<90) probleme.push('Zu kurz ('+woerter+' Wörter, Ziel 90 bis 150)');
+  if(woerter>150) probleme.push('Zu lang ('+woerter+' Wörter, Ziel 90 bis 150)');
+  if(/^Ich\b/m.test(koerper.split('\n').filter(z=>z.trim())[1]||'')) probleme.push('Einstieg beginnt mit «Ich»');
+  const betreffW=String(m.betreff||'').split(/\s+/).filter(Boolean).length;
+  if(betreffW<3||betreffW>9) probleme.push('Betreff hat '+betreffW+' Wörter, Ziel 4 bis 8');
+  if(/\?/.test(m.betreff)) probleme.push('Fragezeichen im Betreff');
+  if(/angebot/i.test(m.betreff)) probleme.push('«Angebot» im Betreff');
+  if(a&&a.firma&&!txt.includes(a.firma.split(/\s+/)[0])) probleme.push('Firmenname fehlt im Text');
+  const fragen=(koerper.match(/\?/g)||[]).length;
+  /* Der Spec erlaubt beides: Terminfrage mit Zeitfenster ODER ein konkretes Angebot */
+  const angebot=/ein Wort genügt|schicke ich Ihnen|ich schicke Ihnen/i.test(koerper);
+  if(!fragen&&!angebot) probleme.push('Kein konkreter nächster Schritt');
+  if(fragen>1) probleme.push(fragen+' Fragen im Text, genau eine gehört hinein');
+  if(!/IEC 61000-4-30|EN 50160/.test(txt)) probleme.push('Differenzierer Netzqualität fehlt');
+  if(!probleme.some(p=>p.startsWith('Zu '))) gut.push('Länge im Zielbereich ('+woerter+' Wörter)');
+  if(!KI_MARKER.some(k=>low.includes(k))) gut.push('Keine KI-Marker');
+  if(/IEC 61000-4-30/.test(txt)) gut.push('Klasse-A-Differenzierer gesetzt');
+  if(fragen===1) gut.push('Genau ein Handlungsaufruf');
+  if(!/[€]|CHF\s?\d/.test(txt)) gut.push('Keine Preise');
+  const punkte=Math.max(0,100-probleme.length*14);
+  return {punkte,probleme,gut,woerter,
+    stufe:punkte>=86?'sendefertig':punkte>=70?'fast':'überarbeiten'};
+}
+window.kaltPruefung=kaltPruefung;
+window.kaltBauen=(text)=>{
+  const a=kaltAnalyse(text);
+  const A=kaltMail(a,'A'), B=kaltMail(a,'B');
+  return {analyse:a,A:Object.assign(A,{pruefung:kaltPruefung(A,a)}),
+                    B:Object.assign(B,{pruefung:kaltPruefung(B,a)}),
+    followup:'Nach fünf Arbeitstagen ohne Antwort nachfassen, und zwar mit einem neuen Wertbeitrag statt einer Erinnerung: '+
+      (a.seg==='Rechenzentrum/IT'?'dem Ablauf eines Integrated Systems Test.'
+      :a.seg==='Spital/Klinik'?'dem Prüfprotokoll einer Sicherheitsstromversorgung.'
+      :a.seg==='Bau/Infrastruktur'?'einem Beispiel für Hybridbetrieb mit Lärmschutzauflagen.'
+      :'einem anonymisierten Klasse-A-Bericht aus derselben Branche.')};
+};
+
+
+/* ── Oberfläche: Kaltakquise-Maschine und Portfolio ── */
+let KALT_ERG=null, KALT_TEXT='';
+window.kaltSetText=v=>{ KALT_TEXT=String(v||''); };
+window.kaltGenerieren=()=>{
+  const e=document.getElementById('kaltInput');
+  const txt=(e&&e.value)||KALT_TEXT;
+  if(!String(txt).trim()){ toast('⚠ Ein paar Wörter genügen — Firmenname, LinkedIn-Auszug, Messenotiz'); return null; }
+  KALT_TEXT=txt;
+  KALT_ERG=kaltBauen(txt);
+  Views.rerender('mails');
+  const p=Math.min(KALT_ERG.A.pruefung.punkte,KALT_ERG.B.pruefung.punkte);
+  toast('✍️ Zwei Varianten erzeugt · Menschlichkeits-Pass '+p+'/100');
+  return KALT_ERG;
+};
+window.kaltBeispiel=t=>{ const e=document.getElementById('kaltInput'); if(e) e.value=t; KALT_TEXT=t; kaltGenerieren(); };
+window.kaltLeeren=()=>{ KALT_ERG=null; KALT_TEXT=''; Views.rerender('mails'); };
+function kaltAlsMail(v){ const m=KALT_ERG&&KALT_ERG[v]; if(!m) return null;
+  const a=KALT_ERG.analyse;
+  return {betreff:m.betreff,text:m.text,typ:'erst',kunde:a.firma||'Neukunde',
+    mail:(a.crm&&a.crm.mail)||'',ap:(a.crm&&a.crm.ap)||a.person||'',
+    seg:a.seg,kt:a.kt||'',_i:a.crm?a.crm._i:null}; }
+window.kaltKopieren=v=>{ const m=kaltAlsMail(v); if(!m) return;
+  MAIL_AKT=[m]; mailKopieren(0,'alles'); };
+window.kaltEml=v=>{ const m=kaltAlsMail(v); if(!m) return;
+  const b=new Blob([emlText(m)],{type:'message/rfc822'});
+  const a2=document.createElement('a'); a2.href=URL.createObjectURL(b);
+  a2.download='Kaltakquise_'+String(m.kunde).replace(/[^\wÄÖÜäöü]+/g,'_').slice(0,40)+'_'+v+'.eml';
+  a2.click(); URL.revokeObjectURL(a2.href);
+  mailHistorie(m,'kalt-eml'); mblockAdd(m,'kaltakquise');
+  toast('💾 .eml erstellt · '+m.kunde+' gesperrt'); };
+window.kaltWord=v=>{ const m=kaltAlsMail(v); if(!m) return;
+  const a=KALT_ERG.analyse;
+  docxSpeichern([
+    {text:m.betreff,stil:'titel'},
+    {text:'Variante '+v+' · '+(a.firma||'ohne Firmenname')+' · '+a.seg,stil:'klein'},
+    {text:m.text},
+    {text:'Analyse',stil:'h1'},
+    {text:['Empfänger: '+(a.person||a.rolle||'nicht genannt')+(a.firma?' bei '+a.firma:''),
+      'Branche: '+a.seg,'Ort: '+(a.ort||'—')+' '+(a.kt||''),
+      'Auslöser: '+(a.trigger?a.trigger.t:'kein konkreter, Einstieg über den Branchenschmerz'),
+      'Zahlen aus dem Input: '+(a.zahlen.join(', ')||'keine')].join('\n')},
+    {text:'Follow-up',stil:'h2'},{text:KALT_ERG.followup}
+  ],'Kaltakquise_'+String(m.kunde).slice(0,30)+'_'+v);
+  toast('📄 Word-Datei erstellt'); };
+window.kaltExport=()=>{ if(!KALT_ERG){ toast('⚠ Noch nichts erzeugt'); return; }
+  const a=KALT_ERG.analyse;
+  exportRows('Kaltakquise_'+(a.firma||'Entwurf').replace(/[^\wÄÖÜäöü]+/g,'_').slice(0,30),
+    ['Variante','Betreff','Mailtext','Punkte','Wörter','Firma','Person','Branche','Ort','Kanton','Auslöser','Zahlen','Follow-up'],
+    ['A','B'].map(v=>{const m=KALT_ERG[v];
+      return [v,m.betreff,m.text,m.pruefung.punkte,m.pruefung.woerter,a.firma||'',a.person||'',a.seg,
+        a.ort||'',a.kt||'',a.trigger?a.trigger.t:'',a.zahlen.join(' | '),KALT_ERG.followup];})); };
+function kaltBlock(){
+  const r=KALT_ERG;
+  const beispiele=[
+    'Implenia baut in Beringen ein Rechenzentrum für STACK, 36 MW, Baustart Q1.',
+    'Herr Meier, Leiter Technik Kantonsspital Graubünden Chur, Erweiterungsbau 2027',
+    'Emmi'];
+  const kasten=(v)=>{ const m=r[v]; const p=m.pruefung;
+    const farbe=p.punkte>=86?'var(--green)':p.punkte>=70?'var(--orange)':'var(--red)';
+    return `<div class="card" style="border-color:${v==='A'?'var(--line2)':'var(--line)'}">
+      <div class="card-h"><h3>${v==='A'?'Variante A — zurückhaltend':'Variante B — offensiv'}</h3>
+        <span class="badge" style="background:${farbe};color:#fff">${p.punkte}/100 · ${p.stufe}</span>
+        <span class="sub">${p.woerter} Wörter</span>
+        <div style="flex:1"></div>
+        <button class="tbtn primary" onclick="kaltKopieren('${v}')">📋 Kopieren</button>
+        <button class="tbtn" onclick="kaltEml('${v}')" title="Als Outlook-Entwurf speichern">💾 .eml</button>
+        <button class="tbtn" onclick="kaltWord('${v}')">📄 Word</button></div>
+      <div class="card-b" style="padding-top:10px">
+        <div style="font-size:11px;color:var(--tx3);font-weight:700;letter-spacing:.4px">BETREFF</div>
+        <div style="font-weight:700;font-size:14.5px;margin:4px 0 12px;padding:9px 12px;background:var(--bg2);border-radius:9px">${esc(m.betreff)}</div>
+        <textarea readonly style="width:100%;min-height:330px;background:var(--bg2);border:1px solid var(--line);border-radius:11px;padding:14px 15px;font-size:13px;line-height:1.62;color:var(--tx);font-family:inherit;outline:none;resize:vertical;white-space:pre-wrap">${esc(m.text)}</textarea>
+        <div style="font-size:11.5px;color:var(--tx2);margin-top:8px"><i>Warum sie wirkt: ${v==='A'
+          ?'Der Auslöser steht vorne, der Beweis kommt über die Klasse-A-Messung, und der Abschluss ist ein einziger Termin mit Zeitfenster.'
+          :'Sie rechnet in Risiko statt in Preis, bündelt Strom, Wärme und Kälte auf einen Ansprechpartner und macht ein Angebot, das ein Wort kostet.'}</i></div>
+        ${p.probleme.length?`<div style="margin-top:8px">${p.probleme.map(x=>`<div style="font-size:11.5px;color:var(--orange)">− ${esc(x)}</div>`).join('')}</div>`:''}
+        ${p.gut.length?`<div style="margin-top:6px">${p.gut.slice(0,4).map(x=>`<div style="font-size:11.5px;color:var(--green)">+ ${esc(x)}</div>`).join('')}</div>`:''}
+      </div></div>`;};
+  return `<div class="card" style="border-color:var(--line2)"><div class="card-h">
+    <h3>🎯 Kaltakquise-Maschine</h3>
+    <span class="sub">Ein paar Wörter genügen — Firmenname, LinkedIn-Auszug, Messenotiz, Zeitungsmeldung</span>
+    <div style="flex:1"></div>
+    ${r?`<button class="tbtn" onclick="kaltExport()">📤 Export</button><button class="tbtn" onclick="kaltLeeren()">✕</button>`:''}
+    </div>
+    <div class="card-b" style="padding-top:10px">
+      <textarea id="kaltInput" placeholder="Alles rein, was du hast. Beispiel: «Implenia baut in Beringen ein Rechenzentrum für STACK, 36 MW, Baustart Q1.» Oder nur: «Emmi»."
+        style="width:100%;min-height:96px;background:var(--bg2);border:1px solid var(--line);border-radius:11px;padding:12px 14px;font-size:13px;line-height:1.55;color:var(--tx);font-family:inherit;outline:none;resize:vertical">${esc(KALT_TEXT)}</textarea>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px">
+        <button class="tbtn primary" style="padding:9px 22px;font-size:13.5px" onclick="kaltGenerieren()">⚡ Zwei Varianten erzeugen</button>
+        <span style="font-size:11.5px;color:var(--tx3)">Beispiele:</span>
+        ${beispiele.map(b=>`<button class="tbtn" style="padding:5px 11px;font-size:11px" onclick="kaltBeispiel(${JSON.stringify(b).replace(/"/g,'&quot;')})">${esc(b.slice(0,34))}…</button>`).join('')}
+      </div>
+      ${r?`<div style="background:rgba(0,113,227,.07);border:1px solid var(--blue);border-radius:11px;padding:11px 14px;margin-top:12px;font-size:12.5px;line-height:1.7">
+        <b>Analyse in drei Zeilen</b><br>
+        Empfänger: ${esc(r.analyse.person||r.analyse.rolle||'nicht namentlich genannt')}${r.analyse.firma?' bei '+esc(r.analyse.firma):''}${r.analyse.ort?' in '+esc(r.analyse.ort):''}<br>
+        Vermuteter Schmerz: ${esc(r.analyse.schmerz)}<br>
+        Gewählter Hook: ${esc(r.analyse.trigger?r.analyse.trigger.t+' als Türöffner':'Branchenschmerz, kein konkreter Auslöser im Input')}${r.analyse.zahlen.length?' · Zahlen aus dem Input: '+esc(r.analyse.zahlen.join(', ')):''}
+        ${r.analyse.annahmen.length?'<br><b>Annahme:</b> '+r.analyse.annahmen.map(esc).join(' · '):''}
+        ${r.analyse.luecken.length?'<br><b>Lücke:</b> '+r.analyse.luecken.map(esc).join(' · '):''}
+      </div>`:''}
+    </div></div>
+    ${r?kasten('A'):''}
+    ${r?kasten('B'):''}
+    ${r?`<div class="card"><div class="card-b" style="padding-top:14px;font-size:12.5px;line-height:1.7">
+      <b>Follow-up:</b> ${esc(r.followup)}</div></div>`:''}`;
+}
+/* ── Portfolio-Ansicht ── */
+function buildPortfolio(el){
+  const gruppen=[...new Set(PORTFOLIO.map(p=>p.gruppe))];
+  el.innerHTML=`<div class="hero"><h1>Portfolio</h1>
+    <p>Das gesamte Miet-Portfolio von Mobil in Time und Aggreko — Strom, Test, Klima und Service, mit Einsatzfeldern und Normbezug</p></div>
+    <div class="kpis">
+      <div class="kpi"><div class="kl">Leistungsbereiche</div><div class="kv">${PORTFOLIO.length}</div></div>
+      <div class="kpi"><div class="kl">Katalogpositionen</div><div class="kv">${KAT.length}</div></div>
+      <div class="kpi"><div class="kl">Preiszeilen CH + international</div><div class="kv">${PR.length+PRI.length}</div></div>
+      <div class="kpi"><div class="kl">Normen hinterlegt</div><div class="kv">${[...new Set(PORTFOLIO.flatMap(p=>p.normen).filter(x=>x&&x!=='—'))].length}</div></div>
+    </div>
+    <div class="card"><div class="card-h"><h3>⭐ Was MiT unterscheidet</h3></div>
+      <div class="card-b" style="padding-top:10px">
+      ${PORTFOLIO_MERKMALE.map(m=>`<div class="linkcard" style="cursor:default"><div class="t">${esc(m.t)}</div><div class="s">${esc(m.txt)}</div></div>`).join('')}
+      </div></div>
+    ${gruppen.map(g=>`<div class="card"><div class="card-h"><h3>${esc(g)}</h3>
+      <span class="sub">${PORTFOLIO.filter(p=>p.gruppe===g).length} Bereiche</span></div>
+      <div class="card-b" style="padding-top:8px">
+      ${PORTFOLIO.filter(p=>p.gruppe===g).map(p=>`<div class="ms-row" style="align-items:flex-start">
+        <span style="width:30px;font-size:17px">${p.ic}</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600;font-size:13.5px">${esc(p.t)}</div>
+          <div style="font-size:12px;color:var(--tx2);margin:2px 0 5px">${esc(p.bereich)}${p.kraftstoff&&p.kraftstoff!=='—'?' · '+esc(p.kraftstoff):''}</div>
+          ${p.merkmal?`<div style="font-size:12px;color:var(--blue);margin-bottom:5px"><b>${esc(p.merkmal)}</b></div>`:''}
+          <div style="font-size:11.5px;color:var(--tx2);margin-bottom:4px"><b>Ausführungen:</b> ${p.varianten.map(esc).join(' · ')}</div>
+          <div style="font-size:11.5px;color:var(--tx2);margin-bottom:4px"><b>Einsatz:</b> ${p.einsatz.map(esc).join(' · ')}</div>
+          ${p.normen.filter(x=>x&&x!=='—').length?`<div style="font-size:11.5px;color:var(--tx3)"><b>Norm:</b> ${p.normen.filter(x=>x&&x!=='—').map(esc).join(' · ')}</div>`:''}
+        </div>
+        <button class="tbtn" style="padding:5px 12px;font-size:11px" onclick="portKatalog(${JSON.stringify(p.katalog).replace(/"/g,'&quot;')})" title="Passende Katalogpositionen anzeigen">🔎 Katalog</button>
+      </div>`).join('')}
+      </div></div>`).join('')}
+    <div class="card"><div class="card-b" style="font-size:11.5px;color:var(--tx2);line-height:1.7;padding-top:14px">
+      Leistungsbereiche und Kennwerte aus der eigenen Mappe (Katalog, Preislisten CH und international)
+      sowie der Produktübersicht von aggreko.com, Stand August 2026. Keine erfundenen Werte:
+      Wo ein Wert fehlt, steht er nicht da.
+    </div></div>`;
+}
+window.portKatalog=kat=>{
+  const k=String(kat||'');
+  const treffer=KAT.filter(x=>new RegExp(k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i').test(String(x.kat||'')+' '+String(x.ukat||'')+' '+String(x.bez||'')));
+  Drawer.open('Katalog — '+k+' ('+treffer.length+')',
+    treffer.length?treffer.slice(0,60).map(x=>`<div class="linkcard" onclick="openKatalog(${x._i})">
+      <div class="t">${esc(x.bez||x.code)}</div>
+      <div class="s">${esc(x.kat||'')} · ${esc(x.code||'')}${x.leistung?' · '+esc(x.leistung):''}${x.spannung?' · '+esc(x.spannung):''}</div></div>`).join('')
+    :'<div class="empty" style="padding:18px">Für diesen Bereich sind im Katalog keine Positionen hinterlegt</div>');
+};
+Views.add('portfolio','Portfolio','Produkte','◈',PORTFOLIO.length,buildPortfolio);
 
 /* ═══════════════ AKQUISE-AUSWAHL FÜR DIE TERMINPLANUNG ═══════════════ */
 const AKQ_KEY='one_akquiseart_v1';
@@ -5277,6 +5815,10 @@ const EXPORT_MAP={
         return [k.co,k.seg,k.prio,k.ort,k.plz,k.kt,c[0],c[1],distKm(HOME,c),k.status,k.mail,k.tel];})); },
   bedarf:()=>bedExport(),
   planer:()=>planerExport(),
+  portfolio:()=>exportRows('Portfolio',
+    ['Gruppe','Bereich','Leistungsbereich','Kraftstoff','Ausführungen','Einsatzfelder','Normen','Besonderheit'],
+    PORTFOLIO.map(p=>[p.gruppe,p.t,p.bereich,p.kraftstoff,p.varianten.join(' | '),
+      p.einsatz.join(' | '),p.normen.join(' | '),p.merkmal||''])),
   recherche:()=>exportRows('Marktrecherche_CH',RAW.recherche.headers,RAW.recherche.rows),
   mails:()=>{ if(MAILQ.length){
       exportRows('Mail_Warteschlange',['Firma','Ansprechpartner','E-Mail','Kanton','Segment','Betreff','Mailtext','Menschlichkeit','Status'],
