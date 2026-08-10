@@ -246,8 +246,14 @@ die einzelne Läufe nicht zeigen:
   verändern.
 
 Letzter Lauf: **5 / 5 Durchgänge fehlerfrei**, identischer Fingerabdruck
-`18a70c3c540f5fc0`, idempotent — 0 Fehlerwerte in 25'847 Formeln, 20'099
-unabhängig nachgerechnete Werte ohne Abweichung, 17 / 17 Verhaltenstests.
+`4f9385248d683e19`, idempotent — 0 Fehlerwerte in 25'847 Formeln, 20'038
+unabhängig nachgerechnete Werte ohne Abweichung, 21 / 21 Verhaltenstests,
+28'570 Excel-Prüfungen ohne Befund.
+
+Die Stufe «Dateibereinigung» meldet in **jedem** Durchgang denselben
+Doppeleintrag — der Werkzeugweg erzeugt ihn reproduzierbar, und die Stufe
+entfernt ihn ebenso reproduzierbar. Deshalb ist sie fester Teil der Kette
+und keine einmalige Reparatur.
 
 Die Mappe enthält zusätzlich eine **eingebaute Selbstkontrolle** (⚖️-Blatt,
 Abschnitt 3): sie rechnet die gewichtete Pipeline auf zwei unabhängigen Wegen
