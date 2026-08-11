@@ -70,60 +70,58 @@ UEB = "'Übungen'"       # Blattname mit Umlaut -> in Formeln immer quoten
 # reha_daten.py und werden unten anhand des Übungsnamens zugeordnet.
 UEBUNGEN = [
     dict(name="Beinpresse", block="Beine vorne",
-         geraet="Beinpresse, tiefe Fussposition", von=8, bis=12, saetze=3,
+         geraet="Beinpresse, tiefe Fussposition", von=5, bis=8, saetze=3,
          rpe="8-9", start=None, maxlast=None, schritt=10, letzter="A",
          aktiv=True,
          notiz="Ersetzt Hackenschmidt-Kniebeuge und Lunges. Schwere "
                "Grundübung zuerst. Hände seitlich ablegen statt an den "
                "Griffen ziehen - dann bleibt die Schulter aussen vor."),
     dict(name="Split Squat", block="Beine vorne",
-         geraet="Multipresse / Hantel", von=8, bis=10, saetze=3, rpe="8",
+         geraet="Multipresse / Hantel", von=5, bis=8, saetze=3, rpe="8",
          start=None, maxlast=None, schritt=5, letzter="A", aktiv=True,
          notiz="Wdh-Bereich von 5-8 auf 8-10 je Bein. Limiter soll der "
                "Muskel sein, nicht die Stabilität."),
     dict(name="Beinstrecker", block="Beine vorne", geraet="Maschine",
-         von=12, bis=15, saetze=3, rpe="9", start=None, maxlast=None,
+         von=5, bis=8, saetze=3, rpe="9", start=None, maxlast=None,
          schritt=5, letzter="R", aktiv=True,
          notiz="Dritter Arbeitssatz läuft als Reduktionssatz aus."),
     dict(name="Adduktion", block="Beine vorne", geraet="Maschine",
-         von=15, bis=20, saetze=3, rpe="9", start=None, maxlast=None,
+         von=5, bis=8, saetze=3, rpe="9", start=None, maxlast=None,
          schritt=2.5, letzter="R", aktiv=True,
          notiz="Deckel entfernt: in Einheit 5 lagen 162.5 kg an, die frühere "
                "Annahme 152.5 kg als Stackende stimmt also nicht. Falls doch "
                "eine Obergrenze existiert, hier unter 'Max (kg)' "
                "eintragen."),
     dict(name="Rumänisches Kreuzheben", block="Beine hinten",
-         geraet="Langhantel", von=10, bis=12, saetze=3, rpe="8", start=None,
+         geraet="Langhantel", von=5, bis=8, saetze=3, rpe="8", start=None,
          maxlast=None, schritt=2.5, letzter="A", aktiv=True,
          notiz="Ersetzt Kickback. Schliesst die Lücke Hüftstreckung bei "
                "gestrecktem Knie, Ischiokrurale und Gluteus in der Dehnung."),
     dict(name="Hip Thrust", block="Beine hinten", geraet="Langhantel",
-         von=10, bis=12, saetze=3, rpe="8-9", start=None, maxlast=None,
+         von=5, bis=8, saetze=3, rpe="8-9", start=None, maxlast=None,
          schritt=10, letzter="A", aktiv=True,
          notiz="Gesamtgewicht inkl. Stange notieren, auch bei "
                "Reduktionssätzen."),
     dict(name="Beinbeuger", block="Beine hinten", geraet="Maschine, sitzend",
-         von=10, bis=15, saetze=3, rpe="9", start=None, maxlast=None,
+         von=5, bis=8, saetze=3, rpe="9", start=None, maxlast=None,
          schritt=5, letzter="R", aktiv=True,
          notiz="Sitzend statt liegend: Hüfte gebeugt, Ischiokrurale "
                "vorgedehnt, mehr Reiz pro Satz. Dritter Satz als "
                "Reduktionssatz."),
     dict(name="Seitliche Kickbacks", block="Beine hinten", geraet="Kabel",
-         von=10, bis=12, saetze=3, rpe="9", start=None, maxlast=None,
+         von=5, bis=8, saetze=3, rpe="9", start=None, maxlast=None,
          schritt=2, letzter="A", aktiv=True,
          notiz="Gluteus medius, relevant für die Silhouette von vorne."),
-    dict(name="Waden", block="Beine hinten", geraet="Maschine", von=10,
-         bis=15, saetze=3, rpe="9", start=None, maxlast=None, schritt=5,
+    dict(name="Waden", block="Beine hinten", geraet="Maschine", von=5, bis=8, saetze=3, rpe="9", start=None, maxlast=None, schritt=5,
          letzter="A", aktiv=True,
          notiz="In jede Beineinheit, bisher nur in jeder zweiten."),
     # Archiv: raus aus der Planung, Historie bleibt in Log und Auswertung.
-    dict(name="Lunges", block="Beine vorne", geraet="Kurzhantel", von=10,
-         bis=12, saetze=None, rpe=None, start=None, maxlast=None,
+    dict(name="Lunges", block="Beine vorne", geraet="Kurzhantel", von=5, bis=8, saetze=None, rpe=None, start=None, maxlast=None,
          schritt=None, letzter="A", aktiv=False,
          notiz="Archiv. Redundant zum Split Squat, Historie bleibt in den "
                "Auswertungen sichtbar."),
     dict(name="Kickback", block="Beine hinten", geraet="Maschine / Kabel",
-         von=10, bis=15, saetze=None, rpe=None, start=None, maxlast=None,
+         von=5, bis=8, saetze=None, rpe=None, start=None, maxlast=None,
          schritt=None, letzter="A", aktiv=False,
          notiz="Archiv. Von Hip Thrust und RDL abgedeckt, Historie bleibt "
                "erhalten."),
@@ -495,13 +493,24 @@ for lab, txt in [
      "Anstrengung 6 bis 10. 10 = keine Wiederholung mehr möglich. Optional, "
      "aber sehr hilfreich für die Steuerung. Die Zielwerte je Übung stehen "
      "im Blatt 'Übungen'."),
+    ("Zielbereich 5 bis 8 Wdh",
+     "Alle Übungen laufen im selben Bereich: 5 bis 8 Wiederholungen je "
+     "Arbeitssatz. Kraftlastig, dafür brauchen die Sätze längere Pausen - "
+     "drei bis vier Minuten bei den schweren Übungen."),
     ("Doppelte Progression",
-     "So wird gesteigert: Zuerst die Wiederholungen bis ans obere Ende des "
-     "Zielbereichs bringen - bei 8-12 also bis alle Arbeitssätze 12 "
-     "schaffen. Erst dann kommt eine Laststufe drauf und die "
-     "Wiederholungen fangen unten wieder an. Bezug ist immer der "
-     "schwächste Satz, nicht der beste. Das Blatt rechnet den nächsten "
-     "Schritt selbst aus, sobald du die Einheit eingetragen hast."),
+     "So wird gesteigert, und zwar nach jedem Training neu: Solange der "
+     "schwächste Arbeitssatz unter 8 Wdh liegt, bleibt das Gewicht stehen "
+     "und es kommt eine Wiederholung dazu. Schaffen alle Sätze 8, kommt "
+     "Gewicht drauf und die Wiederholungen fangen bei 5 wieder an. Bezug "
+     "ist immer der schwächste Satz, nicht der beste. Sobald du die "
+     "Einheit ins Log tippst, steht der nächste Schritt da."),
+    ("Umstellungsphase",
+     "Weil der Bereich von 10 bis 20 Wdh auf 5 bis 8 wechselt, sind die "
+     "aktuellen Gewichte zu leicht. Liegt der schwächste Satz deutlich "
+     "über 8 Wdh, springt der Vorschlag entsprechend grösser - rund 2.5 "
+     "Prozent je Wiederholung darüber, höchstens 15 Prozent pro Einheit. "
+     "Nach zwei bis drei Einheiten bist du im Bereich, danach läuft die "
+     "normale Progression."),
     ("Archiv",
      "Übung im Blatt 'Übungen' auf Aktiv = nein setzen. Sie verschwindet aus "
      "dem Trainingsblatt, bleibt in Log, Auswertung, Progression und "
@@ -1132,8 +1141,19 @@ for k in range(EX_SLOTS):
     u_max = "%s!$I%d" % (UEB, ueb_row)
     u_schritt = "%s!$J%d" % (UEB, ueb_row)
     schritt = "IF(%s=\"\",0,%s)" % (u_schritt, u_schritt)
-    hoch = "$L%d+%s" % (row, schritt)             # eine Laststufe drauf
-    gedeckelt = "IF(%s=\"\",%s,MIN(%s,%s))" % (u_max, hoch, hoch, u_max)
+    # Liegt der schwächste Satz deutlich über dem Zielbereich, reicht eine
+    # Laststufe nicht: 16 Wdh werden durch +2.5 kg nicht zu 5-8. Dann
+    # skaliert der Sprung mit dem Überschuss, rund 2.5 Prozent je Wdh
+    # darüber, gedeckelt bei 15 Prozent - so landet man in zwei bis drei
+    # Einheiten im Bereich statt in zehn.
+    ueberschuss = "MAX(0,$N%d-%s)" % (row, u_bis)
+    faktor = "1+MIN(0.15,0.025*(%s+1))" % ueberschuss
+    kandidat = ("IF(%s=0,ROUND($L%d*(%s)*2,0)/2,"
+                "MAX($L%d+%s,ROUND($L%d*(%s)/%s,0)*%s))"
+                % (schritt, row, faktor, row, schritt, row, faktor,
+                   schritt, schritt))
+    gedeckelt = "IF(%s=\"\",%s,MIN(%s,%s))" % (u_max, kandidat, kandidat,
+                                                u_max)
     reif = "AND($N%d<>\"\",%s<>\"\",$N%d>=%s)" % (row, u_bis, row, u_bis)
 
     # Nächstes Zielgewicht
@@ -1150,7 +1170,8 @@ for k in range(EX_SLOTS):
     wsr.cell(row, 17,
              "=IF($O%d=\"\",\"\",IF($L%d=\"\",\"Einstieg mit "
              "Startgewicht\",IF(AND(%s,$O%d>$L%d),\"Gewicht +\"&"
-             "TEXT($O%d-$L%d,\"0.#\")&\" kg, Wdh zurück auf \"&%s,"
+             "TEXT($O%d-$L%d,\"0.#\")&\" kg, Wdh zurück auf \"&%s&"
+             "IF($N%d>%s+2,\"  (Umstellung auf den neuen Bereich)\",\"\"),"
              "IF(AND(%s,%s=\"\"),\"Zielbereich voll - dafür fehlt "
              "'Schritt (kg)' im Blatt Übungen\","
              "IF(%s,\"Obergrenze erreicht - über Tempo und Pausen "
@@ -1158,8 +1179,8 @@ for k in range(EX_SLOTS):
              "erst \"&%s&"
              "\" Wdh sauber schaffen\",\"Wdh +1 auf \"&$P%d&"
              "\" bei gleichem Gewicht\"))))))"
-             % (row, row, reif, row, row, row, row, u_von, reif, u_schritt,
-                reif, row, row, u_von, u_von, row))
+             % (row, row, reif, row, row, row, row, u_von, row, u_bis,
+                reif, u_schritt, reif, row, row, u_von, u_von, row))
     fmts = {3: NF_INT, 4: NF_INT, 5: NF_INT, 6: NF_KG, 7: NF_INT, 8: NF_KG,
             9: NF_INT, 10: NF_INT, 11: NF_INT, 12: NF_KG, 13: NF_INT,
             14: NF_INT, 15: NF_KG, 16: NF_INT}
