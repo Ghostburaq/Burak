@@ -11,10 +11,10 @@ from __future__ import annotations
 
 import hashlib
 import json
-from datetime import datetime
+from datetime import date, datetime, time
 from pathlib import Path
 
-from .model import Aktivitaet, leere_felder
+from .model import Aktivitaet, leere_felder, wert_konvertieren
 
 
 def datei_hash(pfad: Path) -> str:
@@ -30,6 +30,7 @@ class Registry:
         self.pfad = pfad
         self.eintraege: dict[str, Aktivitaet] = {}
         self.quellen: dict[str, dict] = {}       # hash -> Metadaten der Quelldatei
+        self.korrekturen: dict[str, dict] = {}   # id -> {Feld: Wert} aus Excel
         if pfad.exists():
             self._laden()
 
@@ -37,6 +38,7 @@ class Registry:
     def _laden(self) -> None:
         daten = json.loads(self.pfad.read_text(encoding="utf-8"))
         self.quellen = daten.get("quellen", {})
+        self.korrekturen = daten.get("korrekturen", {})
         for roh in daten.get("eintraege", []):
             a = Aktivitaet.from_json(roh)
             self.eintraege[a.id] = a
@@ -44,10 +46,13 @@ class Registry:
     def speichern(self) -> None:
         self.pfad.parent.mkdir(parents=True, exist_ok=True)
         daten = {
-            "schema": 1,
+            "schema": 2,
             "aktualisiert": datetime.now().isoformat(timespec="seconds"),
             "quellen": self.quellen,
-            "eintraege": [a.to_json() for a in self.sortiert()],
+            "korrekturen": self.korrekturen,
+            # bewusst die unkorrigierten Rohdaten — die Korrekturen stehen
+            # separat und werden erst bei der Ausgabe daruebergelegt
+            "eintraege": [a.to_json() for a in self._roh_sortiert()],
         }
         self.pfad.write_text(json.dumps(daten, ensure_ascii=False, indent=2), encoding="utf-8")
 
@@ -99,9 +104,42 @@ class Registry:
         self.eintraege[neu.id] = zusammen
         return "aktualisiert"
 
+    # -- Korrekturen aus Excel --------------------------------------------
+    def korrekturen_uebernehmen(self, neue: dict[str, dict]) -> int:
+        """Speichert von Hand geänderte Felder. Rückgabe: Anzahl Änderungen."""
+        anzahl = 0
+        for kennung, felder in neue.items():
+            for feld, wert in felder.items():
+                if isinstance(wert, (datetime, date, time)):
+                    wert = wert.isoformat()
+                vorhanden = self.korrekturen.setdefault(kennung, {})
+                if vorhanden.get(feld) != wert:
+                    vorhanden[feld] = wert
+                    anzahl += 1
+        return anzahl
+
+    def _korrektur_anwenden(self, eintrag: Aktivitaet) -> Aktivitaet:
+        felder = self.korrekturen.get(eintrag.id)
+        if not felder:
+            return eintrag
+        kopie = Aktivitaet(**eintrag.__dict__)
+        for feld, wert in felder.items():
+            if not hasattr(kopie, feld):
+                continue
+            try:
+                setattr(kopie, feld, wert_konvertieren(feld, wert))
+            except (ValueError, TypeError):
+                continue
+        return kopie
+
     # -- Abfrage ----------------------------------------------------------
+    def _roh_sortiert(self) -> list[Aktivitaet]:
+        return sorted(self.eintraege.values(), key=lambda a: a.sortierschluessel())
+
     def sortiert(self) -> list[Aktivitaet]:
-        liste = sorted(self.eintraege.values(), key=lambda a: a.sortierschluessel())
+        """Ausgabeliste: Rohdaten mit daruebergelegten Excel-Korrekturen."""
+        liste = [self._korrektur_anwenden(a) for a in self._roh_sortiert()]
+        liste.sort(key=lambda a: a.sortierschluessel())
         for nummer, eintrag in enumerate(liste, start=1):
             eintrag.nr = nummer
         return liste

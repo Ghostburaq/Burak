@@ -10,9 +10,14 @@ from openpyxl import Workbook
 from openpyxl.formatting.rule import DataBarRule
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
+from openpyxl.worksheet.datavalidation import DataValidation
 from openpyxl.worksheet.worksheet import Worksheet
 
-from .model import BREITEN, FELDNAMEN, KATEGORIEN, UEBERSCHRIFTEN, Aktivitaet
+from .model import (BREITEN, EINGABE_SPALTEN, FELDNAMEN, KATEGORIEN,
+                    STATUS_AUSWAHL, UEBERSCHRIFTEN, Aktivitaet)
+
+EINGABE_BLATT = "Eingabe"
+LEERE_EINGABEZEILEN = 40
 
 # Farbwelt (an das bestehende Deck-Design angelehnt)
 NAVY = "FF1B2430"
@@ -133,7 +138,82 @@ def _blatt_aktivitaeten(mappe: Workbook, eintraege: list[Aktivitaet]) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Blatt 2: Tagesuebersicht
+# Blatt 2: Eingabe (haendisch tippen, wird beim naechsten Lauf eingelesen)
+# ---------------------------------------------------------------------------
+
+def _blatt_eingabe(mappe: Workbook) -> None:
+    blatt = mappe.create_sheet(EINGABE_BLATT, index=1)
+    feldnamen = [s[0] for s in EINGABE_SPALTEN]
+    kopf = [s[1] for s in EINGABE_SPALTEN]
+    breiten = [s[2] for s in EINGABE_SPALTEN]
+    letzte = get_column_letter(len(kopf))
+
+    # Hinweiszeile ueber den Ueberschriften
+    blatt.merge_cells(f"A1:{letzte}1")
+    hinweis = blatt.cell(row=1, column=1, value=(
+        "Hier Aktivitäten von Hand eintippen — eine Zeile pro Vorgang. "
+        "Pflicht sind nur Datum und Titel. Beim nächsten Lauf von "
+        "«python3 src/aktivitaeten/cli.py» werden die Zeilen übernommen, "
+        "erscheinen im Blatt «Aktivitäten» und dieses Blatt ist wieder leer. "
+        "ID-Spalte leer lassen — die vergibt das Tool."))
+    hinweis.font = Font(name="Calibri", size=10, bold=True, color=WEISS)
+    hinweis.fill = PatternFill("solid", fgColor=ROT)
+    hinweis.alignment = Alignment(horizontal="left", vertical="center", wrap_text=True)
+    blatt.row_dimensions[1].height = 32
+
+    _kopfzeile(blatt, kopf, breiten, zeile=2)
+
+    erste_datenzeile = 3
+    letzte_datenzeile = erste_datenzeile + LEERE_EINGABEZEILEN - 1
+
+    kategorie_auswahl = DataValidation(
+        type="list", allow_blank=True,
+        formula1='"' + ",".join(KATEGORIEN.keys()) + '"',
+        prompt="Kategorie wählen (oder leer lassen — dann rät das Tool)",
+        promptTitle="Kategorie")
+    status_auswahl = DataValidation(
+        type="list", allow_blank=True,
+        formula1='"' + ",".join(STATUS_AUSWAHL) + '"',
+        prompt="Status wählen oder frei eintippen", promptTitle="Status")
+    blatt.add_data_validation(kategorie_auswahl)
+    blatt.add_data_validation(status_auswahl)
+
+    for zeile in range(erste_datenzeile, letzte_datenzeile + 1):
+        for spalte, feld in enumerate(feldnamen, start=1):
+            zelle = blatt.cell(row=zeile, column=spalte)
+            zelle.border = GITTER
+            zelle.font = Font(name="Calibri", size=10)
+            zelle.alignment = Alignment(vertical="top",
+                                        wrap_text=feld in ("titel", "notizen",
+                                                           "naechster_schritt", "bedarf"))
+            if zeile % 2 == 0:
+                zelle.fill = PatternFill("solid", fgColor=HELLGRAU)
+            if feld == "datum":
+                zelle.number_format = DATUM_FORMAT
+            elif feld in ("von", "bis"):
+                zelle.number_format = ZEIT_FORMAT
+                zelle.alignment = Alignment(horizontal="center", vertical="top")
+            elif feld in ("wert_chf", "potenzial_chf"):
+                zelle.number_format = GELD_FORMAT
+            elif feld == "wahrscheinlichkeit":
+                zelle.number_format = "0"
+                zelle.alignment = Alignment(horizontal="center", vertical="top")
+            elif feld == "id":
+                zelle.font = Font(name="Consolas", size=8, color="FFB0B6BD")
+        blatt.row_dimensions[zeile].height = 22
+
+    spalte_kategorie = get_column_letter(feldnamen.index("kategorie") + 1)
+    spalte_status = get_column_letter(feldnamen.index("status") + 1)
+    kategorie_auswahl.add(f"{spalte_kategorie}{erste_datenzeile}:"
+                          f"{spalte_kategorie}{letzte_datenzeile}")
+    status_auswahl.add(f"{spalte_status}{erste_datenzeile}:{spalte_status}{letzte_datenzeile}")
+
+    blatt.freeze_panes = "B3"
+    blatt.sheet_view.showGridLines = False
+
+
+# ---------------------------------------------------------------------------
+# Blatt 3: Tagesuebersicht
 # ---------------------------------------------------------------------------
 
 def _blatt_tage(mappe: Workbook, eintraege: list[Aktivitaet]) -> None:
@@ -330,6 +410,7 @@ def schreiben(ziel: Path, eintraege: list[Aktivitaet], quellen: dict[str, dict])
     mappe.properties.creator = "Aktivitaeten-Pipeline"
 
     _blatt_aktivitaeten(mappe, eintraege)
+    _blatt_eingabe(mappe)
     _blatt_tage(mappe, eintraege)
     _blatt_pipeline(mappe, eintraege)
     _blatt_kontakte(mappe, eintraege)

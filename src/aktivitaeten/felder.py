@@ -305,7 +305,10 @@ def kategorie_bestimmen(titel: str, notizen: str, typ: str, ort: str = "") -> st
         return "Interne Arbeit"
     if "beratung" in titel_klein:
         return "Beratung"
-    if re.search(r"\b(besprechung|meeting|termin|begehung|workshop|abnahme)\b", titel_klein):
+    # ohne fuehrende Wortgrenze, damit auch Zusammensetzungen greifen
+    # ("Baustellenbegehung", "Kundentermin", "Projektbesprechung")
+    if re.search(r"(besprechung|meeting|termin|begehung|workshop|abnahme|inbetriebnahme)\b",
+                 titel_klein):
         return "Kundentermin"
     if re.search(r"\b(telefon|call|anruf)\b", titel_klein):
         return "Beratung"

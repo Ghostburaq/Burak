@@ -14,11 +14,11 @@ from pathlib import Path
 
 if __package__ in (None, ""):                     # Direktaufruf ohne -m
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-    from aktivitaeten import andere, emlfile, excel, icsfile      # type: ignore
-    from aktivitaeten.model import Aktivitaet                      # type: ignore
-    from aktivitaeten.registry import Registry, datei_hash         # type: ignore
+    from aktivitaeten import andere, emlfile, excel, excelimport, icsfile   # type: ignore
+    from aktivitaeten.model import Aktivitaet                                # type: ignore
+    from aktivitaeten.registry import Registry, datei_hash                   # type: ignore
 else:
-    from . import andere, emlfile, excel, icsfile
+    from . import andere, emlfile, excel, excelimport, icsfile
     from .model import Aktivitaet
     from .registry import Registry, datei_hash
 
@@ -61,6 +61,8 @@ def datei_verarbeiten(pfad: Path, notiz: str = "") -> tuple[list[Aktivitaet], st
     if endung == ".eml":
         text = roh_bytes.decode("utf-8", "replace")
         return emlfile.parsen(str(pfad), text, pfad.name, hash_wert), "E-Mail"
+    if endung in (".xlsx", ".xlsm"):
+        return excelimport.fremde_mappe_lesen(pfad), "Excel-Import"
     if endung == ".txt":
         # "bild.png.txt" oder "bild.txt" neben "bild.png" ist eine Notiz zur Datei
         geschwister = [p for p in pfad.parent.iterdir()
@@ -84,6 +86,7 @@ def report_schreiben(ziel: Path, eintraege: list[Aktivitaet], quellen: dict,
     zeilen.append("## Lauf\n")
     zeilen.append(f"- neu erfasst: **{bilanz['neu']}**")
     zeilen.append(f"- aktualisiert: **{bilanz['aktualisiert']}**")
+    zeilen.append(f"- manuelle Korrekturen aus Excel: **{bilanz.get('korrekturen', 0)}**")
     zeilen.append(f"- unverändert (Duplikat): **{bilanz['unveraendert']}**")
     zeilen.append(f"- übersprungene Dateien (identisch bereits importiert): "
                   f"**{bilanz['dateien_doppelt']}**\n")
@@ -132,18 +135,39 @@ def main(argv: list[str] | None = None) -> int:
                         help="Registry verwerfen und alles neu einlesen")
     parser.add_argument("--excel", default=str(EXCEL), help="Zielpfad der Excel-Datei")
     parser.add_argument("--registry", default=str(REGISTRY), help="Pfad der Registry-JSON")
+    parser.add_argument("--ohne-excel-rueckimport", action="store_true",
+                        help="Blatt «Eingabe» und manuelle Korrekturen nicht zurücklesen")
     argumente = parser.parse_args(argv)
 
     registry_pfad = Path(argumente.registry)
+    excel_pfad = Path(argumente.excel)
     if argumente.neu_aufbauen and registry_pfad.exists():
         registry_pfad.unlink()
     registry = Registry(registry_pfad)
+    bilanz = {"neu": 0, "aktualisiert": 0, "unveraendert": 0,
+              "dateien_doppelt": 0, "korrekturen": 0}
+
+    # Zuerst zurücklesen, was in der bestehenden Mappe von Hand eingetragen
+    # oder korrigiert wurde — sonst wäre es nach dem Neuschreiben weg.
+    if excel_pfad.exists() and not argumente.ohne_excel_rueckimport:
+        try:
+            korrekturen = excelimport.korrekturen_lesen(excel_pfad, registry.eintraege)
+            bilanz["korrekturen"] = registry.korrekturen_uebernehmen(korrekturen)
+            if bilanz["korrekturen"]:
+                print(f"  ✎ {bilanz['korrekturen']} manuelle Korrektur(en) "
+                      f"aus Blatt «Aktivitäten» übernommen")
+            for eintrag in excelimport.eingabezeilen_lesen(excel_pfad):
+                ergebnis = registry.aufnehmen(eintrag)
+                bilanz[ergebnis] += 1
+                if ergebnis != "unveraendert":
+                    datum = f"{eintrag.datum:%d.%m.%Y}" if eintrag.datum else "ohne Datum"
+                    print(f"  ✎ {datum}  {eintrag.titel[:60]}  (Blatt «Eingabe»)")
+        except Exception as fehler:
+            print(f"  ! Excel-Rückimport übersprungen: {type(fehler).__name__}: {fehler}")
 
     dateien = dateien_sammeln(argumente.dateien)
-    if not dateien:
+    if not dateien and not registry.eintraege:
         print("Keine Dateien gefunden. Lege etwas in inbox/ ab oder gib Pfade an.")
-
-    bilanz = {"neu": 0, "aktualisiert": 0, "unveraendert": 0, "dateien_doppelt": 0}
 
     for pfad in dateien:
         hash_wert = datei_hash(pfad)
@@ -174,11 +198,19 @@ def main(argv: list[str] | None = None) -> int:
 
     registry.speichern()
     eintraege = registry.sortiert()
-    ziel = excel.schreiben(Path(argumente.excel), eintraege, registry.quellen)
+    try:
+        ziel = excel.schreiben(excel_pfad, eintraege, registry.quellen)
+    except PermissionError:
+        print(f"\n! {excel_pfad} lässt sich nicht schreiben — die Datei ist "
+              f"vermutlich noch in Excel geöffnet.\n"
+              f"  Excel schliessen und den Befehl erneut ausführen. "
+              f"Die eingelesenen Daten sind bereits gesichert.")
+        return 1
     report_schreiben(REPORT, eintraege, registry.quellen, bilanz)
 
     print(f"\n{len(eintraege)} Einträge gesamt "
           f"(neu {bilanz['neu']}, aktualisiert {bilanz['aktualisiert']}, "
+          f"Korrekturen {bilanz['korrekturen']}, "
           f"Duplikate {bilanz['unveraendert'] + bilanz['dateien_doppelt']})")
     print(f"Excel:    {ziel}")
     print(f"Report:   {REPORT}")

@@ -140,26 +140,75 @@ class Aktivitaet:
 
     @classmethod
     def from_json(cls, roh: dict[str, Any]) -> "Aktivitaet":
-        typen = {f.name: f.type for f in fields(cls)}
-        werte: dict[str, Any] = {}
-        for key, wert in roh.items():
-            if key not in typen:
-                continue
-            if wert in (None, ""):
-                werte[key] = wert
-                continue
-            deklariert = str(typen[key])
-            if key in ("erfasst_am", "aktualisiert_am"):
-                werte[key] = datetime.fromisoformat(wert)
-            elif key in ("datum", "enddatum"):
-                werte[key] = date.fromisoformat(wert)
-            elif key in ("von", "bis"):
-                werte[key] = time.fromisoformat(wert)
-            elif "float" in deklariert and not isinstance(wert, bool):
-                werte[key] = float(wert)
-            else:
-                werte[key] = wert
+        werte = {key: wert_konvertieren(key, wert) for key, wert in roh.items()
+                 if key in {f.name for f in fields(cls)}}
         return cls(**werte)
+
+
+_TYPEN = {f.name: str(f.type) for f in fields(Aktivitaet)}
+
+
+def wert_konvertieren(feld: str, wert: Any) -> Any:
+    """Bringt einen Wert (aus JSON oder Excel) in den Typ des Feldes."""
+    if wert in (None, ""):
+        return wert
+    if feld in ("erfasst_am", "aktualisiert_am"):
+        return wert if isinstance(wert, datetime) else datetime.fromisoformat(str(wert))
+    if feld in ("datum", "enddatum"):
+        if isinstance(wert, datetime):
+            return wert.date()
+        return wert if isinstance(wert, date) else date.fromisoformat(str(wert))
+    if feld in ("von", "bis"):
+        if isinstance(wert, datetime):
+            return wert.time().replace(second=0, microsecond=0)
+        return wert if isinstance(wert, time) else time.fromisoformat(str(wert))
+    if "float" in _TYPEN.get(feld, "") and not isinstance(wert, bool):
+        if isinstance(wert, str):
+            wert = wert.replace("'", "").replace("’", "").replace("%", "").replace(" ", "")
+            wert = wert.replace(",", ".") if wert.count(",") == 1 else wert.replace(",", "")
+        return float(wert)
+    if "int" in _TYPEN.get(feld, "") and not isinstance(wert, bool):
+        return int(wert)
+    if "bool" in _TYPEN.get(feld, ""):
+        return bool(wert) if not isinstance(wert, str) else wert.strip().lower() in ("ja", "wahr", "true", "x", "1")
+    return str(wert).strip() if not isinstance(wert, str) else wert.strip()
+
+
+# Felder, die in Excel geaendert werden duerfen und beim naechsten Lauf als
+# manuelle Korrektur erhalten bleiben.
+EDITIERBAR = [
+    "datum", "von", "bis", "dauer_h", "kategorie", "titel", "firma", "kontakt",
+    "email", "telefon", "ort", "status", "naechster_schritt", "bedarf",
+    "hauptprodukt", "wahrscheinlichkeit", "wert_chf", "potenzial_chf",
+    "forecast_chf", "follow_up", "organisator", "teilnehmer", "website", "notizen",
+]
+
+# Spalten des Eingabeblatts: (Feldname, Ueberschrift, Breite)
+EINGABE_SPALTEN: list[tuple[str, str, int]] = [
+    ("datum", "Datum *", 12),
+    ("von", "Von", 8),
+    ("bis", "Bis", 8),
+    ("kategorie", "Kategorie", 20),
+    ("titel", "Titel *", 40),
+    ("firma", "Firma / Gegenstelle", 26),
+    ("kontakt", "Kontakt", 22),
+    ("email", "E-Mail", 28),
+    ("telefon", "Telefon", 18),
+    ("ort", "Ort", 24),
+    ("status", "Status", 18),
+    ("naechster_schritt", "Nächster Schritt", 32),
+    ("bedarf", "Bedarf", 26),
+    ("hauptprodukt", "Hauptprodukt", 20),
+    ("wahrscheinlichkeit", "Wahrsch. %", 11),
+    ("wert_chf", "Wert CHF", 13),
+    ("potenzial_chf", "Potenzial CHF", 14),
+    ("follow_up", "Follow-up", 16),
+    ("notizen", "Notizen", 50),
+    ("id", "ID (leer lassen)", 24),
+]
+
+STATUS_AUSWAHL = ["Offen", "In Arbeit", "Wiedervorlage", "Erledigt", "Bestätigt",
+                  "Abgesagt", "Kein Interesse", "Angebot draussen"]
 
 
 def leere_felder(a: Aktivitaet) -> int:
