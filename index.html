@@ -6,6 +6,7 @@
 <title>Talia Fiege — IFBB Pro Athlete &amp; Online Fitness Coach</title>
 <meta name="description" content="Talia Fiege — IFBB Pro athlete, certified fitness trainer and online coach. Custom training plans, 1:1 online coaching and contest prep for women who want real strength.">
 <meta name="theme-color" content="#FFFFFF">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%230071E3'/><text x='32' y='45' font-family='-apple-system,Helvetica,Arial' font-size='31' font-weight='700' fill='white' text-anchor='middle'>TF</text></svg>">
 <link rel="canonical" href="https://www.taliafiege.com/">
 
 <!-- Open Graph / social -->
@@ -24,6 +25,29 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://static.wixstatic.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<!-- ============================================================
+     SITE CONFIG — the only block you need to edit.
+
+     Paste each affiliate URL and discount code between the quotes.
+     Anything left empty stays in a clean "coming soon" state:
+     the card shows no code and its Shop link is disabled, so the
+     page never ships a dead link or a fake code.
+     ============================================================ -->
+<script>
+window.SITE = {
+  youtube: "",                                  /* full channel URL, e.g. https://www.youtube.com/@handle */
+
+  essentials: {
+    legion:       { url: "", code: "" },        /* Legion Supplements */
+    angel:        { url: "", code: "" },        /* Angel Competition Bikinis */
+    bodykore:     { url: "", code: "" },        /* BodyKore */
+    muscleegg:    { url: "", code: "" },        /* MuscleEgg */
+    bones:        { url: "", code: "" },        /* Bones Coffee */
+    americanDream:{ url: "", code: "" }         /* American Dream Nut Butter */
+  }
+};
+</script>
 
 <style>
 /* ============================================================
@@ -620,6 +644,68 @@ label{display:block;font-size:.8125rem;color:var(--text-2);font-weight:500;margi
 .footer a:hover{text-decoration:underline}
 
 /* ============================================================
+   COPY-CODE BUTTON + DISABLED LINKS
+   ============================================================ */
+.code-copy{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:26px;height:26px;padding:0;border-radius:8px;cursor:pointer;
+  border:1px solid var(--line-soft);
+  background:linear-gradient(180deg,#FFFFFF,#FAFAFC);
+  color:var(--text-2);box-shadow:var(--e1);
+  transition:transform .2s var(--ease), box-shadow .2s var(--ease), color .2s var(--ease);
+}
+.code-copy:hover{color:var(--blue);transform:translateY(-1px);box-shadow:var(--e2)}
+.code-copy.is-done{color:#1D8A3F;border-color:rgba(29,138,63,.35)}
+.link[aria-disabled="true"],.social[aria-disabled="true"]{color:var(--text-3);pointer-events:none}
+
+/* ============================================================
+   GALLERY LIGHTBOX
+   ============================================================ */
+.shot__open{
+  position:absolute;inset:0;z-index:3;border:0;padding:0;
+  background:none;cursor:zoom-in;border-radius:inherit;
+}
+.shot__open:focus-visible{outline:3px solid var(--blue);outline-offset:-4px}
+
+html.lb-open{overflow:hidden}
+.lightbox{
+  position:fixed;inset:0;
+  width:100vw;max-width:100vw;height:100svh;max-height:100svh;
+  margin:0;padding:0;border:0;background:transparent;overflow:hidden;
+}
+.lightbox::backdrop{
+  background:rgba(245,245,247,.86);
+  backdrop-filter:blur(26px) saturate(160%);-webkit-backdrop-filter:blur(26px) saturate(160%);
+}
+.lightbox__inner{
+  width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+  padding:clamp(3.5rem,8vw,6rem);
+}
+.lightbox__inner img{
+  max-width:100%;max-height:100%;width:auto;height:auto;
+  border-radius:clamp(14px,2vw,22px);background:var(--white);box-shadow:var(--e4);
+}
+.lightbox__count{
+  position:fixed;left:50%;bottom:clamp(1rem,3vh,2rem);transform:translateX(-50%);
+  margin:0;font-size:.8125rem;font-weight:500;color:var(--text-2);
+  background:rgba(255,255,255,.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  padding:.35rem .8rem;border-radius:980px;box-shadow:var(--e1), var(--bevel);
+}
+.lb-btn{
+  position:fixed;display:inline-flex;align-items:center;justify-content:center;
+  width:44px;height:44px;padding:0;border-radius:50%;cursor:pointer;
+  border:1px solid rgba(255,255,255,.8);
+  background:rgba(255,255,255,.84);
+  backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%);
+  color:var(--text);box-shadow:var(--e2), var(--bevel);
+  transition:transform .25s var(--ease), box-shadow .25s var(--ease);
+}
+.lb-btn:hover{transform:scale(1.08);box-shadow:var(--e3), var(--bevel)}
+.lb-btn--close{top:clamp(1rem,3vh,1.75rem);right:clamp(1rem,3vw,1.75rem)}
+.lb-btn--prev{left:clamp(.5rem,2vw,1.5rem);top:50%;margin-top:-22px}
+.lb-btn--next{right:clamp(.5rem,2vw,1.5rem);top:50%;margin-top:-22px}
+
+/* ============================================================
    REVEALS — elements stand up out of the page.
    Uses the independent translate/rotate/scale properties so it
    composes with the pointer tilt, which owns `transform`.
@@ -972,57 +1058,57 @@ label{display:block;font-size:.8125rem;color:var(--text-2);font-weight:500;margi
       No third-party logos are used on purpose (trademark / hotlinking risk).
     -->
     <div class="brands">
-      <article class="card card--lift sheen brand reveal">
+      <article class="card card--lift sheen brand reveal" data-brand="legion">
         <p class="brand__cat">Supplements</p>
         <h3>Legion Supplements</h3>
         <div class="brand__row">
-          <p class="brand__code">Code <b data-placeholder="CODE">[CODE]</b></p>
-          <a class="link" href="#" rel="sponsored noopener">Shop</a>
+          <p class="brand__code" data-code>Code coming soon</p>
+          <a class="link" data-shop href="#" aria-disabled="true">Shop</a>
         </div>
       </article>
 
-      <article class="card card--lift sheen brand reveal" data-delay="1">
+      <article class="card card--lift sheen brand reveal" data-brand="angel" data-delay="1">
         <p class="brand__cat">Competition Suits</p>
         <h3>Angel Competition Bikinis</h3>
         <div class="brand__row">
-          <p class="brand__code">Code <b data-placeholder="CODE">[CODE]</b></p>
-          <a class="link" href="#" rel="sponsored noopener">Shop</a>
+          <p class="brand__code" data-code>Code coming soon</p>
+          <a class="link" data-shop href="#" aria-disabled="true">Shop</a>
         </div>
       </article>
 
-      <article class="card card--lift sheen brand reveal" data-delay="2">
+      <article class="card card--lift sheen brand reveal" data-brand="bodykore" data-delay="2">
         <p class="brand__cat">Equipment</p>
         <h3>BodyKore</h3>
         <div class="brand__row">
-          <p class="brand__code">Code <b data-placeholder="CODE">[CODE]</b></p>
-          <a class="link" href="#" rel="sponsored noopener">Shop</a>
+          <p class="brand__code" data-code>Code coming soon</p>
+          <a class="link" data-shop href="#" aria-disabled="true">Shop</a>
         </div>
       </article>
 
-      <article class="card card--lift sheen brand reveal">
+      <article class="card card--lift sheen brand reveal" data-brand="muscleegg">
         <p class="brand__cat">Protein</p>
         <h3>MuscleEgg</h3>
         <div class="brand__row">
-          <p class="brand__code">Code <b data-placeholder="CODE">[CODE]</b></p>
-          <a class="link" href="#" rel="sponsored noopener">Shop</a>
+          <p class="brand__code" data-code>Code coming soon</p>
+          <a class="link" data-shop href="#" aria-disabled="true">Shop</a>
         </div>
       </article>
 
-      <article class="card card--lift sheen brand reveal" data-delay="1">
+      <article class="card card--lift sheen brand reveal" data-brand="bones" data-delay="1">
         <p class="brand__cat">Coffee</p>
         <h3>Bones Coffee</h3>
         <div class="brand__row">
-          <p class="brand__code">Code <b data-placeholder="CODE">[CODE]</b></p>
-          <a class="link" href="#" rel="sponsored noopener">Shop</a>
+          <p class="brand__code" data-code>Code coming soon</p>
+          <a class="link" data-shop href="#" aria-disabled="true">Shop</a>
         </div>
       </article>
 
-      <article class="card card--lift sheen brand reveal" data-delay="2">
+      <article class="card card--lift sheen brand reveal" data-brand="americanDream" data-delay="2">
         <p class="brand__cat">Nut Butter</p>
         <h3>American Dream Nut Butter</h3>
         <div class="brand__row">
-          <p class="brand__code">Code <b data-placeholder="CODE">[CODE]</b></p>
-          <a class="link" href="#" rel="sponsored noopener">Shop</a>
+          <p class="brand__code" data-code>Code coming soon</p>
+          <a class="link" data-shop href="#" aria-disabled="true">Shop</a>
         </div>
       </article>
     </div>
@@ -1087,10 +1173,10 @@ label{display:block;font-size:.8125rem;color:var(--text-2);font-weight:500;margi
           <li><a class="social" href="https://www.facebook.com/talia.fiegecreations/" target="_blank" rel="noopener">
             <svg width="15" height="15" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M12.6 6.2h1.7V3.6h-2.1c-2 0-3.1 1.2-3.1 3.2v1.6H7v2.6h2.1V17h2.7v-6h2.1l.4-2.6h-2.5V7.1c0-.6.3-.9.8-.9z" fill="currentColor"/></svg>
             Facebook</a></li>
-          <!-- PLACEHOLDER: the old site's YouTube link was broken. Set the real channel URL below, then remove aria-disabled, the data-placeholder attribute and the "(link coming)" text. -->
-          <li><a class="social" href="[YOUTUBE_CHANNEL_URL]" aria-disabled="true" title="YouTube channel URL not set yet" data-placeholder="YOUTUBE_CHANNEL_URL">
+          <!-- The old site's YouTube link was broken. Set SITE.youtube in the config block at the top and this link switches itself on. -->
+          <li><a class="social" data-youtube href="#" aria-disabled="true" title="YouTube channel URL not set yet">
             <svg width="15" height="15" viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="2.5" y="5" width="15" height="10" rx="3" stroke="currentColor" stroke-width="1.6"/><path d="M8.8 7.9l3.6 2.1-3.6 2.1V7.9z" fill="currentColor"/></svg>
-            YouTube <span style="opacity:.65">(link coming)</span></a></li>
+            YouTube <span data-youtube-note style="opacity:.65">(link coming)</span></a></li>
         </ul>
       </div>
 
@@ -1123,6 +1209,23 @@ label{display:block;font-size:.8125rem;color:var(--text-2);font-weight:500;margi
 </section>
 
 </main>
+
+<!-- ======================== GALLERY LIGHTBOX ======================== -->
+<dialog class="lightbox" id="lightbox" aria-label="Photo viewer">
+  <div class="lightbox__inner">
+    <img data-lb-img src="" alt="">
+  </div>
+  <p class="lightbox__count" data-lb-count role="status" aria-live="polite"></p>
+  <button class="lb-btn lb-btn--prev" data-lb-prev type="button" aria-label="Previous photo">
+    <svg width="18" height="18" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M10 3.5L5.5 8 10 12.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </button>
+  <button class="lb-btn lb-btn--next" data-lb-next type="button" aria-label="Next photo">
+    <svg width="18" height="18" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 3.5L10.5 8 6 12.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </button>
+  <button class="lb-btn lb-btn--close" data-lb-close type="button" aria-label="Close photo viewer">
+    <svg width="18" height="18" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+  </button>
+</dialog>
 
 <!-- ====================== STRUCTURED DATA (SEO) ====================== -->
 <script type="application/ld+json">
@@ -1201,6 +1304,7 @@ label{display:block;font-size:.8125rem;color:var(--text-2);font-weight:500;margi
   var KEYS = { ArrowDown:1, PageDown:1, ArrowUp:-1, PageUp:-1 };
   document.addEventListener("keydown", function(e){
     if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (document.querySelector("dialog[open]")) return;   // the lightbox owns the keyboard
     var t = e.target;
     if (t && (t.matches("input, textarea, select") || t.isContentEditable)) return;
     if (t && t.closest && t.closest(".gallery__track")) return;   // let the strip scroll sideways
@@ -1314,8 +1418,8 @@ label{display:block;font-size:.8125rem;color:var(--text-2);font-weight:500;margi
 
   /* ---------- Gallery: scroll-driven 3D coverflow ---------- */
   var track = document.getElementById("galleryTrack");
+  var shots = track ? Array.prototype.slice.call(track.querySelectorAll(".shot")) : [];
   if (track && !reduced.matches) {
-    var shots = Array.prototype.slice.call(track.querySelectorAll(".shot"));
     var graf = false;
     var coverflow = function(){
       graf = false;
@@ -1358,10 +1462,124 @@ label{display:block;font-size:.8125rem;color:var(--text-2);font-weight:500;margi
   handle("optinForm",  "optinStatus",  "Thanks! Once the email tool is connected, your guide lands in your inbox.");
   handle("contactForm","contactStatus","Thanks! Your message is ready to send once the form backend is connected.");
 
-  /* ---------- Placeholder YouTube link must not navigate ---------- */
-  document.querySelectorAll('[data-placeholder="YOUTUBE_CHANNEL_URL"]').forEach(function(a){
-    a.addEventListener("click", function(e){ e.preventDefault(); });
+  /* ---------- Config: affiliate links, discount codes, YouTube ---------- */
+  var CFG = window.SITE || {};
+  var ESS = CFG.essentials || {};
+
+  document.querySelectorAll(".brand[data-brand]").forEach(function(card){
+    var conf   = ESS[card.getAttribute("data-brand")] || {};
+    var codeEl = card.querySelector("[data-code]");
+    var shop   = card.querySelector("[data-shop]");
+
+    if (conf.code) {
+      codeEl.textContent = "Code ";
+      var b = document.createElement("b");
+      b.textContent = conf.code;                       // textContent, never innerHTML
+      codeEl.appendChild(b);
+
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "code-copy";
+      btn.setAttribute("aria-label", "Copy discount code " + conf.code);
+      btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">' +
+        '<rect x="5.6" y="5.6" width="7.8" height="7.8" rx="2" stroke="currentColor" stroke-width="1.5"/>' +
+        '<path d="M10.4 3.4H4.6a1.2 1.2 0 00-1.2 1.2v5.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
+      btn.addEventListener("click", function(){
+        var done = function(){
+          btn.classList.add("is-done");
+          btn.setAttribute("aria-label", "Discount code copied");
+          setTimeout(function(){
+            btn.classList.remove("is-done");
+            btn.setAttribute("aria-label", "Copy discount code " + conf.code);
+          }, 1600);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(conf.code).then(done, function(){});
+        } else {
+          try {
+            var r = document.createRange(); r.selectNodeContents(b);
+            var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+            document.execCommand("copy"); done();
+          } catch (err) { /* clipboard unavailable — the code is still readable on screen */ }
+        }
+      });
+      codeEl.appendChild(btn);
+    }
+
+    if (conf.url) {
+      shop.setAttribute("href", conf.url);
+      shop.setAttribute("target", "_blank");
+      shop.setAttribute("rel", "sponsored noopener");
+      shop.removeAttribute("aria-disabled");
+    }
   });
+
+  var yt = document.querySelector("[data-youtube]");
+  if (yt && CFG.youtube) {
+    yt.setAttribute("href", CFG.youtube);
+    yt.setAttribute("target", "_blank");
+    yt.setAttribute("rel", "noopener");
+    yt.removeAttribute("aria-disabled");
+    yt.removeAttribute("title");
+    var note = yt.querySelector("[data-youtube-note]");
+    if (note) note.parentNode.removeChild(note);
+  }
+
+  /* Any link still waiting on config must never navigate. */
+  document.addEventListener("click", function(e){
+    var a = e.target.closest && e.target.closest('a[aria-disabled="true"]');
+    if (a) e.preventDefault();
+  });
+
+  /* ---------- Gallery lightbox ---------- */
+  var lb = document.getElementById("lightbox");
+  if (lb && shots.length && typeof lb.showModal === "function") {
+    var lbImg   = lb.querySelector("[data-lb-img]");
+    var lbCount = lb.querySelector("[data-lb-count]");
+    var cur = 0, opener = null;
+
+    function render(){
+      var img = shots[cur].querySelector("img");
+      lbImg.src = img.currentSrc || img.src;
+      lbImg.alt = img.alt || "";
+      lbCount.textContent = (cur + 1) + " / " + shots.length;
+    }
+    function step(d){ cur = (cur + d + shots.length) % shots.length; render(); }
+    var savedY = 0;
+    function openAt(i){
+      cur = i; opener = document.activeElement; render();
+      savedY = window.scrollY;
+      document.documentElement.classList.add("lb-open");   // showModal() alone lets the page scroll behind
+      lb.showModal();
+    }
+
+    shots.forEach(function(fig, i){
+      var img = fig.querySelector("img");
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "shot__open";
+      btn.setAttribute("aria-label",
+        "Open photo " + (i + 1) + " of " + shots.length + (img && img.alt ? ": " + img.alt : ""));
+      btn.addEventListener("click", function(){ openAt(i); });
+      fig.appendChild(btn);
+    });
+
+    lb.querySelector("[data-lb-prev]").addEventListener("click", function(){ step(-1); });
+    lb.querySelector("[data-lb-next]").addEventListener("click", function(){ step(1); });
+    lb.querySelector("[data-lb-close]").addEventListener("click", function(){ lb.close(); });
+    lb.querySelector(".lightbox__inner").addEventListener("click", function(e){
+      if (!e.target.closest("img, button")) lb.close();
+    });
+    lb.addEventListener("keydown", function(e){
+      if (e.key === "ArrowRight"){ e.preventDefault(); step(1); }
+      else if (e.key === "ArrowLeft"){ e.preventDefault(); step(-1); }
+    });
+    lb.addEventListener("close", function(){
+      document.documentElement.classList.remove("lb-open");
+      window.scrollTo({ top: savedY, behavior: "auto" });
+      if (opener && opener.focus) opener.focus();
+    });
+  }
 })();
 </script>
 </body>
