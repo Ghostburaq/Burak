@@ -1,3 +1,7 @@
+> **Ebenfalls in diesem Repository:** [Aktivitäten-Pipeline](docs/aktivitaeten.md) —
+> Termine, E-Mails und Screenshots in `inbox/` werfen, eine sortierte
+> Excel-Auswertung rausbekommen (`python3 src/aktivitaeten/cli.py`).
+
 # Pitch-Deck · Bewerbung Vertriebsmanager — AVIA VOLT Suisse
 
 Code-generiertes, voll markenkonformes Pitch-Deck (10 Slides, Deutsch) für die

@@ -2,3 +2,14 @@ __pycache__/
 *.pyc
 .DS_Store
 /tmp/
+
+# --- Aktivitaeten-Pipeline -------------------------------------------------
+# Das Repository ist oeffentlich. Eingeworfene Dateien und die daraus
+# erzeugten Auswertungen enthalten Kundendaten (Namen, Mailadressen,
+# Telefonnummern, Teams-Passcodes, Pipeline-Betraege) und bleiben deshalb
+# ausschliesslich lokal.
+/inbox/*
+!/inbox/README.md
+!/inbox/.gitkeep
+/data/
+/output/
