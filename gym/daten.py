@@ -156,4 +156,16 @@ ROWS = [
     [5, 'Beine vorne', 'Adduktion', 'W', 70, 5, None, None],
     [5, 'Beine vorne', 'Adduktion', 'A', 162.5, 16, None, None],
     [5, 'Beine vorne', 'Adduktion', 'A', 162.5, None, None, 'Wdh nicht notiert'],
+    # --- Einheit 6, nur Beine vorne, ohne Warmups notiert ----------
+    [6, 'Beine vorne', 'Split Squat', 'A', 100, 10, None, None],
+    [6, 'Beine vorne', 'Split Squat', 'A', 100, 9, None, None],
+    [6, 'Beine vorne', 'Split Squat', 'A', 100, 8, None, None],
+    [6, 'Beine vorne', 'Beinpresse', 'A', 273, 12, None, None],
+    [6, 'Beine vorne', 'Beinpresse', 'A', 283, 8, None, None],
+    [6, 'Beine vorne', 'Beinpresse', 'A', 303, 6, None, None],
+    [6, 'Beine vorne', 'Beinstrecker', 'A', 90, 8, None, None],
+    [6, 'Beine vorne', 'Beinstrecker', 'A', 95, 5, None, None],
+    [6, 'Beine vorne', 'Beinstrecker', 'A', 95, 5, None, None],
+    [6, 'Beine vorne', 'Adduktion', 'A', 175.5, 8, None, None],
+    [6, 'Beine vorne', 'Adduktion', 'A', 180, 8, None, None],
 ]
