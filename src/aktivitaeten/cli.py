@@ -14,11 +14,12 @@ from pathlib import Path
 
 if __package__ in (None, ""):                     # Direktaufruf ohne -m
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-    from aktivitaeten import andere, emlfile, excel, excelimport, icsfile   # type: ignore
+    from aktivitaeten import (andere, bericht, emlfile, excel,              # type: ignore
+                              excelimport, icsfile)
     from aktivitaeten.model import Aktivitaet                                # type: ignore
     from aktivitaeten.registry import Registry, datei_hash                   # type: ignore
 else:
-    from . import andere, emlfile, excel, excelimport, icsfile
+    from . import andere, bericht, emlfile, excel, excelimport, icsfile
     from .model import Aktivitaet
     from .registry import Registry, datei_hash
 
@@ -100,20 +101,21 @@ def report_schreiben(ziel: Path, eintraege: list[Aktivitaet], quellen: dict,
         zeilen.append(f"| {name} | {anzahl} | {stunden:.2f} |")
     zeilen.append("")
 
-    zeilen.append("## Chronologie\n")
-    letzter_tag = None
-    for a in eintraege:
-        if a.datum != letzter_tag:
-            letzter_tag = a.datum
-            zeilen.append(f"\n**{a.datum:%d.%m.%Y} · {a.wochentag}**\n")
-        zeit = f"{a.von:%H:%M}" if a.von else "  —  "
-        bis = f"–{a.bis:%H:%M}" if a.bis else ""
-        geld = ""
-        betrag = a.potenzial_chf or a.wert_chf
-        if betrag:
-            geld = f" · Potenzial CHF {betrag:,.0f}".replace(",", "'")
-        firma = f" · {a.firma}" if a.firma else ""
-        zeilen.append(f"- `{zeit}{bis}` **{a.titel}** — {a.kategorie}{firma}{geld}")
+    zeilen.append("## Zusammenfassung\n")
+    zeilen.append(bericht.gesamttext(eintraege) + "\n")
+
+    zeilen.append("## Tagebuch\n")
+    for tag, gruppe in bericht.nach_tagen(eintraege):
+        zeilen.append(f"\n### {tag:%d.%m.%Y} · {gruppe[0].wochentag}\n")
+        zeilen.append(bericht.tagestext(tag, gruppe) + "\n")
+        for a in gruppe:
+            betrag = bericht.chf(a.potenzial_chf or a.wert_chf)
+            zusatz = "".join([
+                f" · {a.firma}" if a.firma else "",
+                f" · Potenzial {betrag}" if betrag else "",
+                f" · nächster Schritt: {a.naechster_schritt}" if a.naechster_schritt else "",
+            ])
+            zeilen.append(f"- `{a.zeit or '—'}` **{a.titel}** — {a.kategorie}{zusatz}")
 
     offen = [a for a in eintraege if a.naechster_schritt or a.follow_up]
     if offen:

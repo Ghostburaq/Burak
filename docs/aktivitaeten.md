@@ -32,17 +32,35 @@ Liste.
 
 ## Die Excel-Mappe
 
+Drei Blätter — mehr braucht es nicht.
+
 | Blatt | Inhalt |
 |---|---|
-| **Aktivitäten** | Alle Einträge, chronologisch, 31 Spalten, Filter + fixierte Kopfzeile |
-| **Eingabe** | Leeres Formular zum Selbst-Eintippen — wird beim nächsten Lauf eingelesen |
-| **Tagesübersicht** | Pro Tag: Anzahl, erste/letzte Uhrzeit, erfasste Stunden, Themen |
-| **Pipeline** | Nur Vertriebsrelevantes, nach Potenzial sortiert, mit Summenzeile |
-| **Kontakte** | Pro Firma: Kontaktdaten, erster/letzter Kontakt, offenes Potenzial |
-| **Quellen** | Jede eingelesene Datei mit Hash, Grösse, Importzeitpunkt, Anzahl Importe |
+| **Dashboard** | Kennzahlen, zwei Diagramme, Zusammenfassung und Tagebuch in Fliesstext, Pipeline, offene Schritte |
+| **Aktivitäten** | Alle Einträge als echte Excel-Tabelle — 11 sichtbare Spalten, 20 weitere eingeklappt |
+| **Eingabe** | Leeres Formular zum Selbst-Eintippen |
 
-Kategorien sind farbcodiert: Akquise, Kundentermin, Beratung,
-Partner / Lieferant, Interner Termin, Messe / Event, Interne Arbeit, E-Mail.
+### Dashboard
+
+* **Kennzahlen** (Aktivitäten, Tage, Stunden, Kundenkontakte, Potenzial, offene
+  Schritte) sind Formeln auf die Aktivitäten-Tabelle — sie rechnen sofort mit,
+  wenn dort etwas geändert wird.
+* **Diagramme**: Stunden je Kategorie und Aktivitäten je Tag, beide an den
+  Auswertungsblöcken darunter hängend.
+* **Tagebuch**: zu jedem Tag ein geschriebener Absatz — wie viele Aktivitäten,
+  worauf der Schwerpunkt lag, was nach aussen ging, was vor Ort war, was intern
+  lief und was offen blieb. Darunter die Einzelvorgänge mit Zeit, Firma,
+  Potenzial und nächstem Schritt.
+
+### Aktivitäten
+
+Eine echte Excel-Tabelle (`Aktivitaeten`): Filterknöpfe, Zebrastreifen,
+strukturierte Bezüge. Sichtbar sind Datum, Zeit, Std., Kategorie, Titel, Firma,
+Kontakt, Status, Nächster Schritt, Potenzial CHF und Notizen.
+
+Die übrigen 20 Spalten (E-Mail, Telefon, Ort, Teilnehmer, Bedarf, Wert,
+Wahrscheinlichkeit, Quelle, ID …) sind **eingeklappt, nicht gelöscht** — über
+das `+` am Spaltenkopf jederzeit sichtbar. Kategorien sind farbcodiert.
 
 ## Excel als Eingabe — selbst eintippen und korrigieren
 
@@ -60,8 +78,9 @@ python3 src/aktivitaeten/cli.py
 ```
 
 Die Zeile wandert ins Blatt «Aktivitäten», das Eingabeblatt ist wieder leer.
-`Wahrsch. %` versteht sowohl `35` als auch `0.35`; `Wert CHF` und
-`Potenzial CHF` versteht `240000` wie `240'000`.
+`Potenzial CHF` versteht `240000` genauso wie `240'000`. Felder, die im
+Eingabeblatt fehlen (Bedarf, Wert, Wahrscheinlichkeit …), lassen sich danach in
+den eingeklappten Spalten der Tabelle nachtragen.
 
 ### 2. Bestehende Zeile korrigieren: direkt im Blatt «Aktivitäten»
 
@@ -73,8 +92,8 @@ Die Automatik überschreibt eine Korrektur nie.
 * Leere Zelle = *nicht angefasst* (überschreibt nichts).
 * Ein einzelnes `-` in der Zelle = Feld bewusst leeren.
 * Die Spalte **ID** ist der Anker — nicht löschen und nicht ändern.
-* Die Blätter Tagesübersicht, Pipeline, Kontakte und Quellen sind berechnet;
-  Änderungen dort werden nicht gelesen.
+* Das Dashboard ist berechnet; Änderungen dort werden nicht gelesen und beim
+  nächsten Lauf überschrieben.
 
 ### 3. Fremde Excel-Liste importieren
 
@@ -91,7 +110,7 @@ denen der Mappe entsprechen — Gross-/Kleinschreibung, Umlaute und `*` sind ega
 `data/registry.json` ist das Gedächtnis der Pipeline.
 
 * **Gleiche Datei nochmal** → über SHA-256 erkannt, wird übersprungen
-  (nur der Zähler im Blatt *Quellen* steigt).
+  (im Dashboard unter *Datenherkunft* mitgezählt).
 * **Gleicher Termin, andere Datei** (z. B. aktualisierte Einladung) → wird über
   die Kalender-UID bzw. `Message-ID` zusammengeführt. Die inhaltsreichere
   Version gewinnt, fehlende Felder werden aus der anderen ergänzt, `revision`
@@ -120,7 +139,8 @@ KATEGORIE_REGELN = [(r"loadbank", "Partner / Lieferant")]   # eigene Regeln zuer
 | `src/aktivitaeten/excelimport.py` | Rückweg: Blatt «Eingabe» und manuelle Korrekturen |
 | `src/aktivitaeten/felder.py` | Heuristiken für Firma, Kontakt, Beträge, Kategorie |
 | `src/aktivitaeten/registry.py` | Dedup, Merge, Persistenz |
-| `src/aktivitaeten/excel.py` | Formatierte Mappe |
+| `src/aktivitaeten/excel.py` | Dashboard, Tabelle, Eingabeblatt |
+| `src/aktivitaeten/bericht.py` | Erzeugt den Fliesstext (Zusammenfassung, Tagebuch) |
 | `src/aktivitaeten/konfig.py` | Stellschrauben |
 
 ## Datenschutz

@@ -10,44 +10,49 @@ from typing import Any
 ZEITZONE = "Europe/Zurich"
 
 # Reihenfolge = Spaltenreihenfolge in der Excel-Tabelle.
-SPALTEN: list[tuple[str, str, int]] = [
-    # (Feldname, Excel-Ueberschrift, Spaltenbreite)
-    ("nr", "Nr.", 6),
-    ("datum", "Datum", 12),
-    ("wochentag", "Wochentag", 12),
-    ("von", "Von", 8),
-    ("bis", "Bis", 8),
-    ("dauer_h", "Dauer (h)", 10),
-    ("kategorie", "Kategorie", 18),
-    ("titel", "Titel", 42),
-    ("firma", "Firma / Gegenstelle", 26),
-    ("kontakt", "Kontakt", 22),
-    ("email", "E-Mail", 30),
-    ("telefon", "Telefon", 20),
-    ("ort", "Ort", 30),
-    ("status", "Status", 14),
-    ("naechster_schritt", "Nächster Schritt", 34),
-    ("bedarf", "Bedarf", 30),
-    ("hauptprodukt", "Hauptprodukt", 22),
-    ("wahrscheinlichkeit", "Wahrsch.", 10),
-    ("wert_chf", "Wert CHF", 14),
-    ("potenzial_chf", "Potenzial CHF", 14),
-    ("forecast_chf", "Gew. Forecast CHF", 16),
-    ("follow_up", "Follow-up", 16),
-    ("organisator", "Organisator", 24),
-    ("teilnehmer", "Teilnehmer", 34),
-    ("meeting_link", "Meeting-Link", 26),
-    ("website", "Website", 26),
-    ("notizen", "Notizen / Inhalt", 60),
-    ("typ", "Typ", 20),
-    ("quelle", "Quelldatei", 40),
-    ("erfasst_am", "Erfasst am", 18),
-    ("id", "ID", 26),
+# Die ersten elf Spalten sind sichtbar, der Rest ist eingeklappt (Gruppierung
+# in Excel aufklappbar) — so bleibt die Tabelle schmal, ohne dass Daten
+# verloren gehen.
+SPALTEN: list[tuple[str, str, int, bool]] = [
+    # (Feldname, Excel-Ueberschrift, Spaltenbreite, sichtbar)
+    ("datum", "Datum", 12, True),
+    ("zeit", "Zeit", 14, True),
+    ("dauer_h", "Std.", 7, True),
+    ("kategorie", "Kategorie", 19, True),
+    ("titel", "Titel", 46, True),
+    ("firma", "Firma / Gegenstelle", 26, True),
+    ("kontakt", "Kontakt", 22, True),
+    ("status", "Status", 17, True),
+    ("naechster_schritt", "Nächster Schritt", 34, True),
+    ("potenzial_chf", "Potenzial CHF", 14, True),
+    ("notizen", "Notizen", 58, True),
+    # --- ab hier eingeklappt -------------------------------------------
+    ("wochentag", "Wochentag", 12, False),
+    ("von", "Von", 8, False),
+    ("bis", "Bis", 8, False),
+    ("email", "E-Mail", 28, False),
+    ("telefon", "Telefon", 18, False),
+    ("ort", "Ort", 28, False),
+    ("teilnehmer", "Teilnehmer", 30, False),
+    ("organisator", "Organisator", 22, False),
+    ("website", "Website", 24, False),
+    ("meeting_link", "Meeting-Link", 24, False),
+    ("bedarf", "Bedarf", 28, False),
+    ("hauptprodukt", "Hauptprodukt", 20, False),
+    ("wahrscheinlichkeit", "Wahrsch.", 10, False),
+    ("wert_chf", "Wert CHF", 13, False),
+    ("forecast_chf", "Gew. Forecast CHF", 16, False),
+    ("follow_up", "Follow-up", 15, False),
+    ("typ", "Typ", 20, False),
+    ("quelle", "Quelldatei", 34, False),
+    ("erfasst_am", "Erfasst am", 17, False),
+    ("id", "ID", 24, False),
 ]
 
 FELDNAMEN = [s[0] for s in SPALTEN]
 UEBERSCHRIFTEN = [s[1] for s in SPALTEN]
 BREITEN = [s[2] for s in SPALTEN]
+SICHTBAR = [s[3] for s in SPALTEN]
 
 # Kategorien mit Farbcode (Excel-Fuellung) und Sortierrang fuer Auswertungen.
 KATEGORIEN: dict[str, str] = {
@@ -117,6 +122,19 @@ class Aktivitaet:
             return ""
         return ["Montag", "Dienstag", "Mittwoch", "Donnerstag",
                 "Freitag", "Samstag", "Sonntag"][self.datum.weekday()]
+
+    @property
+    def zeit(self) -> str:
+        """Eine Spalte statt Von/Bis: '08:30–09:00', '09:05' oder 'ganztägig'."""
+        if self.ganztags:
+            if self.enddatum and self.datum and self.enddatum > self.datum:
+                return f"ganztägig, bis {self.enddatum:%d.%m.}"
+            return "ganztägig"
+        if self.von and self.bis:
+            return f"{self.von:%H:%M}–{self.bis:%H:%M}"
+        if self.von:
+            return f"{self.von:%H:%M}"
+        return ""
 
     def sortierschluessel(self) -> tuple:
         return (
@@ -197,12 +215,7 @@ EINGABE_SPALTEN: list[tuple[str, str, int]] = [
     ("ort", "Ort", 24),
     ("status", "Status", 18),
     ("naechster_schritt", "Nächster Schritt", 32),
-    ("bedarf", "Bedarf", 26),
-    ("hauptprodukt", "Hauptprodukt", 20),
-    ("wahrscheinlichkeit", "Wahrsch. %", 11),
-    ("wert_chf", "Wert CHF", 13),
     ("potenzial_chf", "Potenzial CHF", 14),
-    ("follow_up", "Follow-up", 16),
     ("notizen", "Notizen", 50),
     ("id", "ID (leer lassen)", 24),
 ]

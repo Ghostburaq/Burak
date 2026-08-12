@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import re
 import unicodedata
+from dataclasses import fields as _dataclass_felder
 from datetime import date, datetime, time
 from pathlib import Path
 
@@ -22,6 +23,10 @@ from openpyxl import load_workbook
 
 from .model import (EDITIERBAR, EINGABE_SPALTEN, FELDNAMEN, UEBERSCHRIFTEN,
                     Aktivitaet, wert_konvertieren)
+
+# Nur echte Datenfelder lassen sich setzen — "Zeit" und "Wochentag" sind
+# berechnete Eigenschaften und werden beim Einlesen übergangen.
+SETZBAR = {f.name for f in _dataclass_felder(Aktivitaet)}
 
 EINGABE_BLATT = "Eingabe"
 HAUPT_BLATT = "Aktivitäten"
@@ -118,7 +123,7 @@ def eingabezeilen_lesen(pfad: Path) -> list[Aktivitaet]:
             erfasst_am=datetime.now().replace(microsecond=0),
         )
         for feld, wert in werte.items():
-            if feld != "id" and hasattr(a, feld):
+            if feld != "id" and feld in SETZBAR:
                 setattr(a, feld, wert)
 
         a.id = str(werte.get("id") or _manuelle_id(a))
@@ -202,7 +207,7 @@ def _zeilen_lesen(blatt, zuordnung: dict[int, str], erste: int, quelle: str) -> 
         a = Aktivitaet(quelle=quelle, typ="Import (Excel)",
                        erfasst_am=datetime.now().replace(microsecond=0))
         for feld, wert in werte.items():
-            if feld != "id" and hasattr(a, feld):
+            if feld != "id" and feld in SETZBAR:
                 setattr(a, feld, wert)
         a.id = str(werte.get("id") or _manuelle_id(a))
         if not a.status:
