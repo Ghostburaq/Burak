@@ -15,6 +15,7 @@ ZEITZONE = "Europe/Zurich"
 # verloren gehen.
 SPALTEN: list[tuple[str, str, int, bool]] = [
     # (Feldname, Excel-Ueberschrift, Spaltenbreite, sichtbar)
+    ("nr", "Pos.", 6, True),
     ("datum", "Datum", 12, True),
     ("zeit", "Zeit", 14, True),
     ("dauer_h", "Std.", 7, True),

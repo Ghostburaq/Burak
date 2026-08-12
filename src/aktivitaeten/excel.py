@@ -101,7 +101,10 @@ def _blatt_aktivitaeten(mappe: Workbook, eintraege: list[Aktivitaet]) -> None:
                 wrap_text=feld in ("titel", "notizen", "naechster_schritt", "bedarf", "teilnehmer"))
             zelle.font = Font(name="Calibri", size=10)
 
-            if feld == "datum":
+            if feld == "nr":
+                zelle.alignment = Alignment(horizontal="center", vertical="top")
+                zelle.font = Font(name="Calibri", size=10, bold=True, color=GRAU_TEXT)
+            elif feld == "datum":
                 zelle.number_format = DATUM_FORMAT
             elif feld in ("von", "bis"):
                 zelle.number_format = ZEIT_FORMAT
@@ -355,7 +358,9 @@ def _blatt_dashboard(mappe: Workbook, eintraege: list[Aktivitaet], quellen: dict
         for eintrag in gruppe:
             zeitangabe = eintrag.zeit or "—"
             zusatz = bericht.chf(eintrag.potenzial_chf or eintrag.wert_chf)
-            zeile_text = (f"     {zeitangabe}   {eintrag.titel}"
+            # Positionsnummer wie in der Tabelle — damit die Zeile dort
+            # sofort wiederzufinden ist
+            zeile_text = (f"   Pos. {eintrag.nr:>3}   {zeitangabe}   {eintrag.titel}"
                           + (f"   ·   {eintrag.firma}" if eintrag.firma else "")
                           + (f"   ·   Potenzial {zusatz}" if zusatz else "")
                           + (f"   ·   nächster Schritt: {eintrag.naechster_schritt}"
@@ -376,23 +381,23 @@ def _blatt_dashboard(mappe: Workbook, eintraege: list[Aktivitaet], quellen: dict
     pipeline = sorted([a for a in eintraege if (a.potenzial_chf or a.wert_chf)],
                       key=lambda a: -(a.potenzial_chf or a.wert_chf or 0))
     if pipeline:
-        _abschnitt(blatt, zeile, 1, 6, "Pipeline")
+        _abschnitt(blatt, zeile, 1, 7, "Pipeline")
         zeile = _minitabelle(
             blatt, zeile + 1, 1,
-            ["Firma", "Potenzial CHF", "Status", "Nächster Schritt", "Kontakt", "Datum"],
-            [[a.firma or a.titel, a.potenzial_chf or a.wert_chf, a.status,
+            ["Pos.", "Firma", "Potenzial CHF", "Status", "Nächster Schritt", "Kontakt", "Datum"],
+            [[a.nr, a.firma or a.titel, a.potenzial_chf or a.wert_chf, a.status,
               a.naechster_schritt, a.kontakt or a.email, a.datum] for a in pipeline],
-            {1: GELD_FORMAT, 5: DATUM_FORMAT})
+            {2: GELD_FORMAT, 6: DATUM_FORMAT})
 
     offen = [a for a in eintraege if a.naechster_schritt or a.follow_up]
     if offen:
-        _abschnitt(blatt, zeile, 1, 6, "Offene nächste Schritte")
+        _abschnitt(blatt, zeile, 1, 7, "Offene nächste Schritte")
         zeile = _minitabelle(
             blatt, zeile + 1, 1,
-            ["Firma / Vorgang", "Was", "Bis wann", "Kontakt", "Kategorie", "Datum"],
-            [[a.firma or a.titel, a.naechster_schritt or f"Follow-up: {a.follow_up}",
+            ["Pos.", "Firma / Vorgang", "Was", "Bis wann", "Kontakt", "Kategorie", "Datum"],
+            [[a.nr, a.firma or a.titel, a.naechster_schritt or f"Follow-up: {a.follow_up}",
               a.follow_up, a.kontakt or a.email, a.kategorie, a.datum] for a in offen],
-            {5: DATUM_FORMAT})
+            {6: DATUM_FORMAT})
 
     # -- Herkunft ----------------------------------------------------------
     doppelt = sum(max(m.get("importe", 1) - 1, 0) for m in quellen.values())

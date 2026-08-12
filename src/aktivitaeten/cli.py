@@ -115,7 +115,8 @@ def report_schreiben(ziel: Path, eintraege: list[Aktivitaet], quellen: dict,
                 f" · Potenzial {betrag}" if betrag else "",
                 f" · nächster Schritt: {a.naechster_schritt}" if a.naechster_schritt else "",
             ])
-            zeilen.append(f"- `{a.zeit or '—'}` **{a.titel}** — {a.kategorie}{zusatz}")
+            zeilen.append(f"- **Pos. {a.nr}** · `{a.zeit or '—'}` **{a.titel}** "
+                          f"— {a.kategorie}{zusatz}")
 
     offen = [a for a in eintraege if a.naechster_schritt or a.follow_up]
     if offen:

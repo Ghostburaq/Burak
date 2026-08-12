@@ -6,8 +6,15 @@ Wurf aktualisiert dieselbe Liste, statt sie neu anzulegen.
 ```bash
 pip install openpyxl
 cp meine_termine/*.ics inbox/
-python3 src/aktivitaeten/cli.py
+./aktualisieren.sh                    # oder: python3 src/aktivitaeten/cli.py
 # -> output/Aktivitaeten.xlsx  +  output/report.md
+```
+
+`./aktualisieren.sh` nimmt auch Pfade direkt entgegen und legt die Dateien
+dabei in `inbox/` ab:
+
+```bash
+./aktualisieren.sh ~/Downloads/*.ics
 ```
 
 ## Was erkannt wird
@@ -37,7 +44,7 @@ Drei Blätter — mehr braucht es nicht.
 | Blatt | Inhalt |
 |---|---|
 | **Dashboard** | Kennzahlen, zwei Diagramme, Zusammenfassung und Tagebuch in Fliesstext, Pipeline, offene Schritte |
-| **Aktivitäten** | Alle Einträge als echte Excel-Tabelle — 11 sichtbare Spalten, 20 weitere eingeklappt |
+| **Aktivitäten** | Alle Einträge als echte Excel-Tabelle — 12 sichtbare Spalten, 20 weitere eingeklappt |
 | **Eingabe** | Leeres Formular zum Selbst-Eintippen |
 
 ### Dashboard
@@ -55,8 +62,14 @@ Drei Blätter — mehr braucht es nicht.
 ### Aktivitäten
 
 Eine echte Excel-Tabelle (`Aktivitaeten`): Filterknöpfe, Zebrastreifen,
-strukturierte Bezüge. Sichtbar sind Datum, Zeit, Std., Kategorie, Titel, Firma,
-Kontakt, Status, Nächster Schritt, Potenzial CHF und Notizen.
+strukturierte Bezüge. Sichtbar sind Pos., Datum, Zeit, Std., Kategorie, Titel,
+Firma, Kontakt, Status, Nächster Schritt, Potenzial CHF und Notizen.
+
+**Pos.** ist die laufende Nummer in der chronologischen Liste — dieselbe Nummer
+steht im Dashboard beim Tagebuch, in der Pipeline und bei den offenen Schritten,
+sodass sich jede Zeile sofort wiederfinden lässt. Kommt ein Termin dazwischen
+dazu, wird neu durchnummeriert; der dauerhafte Anker einer Zeile ist die
+(eingeklappte) Spalte **ID**.
 
 Die übrigen 20 Spalten (E-Mail, Telefon, Ort, Teilnehmer, Bedarf, Wert,
 Wahrscheinlichkeit, Quelle, ID …) sind **eingeklappt, nicht gelöscht** — über
