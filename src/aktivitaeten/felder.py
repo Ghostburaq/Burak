@@ -9,8 +9,9 @@ from __future__ import annotations
 import re
 import unicodedata
 
-from .konfig import (EIGENE_DOMAINS, FIRMEN_ALIASE, KATEGORIE_REGELN,
-                     PARTNER_DOMAINS, TECHNISCHE_HOSTS)
+from .konfig import (EIGENE_ADRESSE, EIGENE_DOMAINS, FIRMEN_ALIASE,
+                     FIRMEN_STICHWORTE, KATEGORIE_REGELN, PARTNER_DOMAINS,
+                     TECHNISCHE_HOSTS)
 
 # ---------------------------------------------------------------------------
 # Rauschen, das in Outlook-/Teams-Einladungen immer mitkommt
@@ -58,14 +59,20 @@ AKQUISE_LABELS: list[tuple[str, str]] = [
 ]
 
 EMAIL_RE = re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+")
-TEL_RE = re.compile(r"\+\d[\d\s/().-]{7,}\d")
+# international (+41 …) oder schweizerisch-national (055 254 92 34 / 0552549234)
+TEL_RE = re.compile(r"\+\d[\d\s/().-]{7,}\d|\b0\d{1,2}[\s/.-]?\d{3}[\s.-]?\d{2}[\s.-]?\d{2}\b")
 URL_RE = re.compile(r"https?://[^\s<>\"']+")
 GELD_RE = re.compile(r"(?:CHF|EUR|USD)\s*([\d'’.,\s]+)", re.I)
 PROZENT_RE = re.compile(r"(\d{1,3})\s*%")
 
 
+# Füllzeichen, die Outlook-Tabellen und Formulare mitschleppen
+FUELLZEICHEN = str.maketrans({"ㅤ": " ", "​": " ", "﻿": " ",
+                              " ": " ", "・": " ", "•": " "})
+
+
 def _norm(text: str) -> str:
-    return unicodedata.normalize("NFC", text or "")
+    return unicodedata.normalize("NFC", (text or "").translate(FUELLZEICHEN))
 
 
 def kerntext(text: str) -> str:
@@ -172,7 +179,7 @@ def akquise_felder(text: str) -> dict[str, object]:
         if not zeile:
             continue
         for feld, label in AKQUISE_LABELS:
-            treffer = re.match(rf"^{label}\s*[:\-]?\s*(.*)$", zeile, re.I)
+            treffer = re.match(rf"^(?:{label})\s*[:\-]?\s*(.*)$", zeile, re.I)
             if not treffer:
                 continue
             wert = treffer.group(1).strip(" :-—")
@@ -191,7 +198,7 @@ def akquise_felder(text: str) -> dict[str, object]:
     for feld, label in AKQUISE_LABELS:
         if feld in ergebnis:
             continue
-        treffer = re.search(rf"\b{label}\s*[:\-]?\s*([^,;|\n]{{2,80}})", t, re.I)
+        treffer = re.search(rf"\b(?:{label})\s*[:\-]?\s*([^,;|·\n]{{2,80}})", t, re.I)
         if not treffer:
             continue
         wert = treffer.group(1).strip(" :-—.")
@@ -209,6 +216,110 @@ def akquise_felder(text: str) -> dict[str, object]:
     if pot:
         ergebnis["potenzial_chf"] = geld(pot.group(1))
     return {k: v for k, v in ergebnis.items() if v not in (None, "")}
+
+
+# ---------------------------------------------------------------------------
+# Formulare und Kontaktkarten aus Outlook-Terminen
+# ---------------------------------------------------------------------------
+
+# Beschriftungen, wie sie in Lead-Formularen und Akquise-Karten vorkommen.
+# Der Wert steht entweder direkt dahinter ("OrtZug 6301") oder in der
+# nächsten Zeile ("Firma" \n "Gemeinde Hombrechtikon").
+FORMULAR_LABELS: list[tuple[str, str]] = [
+    ("kontakt", r"Vor-\s*und\s*Nachname|Ansprechpartner(?:in\b)?|Kontaktperson|Name"),
+    ("firma", r"Firma|Unternehmen|Kundenname"),
+    ("email", r"E-?Mail(?:adresse)?"),
+    ("telefon", r"Telefon(?:nummer)?|Tel\.|Mobiltelefon|Handy|Natel"),
+    ("ort", r"Objektadresse|Adresse|Standort|Ort"),
+    ("funktion", r"Funktion|Position|Rolle"),
+    ("hauptprodukt", r"Produkt"),
+    ("segment", r"Segment|Branche"),
+    ("prioritaet", r"Priorit(?:ä|ae)t"),
+    ("kanton", r"Kanton"),
+]
+
+# Werte, die nichts aussagen
+LEERWERTE = {"—", "-", "–", "✕", "x", "n/a", "keine", "offen?"}
+
+
+def formularfelder(text: str) -> dict[str, str]:
+    """Liest Label/Wert-Paare — verklebt oder über zwei Zeilen verteilt."""
+    zeilen = [z.strip(" :\t") for z in re.split(r"[\n|]", _norm(text))]
+    zeilen = [z for z in zeilen if z]
+    ergebnis: dict[str, str] = {}
+
+    for index, zeile in enumerate(zeilen):
+        for feld, label in FORMULAR_LABELS:
+            if feld in ergebnis:
+                continue
+            treffer = re.match(rf"^(?:{label})\s*[:\-]?\s*(.*)$", zeile, re.I)
+            if not treffer:
+                continue
+            wert = treffer.group(1).strip(" :-—·")
+            if not wert and index + 1 < len(zeilen):
+                # Wert steht in der nächsten Zeile — aber nur, wenn diese
+                # nicht selbst wieder eine Beschriftung ist
+                naechste = zeilen[index + 1]
+                if not any(re.match(rf"^(?:{lb})\b", naechste, re.I)
+                           for _, lb in FORMULAR_LABELS):
+                    wert = naechste.strip(" :-—·")
+            if wert and wert.lower() not in LEERWERTE and _wert_passt(feld, wert):
+                ergebnis[feld] = wert
+            break
+    return ergebnis
+
+
+def _wert_passt(feld: str, wert: str) -> bool:
+    """Sicherheitsnetz gegen falsch zugeordnete Beschriftungen."""
+    if feld == "telefon":
+        return len(re.sub(r"\D", "", wert)) >= 9
+    if feld == "email":
+        return bool(EMAIL_RE.fullmatch(wert.strip()))
+    if feld in ("firma", "kontakt", "funktion"):
+        # ein ganzer Satz ist kein Firmen- oder Personenname
+        return len(wert.split()) <= 5 and not wert.endswith((".", "!", "?"))
+    return True
+
+
+def kontaktkarte(text: str) -> dict[str, str]:
+    """Erkennt die Visitenkarten-Form ohne Beschriftungen.
+
+    Funktion / Vorname / Nachname / Telefon / E-Mail stehen jeweils auf einer
+    eigenen Zeile, wie es Outlook beim Einfügen aus einem CRM erzeugt:
+
+        Engineering Director
+        Carine
+        Havet
+        +41 228845000
+        chavet@stackinfra.com
+    """
+    zeilen = [z.strip() for z in re.split(r"[\n|]", _norm(text))]
+    zeilen = [z for z in zeilen if z]
+    tel_index = next((i for i, z in enumerate(zeilen) if TEL_RE.fullmatch(z.strip())), None)
+    mail_index = next((i for i, z in enumerate(zeilen) if EMAIL_RE.fullmatch(z.strip())), None)
+    if tel_index is None and mail_index is None:
+        return {}
+
+    anker = tel_index if tel_index is not None else mail_index
+    ergebnis: dict[str, str] = {}
+    if tel_index is not None:
+        ergebnis["telefon"] = zeilen[tel_index].strip()
+    if mail_index is not None:
+        ergebnis["email"] = zeilen[mail_index].strip()
+
+    # Ein bis zwei Namensteile direkt oberhalb der Telefonnummer
+    namensteile: list[str] = []
+    for zeile in reversed(zeilen[max(anker - 2, 0):anker]):
+        if re.fullmatch(r"[A-ZÄÖÜ][\wäöüéèàç'’-]{1,20}", zeile):
+            namensteile.insert(0, zeile)
+        else:
+            break
+    if namensteile:
+        ergebnis["kontakt"] = " ".join(namensteile)
+        davor = anker - len(namensteile) - 1
+        if davor >= 0 and len(zeilen[davor].split()) <= 5 and not EMAIL_RE.search(zeilen[davor]):
+            ergebnis["funktion"] = zeilen[davor].strip()
+    return ergebnis
 
 
 # ---------------------------------------------------------------------------
@@ -245,11 +356,26 @@ VORWORTE = {
     "termin", "besuch", "meeting", "besprechung", "mail", "e-mail", "telefon",
     "telefonat", "anruf", "call", "kontakt", "notiz", "screenshot", "info",
     "akquise", "beratung", "nachfassen", "follow-up", "protokoll", "projekt",
+    "ort", "besuch", "vor",
 }
+
+
+def firma_aus_stichwort(titel: str) -> str:
+    """Gepflegter Firmenname, wenn ein Stichwort im Titel vorkommt."""
+    klein = _norm(titel).lower()
+    for stichwort, name in sorted(FIRMEN_STICHWORTE.items(), key=lambda kv: -len(kv[0])):
+        if stichwort in klein:
+            return name
+    return ""
 
 
 def firma_aus_titel(titel: str) -> str:
     t = _norm(titel).strip()
+
+    # 0. Gepflegtes Stichwort im Titel schlaegt jede Heuristik.
+    gepflegt = firma_aus_stichwort(t)
+    if gepflegt:
+        return gepflegt
 
     # 1. Eine Rechtsform im Titel ist das staerkste Signal.
     treffer = re.search(rf"\b([A-ZÄÖÜ][\w&.\-]*(?:\s[A-ZÄÖÜ][\w&.\-]*)*\s{RECHTSFORMEN})\b", t)
@@ -291,10 +417,14 @@ def kategorie_bestimmen(titel: str, notizen: str, typ: str, ort: str = "") -> st
         if re.search(muster, gesamt, re.I):
             return kategorie
 
+    if re.search(r"\b(werkstatt|garage|arzt|zahnarzt|ferien|urlaub|privat|"
+                 r"geburtstag|umzug)\b", titel_klein):
+        return "Privat"
     if typ.startswith("E-Mail"):
         return "E-Mail"
     if re.search(r"\b(akquise|kaltakquise|erstkontakt|cold call)\b", gesamt) \
-            or re.search(r"\b(offerte|angebot|ausschreibung)\b", titel_klein):
+            or re.search(r"\b(offerte|richtofferte|angebot|ausschreibung|"
+                         r"ausarbeitung|auslegung)\b", titel_klein):
         return "Akquise"
     if re.search(r"\b(messe|fair|kongress|expo)\b", gesamt) or "maintenance schweiz" in gesamt:
         return "Messe / Event"

@@ -168,8 +168,11 @@ def _bauen(roh: dict, quelle: str, quelle_hash: str) -> Aktivitaet:
     a.organisator = organisator_name or organisator_mail
     externe = [(n, m) for n, m in roh["attendees"]
                if m.split("@")[-1].lower() not in felder.EIGENE_DOMAINS]
-    a.teilnehmer = ", ".join(n or m for n, m in roh["attendees"]
-                             if m.split("@")[-1].lower() not in felder.EIGENE_DOMAINS)
+    intern = [(n, m) for n, m in roh["attendees"]
+              if m.split("@")[-1].lower() in felder.EIGENE_DOMAINS
+              and m.lower() != felder.EIGENE_ADRESSE]
+    # Kollegen gehören in die Teilnehmerliste, nur die eigene Adresse nicht
+    a.teilnehmer = ", ".join(n or m for n, m in externe + intern)
 
     # Der Teams-Block am Ende der Einladung wird fuer Notizen und Kontaktdaten
     # abgeschnitten — sonst landen Einwahlnummern und Passcodes in der Liste.
@@ -187,23 +190,39 @@ def _bauen(roh: dict, quelle: str, quelle_hash: str) -> Aktivitaet:
         notiz = f"{a.notizen} | {notiz}" if notiz else a.notizen
     a.notizen = notiz[:2000]
 
+    # Strukturierte Formulare und Visitenkarten in der Terminnotiz
+    formular = {**felder.kontaktkarte(kern), **felder.formularfelder(kern)}
+    for schluessel in ("firma", "kontakt", "email", "telefon", "ort", "hauptprodukt"):
+        if formular.get(schluessel) and not getattr(a, schluessel, ""):
+            setattr(a, schluessel, formular[schluessel])
+    zusatz = [f"{s.capitalize()}: {formular[s]}"
+              for s in ("funktion", "segment", "prioritaet", "kanton") if formular.get(s)]
+    if zusatz:
+        a.notizen = " | ".join([a.notizen, *zusatz]).strip(" |")[:2000]
+
     # Kontaktdaten — bewusst nur aus dem menschlichen Teil
     adressen = felder.emails(f"{titel}\n{kern}")
-    a.email = adressen[0] if adressen else (externe[0][1] if externe else "")
+    a.email = a.email or (adressen[0] if adressen else (externe[0][1] if externe else ""))
     nummern = felder.telefone(kern)
-    a.telefon = nummern[0] if nummern else ""
+    a.telefon = a.telefon or (nummern[0] if nummern else "")
     a.website = a.website or felder.website(kern)
     a.meeting_link = felder.teams_link(beschreibung_roh) or felder.teams_link(roh.get("LOCATION", ""))
 
-    # Firma: gepflegter Alias schlaegt den aus dem Titel geratenen Namen
+    # Firma: was im Formular steht, gilt; sonst gepflegter Alias, sonst Titel
+    aus_stichwort = felder.firma_aus_stichwort(titel)
     aus_titel = felder.firma_aus_titel(titel)
     aus_domain = felder.firma_aus_domain(a.email or (externe[0][1] if externe else ""))
     gepflegt = aus_domain and aus_domain in felder.FIRMEN_ALIASE.values()
-    a.firma = aus_domain if gepflegt else (aus_titel or aus_domain)
+    if aus_stichwort:
+        a.firma = aus_stichwort              # Stichwort im Titel ist am genauesten
+    elif not formular.get("firma"):
+        a.firma = aus_domain if gepflegt else (aus_titel or aus_domain)
 
     eigener_termin = not externe and (organisator_mail.split("@")[-1].lower()
                                       in felder.EIGENE_DOMAINS or not organisator_mail)
-    if externe:
+    if a.kontakt:
+        pass                                   # aus Formular/Visitenkarte
+    elif externe:
         a.kontakt = externe[0][0] or externe[0][1]
     elif not eigener_termin:
         a.kontakt = organisator_name
@@ -219,6 +238,13 @@ def _bauen(roh: dict, quelle: str, quelle_hash: str) -> Aktivitaet:
     if externe and felder.ist_partner([m for _, m in externe]) \
             and a.kategorie in ("Kundentermin", "Beratung", "Sonstiges"):
         a.kategorie = "Partner / Lieferant"
+    # Runde mit Kolleginnen und Kollegen: interner Termin, keine Alleinarbeit
+    if intern and not externe and a.kategorie in ("Interne Arbeit", "Sonstiges"):
+        a.kategorie = "Interner Termin"
+    # Selbst gesetzter Termin mit fremder Visitenkarte = ausgehender Erstkontakt
+    if a.kategorie in ("Interne Arbeit", "Sonstiges") and not roh["attendees"] \
+            and formular.get("email") and felder.firma_aus_domain(formular["email"]):
+        a.kategorie = "Akquise"
 
     if not a.status:
         a.status = (roh.get("STATUS") or "").capitalize().replace("Confirmed", "Bestätigt")

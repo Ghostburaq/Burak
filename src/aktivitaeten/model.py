@@ -65,6 +65,7 @@ KATEGORIEN: dict[str, str] = {
     "Messe / Event": "FFB8860B",
     "Interne Arbeit": "FF5A6472",
     "E-Mail": "FF8A6D3B",
+    "Privat": "FF9A6FB0",
     "Sonstiges": "FF808080",
 }
 
