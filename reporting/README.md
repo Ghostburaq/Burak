@@ -525,3 +525,33 @@ cd tests && RECALC=/pfad/zu/recalc.py python3 run_durchgaenge.py
 
 `RECALC` zeigt auf ein Hilfsskript, das eine Mappe über LibreOffice neu rechnet;
 ohne Angabe wird der Standardpfad der Arbeitsumgebung verwendet.
+
+## Ausbau vom 12.08.2026 — `CH_MiT_Strom_Customer_CEO_CFO_MASTER__2_.xlsx`
+
+Der Ausbau (Blöcke 1–4: Nachweis, gewichtete Zerlegung, Zeitraum,
+Diagramme) arbeitet direkt auf der ausgelieferten Datei — nicht über die
+Baukette. Skripte und die vollständige Änderungsliste liegen in
+`ausbau/` (`AENDERUNGSLISTE.md`).
+
+Reihenfolge bei Änderungen an dieser Datei:
+
+```bash
+cd ausbau
+python3 ausbau_block1.py … ausbau_block4.py   # je Block, dann neu berechnen
+python3 kontrolle.py DATEI                     # K1–K4 nach jedem Block
+python3 repariere_charts.py DATEI              # nach der LETZTEN Neuberechnung
+python3 ../bereinige_datei.py DATEI            # danach immer
+python3 ../tests/audit_excel.py DATEI          # Schlusskontrolle
+```
+
+Zwei Funde aus diesem Ausbau, die auch die Baukette betreffen:
+
+1. **LibreOffice wirft Diagrammfarben weg.** Beim Neuberechnen über
+   LibreOffice verlieren alle Diagramme ihre Füllfarben. Deshalb läuft
+   `repariere_charts.py` nach der letzten Neuberechnung: es baut die
+   Diagramme mit openpyxl neu und kopiert nur die Diagramm-XMLs auf
+   ZIP-Ebene zurück — die berechneten Werte bleiben unangetastet.
+2. **Segmentliste in `_data` war unvollständig.** «Datacenter» und
+   «Elektroplaner» fehlten; das Segment-Diagramm zeigte CHF 1'072'286
+   zu wenig. Ergänzt, plus Wachhund-Zeile «Übrige (Segment fehlt in
+   der Liste)», die künftige Lücken sichtbar macht.
