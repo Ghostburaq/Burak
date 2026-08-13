@@ -102,6 +102,13 @@ UEBUNGEN = [
          schritt=10, letzter="A", aktiv=True,
          notiz="Gesamtgewicht inkl. Stange notieren, auch bei "
                "Reduktionssätzen."),
+    dict(name="Hip & Glute", block="Beine hinten", geraet="Maschine",
+         von=5, bis=8, saetze=3, rpe="8-9", start=None, maxlast=None,
+         schritt=5, letzter="A", aktiv=True,
+         notiz="Neu ab Einheit 7, ergänzt den Hip Thrust mit der Langhantel. "
+               "Reha-Freigabe ab Woche 2 abgeleitet aus der Hip-Thrust-"
+               "Maschine im Fahrplan - mit Operateur oder Physiotherapie "
+               "bestätigen."),
     dict(name="Beinbeuger", block="Beine hinten", geraet="Maschine, sitzend",
          von=5, bis=8, saetze=3, rpe="9", start=None, maxlast=None,
          schritt=5, letzter="R", aktiv=True,
@@ -132,6 +139,12 @@ UEBUNGEN = [
 # aus genau dieser Ersatzangabe abgeleitet und im Blatt 'Start' als offener
 # Punkt vermerkt.
 REHA_ZUSATZ = {
+    "Hip & Glute": (
+        2,
+        "Beinbeuger sitzend, ab Woche 1 frei",
+        "Freigabewoche abgeleitet aus der Hip-Thrust-Maschine im Fahrplan "
+        "(dort ab Woche 2). Arme vor der Brust kreuzen, nicht am Gerät "
+        "abstützen. Woche mit Operateur oder Physiotherapie bestätigen."),
     "Beinpresse": (
         2,
         "Beinstrecker und Beinbeuger sitzend, beide ab Woche 1 frei",

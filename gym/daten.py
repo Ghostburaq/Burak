@@ -168,4 +168,17 @@ ROWS = [
     [6, 'Beine vorne', 'Beinstrecker', 'A', 95, 5, None, None],
     [6, 'Beine vorne', 'Adduktion', 'A', 175.5, 8, None, None],
     [6, 'Beine vorne', 'Adduktion', 'A', 180, 8, None, None],
+    # --- Einheit 7, nur Beine hinten, ohne Warmups notiert ---------
+    [7, 'Beine hinten', 'Rumänisches Kreuzheben', 'A', 120, 8, None, None],
+    [7, 'Beine hinten', 'Rumänisches Kreuzheben', 'A', 130, 8, None, None],
+    [7, 'Beine hinten', 'Rumänisches Kreuzheben', 'A', 135, 6, None, None],
+    [7, 'Beine hinten', 'Hip Thrust', 'A', 280, 8, None, None],
+    [7, 'Beine hinten', 'Hip Thrust', 'A', 290, 8, None, None],
+    [7, 'Beine hinten', 'Hip Thrust', 'A', 290, 8, None, None],
+    [7, 'Beine hinten', 'Beinbeuger', 'A', 50, 10, None, None],
+    [7, 'Beine hinten', 'Beinbeuger', 'A', 52.5, 10, None, None],
+    [7, 'Beine hinten', 'Hip & Glute', 'A', 136, 15, None, 'erste Einheit'],
+    [7, 'Beine hinten', 'Hip & Glute', 'A', 141, 12, None, None],
+    [7, 'Beine hinten', 'Waden', 'A', 150, 12, None, None],
+    [7, 'Beine hinten', 'Waden', 'A', 160, 12, None, None],
 ]
