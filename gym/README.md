@@ -135,6 +135,13 @@ So entsteht der Vorschlag für die nächste Einheit — er rechnet sich nach
 jedem Log-Eintrag neu:
 
 **Zielbereich: 5 bis 8 Wiederholungen, für alle Übungen gleich.**
+**Immer genau drei Arbeitssätze, absteigend:** Satz 1 schwer (Top-Satz),
+Satz 2 mit 95 %, Satz 3 mit 90 % des Zielgewichts. Die leichteren Sätze
+dürfen eine bzw. zwei Wiederholungen mehr, nie über 8. Reduktionssätze
+entfallen.
+
+Die Progression hängt allein am **Top-Satz** — Satz 2 und 3 sind Volumen,
+kein Steuersignal.
 
 1. **Wiederholungen zuerst.** Solange der *schwächste* Arbeitssatz unter 8
    liegt, bleibt das Gewicht stehen und es kommt eine Wiederholung dazu.

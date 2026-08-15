@@ -83,11 +83,11 @@ UEBUNGEN = [
                "Muskel sein, nicht die Stabilität."),
     dict(name="Beinstrecker", block="Beine vorne", geraet="Maschine",
          von=5, bis=8, saetze=3, rpe="9", start=None, maxlast=None,
-         schritt=5, letzter="R", aktiv=True,
+         schritt=5, letzter="A", aktiv=True,
          notiz="Dritter Arbeitssatz läuft als Reduktionssatz aus."),
     dict(name="Adduktion", block="Beine vorne", geraet="Maschine",
          von=5, bis=8, saetze=3, rpe="9", start=None, maxlast=None,
-         schritt=2.5, letzter="R", aktiv=True,
+         schritt=2.5, letzter="A", aktiv=True,
          notiz="Deckel entfernt: in Einheit 5 lagen 162.5 kg an, die frühere "
                "Annahme 152.5 kg als Stackende stimmt also nicht. Falls doch "
                "eine Obergrenze existiert, hier unter 'Max (kg)' "
@@ -111,7 +111,7 @@ UEBUNGEN = [
                "bestätigen."),
     dict(name="Beinbeuger", block="Beine hinten", geraet="Maschine, sitzend",
          von=5, bis=8, saetze=3, rpe="9", start=None, maxlast=None,
-         schritt=5, letzter="R", aktiv=True,
+         schritt=5, letzter="A", aktiv=True,
          notiz="Sitzend statt liegend: Hüfte gebeugt, Ischiokrurale "
                "vorgedehnt, mehr Reiz pro Satz. Dritter Satz als "
                "Reduktionssatz."),
@@ -165,6 +165,10 @@ BLOCKS = ["Beine vorne", "Beine hinten"]
 
 # Aufwärm-Rampe für das Trainingsblatt: Anteil vom Zielgewicht je Warmup
 WARMUP_FAKTOR = [0.45, 0.70]
+# Arbeitssätze absteigend: Satz 1 ist der Top-Satz und steuert die
+# Progression, Satz 2 und 3 laufen als Back-off darunter. Immer genau drei.
+BACKOFF = [1.00, 0.95, 0.90]
+SATZ_LABEL = ["A · schwer", "A · mittel", "A · leicht"]
 
 # --------------------------------------------------------------------------
 # Design
@@ -510,6 +514,12 @@ for lab, txt in [
      "Alle Übungen laufen im selben Bereich: 5 bis 8 Wiederholungen je "
      "Arbeitssatz. Kraftlastig, dafür brauchen die Sätze längere Pausen - "
      "drei bis vier Minuten bei den schweren Übungen."),
+    ("Drei Sätze, absteigend",
+     "Immer genau drei Arbeitssätze, keine Reduktionssätze mehr. Satz 1 ist "
+     "der schwere Top-Satz und bestimmt allein die Progression. Satz 2 "
+     "läuft mit 95 Prozent, Satz 3 mit 90 Prozent davon - beide dürfen eine "
+     "beziehungsweise zwei Wiederholungen mehr, aber nie über 8. Auf dem "
+     "Trainingsblatt steht je Satz das eigene Gewicht."),
     ("Doppelte Progression",
      "So wird gesteigert, und zwar nach jedem Training neu: Solange der "
      "schwächste Arbeitssatz unter 8 Wdh liegt, bleibt das Gewicht stehen "
@@ -1972,7 +1982,7 @@ if not PREOP:
 wst = sheet("Trainingsblatt")
 # Die breite Notizspalte ist Absicht: sie bestimmt über die
 # Breitenanpassung den Zoom, und damit passt ein Block auf eine A4-Seite.
-for col, w in zip("ABCDEFGHI", [5, 8, 11, 9, 13, 9, 8, 6, 50]):
+for col, w in zip("ABCDEFGHI", [4, 12, 11, 9, 13, 9, 8, 6, 46]):
     wst.column_dimensions[col].width = w
 
 
@@ -2028,11 +2038,10 @@ for nr, (bi, block, kopie) in enumerate(blaetter):
                   % (UEB, UEB_FIRST + i, UEB, UEB_FIRST + i))
         saetzeref = "%s!$F$%d" % (UEB, UEB_FIRST + i)
         rperef = "%s!$G$%d" % (UEB, UEB_FIRST + i)
+        u_bis_ref = "%s!$E$%d" % (UEB, UEB_FIRST + i)
         ziel = rek("O", exref)
-        # Satzschema aus den Planvorgaben: zwei Warmups, dann die
-        # Ziel-Arbeitssätze, der letzte optional als Reduktionssatz.
-        satzmuster = (["W"] * len(WARMUP_FAKTOR)
-                      + ["A"] * (u["saetze"] - 1) + [u["letzter"]])
+        # Zwei Warmups, dann drei Arbeitssätze absteigend.
+        satzmuster = ["W"] * len(WARMUP_FAKTOR) + ["A"] * len(BACKOFF)
 
         wst.merge_cells(start_row=row, start_column=1, end_row=row,
                         end_column=9)
@@ -2127,28 +2136,34 @@ for nr, (bi, block, kopie) in enumerate(blaetter):
         row += 1
 
         for s, typ in enumerate(satzmuster):
+            arbeitssatz = s - len(WARMUP_FAKTOR)      # -2, -1, 0, 1, 2
             c = wst.cell(row, 1, s + 1)
             c.font, c.alignment = F_SMALL, C
-            c = wst.cell(row, 2, typ)
+            c = wst.cell(row, 2,
+                         SATZ_LABEL[arbeitssatz] if arbeitssatz >= 0 else typ)
             c.font, c.alignment = F_BOLD, C
             if typ == "A":
                 c.fill = FILL_WORK
-            # Warmups nach Rampe, Arbeitssätze auf Zielgewicht,
-            # Reduktionssatz bleibt offen.
-            fak = (WARMUP_FAKTOR[s] if s < len(WARMUP_FAKTOR)
-                   else (1.0 if typ == "A" else None))
-            if fak is not None:
-                c = wst.cell(row, 3,
-                             "=IF(%s,\"\",IF(%s=\"\",\"\","
-                             "ROUND(%s*%s*2,0)/2))"
-                             % (gesperrt, ziel, ziel, fak))
-                c.font = Font(name=FONT, size=10, color="4A5568")
-                c.alignment, c.number_format = C, NF_KG
-            # Ziel-Wdh nur bei den Arbeitssätzen, Warmups bleiben frei
-            if typ == "A":
+            # Warmups nach Rampe, danach der Top-Satz und zwei Back-offs
+            fak = (WARMUP_FAKTOR[s] if arbeitssatz < 0
+                   else BACKOFF[arbeitssatz])
+            c = wst.cell(row, 3,
+                         "=IF(%s,\"\",IF(%s=\"\",\"\","
+                         "ROUND(%s*%s*2,0)/2))"
+                         % (gesperrt, ziel, ziel, fak))
+            c.font = Font(name=FONT, size=10,
+                          color=NAVY if arbeitssatz == 0 else "4A5568")
+            c.alignment, c.number_format = C, NF_KG
+            if arbeitssatz == 0:
+                c.font = Font(name=FONT, size=11, bold=True, color=NAVY)
+            # Ziel-Wdh: leichtere Sätze dürfen eine Wdh mehr, gedeckelt
+            # am oberen Ende des Zielbereichs.
+            if arbeitssatz >= 0:
                 c = wst.cell(row, 4,
-                             "=IF(%s,\"\",IF(%s=\"\",\"\",%s))"
-                             % (gesperrt, zielwdh, zielwdh))
+                             "=IF(%s,\"\",IF(%s=\"\",\"\","
+                             "MIN(%s,%s+%d)))"
+                             % (gesperrt, zielwdh, u_bis_ref, zielwdh,
+                                arbeitssatz))
                 c.font = Font(name=FONT, size=10, bold=True, color=GREEN)
                 c.alignment, c.number_format = C, NF_INT
             for col in range(5, 10):
@@ -2187,8 +2202,8 @@ wst.conditional_formatting.add(
                 font=Font(name=FONT, size=9, bold=True, color=RED)))
 
 druck(wst, "A1:I%d" % (row - 1), margins=(0.45, 0.35, 0.45, 0.45),
-      fussnote="Plan und Ziel-Wdh kommen aus der doppelten Progression im "
-               "Blatt 'Rekorde'  ·  Warmups 45 % / 70 % vom Zielgewicht")
+      fussnote="Satz 1 schwer (Top-Satz, steuert die Progression) · Satz 2 "
+               "95 % · Satz 3 90 %  ·  Warmups 45 % / 70 %")
 
 # ==========================================================================
 # DASHBOARD
