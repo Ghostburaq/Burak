@@ -35,7 +35,16 @@
      page never ships a dead link or a fake code.
      ============================================================ -->
 <script>
+/* Wix (and any page builder) loads this inside an iframe. Flag it before
+   first paint so the CSS below can adapt instead of fighting the host page. */
+if (window.self !== window.top) document.documentElement.classList.add("is-embedded");
+
 window.SITE = {
+
+  /* Where your Wix site lives. Change this if you move Wix to a subdomain
+     (e.g. "https://programs.taliafiege.com") — the challenge links on slide 5
+     follow it automatically. Leave empty to keep the URLs as written. */
+  wixBase: "",
 
   /* ---- how people reach you ---------------------------------------- */
   booking: {
@@ -778,6 +787,22 @@ html.lb-open{overflow:hidden}
 .reveal[data-delay="2"]{transition-delay:.2s}
 .reveal[data-delay="3"]{transition-delay:.3s}
 
+/* ============================================================
+   EMBEDDED MODE — running inside a Wix "Embed HTML" iframe
+   ============================================================ */
+.is-embedded{
+  /* the iframe is its own viewport: snapping a nested scroller feels broken,
+     and reaching the end must not start scrolling the Wix page behind it */
+  scroll-snap-type:none;
+  overscroll-behavior:contain;
+}
+.is-embedded body{overscroll-behavior:contain}
+.is-embedded .slide{
+  scroll-snap-align:none;
+  padding-block:calc(var(--nav-h) + var(--nav-top) + 1.5rem) 2rem;
+}
+.is-embedded .dots{display:none}          /* the host page owns the side gutters */
+
 @media(prefers-reduced-motion:reduce){
   html{scroll-behavior:auto;scroll-snap-type:none}
   *,*::before,*::after{
@@ -1370,6 +1395,16 @@ html.lb-open{overflow:hidden}
       im.loading = "lazy"; im.decoding = "async";
       fig.appendChild(im);
       trackEl.appendChild(fig);
+    });
+  })();
+
+  /* ---------- Wix moved to another domain? Follow it. ---------- */
+  (function(){
+    var base = (CFG.wixBase || "").replace(/\/$/, "");
+    var OLD  = "https://www.taliafiege.com";
+    if (!base || base === OLD) return;
+    document.querySelectorAll('a[href^="' + OLD + '/"]').forEach(function(a){
+      a.setAttribute("href", base + a.getAttribute("href").slice(OLD.length));
     });
   })();
 

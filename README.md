@@ -2,8 +2,7 @@
 
 Single-page site for **Talia Fiege — IFBB Pro Athlete, Online Fitness Coach & Entrepreneur**, built as ten full-screen slides that snap into place like a keynote.
 
-One self-contained file: `index.html` (HTML + CSS + vanilla JS). No build step, no framework.
-One self-contained file: `index.html` (HTML + CSS + vanilla JS). No build step, no framework. See "Hosting this on Wix" below before deploying.
+One self-contained file: `index.html` (HTML + CSS + vanilla JS). No build step, no framework. It runs both as a standalone site and inside a Wix embed — see **[DEPLOY.md](DEPLOY.md)**.
 
 ## The slides
 
@@ -52,6 +51,7 @@ Near the top of `index.html`, right after the font `<link>`, is a `window.SITE` 
 
 | Key | What it does |
 |---|---|
+| `wixBase` | Where the Wix site lives. Set it to e.g. `"https://programs.taliafiege.com"` and the challenge links on slide 5 follow. Empty keeps the URLs as written. |
 | `booking.mode` | `"application"` (default) points every CTA at the form on the last slide. `"calendar"` points them at `booking.calendarUrl` instead and relabels the buttons. |
 | `youtube` | Channel URL. Empty leaves the YouTube chip disabled. |
 | `links` | `{ label, url }` entries from your Linktree. They render as pills under the socials; an empty list hides that whole block. |
@@ -74,14 +74,16 @@ A partner with a code but no URL (or the reverse) is fine — each half works on
 
 Search the file for `data-placeholder` to jump to all three.
 
-## Hosting this on Wix
+## Hosting
 
-Wix cannot serve a hand-written `index.html` as a page. There are two honest routes and they are a real decision, not a detail:
+Wix cannot serve a hand-written `index.html` as a page, so there are two routes — and **this file is ready for both without being edited**. It checks at load whether it is inside an iframe and adapts: snapping off, side dots hidden, scroll chaining contained.
 
-1. **Host the one-pager, keep Wix for the programs.** Put this file on Netlify, Vercel or Cloudflare Pages (all free), point `taliafiege.com` at it, and move the current Wix site to a subdomain such as `programs.taliafiege.com`. The challenge links in slide 5 then need updating to that subdomain. This is the only route where the page works exactly as built — snapping, anchors, and content Google can index.
-2. **Embed it in Wix.** Wix's HTML embed puts the page inside a sandboxed `iframe`. The full-screen slides then size to the iframe rather than the browser window, the nav anchors cannot move the outer page, and Google indexes the iframe's content separately from the site. Workable for a section, poor for a whole homepage.
+- **Route A** — host it yourself, point `taliafiege.com` at it, move the Wix site to a subdomain. The page works exactly as built and its text is indexable.
+- **Route B** — embed it in Wix. Ships today, costs you SEO on that content.
 
-If Wix has to stay the host, the better plan is to treat this file as the design reference and rebuild the layout with Wix's own sections — you keep the look and lose the slide mechanics.
+Step-by-step for both, plus what Route B actually costs, is in **[DEPLOY.md](DEPLOY.md)**.
+
+Set `wixBase` in the config block if the Wix site moves to a subdomain — the three challenge links follow it automatically.
 
 ## Not connected yet
 
