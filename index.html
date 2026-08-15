@@ -36,16 +36,46 @@
      ============================================================ -->
 <script>
 window.SITE = {
-  youtube: "",                                  /* full channel URL, e.g. https://www.youtube.com/@handle */
 
+  /* ---- how people reach you ---------------------------------------- */
+  booking: {
+    mode: "application",     /* "application" = every CTA opens the form on the last slide (recommended:
+                                you see the request first and offer times yourself)
+                                "calendar"    = every CTA opens your Wix booking page instead */
+    calendarUrl: "https://www.taliafiege.com/booking-calendar"
+  },
+
+  youtube: "",               /* full channel URL, e.g. https://www.youtube.com/@handle */
+
+  /* ---- everything from your Linktree ------------------------------- */
+  links: [
+    /* { label: "Free Macro Guide", url: "https://..." }, */
+  ],
+
+  /* ---- photos: paste new URLs here, no markup editing -------------- */
+  images: {
+    hero:  "",               /* slide 1 portrait — leave empty to keep the current photo */
+    about: "",               /* slide 3 portrait */
+    gallery: [
+      /* "https://....jpg", or { src: "https://....jpg", alt: "what it shows", wide: true } */
+    ]
+  },
+
+  /* ---- affiliate partners ------------------------------------------ */
   essentials: {
-    legion:       { url: "", code: "" },        /* Legion Supplements */
-    angel:        { url: "", code: "" },        /* Angel Competition Bikinis */
-    bodykore:     { url: "", code: "" },        /* BodyKore */
-    muscleegg:    { url: "", code: "" },        /* MuscleEgg */
-    bones:        { url: "", code: "" },        /* Bones Coffee */
-    americanDream:{ url: "", code: "" }         /* American Dream Nut Butter */
-  }
+    legion:       { url: "", code: "" },
+    angel:        { url: "", code: "" },
+    bodykore:     { url: "", code: "" },
+    muscleegg:    { url: "", code: "" },
+    bones:        { url: "", code: "" },
+    americanDream:{ url: "", code: "" }
+  },
+
+  /* New partners show up as extra cards. Add one only once the deal is
+     live and you have the real link and code — an empty list ships nothing. */
+  extraPartners: [
+    /* { name: "", category: "", url: "", code: "" } */
+  ]
 };
 </script>
 
@@ -565,7 +595,8 @@ h3{font-size:clamp(1.1875rem,1.7vw,1.4375rem);font-weight:600;line-height:1.22;l
    ============================================================ */
 .brands{display:grid;gap:clamp(.75rem,1.5vw,1.125rem);grid-template-columns:1fr;perspective:1400px}
 @media(min-width:640px){.brands{grid-template-columns:repeat(2,1fr)}}
-@media(min-width:1000px){.brands{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:1000px){.brands{grid-template-columns:repeat(3,1fr)}
+  .brands.is-dense{grid-template-columns:repeat(4,1fr)}}
 .brand{padding:1.35rem 1.5rem;display:flex;flex-direction:column;gap:.7rem}
 .brand__cat{font-size:.6875rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-3);margin:0}
 .brand h3{font-size:1.0625rem}
@@ -606,10 +637,37 @@ input:focus,textarea:focus{
   border-color:var(--blue);outline:none;
   box-shadow:inset 0 1px 2px rgba(0,0,0,.04), 0 0 0 4px rgba(0,113,227,.16);
 }
-textarea{resize:vertical;min-height:120px}
+textarea{resize:vertical;min-height:88px}
 label{display:block;font-size:.8125rem;color:var(--text-2);font-weight:500;margin-bottom:.4rem}
 .field{margin-bottom:1rem}
 .form-note{font-size:.8125rem;color:var(--text-3);margin:1rem 0 0}
+.field-grid{display:grid;gap:0 1rem;grid-template-columns:1fr}
+@media(min-width:560px){.field-grid{grid-template-columns:1fr 1fr}}
+select{
+  width:100%;padding:.9rem 2.4rem .9rem 1.1rem;border-radius:12px;
+  background:linear-gradient(180deg,#FBFBFD,#FFFFFF)
+    no-repeat right 1rem center/13px 8px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='8' fill='none'%3E%3Cpath d='M1.5 1.5 6.5 6.5l5-5' stroke='%236E6E73' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+    linear-gradient(180deg,#FBFBFD,#FFFFFF);
+  background-repeat:no-repeat,no-repeat;
+  background-position:right 1rem center,0 0;
+  background-size:13px 8px,auto;
+  border:1px solid rgba(0,0,0,.16);
+  box-shadow:inset 0 1px 2px rgba(0,0,0,.05);
+  color:var(--text);font-family:inherit;font-size:1rem;
+  appearance:none;-webkit-appearance:none;cursor:pointer;
+  transition:border-color .2s var(--ease), box-shadow .2s var(--ease);
+}
+select:invalid{color:var(--text-3)}
+select:focus{border-color:var(--blue);outline:none;box-shadow:inset 0 1px 2px rgba(0,0,0,.04), 0 0 0 4px rgba(0,113,227,.16)}
+
+.more-links{margin-top:1.5rem}
+.more-links[hidden]{display:none}
+.more-links__label{
+  font-size:.6875rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--text-3);margin:0 0 .6rem;
+}
+.more-links .socials{margin-top:0}
 .form-status{margin:1rem 0 0;font-size:.875rem;color:var(--blue);min-height:1.4em;font-weight:500}
 
 /* ============================================================
@@ -748,12 +806,12 @@ html.lb-open{overflow:hidden}
         <li><a href="#programs">Programs</a></li>
         <li><a href="#results">Results</a></li>
         <li><a href="#essentials">Essentials</a></li>
-        <li><a href="#contact">Contact</a></li>
-        <li class="nav__cta-mobile"><a class="btn btn--blue btn--sm" href="https://www.taliafiege.com/booking-calendar" target="_blank" rel="noopener">Free Consultation</a></li>
+        <li><a href="#contact">Apply</a></li>
+        <li class="nav__cta-mobile"><a class="btn btn--blue btn--sm" data-book data-book-alt="Free Consultation" href="#contact"><span data-book-text>Apply for Coaching</span></a></li>
       </ul>
     </nav>
 
-    <a class="btn btn--blue btn--sm nav__cta" href="https://www.taliafiege.com/booking-calendar" target="_blank" rel="noopener">Free Consultation</a>
+    <a class="btn btn--blue btn--sm nav__cta" data-book data-book-alt="Free Consultation" href="#contact"><span data-book-text>Apply for Coaching</span></a>
 
     <button class="nav__toggle" id="navToggle" aria-expanded="false" aria-controls="navLinks" aria-label="Open menu">
       <span></span><span></span><span></span>
@@ -775,8 +833,8 @@ html.lb-open{overflow:hidden}
       <p class="hero__sub">Online Fitness Coach · Entrepreneur · Single Mom Who Rewrote the Rules</p>
       <div class="hero__actions">
         <a class="btn btn--blue" href="#coaching">Start Your Journey</a>
-        <a class="link" href="https://www.taliafiege.com/booking-calendar" target="_blank" rel="noopener">
-          Free Consultation
+        <a class="link" data-book data-book-alt="Free Consultation" href="#contact">
+          <span data-book-text>Apply for Coaching</span>
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 3.5L10.5 8 6 12.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </a>
       </div>
@@ -796,7 +854,7 @@ html.lb-open{overflow:hidden}
       </span>
       <span class="chip chip--b">
         <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        Co-Owner, MomBodz
+        First Show, First Place
       </span>
     </div>
   </div>
@@ -823,8 +881,8 @@ html.lb-open{overflow:hidden}
       </article>
       <article class="card card--lift sheen pillar reveal" data-delay="2">
         <p class="pillar__num">03</p>
-        <h3>Co-Owner, MomBodz</h3>
-        <p>A meal prep business built from the same problem my clients have: eating right when life is full.</p>
+        <h3>First Show, First Place</h3>
+        <p>Two first-place wins and a second place — all in my very first bodybuilding show.</p>
       </article>
     </div>
   </div>
@@ -844,7 +902,7 @@ html.lb-open{overflow:hidden}
       <div class="about__body" style="margin-top:1.75rem">
         <p>I came to sports late. Volleyball in high school was the start. Then at <strong>24 I found weightlifting</strong> — and that changed everything.</p>
         <p>The road was not clean. Highs, lows, and the injuries that come with pushing your limits. I kept going. I picked up <strong>kickboxing</strong>. I ran a <strong>demolition derby</strong> car. I raised my kid on my own and handled more than I can count.</p>
-        <p>Then I stepped on a bodybuilding stage for the first time and walked off with <strong>two first-place wins and a second</strong>. Today I'm an <strong>IFBB Pro</strong>, a certified trainer, and co-owner of the meal prep business <strong>MomBodz</strong>.</p>
+        <p>Then I stepped on a bodybuilding stage for the first time and walked off with <strong>two first-place wins and a second</strong>. Today I'm an <strong>IFBB Pro</strong> and a certified trainer.</p>
         <p>My work is simple: help women build real strength and unshakable confidence — and become the best version of themselves.</p>
       </div>
     </div>
@@ -857,7 +915,7 @@ html.lb-open{overflow:hidden}
     <div class="slide-head reveal">
       <p class="eyebrow">Work With Me</p>
       <h2 id="coaching-title">Coaching that actually fits your life.</h2>
-      <p class="lede">Weight loss, muscle building, strength, cardio, flexibility and nutrition — built around your schedule, your body and your goal. Every client starts with a free consultation.</p>
+      <p class="lede">Weight loss, muscle building, strength, cardio, flexibility and nutrition — built around your schedule, your body and your goal. Every client starts with an application, not an open calendar.</p>
     </div>
 
     <div class="grid-3">
@@ -874,7 +932,7 @@ html.lb-open{overflow:hidden}
           <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Built around the equipment you actually have</li>
           <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Yours to keep and repeat</li>
         </ul>
-        <a class="btn btn--outline btn--block" href="https://www.taliafiege.com/booking-calendar" target="_blank" rel="noopener">Apply Now</a>
+        <a class="btn btn--outline btn--block" data-book href="#contact"><span data-book-text>Apply Now</span></a>
       </article>
 
       <!-- PLACEHOLDER: replace the visible "$—" with the real monthly price for 1:1 Online Coaching. -->
@@ -890,7 +948,7 @@ html.lb-open{overflow:hidden}
           <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>In-app support between sessions</li>
           <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Direct access to me — not an assistant</li>
         </ul>
-        <a class="btn btn--blue btn--block" href="https://www.taliafiege.com/booking-calendar" target="_blank" rel="noopener">Apply Now</a>
+        <a class="btn btn--blue btn--block" data-book href="#contact"><span data-book-text>Apply Now</span></a>
       </article>
 
       <!-- PLACEHOLDER: replace the visible "$—" with the real monthly price for Contest Prep. -->
@@ -905,7 +963,7 @@ html.lb-open{overflow:hidden}
           <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Peak week handled step by step</li>
           <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Guided by someone who earned her pro card</li>
         </ul>
-        <a class="btn btn--outline btn--block" href="https://www.taliafiege.com/booking-calendar" target="_blank" rel="noopener">Apply Now</a>
+        <a class="btn btn--outline btn--block" data-book href="#contact"><span data-book-text>Apply Now</span></a>
       </article>
 
     </div>
@@ -1150,20 +1208,20 @@ html.lb-open{overflow:hidden}
 </section>
 
 <!-- ========================= 10 · CONTACT ========================= -->
-<section class="slide slide--grey" id="contact" data-slide="Contact" aria-labelledby="contact-title">
+<section class="slide slide--grey" id="contact" data-slide="Apply" aria-labelledby="contact-title">
   <div class="wrap" style="display:flex;flex-direction:column;flex:1">
     <div class="contact__grid" style="flex:1;align-content:center">
       <div class="reveal">
-        <p class="eyebrow">Contact</p>
-        <h2 id="contact-title">Let's talk.</h2>
-        <p class="lede">Coaching questions, collaborations or press — send a message and I'll get back to you.</p>
+        <p class="eyebrow">Apply</p>
+        <h2 id="contact-title">Apply for coaching.</h2>
+        <p class="lede">There is no open calendar. Tell me what you're working toward and I'll come back to you with times that actually work.</p>
 
         <a class="contact__mail" href="mailto:taliafiege13@gmail.com">
           <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="2" y="4" width="16" height="12" rx="2.5" stroke="currentColor" stroke-width="1.6"/><path d="M3 6l7 5 7-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
           taliafiege13@gmail.com
         </a>
 
-        <ul class="socials">
+        <ul class="socials" aria-label="Social profiles">
           <li><a class="social" href="https://www.instagram.com/taliafiege13_ifbbpro/" target="_blank" rel="noopener">
             <svg width="15" height="15" viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="3" y="3" width="14" height="14" rx="4.5" stroke="currentColor" stroke-width="1.6"/><circle cx="10" cy="10" r="3.4" stroke="currentColor" stroke-width="1.6"/><circle cx="14.3" cy="5.7" r="1" fill="currentColor"/></svg>
             Instagram</a></li>
@@ -1178,32 +1236,66 @@ html.lb-open{overflow:hidden}
             <svg width="15" height="15" viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="2.5" y="5" width="15" height="10" rx="3" stroke="currentColor" stroke-width="1.6"/><path d="M8.8 7.9l3.6 2.1-3.6 2.1V7.9z" fill="currentColor"/></svg>
             YouTube <span data-youtube-note style="opacity:.65">(link coming)</span></a></li>
         </ul>
+
+        <!-- Populated from SITE.links (your Linktree). Stays hidden while the list is empty. -->
+        <div class="more-links" data-links-wrap hidden>
+          <p class="more-links__label">More from me</p>
+          <ul class="socials" data-links></ul>
+        </div>
       </div>
 
-      <!-- CONTACT FORM — front-end only. Connect to a form backend (Formspree, Basin, Wix Forms) before launch. -->
+      <!-- APPLICATION FORM — front-end only. Connect to a form backend (Formspree, Basin, Wix Forms) before launch. -->
       <div class="card sheen reveal" data-delay="1" style="padding:clamp(1.5rem,2.6vw,2.25rem)">
-        <form id="contactForm" data-todo="connect to a form backend (Formspree/Basin/Wix Forms)" novalidate>
-          <div class="field">
-            <label for="cName">Name</label>
-            <input id="cName" name="name" type="text" autocomplete="name" placeholder="Your name" required>
+        <form id="applyForm" data-todo="connect to a form backend (Formspree/Basin/Wix Forms)" novalidate>
+          <div class="field-grid">
+            <div class="field">
+              <label for="cName">Name</label>
+              <input id="cName" name="name" type="text" autocomplete="name" placeholder="Your name" required>
+            </div>
+            <div class="field">
+              <label for="cEmail">Email</label>
+              <input id="cEmail" name="email" type="email" autocomplete="email" placeholder="your@email.com" required>
+            </div>
+            <div class="field">
+              <label for="cGoal">Main goal</label>
+              <select id="cGoal" name="goal" required>
+                <option value="" selected disabled>Choose one</option>
+                <option>Weight loss</option>
+                <option>Muscle building</option>
+                <option>Strength</option>
+                <option>Contest prep</option>
+                <option>General fitness</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="cExp">Training experience</label>
+              <select id="cExp" name="experience" required>
+                <option value="" selected disabled>Choose one</option>
+                <option>New to lifting</option>
+                <option>1&ndash;2 years</option>
+                <option>3+ years</option>
+                <option>I have competed before</option>
+              </select>
+            </div>
           </div>
           <div class="field">
-            <label for="cEmail">Email</label>
-            <input id="cEmail" name="email" type="email" autocomplete="email" placeholder="your@email.com" required>
+            <label for="cWhen">When do you usually train?</label>
+            <input id="cWhen" name="availability" type="text" placeholder="e.g. early mornings, weekdays">
           </div>
           <div class="field">
-            <label for="cMsg">Message</label>
-            <textarea id="cMsg" name="message" placeholder="Tell me about your goal." required></textarea>
+            <label for="cMsg">Anything else I should know?</label>
+            <textarea id="cMsg" name="message" placeholder="Injuries, competition plans, your timeline."></textarea>
           </div>
-          <button class="btn btn--blue btn--block" type="submit">Send Message</button>
-          <p class="form-status" id="contactStatus" role="status" aria-live="polite"></p>
+          <button class="btn btn--blue btn--block" type="submit">Send Application</button>
+          <p class="form-status" id="applyStatus" role="status" aria-live="polite"></p>
+          <p class="form-note">No open calendar &mdash; I read every application and follow up personally.</p>
         </form>
       </div>
     </div>
 
     <footer class="footer">
       <p style="margin:0">&copy; 2026 Talia Fiege &mdash; All Rights Reserved.</p>
-      <p style="margin:0"><a href="https://www.taliafiege.com/booking-calendar" target="_blank" rel="noopener">Book a free consultation</a></p>
+      <p style="margin:0"><a data-book data-book-alt="Book a free consultation" href="#contact"><span data-book-text>Apply for coaching</span></a></p>
     </footer>
   </div>
 </section>
@@ -1253,6 +1345,47 @@ html.lb-open{overflow:hidden}
   var reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
   var isTouch = window.matchMedia("(hover: none), (pointer: coarse)").matches;
   var slides  = Array.prototype.slice.call(document.querySelectorAll(".slide"));
+  var CFG     = window.SITE || {};
+
+  /* ---------- Photos from config (runs before the gallery is wired up) ---------- */
+  (function(){
+    var IMG = CFG.images || {};
+    var heroImg  = document.querySelector(".hero__photo img");
+    var aboutImg = document.querySelector(".about__photo img");
+    if (heroImg  && IMG.hero)  heroImg.src  = IMG.hero;
+    if (aboutImg && IMG.about) aboutImg.src = IMG.about;
+
+    var list = IMG.gallery || [];
+    var trackEl = document.getElementById("galleryTrack");
+    if (!trackEl || !list.length) return;
+    while (trackEl.firstChild) trackEl.removeChild(trackEl.firstChild);
+    list.forEach(function(item, i){
+      var src = typeof item === "string" ? item : (item && item.src);
+      if (!src) return;
+      var fig = document.createElement("figure");
+      fig.className = "shot" + (item && item.wide ? " shot--wide" : "");
+      var im = document.createElement("img");
+      im.src = src;
+      im.alt = (item && item.alt) || ("Talia Fiege, photo " + (i + 1));
+      im.loading = "lazy"; im.decoding = "async";
+      fig.appendChild(im);
+      trackEl.appendChild(fig);
+    });
+  })();
+
+  /* ---------- Booking mode: application form (default) or Wix calendar ---------- */
+  (function(){
+    var BK = CFG.booking || {};
+    if (BK.mode !== "calendar" || !BK.calendarUrl) return;   // markup already points at the form
+    document.querySelectorAll("[data-book]").forEach(function(a){
+      a.setAttribute("href", BK.calendarUrl);
+      a.setAttribute("target", "_blank");
+      a.setAttribute("rel", "noopener");
+      var alt = a.getAttribute("data-book-alt");
+      var txt = a.querySelector("[data-book-text]");
+      if (alt && txt) txt.textContent = alt;
+    });
+  })();
 
   /* ---------- Mobile menu ---------- */
   var toggle = document.getElementById("navToggle");
@@ -1460,16 +1593,15 @@ html.lb-open{overflow:hidden}
     });
   }
   handle("optinForm",  "optinStatus",  "Thanks! Once the email tool is connected, your guide lands in your inbox.");
-  handle("contactForm","contactStatus","Thanks! Your message is ready to send once the form backend is connected.");
+  handle("applyForm","applyStatus","Thanks! Your application is ready to send once the form backend is connected.");
 
   /* ---------- Config: affiliate links, discount codes, YouTube ---------- */
-  var CFG = window.SITE || {};
   var ESS = CFG.essentials || {};
 
-  document.querySelectorAll(".brand[data-brand]").forEach(function(card){
-    var conf   = ESS[card.getAttribute("data-brand")] || {};
+  function wirePartner(card, conf){
     var codeEl = card.querySelector("[data-code]");
     var shop   = card.querySelector("[data-shop]");
+    conf = conf || {};
 
     if (conf.code) {
       codeEl.textContent = "Code ";
@@ -1512,7 +1644,61 @@ html.lb-open{overflow:hidden}
       shop.setAttribute("rel", "sponsored noopener");
       shop.removeAttribute("aria-disabled");
     }
+  }
+
+  document.querySelectorAll(".brand[data-brand]").forEach(function(card){
+    wirePartner(card, ESS[card.getAttribute("data-brand")]);
   });
+
+  /* New partners (e.g. a brand deal that goes live later) are appended here. */
+  var brandsWrap = document.querySelector(".brands");
+  (CFG.extraPartners || []).forEach(function(b){
+    if (!brandsWrap || !b || !b.name) return;
+    var card = document.createElement("article");
+    card.className = "card card--lift sheen brand";
+
+    var cat = document.createElement("p");
+    cat.className = "brand__cat";
+    cat.textContent = b.category || "Partner";
+
+    var h = document.createElement("h3");
+    h.textContent = b.name;
+
+    var row  = document.createElement("div"); row.className = "brand__row";
+    var code = document.createElement("p");
+    code.className = "brand__code";
+    code.setAttribute("data-code", "");
+    code.textContent = "Code coming soon";
+    var shop = document.createElement("a");
+    shop.className = "link";
+    shop.setAttribute("data-shop", "");
+    shop.setAttribute("href", "#");
+    shop.setAttribute("aria-disabled", "true");
+    shop.textContent = "Shop";
+
+    row.appendChild(code); row.appendChild(shop);
+    card.appendChild(cat); card.appendChild(h); card.appendChild(row);
+    brandsWrap.appendChild(card);
+    wirePartner(card, b);
+  });
+  if (brandsWrap && brandsWrap.children.length > 6) brandsWrap.classList.add("is-dense");
+
+  /* Extra links (Linktree) render next to the socials. */
+  var linksWrap = document.querySelector("[data-links]");
+  var linksBox  = document.querySelector("[data-links-wrap]");
+  (CFG.links || []).forEach(function(l){
+    if (!linksWrap || !l || !l.url || !l.label) return;
+    var li = document.createElement("li");
+    var a  = document.createElement("a");
+    a.className = "social";
+    a.setAttribute("href", l.url);
+    a.setAttribute("target", "_blank");
+    a.setAttribute("rel", "noopener");
+    a.textContent = l.label;
+    li.appendChild(a);
+    linksWrap.appendChild(li);
+  });
+  if (linksBox && linksWrap && linksWrap.children.length) linksBox.hidden = false;
 
   var yt = document.querySelector("[data-youtube]");
   if (yt && CFG.youtube) {

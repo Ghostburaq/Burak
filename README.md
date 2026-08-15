@@ -3,14 +3,14 @@
 Single-page site for **Talia Fiege — IFBB Pro Athlete, Online Fitness Coach & Entrepreneur**, built as ten full-screen slides that snap into place like a keynote.
 
 One self-contained file: `index.html` (HTML + CSS + vanilla JS). No build step, no framework.
-Deploy by uploading `index.html` to any static host (Netlify, Vercel, Cloudflare Pages, or as a custom-code page in Wix).
+One self-contained file: `index.html` (HTML + CSS + vanilla JS). No build step, no framework. See "Hosting this on Wix" below before deploying.
 
 ## The slides
 
 | # | Slide | Content |
 |---|---|---|
 | 1 | Home | Name, IFBB Pro badge, two CTAs, portrait with aura, floating glass chips and parallax |
-| 2 | Credentials | IFBB Pro · Certified Trainer · Co-Owner MomBodz |
+| 2 | Credentials | IFBB Pro · Certified Trainer · First Show, First Place |
 | 3 | About | The story, with portrait |
 | 4 | Coaching | Three pricing cards, 3D tilt on hover |
 | 5 | Programs | The three Wix challenge pages |
@@ -18,7 +18,7 @@ Deploy by uploading `index.html` to any static host (Netlify, Vercel, Cloudflare
 | 7 | Gallery | Full-bleed 3D coverflow strip, click to open the lightbox |
 | 8 | Essentials | Six affiliate brands with copy-code buttons + FTC disclosure + Etsy |
 | 9 | Free Guide | Email capture |
-| 10 | Contact | Email, socials, contact form, footer |
+| 10 | Apply | Coaching application, email, socials, Linktree links, footer |
 
 **Navigation:** click the dots on the right, use the nav links, or press `↑` `↓` `PageUp` `PageDown` `Home` `End`. A progress bar tracks position.
 
@@ -46,28 +46,23 @@ Snapping is `mandatory` only from 1000×880 px upward, where every slide provabl
 
 ## Before going live — fill these in
 
-### 1. Affiliate links, discount codes and YouTube — one config block
+### 1. The config block
 
-Near the top of `index.html`, right after the font `<link>`, is a `window.SITE` block. It is the only place these values live:
+Near the top of `index.html`, right after the font `<link>`, is a `window.SITE` block. Photos, links, discount codes and the booking behaviour all live there — you should not need to touch the markup for any of it:
 
-```js
-window.SITE = {
-  youtube: "https://www.youtube.com/@yourhandle",
+| Key | What it does |
+|---|---|
+| `booking.mode` | `"application"` (default) points every CTA at the form on the last slide. `"calendar"` points them at `booking.calendarUrl` instead and relabels the buttons. |
+| `youtube` | Channel URL. Empty leaves the YouTube chip disabled. |
+| `links` | `{ label, url }` entries from your Linktree. They render as pills under the socials; an empty list hides that whole block. |
+| `images.hero` / `images.about` | New portraits for slides 1 and 3. Empty keeps the current photo. |
+| `images.gallery` | Replaces the whole gallery strip. Accepts `"url"` or `{ src, alt, wide }`. `wide: true` makes a landscape frame. |
+| `essentials` | The six existing affiliate partners, each `{ url, code }`. |
+| `extraPartners` | `{ name, category, url, code }` for new deals. Each becomes another card; the grid switches to four columns past six cards. |
 
-  essentials: {
-    legion:       { url: "https://…", code: "TALIA10" },
-    angel:        { url: "https://…", code: "TALIA"   },
-    bodykore:     { url: "https://…", code: "…"       },
-    muscleegg:    { url: "https://…", code: "…"       },
-    bones:        { url: "https://…", code: "…"       },
-    americanDream:{ url: "https://…", code: "…"       }
-  }
-};
-```
+Anything left empty stays in a clean "coming soon" state — a card shows no code and its Shop link is disabled and cannot be clicked, so the page never ships a dead link or an invented code. Fill a value in and that card switches itself on: the code appears as a pill with a copy-to-clipboard button, and the Shop link opens in a new tab with `rel="sponsored noopener"`.
 
-Anything left as `""` stays in a clean "coming soon" state — the card shows no code and its Shop link is disabled and cannot be clicked, so the page never ships a dead link or an invented code. Fill a value in and that card switches itself on: the code appears as a pill with a copy-to-clipboard button, and the Shop link opens in a new tab with `rel="sponsored noopener"`.
-
-A brand with a code but no URL (or the reverse) is fine — each half works on its own.
+A partner with a code but no URL (or the reverse) is fine — each half works on its own.
 
 ### 2. Prices — still in the markup
 
@@ -79,10 +74,19 @@ A brand with a code but no URL (or the reverse) is fine — each half works on i
 
 Search the file for `data-placeholder` to jump to all three.
 
+## Hosting this on Wix
+
+Wix cannot serve a hand-written `index.html` as a page. There are two honest routes and they are a real decision, not a detail:
+
+1. **Host the one-pager, keep Wix for the programs.** Put this file on Netlify, Vercel or Cloudflare Pages (all free), point `taliafiege.com` at it, and move the current Wix site to a subdomain such as `programs.taliafiege.com`. The challenge links in slide 5 then need updating to that subdomain. This is the only route where the page works exactly as built — snapping, anchors, and content Google can index.
+2. **Embed it in Wix.** Wix's HTML embed puts the page inside a sandboxed `iframe`. The full-screen slides then size to the iframe rather than the browser window, the nav anchors cannot move the outer page, and Google indexes the iframe's content separately from the site. Workable for a section, poor for a whole homepage.
+
+If Wix has to stay the host, the better plan is to treat this file as the design reference and rebuild the layout with Wix's own sections — you keep the look and lose the slide mechanics.
+
 ## Not connected yet
 
 - **Email capture** (`#optinForm`) — front-end only. Set `action`/`method` to your Kit, Mailchimp or Klaviyo endpoint and remove the JS demo handler.
-- **Contact form** (`#contactForm`) — front-end only. Point it at Formspree, Basin or Wix Forms.
+- **Coaching application** (`#applyForm`) — front-end only. Point it at Formspree, Basin or Wix Forms. It collects name, email, goal, experience, training availability and notes.
 - **Transformation photos** (Results slide) — three placeholder frames. Swap-in markup is in an HTML comment right above them. Only publish client photos with written permission.
 
 ## Notes
