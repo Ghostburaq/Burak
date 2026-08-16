@@ -48,11 +48,16 @@ FIRMEN_STICHWORTE = {
     "v-zug": "V-Zug AG",
     "amag": "AMAG",
     "aggreko": "Aggreko",
+    "dpr": "DPR / Vantage ZRH12",
+    "gampel": "Rock Hock Verein Gampel",
+    "rock hock": "Rock Hock Verein Gampel",
 }
 
 # Eigene Kategorie-Regeln. Werden VOR den Standardregeln geprueft.
 # Format: (Regex auf "Titel + Notizen", Kategorie)
 KATEGORIE_REGELN: list[tuple[str, str]] = [
+    (r"\b(amag|skoda)\b", "Privat"),                 # eigenes Auto
+    (r"\b(dpr|vantage)\b", "Projekt"),               # Projekt ZRH12
     # (r"loadbank|cross[- ]hire", "Partner / Lieferant"),
 ]
 

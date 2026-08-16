@@ -109,17 +109,37 @@ def parsen(pfad: str, roh_text: str, quelle: str, quelle_hash: str) -> list[Akti
             continue
 
         if name == "ATTENDEE":
-            aktuell["attendees"].append(_person(params, wert))
+            if params.get("CUTYPE", "").upper() not in ("RESOURCE", "ROOM"):
+                aktuell["attendees"].append(_person(params, wert))
         elif name == "ORGANIZER":
             aktuell["organizer"] = _person(params, wert)
         elif name in ("DTSTART", "DTEND", "DTSTAMP"):
             aktuell[name] = _zeitpunkt(wert, params)
-        elif name in ("UID", "SUMMARY", "LOCATION", "DESCRIPTION", "STATUS", "CATEGORIES"):
+        elif name in ("UID", "SUMMARY", "LOCATION", "DESCRIPTION", "STATUS",
+                      "CATEGORIES", "RECURRENCE-ID"):
             aktuell[name] = wert
-        elif name == "X-ALT-DESC" and "DESCRIPTION" not in aktuell:
-            aktuell["DESCRIPTION"] = re.sub(r"<[^>]+>", " ", wert)
+        elif name == "X-ALT-DESC":
+            aktuell["HTML"] = wert
 
     return ereignisse
+
+
+BLOCK_TAGS = re.compile(r"</(?:div|p|li|tr|h\d)>|<br\s*/?>", re.I)
+
+
+def _beste_beschreibung(roh: dict) -> str:
+    """Klartext bevorzugen — ausser Outlook hat die Zeilenumbrueche verschluckt."""
+    text = roh.get("DESCRIPTION", "")
+    html = roh.get("HTML", "")
+    if not html:
+        return text
+    if not text or text.count("\n") < 2:
+        aus_html = BLOCK_TAGS.sub("\n", html)
+        aus_html = re.sub(r"<[^>]+>", " ", aus_html)
+        aus_html = re.sub(r"[ \t]{2,}", " ", aus_html)
+        if aus_html.count("\n") > text.count("\n"):
+            return aus_html
+    return text
 
 
 def _bauen(roh: dict, quelle: str, quelle_hash: str) -> Aktivitaet:
@@ -128,13 +148,19 @@ def _bauen(roh: dict, quelle: str, quelle_hash: str) -> Aktivitaet:
     stempel, _ = roh.get("DTSTAMP", (None, False))
 
     titel = (roh.get("SUMMARY") or "(ohne Titel)").strip()
-    beschreibung_roh = roh.get("DESCRIPTION", "")
+    beschreibung_roh = _beste_beschreibung(roh)
     ort = felder.saeubern(roh.get("LOCATION", ""))
     if ort.lower() in ("microsoft teams meeting", "microsoft teams-besprechung"):
         ort = "Microsoft Teams (online)"
 
+    # Bei Serienterminen tragen alle Instanzen dieselbe UID — erst die
+    # RECURRENCE-ID macht die einzelne Instanz unterscheidbar.
+    kennung = (roh.get("UID") or f"{quelle_hash[:16]}-{titel[:20]}").strip()
+    if roh.get("RECURRENCE-ID"):
+        kennung = f"{kennung}#{roh['RECURRENCE-ID'].strip()}"
+
     a = Aktivitaet(
-        id=(roh.get("UID") or f"{quelle_hash[:16]}-{titel[:20]}").strip(),
+        id=kennung,
         quelle=quelle,
         quelle_hash=quelle_hash,
         typ="Termin (Kalender)",

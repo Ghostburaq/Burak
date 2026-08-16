@@ -60,6 +60,7 @@ KATEGORIEN: dict[str, str] = {
     "Akquise": "FFE2001A",
     "Kundentermin": "FF1F6FB2",
     "Beratung": "FF2E8B57",
+    "Projekt": "FF0B5FA5",
     "Partner / Lieferant": "FF0F766E",
     "Interner Termin": "FF6B5B95",
     "Messe / Event": "FFB8860B",

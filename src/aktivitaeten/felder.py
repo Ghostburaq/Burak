@@ -343,9 +343,14 @@ PERSONENNAME = re.compile(
     r"^[A-ZÄÖÜ][a-zäöüß]+(?:[-\s][A-ZÄÖÜ][a-zäöüß]+){1,2}$")
 
 
+# Rollenbezeichnungen, die in Notizen hinter dem Namen stehen
+ROLLE_ANHANG = re.compile(
+    r"\s*(Ansprechpartner(?:in)?|Kontaktperson|Kontakt|AP|Bauleiter|Projektleiter)\s*$", re.I)
+
+
 def personenname(text: str) -> str:
     """Gibt den Text zurueck, wenn er wie ein Personenname aussieht — sonst ''."""
-    kandidat = _norm(text).strip(" ,;:")
+    kandidat = ROLLE_ANHANG.sub("", _norm(text).strip(" ,;:")).strip()
     return kandidat if PERSONENNAME.fullmatch(kandidat) else ""
 
 
@@ -423,7 +428,7 @@ def kategorie_bestimmen(titel: str, notizen: str, typ: str, ort: str = "") -> st
     if typ.startswith("E-Mail"):
         return "E-Mail"
     if re.search(r"\b(akquise|kaltakquise|erstkontakt|cold call)\b", gesamt) \
-            or re.search(r"\b(offerte|richtofferte|angebot|ausschreibung|"
+            or re.search(r"\b(offerten?|richtofferten?|angebote?|ausschreibung|"
                          r"ausarbeitung|auslegung)\b", titel_klein):
         return "Akquise"
     if re.search(r"\b(messe|fair|kongress|expo)\b", gesamt) or "maintenance schweiz" in gesamt:
@@ -433,6 +438,12 @@ def kategorie_bestimmen(titel: str, notizen: str, typ: str, ort: str = "") -> st
     if re.search(r"\b(home ?office|nachfassen|nachbearbeitung|liste|admin(istration)?|"
                  r"reporting|ablage|planung)\b", titel_klein):
         return "Interne Arbeit"
+    if re.search(r"(teamsitzung|sitzung|jour fixe|weekly|daily|standup)\b", titel_klein):
+        return "Interner Termin"
+    # Abwicklung eines laufenden Auftrags — weder Akquise noch reine Büroarbeit
+    if re.search(r"(projekt|abwicklung|koordination|disposition|transport|"
+                 r"anlieferung|aufbau|abbau|montage)\b", titel_klein):
+        return "Projekt"
     if "beratung" in titel_klein:
         return "Beratung"
     # ohne fuehrende Wortgrenze, damit auch Zusammensetzungen greifen
