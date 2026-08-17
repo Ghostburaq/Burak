@@ -45,7 +45,7 @@ QUELLE = "Löwin_Training_260727.pdf"
 STAND = "31.07.2026"
 
 SESSIONS = 16          # gleichzeitig angezeigte Einheiten (rollendes Fenster)
-EX_SLOTS = 14          # Übungs-Slots im Stammblatt (11 belegt)
+EX_SLOTS = 16          # Übungs-Slots im Stammblatt (13 belegt)
 SESSION_SLOTS = 60     # vorbereitete Zeilen im Blatt 'Einheiten'
 LOG_ROWS = 1200        # vorbereitete Satzzeilen im Log
 BLATT_KOPIEN = 4       # Trainingsblätter je Block auf Vorrat
@@ -69,8 +69,8 @@ UEB = "'Übungen'"       # Blattname mit Umlaut -> in Formeln immer quoten
 # Die Reha-Felder (Freigabewoche, Ersatzübung, Hinweis) stehen in
 # reha_daten.py und werden unten anhand des Übungsnamens zugeordnet.
 UEBUNGEN = [
-    dict(name="Beinpresse", block="Beine vorne",
-         geraet="Beinpresse, tiefe Fussposition", von=5, bis=8, saetze=3,
+    dict(name="Beinpresse eng", block="Beine vorne",
+         geraet="Beinpresse, enger Stand, tiefe Fussposition", von=5, bis=8, saetze=3,
          rpe="8-9", start=None, maxlast=None, schritt=10, letzter="A",
          aktiv=True,
          notiz="Ersetzt Hackenschmidt-Kniebeuge und Lunges. Schwere "
@@ -97,6 +97,15 @@ UEBUNGEN = [
          maxlast=None, schritt=2.5, letzter="A", aktiv=True,
          notiz="Ersetzt Kickback. Schliesst die Lücke Hüftstreckung bei "
                "gestrecktem Knie, Ischiokrurale und Gluteus in der Dehnung."),
+    dict(name="Beinpresse breit", block="Beine hinten",
+         geraet="Beinpresse, breiter Stand, Füsse hoch", von=5, bis=8,
+         saetze=3, rpe="8-9", start=260, maxlast=None, schritt=10,
+         letzter="A", aktiv=True,
+         notiz="Neu. Startgewicht 260 kg = 85 Prozent des Top-Satzes der "
+               "engen Beinpresse (303 kg), auf 10 kg gerundet. Breiter "
+               "Stand mit höherer Fussposition holt Adduktoren und Gesäss "
+               "stärker rein. Die erste Einheit ist eine Eichung - danach "
+               "rechnet die Progression aus deinen echten Werten weiter."),
     dict(name="Hip Thrust", block="Beine hinten", geraet="Langhantel",
          von=5, bis=8, saetze=3, rpe="8-9", start=None, maxlast=None,
          schritt=10, letzter="A", aktiv=True,
@@ -139,13 +148,19 @@ UEBUNGEN = [
 # aus genau dieser Ersatzangabe abgeleitet und im Blatt 'Start' als offener
 # Punkt vermerkt.
 REHA_ZUSATZ = {
+    "Beinpresse breit": (
+        2,
+        "Beinbeuger sitzend, ab Woche 1 frei",
+        "Freigabewoche wie bei der engen Beinpresse abgeleitet, nicht "
+        "ärztlich bestätigt. Hände seitlich ablegen, nicht an den Griffen "
+        "ziehen."),
     "Hip & Glute": (
         2,
         "Beinbeuger sitzend, ab Woche 1 frei",
         "Freigabewoche abgeleitet aus der Hip-Thrust-Maschine im Fahrplan "
         "(dort ab Woche 2). Arme vor der Brust kreuzen, nicht am Gerät "
         "abstützen. Woche mit Operateur oder Physiotherapie bestätigen."),
-    "Beinpresse": (
+    "Beinpresse eng": (
         2,
         "Beinstrecker und Beinbeuger sitzend, beide ab Woche 1 frei",
         "Freigabewoche abgeleitet: die Beinpresse war im bisherigen Plan die "
