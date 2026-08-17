@@ -179,7 +179,8 @@ for _u in UEBUNGEN:
 BLOCKS = ["Beine vorne", "Beine hinten"]
 
 # Aufwärm-Rampe für das Trainingsblatt: Anteil vom Zielgewicht je Warmup
-WARMUP_FAKTOR = [0.45, 0.70]
+WARMUP_FAKTOR = [0.40, 0.70]
+WARMUP_LABEL = ["1. Satz 40 %", "2. Satz 70 %"]
 # Arbeitssätze absteigend: Satz 1 ist der Top-Satz und steuert die
 # Progression, Satz 2 und 3 laufen als Back-off darunter. Immer genau drei.
 BACKOFF = [1.00, 0.95, 0.90]
@@ -534,7 +535,8 @@ for lab, txt in [
      "der schwere Top-Satz und bestimmt allein die Progression. Satz 2 "
      "läuft mit 95 Prozent, Satz 3 mit 90 Prozent davon - beide dürfen eine "
      "beziehungsweise zwei Wiederholungen mehr, aber nie über 8. Auf dem "
-     "Trainingsblatt steht je Satz das eigene Gewicht."),
+     "Trainingsblatt steht je Satz das eigene Gewicht. Davor "
+     "zwei Aufwärmsätze mit 40 und 70 Prozent des Top-Satzes."),
     ("Doppelte Progression",
      "So wird gesteigert, und zwar nach jedem Training neu: Solange der "
      "schwächste Arbeitssatz unter 8 Wdh liegt, bleibt das Gewicht stehen "
@@ -2155,7 +2157,8 @@ for nr, (bi, block, kopie) in enumerate(blaetter):
             c = wst.cell(row, 1, s + 1)
             c.font, c.alignment = F_SMALL, C
             c = wst.cell(row, 2,
-                         SATZ_LABEL[arbeitssatz] if arbeitssatz >= 0 else typ)
+                         SATZ_LABEL[arbeitssatz] if arbeitssatz >= 0
+                         else WARMUP_LABEL[s])
             c.font, c.alignment = F_BOLD, C
             if typ == "A":
                 c.fill = FILL_WORK
@@ -2217,8 +2220,8 @@ wst.conditional_formatting.add(
                 font=Font(name=FONT, size=9, bold=True, color=RED)))
 
 druck(wst, "A1:I%d" % (row - 1), margins=(0.45, 0.35, 0.45, 0.45),
-      fussnote="Satz 1 schwer (Top-Satz, steuert die Progression) · Satz 2 "
-               "95 % · Satz 3 90 %  ·  Warmups 45 % / 70 %")
+      fussnote="Aufwärmen: 1. Satz 40 %, 2. Satz 70 %  ·  Arbeitssätze: "
+               "schwer 100 % (Top-Satz), mittel 95 %, leicht 90 %")
 
 # ==========================================================================
 # DASHBOARD
