@@ -180,11 +180,12 @@ BLOCKS = ["Beine vorne", "Beine hinten"]
 
 # Aufwärm-Rampe für das Trainingsblatt: Anteil vom Zielgewicht je Warmup
 WARMUP_FAKTOR = [0.40, 0.70]
-WARMUP_LABEL = ["1. Satz 40 %", "2. Satz 70 %"]
+WARMUP_LABEL = ["Warmup 1", "Warmup 2"]
 # Arbeitssätze absteigend: Satz 1 ist der Top-Satz und steuert die
 # Progression, Satz 2 und 3 laufen als Back-off darunter. Immer genau drei.
 BACKOFF = [1.00, 0.95, 0.90]
-SATZ_LABEL = ["A · schwer", "A · mittel", "A · leicht"]
+SATZ_LABEL = ["Arbeitssatz 1", "Arbeitssatz 2",
+              "Arbeitssatz 3"]
 
 # --------------------------------------------------------------------------
 # Design
@@ -535,8 +536,10 @@ for lab, txt in [
      "der schwere Top-Satz und bestimmt allein die Progression. Satz 2 "
      "läuft mit 95 Prozent, Satz 3 mit 90 Prozent davon - beide dürfen eine "
      "beziehungsweise zwei Wiederholungen mehr, aber nie über 8. Auf dem "
-     "Trainingsblatt steht je Satz das eigene Gewicht. Davor "
-     "zwei Aufwärmsätze mit 40 und 70 Prozent des Top-Satzes."),
+     "Trainingsblatt steht je Satz das eigene Gewicht: "
+     "Warmup 1 mit 40 und Warmup 2 mit 70 Prozent, dann Arbeitssatz 1 "
+     "mit 100, Arbeitssatz 2 mit 95 und Arbeitssatz 3 mit 90 Prozent. "
+     "Alle drei Arbeitssätze bleiben im Bereich 5 bis 8 Wiederholungen."),
     ("Doppelte Progression",
      "So wird gesteigert, und zwar nach jedem Training neu: Solange der "
      "schwächste Arbeitssatz unter 8 Wdh liegt, bleibt das Gewicht stehen "
@@ -2017,7 +2020,7 @@ if not PREOP:
 wst = sheet("Trainingsblatt")
 # Die breite Notizspalte ist Absicht: sie bestimmt über die
 # Breitenanpassung den Zoom, und damit passt ein Block auf eine A4-Seite.
-for col, w in zip("ABCDEFGHI", [4, 12, 11, 9, 13, 9, 8, 6, 46]):
+for col, w in zip("ABCDEFGHI", [4, 15, 11, 9, 13, 9, 8, 6, 43]):
     wst.column_dimensions[col].width = w
 
 
@@ -2238,8 +2241,9 @@ wst.conditional_formatting.add(
                 font=Font(name=FONT, size=9, bold=True, color=RED)))
 
 druck(wst, "A1:I%d" % (row - 1), margins=(0.45, 0.35, 0.45, 0.45),
-      fussnote="Aufwärmen: 1. Satz 40 %, 2. Satz 70 %  ·  Arbeitssätze: "
-               "schwer 100 % (Top-Satz), mittel 95 %, leicht 90 %")
+      fussnote="Warmup 1 = 40 %, Warmup 2 = 70 %  ·  Arbeitssatz 1 = "
+               "100 % (Top-Satz), 2 = 95 %, 3 = 90 %  ·  alle Arbeitssätze "
+               "5-8 Wdh")
 
 # ==========================================================================
 # DASHBOARD
