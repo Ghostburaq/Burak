@@ -181,4 +181,17 @@ ROWS = [
     [7, 'Beine hinten', 'Hip & Glute', 'A', 141, 12, None, None],
     [7, 'Beine hinten', 'Waden', 'A', 150, 12, None, None],
     [7, 'Beine hinten', 'Waden', 'A', 160, 12, None, None],
+    # --- Einheit 8, Beine vorne ------------------------------------
+    [8, 'Beine vorne', 'Split Squat', 'A', 110, 7, None, None],
+    [8, 'Beine vorne', 'Split Squat', 'A', 115, 6, None, None],
+    [8, 'Beine vorne', 'Split Squat', 'A', 115, 5, None, None],
+    [8, 'Beine vorne', 'Beinpresse eng', 'A', 333, 8, None, None],
+    [8, 'Beine vorne', 'Beinpresse eng', 'A', 333, 8, None, None],
+    [8, 'Beine vorne', 'Beinpresse eng', 'A', 303, 8, None, None],
+    [8, 'Beine vorne', 'Beinstrecker', 'A', 80, 8, None, None],
+    [8, 'Beine vorne', 'Beinstrecker', 'A', 80, 8, None, None],
+    [8, 'Beine vorne', 'Beinstrecker', 'A', 80, 8, None, None],
+    [8, 'Beine vorne', 'Adduktion', 'A', 185, 5, None, None],
+    [8, 'Beine vorne', 'Adduktion', 'A', 176, 6, None, None],
+    [8, 'Beine vorne', 'Adduktion', 'A', 166.5, 7, None, None],
 ]

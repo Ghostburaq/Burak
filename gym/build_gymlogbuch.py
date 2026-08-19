@@ -71,14 +71,14 @@ UEB = "'Übungen'"       # Blattname mit Umlaut -> in Formeln immer quoten
 UEBUNGEN = [
     dict(name="Beinpresse eng", block="Beine vorne",
          geraet="Beinpresse, enger Stand, tiefe Fussposition", von=5, bis=8, saetze=3,
-         rpe="8-9", start=None, maxlast=None, schritt=10, letzter="A",
+         rpe="8-9", start=None, maxlast=None, schritt=5, letzter="A",
          aktiv=True,
          notiz="Ersetzt Hackenschmidt-Kniebeuge und Lunges. Schwere "
                "Grundübung zuerst. Hände seitlich ablegen statt an den "
                "Griffen ziehen - dann bleibt die Schulter aussen vor."),
     dict(name="Split Squat", block="Beine vorne",
          geraet="Multipresse / Hantel", von=5, bis=8, saetze=3, rpe="8",
-         start=None, maxlast=None, schritt=5, letzter="A", aktiv=True,
+         start=None, maxlast=None, schritt=2.5, letzter="A", aktiv=True,
          notiz="Wdh-Bereich von 5-8 auf 8-10 je Bein. Limiter soll der "
                "Muskel sein, nicht die Stabilität."),
     dict(name="Beinstrecker", block="Beine vorne", geraet="Maschine",
@@ -99,7 +99,7 @@ UEBUNGEN = [
                "gestrecktem Knie, Ischiokrurale und Gluteus in der Dehnung."),
     dict(name="Beinpresse breit", block="Beine hinten",
          geraet="Beinpresse, breiter Stand, Füsse hoch", von=5, bis=8,
-         saetze=3, rpe="8-9", start=260, maxlast=None, schritt=10,
+         saetze=3, rpe="8-9", start=260, maxlast=None, schritt=5,
          letzter="A", aktiv=True,
          notiz="Neu. Startgewicht 260 kg = 85 Prozent des Top-Satzes der "
                "engen Beinpresse (303 kg), auf 10 kg gerundet. Breiter "
@@ -108,7 +108,7 @@ UEBUNGEN = [
                "rechnet die Progression aus deinen echten Werten weiter."),
     dict(name="Hip Thrust", block="Beine hinten", geraet="Langhantel",
          von=5, bis=8, saetze=3, rpe="8-9", start=None, maxlast=None,
-         schritt=10, letzter="A", aktiv=True,
+         schritt=5, letzter="A", aktiv=True,
          notiz="Gesamtgewicht inkl. Stange notieren, auch bei "
                "Reduktionssätzen."),
     dict(name="Hip & Glute", block="Beine hinten", geraet="Maschine",
@@ -120,7 +120,7 @@ UEBUNGEN = [
                "bestätigen."),
     dict(name="Beinbeuger", block="Beine hinten", geraet="Maschine, sitzend",
          von=5, bis=8, saetze=3, rpe="9", start=None, maxlast=None,
-         schritt=5, letzter="A", aktiv=True,
+         schritt=2.5, letzter="A", aktiv=True,
          notiz="Sitzend statt liegend: Hüfte gebeugt, Ischiokrurale "
                "vorgedehnt, mehr Reiz pro Satz. Dritter Satz als "
                "Reduktionssatz."),
@@ -544,13 +544,13 @@ for lab, txt in [
      "Gewicht drauf und die Wiederholungen fangen bei 5 wieder an. Bezug "
      "ist immer der schwächste Satz, nicht der beste. Sobald du die "
      "Einheit ins Log tippst, steht der nächste Schritt da."),
-    ("Umstellungsphase",
-     "Weil der Bereich von 10 bis 20 Wdh auf 5 bis 8 wechselt, sind die "
-     "aktuellen Gewichte zu leicht. Liegt der schwächste Satz deutlich "
-     "über 8 Wdh, springt der Vorschlag entsprechend grösser - rund 2.5 "
-     "Prozent je Wiederholung darüber, höchstens 15 Prozent pro Einheit. "
-     "Nach zwei bis drei Einheiten bist du im Bereich, danach läuft die "
-     "normale Progression."),
+    ("Wie viel Gewicht dazukommt",
+     "Ein Prozent auf das letzte Top-Gewicht, aufgerundet auf die nächste "
+     "Laststufe des Geräts. Das ist bewusst klein gehalten und über Monate "
+     "tragfähig. An Maschinen mit groben Steckgewichten ist eine Stufe "
+     "mehr als ein Prozent - der tatsächliche Zuwachs steht deshalb in "
+     "Prozent neben dem Vorschlag. Wird ein Sprung zu gross, im Blatt "
+     "'Übungen' eine kleinere Laststufe eintragen."),
     ("Archiv",
      "Übung im Blatt 'Übungen' auf Aktiv = nein setzen. Sie verschwindet aus "
      "dem Trainingsblatt, bleibt in Log, Auswertung, Progression und "
@@ -1181,17 +1181,13 @@ for k in range(EX_SLOTS):
     u_max = "%s!$I%d" % (UEB, ueb_row)
     u_schritt = "%s!$J%d" % (UEB, ueb_row)
     schritt = "IF(%s=\"\",0,%s)" % (u_schritt, u_schritt)
-    # Liegt der schwächste Satz deutlich über dem Zielbereich, reicht eine
-    # Laststufe nicht: 16 Wdh werden durch +2.5 kg nicht zu 5-8. Dann
-    # skaliert der Sprung mit dem Überschuss, rund 2.5 Prozent je Wdh
-    # darüber, gedeckelt bei 15 Prozent - so landet man in zwei bis drei
-    # Einheiten im Bereich statt in zehn.
-    ueberschuss = "MAX(0,$N%d-%s)" % (row, u_bis)
-    faktor = "1+MIN(0.15,0.025*(%s+1))" % ueberschuss
-    kandidat = ("IF(%s=0,ROUND($L%d*(%s)*2,0)/2,"
-                "MAX($L%d+%s,ROUND($L%d*(%s)/%s,0)*%s))"
-                % (schritt, row, faktor, row, schritt, row, faktor,
-                   schritt, schritt))
+    # Ein Prozent auf das letzte Top-Gewicht, aufgerundet auf die
+    # nächste Laststufe des Geräts. Weil eine Stufe an manchen Maschinen
+    # mehr als ein Prozent ist, steht der tatsächliche Zuwachs im
+    # Klartext daneben.
+    kandidat = ("IF(%s=0,ROUND($L%d*1.01*2,0)/2,"
+                "CEILING($L%d*1.01/%s,1)*%s)"
+                % (schritt, row, row, schritt, schritt))
     gedeckelt = "IF(%s=\"\",%s,MIN(%s,%s))" % (u_max, kandidat, kandidat,
                                                 u_max)
     reif = "AND($N%d<>\"\",%s<>\"\",$N%d>=%s)" % (row, u_bis, row, u_bis)
@@ -1210,8 +1206,8 @@ for k in range(EX_SLOTS):
     wsr.cell(row, 17,
              "=IF($O%d=\"\",\"\",IF($L%d=\"\",\"Einstieg mit "
              "Startgewicht\",IF(AND(%s,$O%d>$L%d),\"Gewicht +\"&"
-             "TEXT($O%d-$L%d,\"0.#\")&\" kg, Wdh zurück auf \"&%s&"
-             "IF($N%d>%s+2,\"  (Umstellung auf den neuen Bereich)\",\"\"),"
+             "TEXT($O%d-$L%d,\"0.#\")&\" kg (\"&"
+             "TEXT(($O%d-$L%d)/$L%d,\"0.0%%\")&\"), Wdh zurück auf \"&%s,"
              "IF(AND(%s,%s=\"\"),\"Zielbereich voll - dafür fehlt "
              "'Schritt (kg)' im Blatt Übungen\","
              "IF(%s,\"Obergrenze erreicht - über Tempo und Pausen "
@@ -1219,7 +1215,7 @@ for k in range(EX_SLOTS):
              "erst \"&%s&"
              "\" Wdh sauber schaffen\",\"Wdh +1 auf \"&$P%d&"
              "\" bei gleichem Gewicht\"))))))"
-             % (row, row, reif, row, row, row, row, u_von, row, u_bis,
+             % (row, row, reif, row, row, row, row, row, row, row, u_von,
                 reif, u_schritt, reif, row, row, u_von, u_von, row))
     fmts = {3: NF_INT, 4: NF_INT, 5: NF_INT, 6: NF_KG, 7: NF_INT, 8: NF_KG,
             9: NF_INT, 10: NF_INT, 11: NF_INT, 12: NF_KG, 13: NF_INT,
