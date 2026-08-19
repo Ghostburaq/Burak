@@ -996,8 +996,9 @@ kopfzeile(wsp, 3, 1,
            "Letzte\nEinheit", "Volumen\nletzte (kg)", "Veränderung\n(kg)",
            "Veränderung\n(%)", "Top-Gewicht\nzuletzt (kg)",
            "Bestes Top-\nGewicht (kg)", "Abstand zum\nBestwert (kg)",
-           "Trend", "Einheiten auf\ndiesem Gewicht", "Nächster Schritt"],
-          [22, 8, 12, 8, 12, 12, 12, 12, 12, 13, 12, 13, 30], height=34)
+           "Trend", "Einheiten auf\ndiesem Gewicht", "Nächster Schritt",
+           "Ziel in 12\nEinheiten (kg)"],
+          [22, 8, 11, 8, 11, 11, 11, 12, 12, 12, 11, 12, 28, 12], height=34)
 
 PROG_FIRST = 4
 for k in range(EX_SLOTS):
@@ -1044,15 +1045,25 @@ for k in range(EX_SLOTS):
              "=IFERROR(INDEX(Rekorde!$Q$%d:$Q$%d,MATCH(%s,"
              "Rekorde!$A$%d:$A$%d,0)),\"\")"
              % (REK_FIRST, REK_LAST, ex, REK_FIRST, REK_LAST))
+    # Wo stehst du in zwölf Einheiten, wenn jede ein Prozent bringt?
+    # Rund drei Monate bei einer Einheit je Block und Woche.
+    u_schr = "%s!$J%d" % (UEB, UEB_FIRST + k)
+    wsp.cell(row, 14,
+             "=IF(OR($H%d=\"\",%s=\"\"),\"\","
+             "CEILING($H%d*1.01^12/%s,1)*%s)"
+             % (row, u_schr, row, u_schr, u_schr))
     fmts = {2: NF_INT, 3: NF_INT, 4: NF_INT, 5: NF_INT, 6: NF_INT,
-            7: NF_PCT, 8: NF_KG, 9: NF_KG, 10: NF_KG, 12: NF_INT}
-    for col in range(1, 14):
+            7: NF_PCT, 8: NF_KG, 9: NF_KG, 10: NF_KG, 12: NF_INT,
+            14: NF_KG}
+    for col in range(1, 15):
         cc = wsp.cell(row, col)
         cc.border = B_ALL
         if col > 1:
             cc.font, cc.alignment = F_BODY, C
         if col == 13:
             cc.font, cc.alignment = Font(name=FONT, size=9, color=NAVY), LW
+        if col == 14:
+            cc.font = Font(name=FONT, size=10, bold=True, color=GREEN)
         if col in fmts:
             cc.number_format = fmts[col]
         if k % 2 == 0:
@@ -1080,10 +1091,17 @@ wsp.conditional_formatting.add(
     FormulaRule(formula=['AND($L%d<>"",$L%d>=4)' % (PROG_FIRST, PROG_FIRST)],
                 fill=PatternFill("solid", bgColor="FEF6E7"),
                 font=Font(name=FONT, size=9, bold=True, color=AMBER)))
-archiv_grau(wsp, 1, 13, PROG_FIRST, PROG_LAST)
+# Deutlich unter dem eigenen Bestwert - das sieht man sonst nicht.
+wsp.conditional_formatting.add(
+    "H%d:J%d" % (PROG_FIRST, PROG_LAST),
+    FormulaRule(formula=['AND($H%d<>"",$I%d<>"",$H%d<$I%d*0.9)'
+                         % (PROG_FIRST, PROG_FIRST, PROG_FIRST, PROG_FIRST)],
+                fill=PatternFill("solid", bgColor="FCE8C0"),
+                font=Font(name=FONT, size=10, bold=True, color=AMBER)))
+archiv_grau(wsp, 1, 14, PROG_FIRST, PROG_LAST)
 
 hin = PROG_LAST + 2
-wsp.merge_cells(start_row=hin, start_column=1, end_row=hin, end_column=13)
+wsp.merge_cells(start_row=hin, start_column=1, end_row=hin, end_column=14)
 c = wsp.cell(hin, 1,
              "Lesehilfe: Volumen schwankt mit der Wiederholungszahl. "
              "Fallendes Volumen bei steigendem Top-Gewicht ist kein "
@@ -1091,11 +1109,15 @@ c = wsp.cell(hin, 1,
              "Schwelle für steigend / fallend: 5 Prozent.   ·   "
              "'Einheiten auf diesem Gewicht' zählt, wie lange die aktuelle "
              "Last schon steht - ab vier Einheiten gelb, dann lohnt ein "
-             "Blick auf Ausführung, Erholung oder eine Variante.")
+             "Blick auf Ausführung, Erholung oder eine Variante.   ·   "
+             "Gelbe Felder bei 'Top-Gewicht zuletzt' heissen: mehr als zehn "
+             "Prozent unter dem eigenen Bestwert.   ·   'Ziel in 12 "
+             "Einheiten' rechnet ein Prozent je Einheit hoch, rund drei "
+             "Monate bei einer Einheit je Block und Woche.")
 c.font, c.alignment = F_SMALL, LW
 wsp.row_dimensions[hin].height = 26
 wsp.freeze_panes = "B4"
-druck(wsp, "A1:M%d" % hin, landscape=True, titles="1:3")
+druck(wsp, "A1:N%d" % hin, landscape=True, titles="1:3")
 
 # ==========================================================================
 # REKORDE
