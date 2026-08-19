@@ -70,35 +70,35 @@ UEB = "'Übungen'"       # Blattname mit Umlaut -> in Formeln immer quoten
 # reha_daten.py und werden unten anhand des Übungsnamens zugeordnet.
 UEBUNGEN = [
     dict(name="Beinpresse eng", block="Beine vorne",
-         geraet="Beinpresse, enger Stand, tiefe Fussposition", von=5, bis=8, saetze=3,
+         geraet="Beinpresse, enger Stand, tiefe Fussposition", von=5, bis=7, saetze=3,
          rpe="8-9", start=None, maxlast=None, schritt=5, letzter="A",
          aktiv=True,
          notiz="Ersetzt Hackenschmidt-Kniebeuge und Lunges. Schwere "
                "Grundübung zuerst. Hände seitlich ablegen statt an den "
                "Griffen ziehen - dann bleibt die Schulter aussen vor."),
     dict(name="Split Squat", block="Beine vorne",
-         geraet="Multipresse / Hantel", von=5, bis=8, saetze=3, rpe="8",
+         geraet="Multipresse / Hantel", von=5, bis=7, saetze=3, rpe="8",
          start=None, maxlast=None, schritt=2.5, letzter="A", aktiv=True,
          notiz="Wdh-Bereich von 5-8 auf 8-10 je Bein. Limiter soll der "
                "Muskel sein, nicht die Stabilität."),
     dict(name="Beinstrecker", block="Beine vorne", geraet="Maschine",
-         von=5, bis=8, saetze=3, rpe="9", start=None, maxlast=None,
+         von=5, bis=7, saetze=3, rpe="9", start=None, maxlast=None,
          schritt=5, letzter="A", aktiv=True,
          notiz="Dritter Arbeitssatz läuft als Reduktionssatz aus."),
     dict(name="Adduktion", block="Beine vorne", geraet="Maschine",
-         von=5, bis=8, saetze=3, rpe="9", start=None, maxlast=None,
+         von=5, bis=7, saetze=3, rpe="9", start=None, maxlast=None,
          schritt=2.5, letzter="A", aktiv=True,
          notiz="Deckel entfernt: in Einheit 5 lagen 162.5 kg an, die frühere "
                "Annahme 152.5 kg als Stackende stimmt also nicht. Falls doch "
                "eine Obergrenze existiert, hier unter 'Max (kg)' "
                "eintragen."),
     dict(name="Rumänisches Kreuzheben", block="Beine hinten",
-         geraet="Langhantel", von=5, bis=8, saetze=3, rpe="8", start=None,
+         geraet="Langhantel", von=5, bis=7, saetze=3, rpe="8", start=None,
          maxlast=None, schritt=2.5, letzter="A", aktiv=True,
          notiz="Ersetzt Kickback. Schliesst die Lücke Hüftstreckung bei "
                "gestrecktem Knie, Ischiokrurale und Gluteus in der Dehnung."),
     dict(name="Beinpresse breit", block="Beine hinten",
-         geraet="Beinpresse, breiter Stand, Füsse hoch", von=5, bis=8,
+         geraet="Beinpresse, breiter Stand, Füsse hoch", von=5, bis=7,
          saetze=3, rpe="8-9", start=260, maxlast=None, schritt=5,
          letzter="A", aktiv=True,
          notiz="Neu. Startgewicht 260 kg = 85 Prozent des Top-Satzes der "
@@ -107,37 +107,37 @@ UEBUNGEN = [
                "stärker rein. Die erste Einheit ist eine Eichung - danach "
                "rechnet die Progression aus deinen echten Werten weiter."),
     dict(name="Hip Thrust", block="Beine hinten", geraet="Langhantel",
-         von=5, bis=8, saetze=3, rpe="8-9", start=None, maxlast=None,
+         von=5, bis=7, saetze=3, rpe="8-9", start=None, maxlast=None,
          schritt=5, letzter="A", aktiv=True,
          notiz="Gesamtgewicht inkl. Stange notieren, auch bei "
                "Reduktionssätzen."),
     dict(name="Hip & Glute", block="Beine hinten", geraet="Maschine",
-         von=5, bis=8, saetze=3, rpe="8-9", start=None, maxlast=None,
+         von=5, bis=7, saetze=3, rpe="8-9", start=None, maxlast=None,
          schritt=5, letzter="A", aktiv=True,
          notiz="Neu ab Einheit 7, ergänzt den Hip Thrust mit der Langhantel. "
                "Reha-Freigabe ab Woche 2 abgeleitet aus der Hip-Thrust-"
                "Maschine im Fahrplan - mit Operateur oder Physiotherapie "
                "bestätigen."),
     dict(name="Beinbeuger", block="Beine hinten", geraet="Maschine, sitzend",
-         von=5, bis=8, saetze=3, rpe="9", start=None, maxlast=None,
+         von=5, bis=7, saetze=3, rpe="9", start=None, maxlast=None,
          schritt=2.5, letzter="A", aktiv=True,
          notiz="Sitzend statt liegend: Hüfte gebeugt, Ischiokrurale "
                "vorgedehnt, mehr Reiz pro Satz. Dritter Satz als "
                "Reduktionssatz."),
     dict(name="Seitliche Kickbacks", block="Beine hinten", geraet="Kabel",
-         von=5, bis=8, saetze=3, rpe="9", start=None, maxlast=None,
+         von=5, bis=7, saetze=3, rpe="9", start=None, maxlast=None,
          schritt=2, letzter="A", aktiv=True,
          notiz="Gluteus medius, relevant für die Silhouette von vorne."),
-    dict(name="Waden", block="Beine hinten", geraet="Maschine", von=5, bis=8, saetze=3, rpe="9", start=None, maxlast=None, schritt=5,
+    dict(name="Waden", block="Beine hinten", geraet="Maschine", von=5, bis=7, saetze=3, rpe="9", start=None, maxlast=None, schritt=5,
          letzter="A", aktiv=True,
          notiz="In jede Beineinheit, bisher nur in jeder zweiten."),
     # Archiv: raus aus der Planung, Historie bleibt in Log und Auswertung.
-    dict(name="Lunges", block="Beine vorne", geraet="Kurzhantel", von=5, bis=8, saetze=None, rpe=None, start=None, maxlast=None,
+    dict(name="Lunges", block="Beine vorne", geraet="Kurzhantel", von=5, bis=7, saetze=None, rpe=None, start=None, maxlast=None,
          schritt=None, letzter="A", aktiv=False,
          notiz="Archiv. Redundant zum Split Squat, Historie bleibt in den "
                "Auswertungen sichtbar."),
     dict(name="Kickback", block="Beine hinten", geraet="Maschine / Kabel",
-         von=5, bis=8, saetze=None, rpe=None, start=None, maxlast=None,
+         von=5, bis=7, saetze=None, rpe=None, start=None, maxlast=None,
          schritt=None, letzter="A", aktiv=False,
          notiz="Archiv. Von Hip Thrust und RDL abgedeckt, Historie bleibt "
                "erhalten."),
@@ -460,6 +460,10 @@ for lab, txt in [
     ("Blatt 'Rekorde'",
      "Bestwerte je Übung über alle Einheiten, inklusive der Einheit, in der "
      "der Rekord gefallen ist."),
+    ("Blatt 'Wochenplan'",
+     "Wochenraster mit zwei Beineinheiten und den Regeln zur Regeneration: "
+     "72 Stunden Abstand, Satzpausen, Schlaf, was bei ausbleibendem "
+     "Fortschritt zuerst zu prüfen ist."),
     ("Blatt 'Dashboard'",
      "Kennzahlen und vier Diagramme auf einer Seite. Gut zum Aufhängen."),
     ("Blatt 'OP-Countdown'" if PREOP else "Blatt 'Reha-Fahrplan'",
@@ -527,8 +531,8 @@ for lab, txt in [
      "Anstrengung 6 bis 10. 10 = keine Wiederholung mehr möglich. Optional, "
      "aber sehr hilfreich für die Steuerung. Die Zielwerte je Übung stehen "
      "im Blatt 'Übungen'."),
-    ("Zielbereich 5 bis 8 Wdh",
-     "Alle Übungen laufen im selben Bereich: 5 bis 8 Wiederholungen je "
+    ("Zielbereich 5 bis 7 Wdh",
+     "Alle Übungen laufen im selben Bereich: 5 bis 7 Wiederholungen je "
      "Arbeitssatz. Kraftlastig, dafür brauchen die Sätze längere Pausen - "
      "drei bis vier Minuten bei den schweren Übungen."),
     ("Drei Sätze, absteigend",
@@ -539,11 +543,11 @@ for lab, txt in [
      "Trainingsblatt steht je Satz das eigene Gewicht: "
      "Warmup 1 mit 40 und Warmup 2 mit 70 Prozent, dann Arbeitssatz 1 "
      "mit 100, Arbeitssatz 2 mit 95 und Arbeitssatz 3 mit 90 Prozent. "
-     "Alle drei Arbeitssätze bleiben im Bereich 5 bis 8 Wiederholungen."),
+     "Alle drei Arbeitssätze bleiben im Bereich 5 bis 7 Wiederholungen."),
     ("Doppelte Progression",
      "So wird gesteigert, und zwar nach jedem Training neu: Solange der "
-     "schwächste Arbeitssatz unter 8 Wdh liegt, bleibt das Gewicht stehen "
-     "und es kommt eine Wiederholung dazu. Schaffen alle Sätze 8, kommt "
+     "schwächste Arbeitssatz unter 7 Wdh liegt, bleibt das Gewicht stehen "
+     "und es kommt eine Wiederholung dazu. Schaffen alle Sätze 7, kommt "
      "Gewicht drauf und die Wiederholungen fangen bei 5 wieder an. Bezug "
      "ist immer der schwächste Satz, nicht der beste. Sobald du die "
      "Einheit ins Log tippst, steht der nächste Schritt da."),
@@ -720,21 +724,22 @@ druck(wsu, "A1:M%d" % hinweis, landscape=True, titles="1:3")
 # EINHEITEN
 # ==========================================================================
 wse = sheet("Einheiten")
-titelbalken(wse, 1, 11, "EINHEITEN  |  KOPFDATEN JE TRAINING",
+titelbalken(wse, 1, 12, "EINHEITEN  |  KOPFDATEN JE TRAINING",
             "Gelb ausfüllen. Das Datum wandert automatisch ins Log; Sätze, "
             "Volumen und Tonnage rechnen sich aus dem Log.")
 kopfzeile(wse, 3, 1,
           ["Einheit", "Datum", "Fokus", "Körper-\ngewicht (kg)",
            "Dauer\n(min)", "Schlaf\n(h)", "Gefühl\n1-5", "Arbeits-\nsätze",
-           "Arbeits-\nvolumen (kg)", "Tonnage\ngesamt (kg)", "Notiz"],
-          [9, 13, 17, 12, 9, 9, 9, 10, 14, 13, 38], height=32)
+           "Arbeits-\nvolumen (kg)", "Tonnage\ngesamt (kg)",
+           "Tage seit\nletzter Einheit", "Notiz"],
+          [9, 13, 17, 12, 9, 9, 9, 10, 14, 13, 11, 32], height=32)
 
 for i in range(SESSION_SLOTS):
     row = EINH_FIRST + i
     c = wse.cell(row, 1, i + 1)
     c.font, c.alignment, c.fill, c.border = F_BOLD, C, FILL_INPUT, B_ALL
     for col, nf in ((2, NF_DATE), (3, None), (4, NF_KG), (5, NF_INT),
-                    (6, NF_KG), (7, NF_INT), (11, None)):
+                    (6, NF_KG), (7, NF_INT), (12, None)):
         c = wse.cell(row, col)
         c.font, c.fill, c.border = F_BODY, FILL_INPUT, B_ALL
         c.alignment = L if col in (3, 11) else C
@@ -767,14 +772,22 @@ for col in (8, 9, 10):
     c = wse.cell(srow, col, "=SUM(%s%d:%s%d)" % (L_, EINH_FIRST, L_,
                                                  EINH_LAST))
     c.font, c.alignment, c.number_format = F_BOLD, C, NF_INT
-for col in range(1, 12):
+for col in range(1, 13):
     wse.cell(srow, col).border = Border(top=med)
     wse.cell(srow, col).fill = FILL_LIGHT
 
-wse.cell(srow + 2, 1, "Ohne Datum funktioniert alles weiter - das Datum ist "
-                      "reine Dokumentation.").font = F_SMALL
+wse.cell(srow + 2, 1,
+         "Ohne Datum funktioniert alles weiter, aber nur mit Datum rechnet "
+         "die Spalte 'Tage seit letzter Einheit'. Unter zwei Tagen wird sie "
+         "gelb - zwischen zwei Beineinheiten sollten 72 Stunden liegen, "
+         "siehe Blatt 'Wochenplan'.").font = F_SMALL
+wse.conditional_formatting.add(
+    "K%d:K%d" % (EINH_FIRST, EINH_LAST),
+    FormulaRule(formula=['AND($K%d<>"",$K%d<2)' % (EINH_FIRST, EINH_FIRST)],
+                fill=PatternFill("solid", bgColor="FCE8C0"),
+                font=Font(name=FONT, size=10, bold=True, color=AMBER)))
 wse.freeze_panes = "B4"
-druck(wse, "A1:K%d" % (srow + 2), landscape=True, titles="1:3")
+druck(wse, "A1:L%d" % (srow + 2), landscape=True, titles="1:3")
 
 # ==========================================================================
 # LOG
@@ -2015,6 +2028,144 @@ if not PREOP:
                    "gleiche Tageszeit")
 
 # ==========================================================================
+# WOCHENPLAN  -  Struktur und Regeneration
+# ==========================================================================
+wsw = sheet("Wochenplan")
+for col, w in zip("ABCDE", [4, 14, 26, 40, 40]):
+    wsw.column_dimensions[col].width = w
+titelbalken(wsw, 2, 5,
+            "WOCHENPLAN  |  %s" % ("VOR DER OP" if PREOP else "REHA"),
+            "Zwei Beineinheiten je Woche, dazwischen mindestens 72 Stunden. "
+            "Regeneration ist Teil des Plans, nicht die Pause davon.")
+
+r = 4
+abschnitt(ws := wsw, r, 2, 5, "Wochenraster")
+r += 1
+for i, lab in enumerate(["Tag", "Einheit", "Inhalt", "Warum"]):
+    c = wsw.cell(r, 2 + i, lab)
+    c.font, c.fill, c.alignment, c.border = F_H1, FILL_HEAD, CW, B_ALL
+wsw.row_dimensions[r].height = 20
+r += 1
+
+TAGE = [
+    ("Montag", "Beine vorne", "Beinpresse eng · Split Squat · "
+     "Beinstrecker · Adduktion",
+     "Frischer Wochenstart für die schwerste Einheit."),
+    ("Dienstag", "frei", "Gehen, lockeres Radfahren, Mobilität",
+     "Durchblutung fördert die Erholung, ohne neuen Reiz zu setzen."),
+    ("Mittwoch", "frei", "Oberkörper oder Ruhetag",
+     "Beine bleiben unbelastet."),
+    ("Donnerstag", "Beine hinten", "RDL · Beinpresse breit · Hip Thrust · "
+     "Hip & Glute · Beinbeuger · Seitl. Kickbacks · Waden",
+     "72 Stunden nach Montag - die Vorderseite ist wieder erholt."),
+    ("Freitag", "frei", "Oberkörper oder Ruhetag", "Erholung."),
+    ("Samstag", "frei", "Gehen, Mobilität",
+     "Lockere Bewegung, keine Beinlast."),
+    ("Sonntag", "frei", "Ruhetag",
+     "Vollständige Pause vor dem nächsten Montag."),
+]
+for tag, einheit, inhalt, warum in TAGE:
+    wsw.cell(r, 2, tag).font = F_BOLD
+    wsw.cell(r, 2).alignment = L_IND
+    c = wsw.cell(r, 3, einheit)
+    c.font = Font(name=FONT, size=10, bold=True,
+                  color=NAVY if einheit != "frei" else "8A94A0")
+    c.alignment = C
+    if einheit != "frei":
+        c.fill = FILL_WORK
+    for col, txt in ((4, inhalt), (5, warum)):
+        cc = wsw.cell(r, col, txt)
+        cc.font, cc.alignment = F_BODY, LW
+    for col in range(2, 6):
+        wsw.cell(r, col).border = B_ALL
+    wsw.row_dimensions[r].height = zeilenhoehe(inhalt, breite=44)
+    r += 1
+
+r += 1
+abschnitt(wsw, r, 2, 5, "Regeneration - die Regeln")
+r += 1
+REGELN = [
+    ("72 Stunden zwischen zwei Beineinheiten",
+     "Muskelprotein-Synthese läuft nach einer schweren Einheit rund zwei "
+     "bis drei Tage. Wer früher wieder schwer belastet, sammelt Ermüdung "
+     "statt Anpassung. Zwei Einheiten je Woche reichen bei drei "
+     "Arbeitssätzen im Bereich 5 bis 7 vollkommen aus."),
+    ("Satzpausen: 3 bis 4 Minuten schwer, 2 Minuten Isolation",
+     "Im Bereich 5 bis 7 Wiederholungen ist die Last hoch. Zu kurze Pausen "
+     "kosten Wiederholungen im nächsten Satz und verfälschen damit die "
+     "Progression - der schwächste Satz ist die Rechengrundlage."),
+    ("Schlaf 7 bis 9 Stunden",
+     "Der grösste Wachstumshormon-Puls liegt im ersten Tiefschlafzyklus. "
+     "Zwei kurze Nächte hintereinander sieht man in den Wiederholungen."),
+    ("Protein über den Tag verteilt",
+     "2.0 bis 2.5 g je kg Körpergewicht, auf vier bis fünf Mahlzeiten. "
+     "Derselbe Wert, den der Reha-Fahrplan für die Sehnenheilung nennt."),
+    ("Muskelkater beim Aufwärmen",
+     "Ist der Muskelkater der letzten Einheit beim zweiten Warmup noch "
+     "deutlich spürbar, die Einheit mit zwei statt drei Arbeitssätzen "
+     "fahren. Das Gewicht bleibt, das Volumen sinkt."),
+    ("Zwei Einheiten ohne Fortschritt",
+     "Steht eine Übung zwei Einheiten auf demselben Gewicht und derselben "
+     "Wiederholungszahl, ist meist die Erholung das Problem, nicht der "
+     "Reiz. Erst Schlaf und Essen prüfen, dann das Programm."),
+]
+for lab, txt in REGELN:
+    wsw.cell(r, 2, lab).font = F_BOLD
+    wsw.cell(r, 2).alignment = LW
+    wsw.merge_cells(start_row=r, start_column=3, end_row=r, end_column=5)
+    c = wsw.cell(r, 3, txt)
+    c.font, c.alignment = F_BODY, LW
+    for col in range(2, 6):
+        wsw.cell(r, col).border = B_ALL
+    wsw.row_dimensions[r].height = max(zeilenhoehe(txt, breite=105),
+                                       zeilenhoehe(lab, breite=15))
+    r += 1
+
+if not PREOP:
+    r += 1
+    abschnitt(wsw, r, 2, 5, "Was sich nach der Operation ändert")
+    r += 1
+    for lab, txt in [
+        ("Phase 1 und 2, Woche 0 bis 6",
+         "Erhalt statt Aufbau. Zwei Einheiten je Woche, nur die im Blatt "
+         "'Reha-Modus' freigegebenen Übungen, alles im Sitzen. Die "
+         "Progression läuft weiter, springt aber selten - das ist richtig "
+         "so."),
+        ("Phase 3, ab Woche 6",
+         "Beinpresse und Split Squat kommen zurück, das Wochenraster oben "
+         "gilt wieder vollständig."),
+        ("Bauchpresse und Blutdruck",
+         "Schweres Pressen erhöht den Druck über den Schultergürtel. In "
+         "den ersten Wochen bewusst ausatmen statt pressen, auch wenn das "
+         "eine Wiederholung kostet."),
+    ]:
+        wsw.cell(r, 2, lab).font = F_BOLD
+        wsw.cell(r, 2).alignment = LW
+        wsw.merge_cells(start_row=r, start_column=3, end_row=r, end_column=5)
+        c = wsw.cell(r, 3, txt)
+        c.font, c.alignment = F_BODY, LW
+        for col in range(2, 6):
+            wsw.cell(r, col).border = B_ALL
+        wsw.row_dimensions[r].height = zeilenhoehe(txt, breite=105)
+        r += 1
+
+r += 1
+wsw.merge_cells(start_row=r, start_column=2, end_row=r, end_column=5)
+c = wsw.cell(r, 2,
+             "Zwei Beineinheiten an aufeinanderfolgenden Tagen sind möglich, "
+             "aber nicht ideal: Kniebeuge-Muster und Hüftstreckung "
+             "überschneiden sich stärker, als die Blocknamen vermuten "
+             "lassen. Wenn es terminlich nicht anders geht, die zweite "
+             "Einheit mit zwei statt drei Arbeitssätzen fahren.")
+c.font = Font(name=FONT, size=9, bold=True, color=AMBER)
+c.alignment, c.fill = LW, PatternFill("solid", fgColor="FEF6E7")
+for col in range(2, 6):
+    wsw.cell(r, col).fill = PatternFill("solid", fgColor="FEF6E7")
+    wsw.cell(r, col).border = B_ALL
+wsw.row_dimensions[r].height = 34
+druck(wsw, "B1:E%d" % r, landscape=False, titles="1:2")
+
+# ==========================================================================
 # TRAININGSBLATT (Druckvorlage zum Mitnehmen)
 # ==========================================================================
 wst = sheet("Trainingsblatt")
@@ -2243,7 +2394,7 @@ wst.conditional_formatting.add(
 druck(wst, "A1:I%d" % (row - 1), margins=(0.45, 0.35, 0.45, 0.45),
       fussnote="Warmup 1 = 40 %, Warmup 2 = 70 %  ·  Arbeitssatz 1 = "
                "100 % (Top-Satz), 2 = 95 %, 3 = 90 %  ·  alle Arbeitssätze "
-               "5-8 Wdh")
+               "5-7 Wdh")
 
 # ==========================================================================
 # DASHBOARD
@@ -2372,12 +2523,12 @@ druck(wsd, "A1:J%d" % ende)
 # Blattreihenfolge und Speichern
 # --------------------------------------------------------------------------
 if PREOP:
-    ORDER = ["Start", "Dashboard", "OP-Countdown", "Vorbereitung",
+    ORDER = ["Start", "Wochenplan", "Dashboard", "OP-Countdown", "Vorbereitung",
              "Baseline Schulter", "Reha-Fahrplan", "Einheiten", "Log",
              "Auswertung", "Progression", "Rekorde", "Trainingsblatt",
              "Übungen"]
 else:
-    ORDER = ["Start", "Dashboard", "Reha-Fahrplan", "Reha-Modus", "Reha-Log",
+    ORDER = ["Start", "Wochenplan", "Dashboard", "Reha-Fahrplan", "Reha-Modus", "Reha-Log",
              "Einheiten", "Log", "Auswertung", "Progression", "Rekorde",
              "Trainingsblatt", "Übungen"]
 wb._sheets = [wb[n] for n in ORDER]
