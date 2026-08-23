@@ -10,7 +10,7 @@ Dokument nach dem Gestaltungssystem in `design.py`.
 [`Schlussbericht_Kreuz_Zuzwil.pdf`](../Schlussbericht_Kreuz_Zuzwil.pdf) ·
 [`Vorlage_kabuu_Bericht.dotx`](../Vorlage_kabuu_Bericht.dotx)
 
-63 Seiten, 101 Verzeichniseinträge, Inhalt zeichengenau wie im Original.
+62 Seiten, 101 Verzeichniseinträge, Inhalt zeichengenau wie im Original.
 
 ## Neu bauen
 
@@ -22,6 +22,7 @@ python3 src/report/make.py
 Der Lauf macht alles: Inhalt auslesen, Logo erzeugen, Bericht setzen,
 PDF exportieren, Seitenzahlen ins Inhaltsverzeichnis zurückschreiben,
 Wordvorlage schreiben und den Inhalt gegen das Original prüfen.
+`python3 src/report/lint.py` sucht anschliessend nach Satzfehlern.
 
 | Datei | Zweck |
 |-------|-------|
@@ -32,6 +33,7 @@ Wordvorlage schreiben und den Inhalt gegen das Original prüfen.
 | `src/report/make_logo.py` | kabuu-Logo in allen benötigten Varianten |
 | `src/report/make_pdf.py` | PDF-Export, Seitenzahlen, Seitenvorschau |
 | `src/report/check.py` | Prüft, dass kein Zeichen des Originals fehlt |
+| `src/report/lint.py` | Sucht Satzfehler im fertigen PDF |
 
 ## Was am Satz gemacht wurde
 
@@ -81,7 +83,26 @@ in diesem Look an.
 
 ## Prüfungen
 
-Beide Dateien bestehen die XSD-Prüfung gegen das OOXML-Schema — inklusive der
-vorgeschriebenen Reihenfolge der Eigenschaftselemente, an der Word streng ist
-und LibreOffice nicht. `check.py` vergleicht den sichtbaren Text mit dem
-Original und lässt nur die bewusst gesetzten typografischen Änderungen zu.
+Drei Prüfungen, alle grün:
+
+- **Schema.** Beide Dateien bestehen die XSD-Prüfung gegen das OOXML-Schema —
+  inklusive der vorgeschriebenen Reihenfolge der Eigenschaftselemente, an der
+  Word streng ist und LibreOffice nicht.
+- **Inhalt.** `check.py` vergleicht den sichtbaren Text mit dem Original und
+  lässt nur die bewusst gesetzten typografischen Änderungen zu.
+- **Satz.** `lint.py` liest das fertige PDF und meldet, was beim Durchblättern
+  untergeht: Worttrennung in Tabellenzellen, verwaiste Restzeilen, fast leere
+  Seiten, Löcher im Satz, Verzeichniseinträge mit falscher Seitenzahl,
+  fehlende Kopf- oder Fusszeilen, Lücken in der Kapitelnummerierung und
+  Abweichungen im Zahlensatz.
+
+Zwei Stellen sind bewusst ausgenommen und deshalb in der Prüfung vermerkt: die
+letzte Seite eines Kapitels darf kurz ausfallen, weil jedes Kapitel auf einer
+neuen Seite beginnt; und in den Rechenblöcken wird nichts eingefügt, was die
+Zeichenzahl ändert — dort richten Leerzeichen die Spalten aus.
+
+## Dokumenteigenschaften
+
+Titel, Verfasser, Gegenstand, Schlagwörter und Firma stehen in der Datei und
+wandern in die PDF-Metadaten. Das PDF trägt zusätzlich 123 Lesezeichen, eines
+je Überschrift.

@@ -19,6 +19,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+from datetime import datetime
 from pathlib import Path
 
 import docx
@@ -47,28 +48,39 @@ OUT_DOTX = ROOT / "Vorlage_kabuu_Bericht.dotx"
 TITLE = "Netzqualitätsmessung und Ursachenanalyse Lichtflackern"
 OBJECT = "Gasthaus Kreuz, Oberdorfstrasse 16, 9524 Zuzwil SG"
 SHORT = "Gasthaus Kreuz, Zuzwil SG"
+RUNNING_TITLE = "Schlussbericht Netzqualitätsmessung"
 STAND = "23.08.2026"
 CAMPAIGN = ("Messkampagne 05.08.2026 bis 17.08.2026 · 3 Messpunkte · "
             "IEC 61000-4-30 Ed.3 Class A")
 CONTACT = "kabuu · Netzqualität & EMV Messungen · Burak Ücöz"
+AUTHOR = "Burak Ücöz"
+COMPANY = "kabuu — Netzqualität & EMV Messungen"
+REPORT_DATE = datetime(2026, 8, 23)
 
 # Tabellen, deren Kopfzeile keine Spaltentitel enthält, sondern bereits Daten.
 HEADER_MAX_CHARS = 40
 MIN_COL_TEXT, MIN_COL_NUM = 980, 620
+# Bis zu dieser Zeilenzahl wird eine Tabelle nie umbrochen.
+ATOMIC_ROWS = 6
+# Ab dieser Zellenlänge gilt eine Spalte als Text, nicht als Zahlenspalte.
+NUMERIC_MAX_CHARS = 20
+# Schreibhöhe für die leeren Zeilen eines Erhebungsblatts.
+FORM_ROW_HEIGHT = 420
 SYMBOLS = {"+", "○", "−", "-", "—", "✓", "–"}
 BULLET_NUM = 10
 ORDERED_NUMS = tuple(range(20, 44))
 
 
 # ---------------------------------------------------------------- Grundriss --
-def new_document(subject: str = SHORT, stand: str = STAND) -> docx.Document:
+def new_document(subject: str = SHORT, stand: str = STAND,
+                 running_title: str = RUNNING_TITLE) -> docx.Document:
     doc = docx.Document()
     _purge_body(doc)
     _page_setup(doc)
     _settings(doc)
     _base_styles(doc)
     _numbering_defs(doc)
-    _header(doc, subject, stand)
+    _header(doc, running_title, subject, stand)
     _footer(doc, subject)
     return doc
 
@@ -203,6 +215,46 @@ def _numbering_defs(doc):
         numbering.append(node)
 
 
+def _properties(doc, *, title: str, subject: str, keywords: str, description: str):
+    """Dokumenteigenschaften setzen.
+
+    Word zeigt sie in den Infos, der PDF-Export übernimmt sie als Metadaten.
+    Ohne diesen Schritt trägt jede erzeugte Datei „python-docx“ als Verfasser
+    — auf einem Bericht, der an einen Auftraggeber geht, ein Fehler.
+    """
+    core = doc.core_properties
+    core.title = title
+    core.subject = subject
+    core.author = AUTHOR
+    core.last_modified_by = AUTHOR
+    core.category = "Messbericht"
+    core.comments = description
+    core.keywords = keywords
+    core.revision = 1
+    core.created = core.modified = REPORT_DATE
+
+    # Firma und Anwendung stehen in den erweiterten Eigenschaften, die
+    # python-docx nicht anfasst — dort also direkt am XML.
+    from lxml import etree
+
+    for part in doc.part.package.iter_parts():
+        if part.partname != "/docProps/app.xml":
+            continue
+        root = etree.fromstring(part.blob)
+        ns = root.nsmap.get(None, "")
+        for tag, value in (("Company", COMPANY),
+                           ("Application", "kabuu Berichtssatz"),
+                           ("Manager", AUTHOR)):
+            node = root.find(f"{{{ns}}}{tag}")
+            if node is None:
+                node = etree.SubElement(root, f"{{{ns}}}{tag}")
+            node.text = value
+        part._blob = etree.tostring(
+            root, xml_declaration=True, encoding="UTF-8", standalone=True
+        )
+    return doc
+
+
 def _finish(doc):
     """Letzter Schliff vor dem Speichern: Elementfolge im ganzen Paket richten."""
     section = doc.sections[0]
@@ -230,7 +282,7 @@ def _logo_run(p, name: str, height_cm: float):
     return r
 
 
-def _header(doc, subject: str, stand: str):
+def _header(doc, running_title: str, subject: str, stand: str):
     section = doc.sections[0]
     section.first_page_header.paragraphs[0].text = ""  # Deckblatt ohne Kopfzeile
     header = section.header
@@ -248,7 +300,7 @@ def _header(doc, subject: str, stand: str):
         qn("w:lineRule"): "auto"}))
     borders(p, bottom=(HAIR, 6, 6))
     _logo_run(p, "logo_mark.png", 0.62)
-    run(p, "   Schlussbericht Netzqualitätsmessung", size=16, color=INK, bold=True)
+    run(p, f"   {running_title}", size=16, color=INK, bold=True)
     run(p, f"\t{subject}{NBSP}· Stand {stand}", size=16, color=STEEL)
 
 
@@ -290,8 +342,16 @@ def spacer(doc, points: int):
     return para(doc, space_before=0, space_after=0, line=points * 20, keep_next=True)
 
 
-def body_text(doc, text: str, **kw):
-    p = para(doc, align=ALIGN["justify"], space_after=SP_BODY_AFTER, **kw)
+LEAD_IN_FOLLOWERS = {"table", "figure", "formula", "callout"}
+
+
+def body_text(doc, text: str, *, leads_into: str | None = None, **kw):
+    """Fliesstext. Eine Zeile, die auf einen Doppelpunkt endet und einen
+    Block ankündigt, wird an diesen gebunden — sie darf nicht allein am
+    Seitenfuss zurückbleiben."""
+    lead_in = text.rstrip().endswith(":") and leads_into in LEAD_IN_FOLLOWERS
+    p = para(doc, align=ALIGN["justify"], space_after=SP_BODY_AFTER,
+             keep_next=lead_in, **kw)
     run(p, typo(text))
     return p
 
@@ -354,7 +414,8 @@ def formula(doc, text: str):
                  line=252, indent_left=170, keep_next=i < len(lines) - 1)
         shade(p, PANEL)
         borders(p, left=(STEEL_LT, 18, 8))
-        run(p, line or " ", font=MONO, size=SZ_MONO, color="2A3038")
+        run(p, typo(line, insert=False) or " ", font=MONO, size=SZ_MONO,
+            color="2A3038")
     return None
 
 
@@ -442,7 +503,15 @@ def _classify(rows: list[list[str]], has_header: bool):
             centered.append(False)
             continue
         centered.append(all(v in SYMBOLS for v in values))
-        numeric.append(not centered[-1] and sum(looks_numeric(v) for v in values) >= 0.7 * len(values))
+        # Eine Spalte ist nur dann eine Zahlenspalte, wenn ihre Werte auch
+        # kurz sind. Ein ganzer Satz, der zufällig mit einer Ziffer beginnt
+        # ("94,0 bis 104,0 %, 100 % einer Woche"), gehört linksbündig.
+        compact_enough = max(len(v) for v in values) <= NUMERIC_MAX_CHARS
+        numeric.append(
+            not centered[-1]
+            and compact_enough
+            and sum(looks_numeric(v) for v in values) >= 0.7 * len(values)
+        )
     return numeric, centered
 
 
@@ -470,6 +539,12 @@ def render_table(doc, grid: list[list[dict]], *, force_header: bool | None = Non
         row_rules(table.rows[r], header=is_head, cant_split=True)
         body_index = r - (1 if has_header else 0)
         fill = INK if is_head else (BAND if body_index % 2 == 1 else None)
+        bind = _binds_to_next(r, len(rows), has_header)
+        if not any(v.strip() for v in values):
+            # Leerzeile eines Erhebungsblatts: sie soll von Hand ausgefüllt
+            # werden und braucht dafür Schreibhöhe statt einer Textzeile.
+            trPr = table.rows[r]._tr.get_or_add_trPr()
+            trPr.append(el("trHeight", val=FORM_ROW_HEIGHT, hRule="atLeast"))
         for c, text in enumerate(values):
             cell = clear_cell(table.rows[r].cells[c])
             cell_style(
@@ -481,12 +556,30 @@ def render_table(doc, grid: list[list[dict]], *, force_header: bool | None = Non
             cell_margins(cell, top=95 if is_head else 85, bottom=95 if is_head else 85,
                          left=115, right=115)
             _fill_cell(cell, text, is_head=is_head, numeric=numeric[c],
-                       centered=centered[c], label=(c == 0 and not has_header))
+                       centered=centered[c], label=(c == 0 and not has_header),
+                       keep_next=bind)
     _after_block(doc)
     return table
 
 
-def _fill_cell(cell, text: str, *, is_head: bool, numeric: bool, centered: bool, label: bool):
+def _binds_to_next(row: int, total: int, has_header: bool) -> bool:
+    """Welche Tabellenzeile darf nicht von der folgenden getrennt werden.
+
+    Drei Fälle, die im Satz sonst regelmässig unschön auffallen: eine
+    Kopfzeile allein am Seitenfuss, eine einzelne Datenzeile allein auf der
+    Folgeseite, und eine kurze Tabelle, die überhaupt umbricht.
+    """
+    if row == total - 1:
+        return False  # letzte Zeile bindet nichts, sonst klebt die Tabelle am Text
+    if total <= ATOMIC_ROWS:
+        return True
+    if has_header and row == 0:
+        return True
+    return row >= total - 3
+
+
+def _fill_cell(cell, text: str, *, is_head: bool, numeric: bool, centered: bool,
+               label: bool, keep_next: bool = False):
     lines = text.split("\n") if text else [""]
     # Kopfzeile folgt der Ausrichtung ihrer Spalte, sonst stehen Titel und
     # Werte nicht übereinander.
@@ -494,7 +587,7 @@ def _fill_cell(cell, text: str, *, is_head: bool, numeric: bool, centered: bool,
     for i, line in enumerate(lines):
         p = para(cell, space_before=0, space_after=0 if i == len(lines) - 1 else 70,
                  line=LINE_TIGHT, align=ALIGN[align], keep_lines=False,
-                 hyphenate=False)
+                 hyphenate=False, keep_next=keep_next)
         if not line:
             continue
         run(p, typo(line),
@@ -586,9 +679,9 @@ def table_of_contents(doc, entries, pages: dict[str, str]):
     for i, (level, text, anchor) in enumerate(entries):
         entry = para(
             doc,
-            space_before=140 if level == 1 and i else 0,
-            space_after=0 if level == 1 else 20,
-            line=272,
+            space_before=90 if level == 1 and i else 0,
+            space_after=0,
+            line=252,
             indent_left=0 if level == 1 else 400,
             indent_right=560,
             keep_lines=False,
@@ -702,7 +795,8 @@ def build(blocks, pages: dict[str, str]):
         if kind == "caption":
             caption(doc, block["text"])
         elif kind == "paragraph":
-            body_text(doc, block["text"])
+            following = body[i + 1]["type"] if i + 1 < len(body) else None
+            body_text(doc, block["text"], leads_into=following)
         elif kind == "listitem":
             nxt = body[i + 1] if i + 1 < len(body) else None
             if not in_list and block["ordered"]:
@@ -720,6 +814,15 @@ def build(blocks, pages: dict[str, str]):
         i += 1
 
     closing(doc, [b["text"] for b in blocks[-4:]])
+    _properties(
+        doc,
+        title=f"Schlussbericht {TITLE} — {SHORT}",
+        subject=CAMPAIGN,
+        keywords="Netzqualität, EN 50160, Flicker, Rundsteuerung, "
+                 "IEC 61000-4-30, Photovoltaik, Zuzwil",
+        description="Netzqualitätsmessung an drei Messpunkten mit Ursachenanalyse "
+                    "des Lichtflackerns und Massnahmenkatalog.",
+    )
     _finish(doc)
     return doc, entries
 
@@ -742,7 +845,8 @@ TEMPLATE_NOTE = {
 
 def build_template():
     """Leere Vorlage mit derselben Gestaltung, aber ohne Berichtsinhalt."""
-    doc = new_document(subject="Objekt, Ort", stand="TT.MM.JJJJ")
+    doc = new_document(subject="Objekt, Ort", stand="TT.MM.JJJJ",
+                       running_title="Berichtstitel")
 
     meta = [
         [{"text": "Objekt", "span": 1}, {"text": "Objektname, Strasse, PLZ Ort", "span": 1}],
@@ -811,6 +915,14 @@ def build_template():
         "kabuu — Netzqualität & EMV Messungen · Im Abt 9 A · 8240 Thayngen",
         "+41 79 512 98 07 · engineering.kabuu@gmail.com",
     ])
+    _properties(
+        doc,
+        title="kabuu — Vorlage Messbericht",
+        subject="Wordvorlage für Berichte von kabuu Netzqualität & EMV Messungen",
+        keywords="Vorlage, Messbericht, Netzqualität, kabuu",
+        description="Leere Berichtsvorlage mit Deckblatt, Überschriftenebenen, "
+                    "Tabellenlook, Hinweiskästen und Bildlegenden.",
+    )
     _finish(doc)
     return doc
 

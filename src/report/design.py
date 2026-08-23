@@ -347,32 +347,66 @@ _PREFIX = r"Kapitel|Abbildung|Abschnitt|Bild|Tabelle|Anhang|Seite|Nr\.?|Rang|Typ
 _STANDARD = r"EN|IEC|DIN|VDE|NIN|ISO|SN"
 
 
-def typo(text: str) -> str:
+# Vierstellige und längere Zahlen bekommen die Tausendertrennung nur, wenn
+# ihnen eine Einheit folgt oder sie die untere Grenze eines Bereichs sind.
+# Normnummern (EN 50160), Postleitzahlen, Serien- und Typennummern bleiben
+# damit unberührt — dort wäre die Trennung schlicht falsch.
+_THOUSANDS = re.compile(
+    rf"(?<![\d\u2019.,\-])(\d{{4,}})"
+    rf"(?={NBSP}(?:{_UNITS})\b|(?: bis | und )\d{{3,}}{NBSP}(?:{_UNITS})\b)"
+)
+_STANDARD_BEFORE = re.compile(rf"(?:{_STANDARD})[ {NBSP}]$")
+
+
+def _swiss_thousands(digits: str) -> str:
+    out, rest = digits[-3:], digits[:-3]
+    while rest:
+        out, rest = rest[-3:] + "\u2019" + out, rest[:-3]
+    return out
+
+
+def typo(text: str, *, insert: bool = True) -> str:
     """Schweizer Zahlensatz und geschützte Abstände.
 
     Zahl und Einheit, Normbezeichnung und Nummer, Verweiswort und Ziffer
     gehören zusammen und dürfen nicht über den Zeilenumbruch getrennt werden.
     Tausendertrennung als Hochkomma, wie in der Schweiz üblich.
+
+    ``insert=False`` lässt die beiden Regeln weg, die Zeichen hinzufügen —
+    die nachträgliche Tausendertrennung und das Multiplikationszeichen. Für
+    die Rechenblöcke ist das nötig: dort stehen die Spalten über Leerzeichen
+    untereinander, und ein zusätzliches Zeichen verschiebt die ganze Zeile.
     """
-    # Tausendertrennung: 86'600 -> 86’600 (auch mehrfach: 1'234'567)
+    # Tausendertrennung des Originals auf Hochkomma umstellen: 86'600 -> 86\u2019600
     for _ in range(3):
-        text = re.sub(r"(?<=\d)'(?=\d{3}\b)", "\u2019", text)
+        text = re.sub(r"(?<=\d)\'(?=\d{3}\b)", "\u2019", text)
     # Zahl + Einheit
-    text = re.sub(rf"(\d(?:[.,]\d+)?)\s+({_UNITS})(?![\wäöüÄÖÜß])", rf"\1{NBSP}\2", text)
+    text = re.sub(rf"(\d(?:[.,]\d+)?) ({_UNITS})(?![\wäöüÄÖÜß])", rf"\1{NBSP}\2", text)
     # Normbezeichnung + Nummer, Verweiswort + Nummer
-    text = re.sub(rf"\b({_STANDARD})\s+(\d)", rf"\1{NBSP}\2", text)
-    text = re.sub(rf"\b({_PREFIX})\s+(\d+|[A-Z]\b)", rf"\1{NBSP}\2", text)
+    text = re.sub(rf"\b({_STANDARD}) (\d)", rf"\1{NBSP}\2", text)
+    text = re.sub(rf"\b({_PREFIX}) (\d+|[A-Z]\b)", rf"\1{NBSP}\2", text)
     # Datum und Uhrzeit einer Zeitangabe zusammenhalten
-    text = re.sub(r"(\d{2}\.\d{2}\.(?:\d{4})?)\s+(\d{2}:\d{2})", rf"\1{NBSP}\2", text)
-    # Messpunkt- und Phasenbezeichner nicht umbrechen
+    text = re.sub(r"(\d{2}\.\d{2}\.(?:\d{4})?) (\d{2}:\d{2})", rf"\1{NBSP}\2", text)
+    # Messpunktbezeichner nicht umbrechen
     text = re.sub(r"\bMP-(\d)", rf"MP{NBHYPH}\1", text)
+    if not insert:
+        return text
     # Multiplikationszeichen an die Zahl binden
     text = re.sub(r"(\d)\s*×\s*", rf"\1{NBSP}× ", text)
+    # Tausendertrennung für Messwerte, die sie im Original noch nicht hatten
+    text = _THOUSANDS.sub(
+        lambda m: m.group(1)
+        if _STANDARD_BEFORE.search(text[max(0, m.start() - 8):m.start()])
+        else _swiss_thousands(m.group(1)),
+        text,
+    )
     return text
 
 
+# "rund 125 A" ist ein Zahlenwert, "rund das 6-Fache" eine Formulierung.
 _NUMERIC = re.compile(
-    rf"^[−–\-+]?[\d’'.,]+(?:\s*(?:{_UNITS}))?$|^—$|^rund\s|^[+\-]?\d", re.IGNORECASE
+    rf"^[−–\-+]?[\d’'.,]+(?:\s*(?:{_UNITS}))?$|^—$|^rund\s+\d|^[+\-]?\d",
+    re.IGNORECASE,
 )
 
 
