@@ -217,12 +217,23 @@ def _bauen(roh: dict, quelle: str, quelle_hash: str) -> Aktivitaet:
     a.notizen = notiz[:2000]
 
     # Strukturierte Formulare und Visitenkarten in der Terminnotiz
-    formular = {**felder.kontaktkarte(kern), **felder.formularfelder(kern)}
+    formular = {**felder.crm_block(kern), **felder.kontaktkarte(kern),
+                **felder.formularfelder(kern)}
+    # Steht die Projektbezeichnung auch im Titel, ist der Rest der Kontaktname
+    projekt = formular.pop("projekt", "")
+    if projekt and projekt.lower() in titel.lower():
+        rest = re.sub(re.escape(projekt), " ", titel, flags=re.I)
+        rest = felder.KONTAKT_PRAEFIXE.sub("", rest).strip(" —–-:·|,")
+        name = felder.personenname(rest)
+        if name:
+            formular.setdefault("kontakt", name)
     for schluessel in ("firma", "kontakt", "email", "telefon", "ort", "hauptprodukt"):
         if formular.get(schluessel) and not getattr(a, schluessel, ""):
             setattr(a, schluessel, formular[schluessel])
     zusatz = [f"{s.capitalize()}: {formular[s]}"
               for s in ("funktion", "segment", "prioritaet", "kanton") if formular.get(s)]
+    if projekt:
+        zusatz.insert(0, f"Projekt: {projekt}")
     if zusatz:
         a.notizen = " | ".join([a.notizen, *zusatz]).strip(" |")[:2000]
 
@@ -239,9 +250,11 @@ def _bauen(roh: dict, quelle: str, quelle_hash: str) -> Aktivitaet:
     aus_titel = felder.firma_aus_titel(titel)
     aus_domain = felder.firma_aus_domain(a.email or (externe[0][1] if externe else ""))
     gepflegt = aus_domain and aus_domain in felder.FIRMEN_ALIASE.values()
-    if aus_stichwort:
-        a.firma = aus_stichwort              # Stichwort im Titel ist am genauesten
-    elif not formular.get("firma"):
+    if formular.get("firma"):
+        pass                                 # aus CRM-Block/Formular, am genauesten
+    elif aus_stichwort:
+        a.firma = aus_stichwort
+    elif True:
         a.firma = aus_domain if gepflegt else (aus_titel or aus_domain)
 
     eigener_termin = not externe and (organisator_mail.split("@")[-1].lower()
@@ -256,7 +269,11 @@ def _bauen(roh: dict, quelle: str, quelle_hash: str) -> Aktivitaet:
         # Bei selbst gesetzten Terminen steht der Ansprechpartner oft als erste
         # Zeile der Notiz (kopierte Signatur / Visitenkarte).
         erste = next((z for z in kern.splitlines() if z.strip()), "")
-        a.kontakt = felder.personenname(erste)
+        a.kontakt = felder.personenname(erste) or felder.name_aus_mail(a.email)
+
+    # Ein einzelnes Wort ist kein Personenname — dann lieber aus der Mailadresse
+    if a.kontakt and " " not in a.kontakt and a.email:
+        a.kontakt = felder.name_aus_mail(a.email) or a.kontakt
 
     a.kategorie = felder.kategorie_bestimmen(titel, notiz, a.typ, ort)
     if a.kategorie == "Sonstiges":

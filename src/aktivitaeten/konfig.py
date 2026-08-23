@@ -32,6 +32,8 @@ FIRMEN_ALIASE = {
     "ei-ag": "Elektro-Installationen EI AG",
     "emmi": "Emmi Schweiz AG",
     "amag": "AMAG",
+    "ekz": "EKZ Elektrizitätswerke Kanton Zürich",
+    "implenia": "Implenia",
 }
 
 # Firmennamen, die auch ohne Rechtsform im Termintitel erkannt werden sollen.
@@ -51,6 +53,7 @@ FIRMEN_STICHWORTE = {
     "dpr": "DPR / Vantage ZRH12",
     "gampel": "Rock Hock Verein Gampel",
     "rock hock": "Rock Hock Verein Gampel",
+    "ekz": "EKZ Elektrizitätswerke Kanton Zürich",
 }
 
 # Eigene Kategorie-Regeln. Werden VOR den Standardregeln geprueft.

@@ -6,6 +6,7 @@ wenn nichts erkannt wird — die Pipeline soll nie an einem Sonderfall haengen.
 
 from __future__ import annotations
 
+import html
 import re
 import unicodedata
 
@@ -72,7 +73,9 @@ FUELLZEICHEN = str.maketrans({"ㅤ": " ", "​": " ", "﻿": " ",
 
 
 def _norm(text: str) -> str:
-    return unicodedata.normalize("NFC", (text or "").translate(FUELLZEICHEN))
+    """Vereinheitlicht Sonderzeichen und loest HTML-Entities auf (&lt; &amp; …)."""
+    entschaerft = html.unescape(text or "")
+    return unicodedata.normalize("NFC", entschaerft.translate(FUELLZEICHEN))
 
 
 def kerntext(text: str) -> str:
@@ -295,17 +298,18 @@ def kontaktkarte(text: str) -> dict[str, str]:
     """
     zeilen = [z.strip() for z in re.split(r"[\n|]", _norm(text))]
     zeilen = [z for z in zeilen if z]
-    tel_index = next((i for i, z in enumerate(zeilen) if TEL_RE.fullmatch(z.strip())), None)
-    mail_index = next((i for i, z in enumerate(zeilen) if EMAIL_RE.fullmatch(z.strip())), None)
+    blank = lambda z: z.strip().strip("<>()[] ")
+    tel_index = next((i for i, z in enumerate(zeilen) if TEL_RE.fullmatch(blank(z))), None)
+    mail_index = next((i for i, z in enumerate(zeilen) if EMAIL_RE.fullmatch(blank(z))), None)
     if tel_index is None and mail_index is None:
         return {}
 
     anker = tel_index if tel_index is not None else mail_index
     ergebnis: dict[str, str] = {}
     if tel_index is not None:
-        ergebnis["telefon"] = zeilen[tel_index].strip()
+        ergebnis["telefon"] = blank(zeilen[tel_index])
     if mail_index is not None:
-        ergebnis["email"] = zeilen[mail_index].strip()
+        ergebnis["email"] = blank(zeilen[mail_index])
 
     # Ein bis zwei Namensteile direkt oberhalb der Telefonnummer
     namensteile: list[str] = []
@@ -320,6 +324,103 @@ def kontaktkarte(text: str) -> dict[str, str]:
         if davor >= 0 and len(zeilen[davor].split()) <= 5 and not EMAIL_RE.search(zeilen[davor]):
             ergebnis["funktion"] = zeilen[davor].strip()
     return ergebnis
+
+
+# Rollen- und Funktionsbezeichnungen — hilfreich, um sie von Firmennamen
+# zu unterscheiden.
+ROLLENWOERTER = {
+    "project", "manager", "director", "architect", "architecte", "architectes",
+    "engineer", "engineering", "contractor", "council", "consultant", "owner",
+    "developer", "associate", "industrial", "development", "general", "senior",
+    "technical", "sales", "chief", "head", "of", "the", "real", "estate",
+    "projektleiter", "bauleiter", "inhaber", "leiter", "geschaeftsfuehrer",
+}
+
+PLZ_RE = re.compile(r"^\d{4}$")
+
+LAENDER = {"switzerland", "schweiz", "suisse", "svizzera", "deutschland",
+           "germany", "france", "frankreich", "austria", "österreich",
+           "italy", "italien", "liechtenstein"}
+
+
+def crm_block(text: str) -> dict[str, str]:
+    """Liest CRM-Exporte, deren Felder nur durch Leerraum getrennt sind.
+
+    Outlook-Termine aus dem Projektsystem sehen so aus — alles in einer
+    Zeile, die Felder durch mehrere Leerzeichen abgeteilt:
+
+        300629372   SIERRE GRASSROOT DATA CENTER  Associate Director
+        Michael     Melly +41 274562912   Contractor  Melly Constructions SA
+        Route de Chippis 99A    3966  Sierre   Valais   Switzerland
+    """
+    roh = _norm(text).replace("\n", "  ")
+    teile = [t.strip() for t in re.split(r"\s{2,}", roh) if t.strip()]
+    if len(teile) < 6:
+        return {}
+
+    # Strenge Erkennung: ein CRM-Export beginnt mit einer Projektnummer und
+    # enthaelt Postleitzahl und Land. Ohne diese Merkmale ist es Fliesstext,
+    # und ein Ratespiel auf Fliesstext zerstoert sonst gute Werte.
+    hat_projektnummer = teile[0].isdigit() and len(teile[0]) >= 6
+    hat_plz = any(PLZ_RE.match(x) for x in teile)
+    hat_land = any(x.lower() in LAENDER for x in teile)
+    if not (hat_plz and (hat_projektnummer or hat_land)):
+        return {}
+
+    ergebnis: dict[str, str] = {}
+    tel_index = None
+    for index, teil in enumerate(teile):
+        treffer = TEL_RE.search(teil)
+        if treffer and len(re.sub(r"\D", "", treffer.group())) >= 9:
+            ergebnis["telefon"] = treffer.group().strip()
+            tel_index = index
+            break
+    adressen = emails(roh)
+    if adressen:
+        ergebnis["email"] = adressen[0]
+    if not ergebnis:
+        return {}
+
+    # Projektbezeichnung: langer Grossbuchstaben-Block am Anfang
+    for teil in teile[:3]:
+        if len(teil) > 8 and teil == teil.upper() and not teil.isdigit():
+            ergebnis["projekt"] = teil
+            break
+
+    # Firma: erster mehrwortiger Eintrag nach der Telefonnummer, der nicht
+    # nur aus Rollenbezeichnungen besteht
+    for teil in teile[(tel_index or 0) + 1:]:
+        worte = teil.split()
+        if len(worte) < 2 or any(z.isdigit() for z in teil):
+            continue
+        if "@" in teil or teil.lower().startswith("www"):
+            continue
+        if all(w.lower().strip(",.") in ROLLENWOERTER for w in worte):
+            continue
+        # Vorangestellte Rollenbezeichnung abtrennen ("Engineering Structurame Sarl")
+        while len(worte) > 2 and worte[0].lower().strip(",.") in ROLLENWOERTER:
+            worte.pop(0)
+        ergebnis["firma"] = " ".join(worte)
+        break
+
+    # Ort steht hinter der Postleitzahl
+    for index, teil in enumerate(teile[:-1]):
+        if PLZ_RE.match(teil):
+            ergebnis["ort"] = f"{teil} {teile[index + 1]}".strip()
+            break
+
+    return ergebnis
+
+
+def name_aus_mail(adresse: str) -> str:
+    """'Simon.Meier@ekz.ch' -> 'Simon Meier' (nur bei klarem Vorname.Nachname)."""
+    lokal = _norm(adresse).split("@")[0]
+    if "." not in lokal:
+        return ""
+    teile = [t for t in lokal.split(".") if t]
+    if not 2 <= len(teile) <= 3 or any(len(t) < 2 or any(c.isdigit() for c in t) for t in teile):
+        return ""
+    return " ".join(t.capitalize() for t in teile)
 
 
 # ---------------------------------------------------------------------------
@@ -442,7 +543,8 @@ def kategorie_bestimmen(titel: str, notizen: str, typ: str, ort: str = "") -> st
         return "Interner Termin"
     # Abwicklung eines laufenden Auftrags — weder Akquise noch reine Büroarbeit
     if re.search(r"(projekt|abwicklung|koordination|disposition|transport|"
-                 r"anlieferung|aufbau|abbau|montage)\b", titel_klein):
+                 r"anlieferung|aufbau|abbau|montage|messung|\bibn\b|"
+                 r"inbetriebnahme)\b", titel_klein):
         return "Projekt"
     if "beratung" in titel_klein:
         return "Beratung"
