@@ -64,6 +64,12 @@ Dunkle Kopfzeile, Zebrastreifen, Haarlinien statt Gitter, ruhige Innenränder.
 **Hinweiskästen.** Vier Rollen mit fester Bedeutung: bestätigtes Ergebnis
 (grün), Vorbehalt (amber), interner Hinweis (rot), Einordnung (blau).
 
+**Abbildungen.** Im Ausgangsbericht stehen sie als 1, 4, 5, 2, 3 im Text — die
+Anhänge wurden nachträglich eingefügt. Da keine Stelle im Text auf eine
+Abbildungsnummer verweist, werden sie beim Satz in Lesereihenfolge
+durchgezählt. In der Bilddokumentation stehen Messpunkt und Inhalt an einem
+Tabulator, sodass die Werte untereinander beginnen.
+
 **Logo.** Bildmarke auf dem Deckblatt, in der Kopfzeile jeder Seite und auf der
 Schlussseite.
 
@@ -93,16 +99,26 @@ Drei Prüfungen, alle grün:
 - **Satz.** `lint.py` liest das fertige PDF und meldet, was beim Durchblättern
   untergeht: Worttrennung in Tabellenzellen, verwaiste Restzeilen, fast leere
   Seiten, Löcher im Satz, Verzeichniseinträge mit falscher Seitenzahl,
-  fehlende Kopf- oder Fusszeilen, Lücken in der Kapitelnummerierung und
-  Abweichungen im Zahlensatz.
+  fehlende Kopf- oder Fusszeilen, Lücken in der Kapitel- und
+  Abbildungsnummerierung, Abweichungen im Zahlensatz sowie den inneren
+  Zusammenhalt der Datei — Verweise ohne Ziel, Bildbeziehungen ohne Datei,
+  Listenbezüge ohne Definition.
 
 Zwei Stellen sind bewusst ausgenommen und deshalb in der Prüfung vermerkt: die
 letzte Seite eines Kapitels darf kurz ausfallen, weil jedes Kapitel auf einer
 neuen Seite beginnt; und in den Rechenblöcken wird nichts eingefügt, was die
 Zeichenzahl ändert — dort richten Leerzeichen die Spalten aus.
 
+## Nachgerechnet
+
+Die 18 Rechenblöcke in Kapitel 10 wurden unabhängig nachgerechnet: Anschluss-
+und Anlagenleistung, Frequenzordnung der Rundsteuersignale, Netzimpedanz aus
+der Spannungsanhebung, Spannungsänderung durch Lastsprünge, Neutralleiterstrom
+aus der Schieflast, Resonanzprüfung des Lichtstromkreises und die Strombilanz.
+Alle Ergebnisse stimmen. Ebenso alle Querverweise auf Kapitel und Anhänge.
+
 ## Dokumenteigenschaften
 
 Titel, Verfasser, Gegenstand, Schlagwörter und Firma stehen in der Datei und
-wandern in die PDF-Metadaten. Das PDF trägt zusätzlich 123 Lesezeichen, eines
-je Überschrift.
+wandern in die PDF-Metadaten. Das PDF trägt zusätzlich ein Lesezeichen je
+Überschrift.

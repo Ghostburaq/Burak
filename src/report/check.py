@@ -48,6 +48,10 @@ def canonical(text: str) -> str:
         ("\u00a0", " "), ("\u202f", " "),
     ):
         text = text.replace(special, plain)
+    # Die Abbildungen stehen im Ausgangsbericht als 1, 4, 5, 2, 3 im Text und
+    # werden beim Satz in Lesereihenfolge durchgezählt. Für den Vergleich
+    # zählt die Legende, nicht ihre Nummer.
+    text = re.sub(r"Abbildung[\s\u00a0]+\d+", "Abbildung#", text)
     # Grossschreibung ist im neuen Bericht eine Auszeichnung (w:caps), keine
     # Texteigenschaft — für den Inhaltsvergleich also ohne Belang.
     text = re.sub(r"\s+", "", text).casefold()

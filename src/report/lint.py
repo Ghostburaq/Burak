@@ -254,6 +254,78 @@ def check_headings_order(headings: list[tuple[int, str]]) -> list[str]:
     return hits
 
 
+def check_structure() -> list[str]:
+    """Innerer Zusammenhalt der Word-Datei.
+
+    Ein Verweis ohne Ziel, eine Bildbeziehung ohne Datei oder ein Listenbezug
+    ohne Definition öffnet zwar noch, verhält sich in Word aber falsch — und
+    fällt beim Durchblättern des PDF nicht auf.
+    """
+    import xml.etree.ElementTree as ET
+
+    R = "{http://schemas.openxmlformats.org/officeDocument/2006/relationships}"
+    A = "{http://schemas.openxmlformats.org/drawingml/2006/main}"
+    hits = []
+    with zipfile.ZipFile(DOCX) as z:
+        names = set(z.namelist())
+        doc = ET.fromstring(z.read("word/document.xml"))
+        rels = {r.get("Id"): r.get("Target")
+                for r in ET.fromstring(z.read("word/_rels/document.xml.rels"))}
+        numbering = ET.fromstring(z.read("word/numbering.xml"))
+
+    starts = [b.get(W + "name") for b in doc.iter(W + "bookmarkStart")]
+    ids = [b.get(W + "id") for b in doc.iter(W + "bookmarkStart")]
+    if len(ids) != len(set(ids)):
+        hits.append("doppelt vergebene Sprungmarken-Kennungen")
+    open_ids = set(ids) - {b.get(W + "id") for b in doc.iter(W + "bookmarkEnd")}
+    if open_ids:
+        hits.append(f"{len(open_ids)} Sprungmarke(n) ohne Ende")
+
+    targets = set(starts)
+    anchors = {h.get(W + "anchor") for h in doc.iter(W + "hyperlink") if h.get(W + "anchor")}
+    for missing in sorted(anchors - targets):
+        hits.append(f"Verweis ohne Ziel: {missing}")
+    instr = "".join(t.text or "" for t in doc.iter(W + "instrText"))
+    for missing in sorted(set(re.findall(r"PAGEREF\s+(\S+)", instr)) - targets):
+        hits.append(f"Seitenverweis ohne Sprungmarke: {missing}")
+
+    used = {b.get(R + "embed") for b in doc.iter(A + "blip")}
+    for rid in sorted(used):
+        target = rels.get(rid)
+        if not target:
+            hits.append(f"Bildbeziehung {rid} fehlt")
+        elif "word/" + target.lstrip("/") not in names:
+            hits.append(f"Bilddatei fehlt: {target}")
+    orphans = [r for r, t in rels.items() if t and t.startswith("media/") and r not in used]
+    if orphans:
+        hits.append(f"{len(orphans)} Bilddatei(en) im Paket, die niemand verwendet")
+
+    defined = {n.get(W + "numId") for n in numbering.findall(W + "num")}
+    referenced = {n.find(W + "numId").get(W + "val")
+                  for n in doc.iter(W + "numPr") if n.find(W + "numId") is not None}
+    for missing in sorted(referenced - defined):
+        hits.append(f"Liste {missing} ohne Definition")
+    return hits
+
+
+def check_figure_order() -> list[str]:
+    """Abbildungen müssen in Lesereihenfolge durchnummeriert sein."""
+    import xml.etree.ElementTree as ET
+
+    with zipfile.ZipFile(DOCX) as z:
+        doc = ET.fromstring(z.read("word/document.xml"))
+    seen = []
+    for p in doc.iter(W + "p"):
+        text = "".join(t.text or "" for t in p.iter(W + "t"))
+        m = re.match(r"^Abbildung[\s\u00a0]+(\d+):", text)
+        if m:
+            seen.append(int(m.group(1)))
+    expected = list(range(1, len(seen) + 1))
+    if seen != expected:
+        return [f"Abbildungen stehen als {seen}, erwartet {expected}"]
+    return []
+
+
 def check_typography() -> list[str]:
     """Zahlensatz im DOCX prüfen.
 
@@ -315,6 +387,8 @@ def main() -> int:
         (f"Inhaltsverzeichnis ({toc_count} Einträge)", toc_hits),
         ("Kopf- und Fusszeilen", check_running_titles(pages)),
         ("Kapitelnummerierung", check_headings_order(headings)),
+        ("Abbildungsnummerierung", check_figure_order()),
+        ("Innerer Zusammenhalt der Datei", check_structure()),
         ("Zahlensatz", check_typography()),
     ]
 

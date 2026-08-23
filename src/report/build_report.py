@@ -66,6 +66,8 @@ ATOMIC_ROWS = 6
 NUMERIC_MAX_CHARS = 20
 # Schreibhöhe für die leeren Zeilen eines Erhebungsblatts.
 FORM_ROW_HEIGHT = 420
+# Breite der Beschriftungsspalte in der Bilddokumentation.
+PHOTO_LABEL_W = 1000
 SYMBOLS = {"+", "○", "−", "-", "—", "✓", "–"}
 BULLET_NUM = 10
 ORDERED_NUMS = tuple(range(20, 44))
@@ -612,12 +614,22 @@ def figure(doc, name: str, *, max_w_cm=16.6, max_h_cm=15.6, keep_next=True):
     return p
 
 
-def caption(doc, text: str):
+CAPTION_RE = re.compile(r"^Abbildung\s+(\d+):\s*(.*)$", re.S)
+
+
+def caption(doc, text: str, number: int | None = None):
+    """Bildlegende. ``number`` setzt die Nummer in Lesereihenfolge neu.
+
+    Im Ausgangsbericht stehen die Abbildungen als 1, 4, 5, 2, 3 im Text —
+    die Anhänge wurden nachträglich eingefügt. Da keine Stelle im Text auf
+    eine Abbildungsnummer verweist, werden sie beim Satz durchgezählt.
+    """
     p = para(doc, space_before=0, space_after=200, line=252, align=ALIGN["center"],
              indent_left=300, indent_right=300, hyphenate=False)
-    m = re.match(r"^(Abbildung\s+\d+):\s*(.*)$", text, re.S)
+    m = CAPTION_RE.match(text)
     if m:
-        run(p, typo(m.group(1)) + ":   ", size=SZ_CAPTION, color=INK, bold=True)
+        label = f"Abbildung {number if number else m.group(1)}:"
+        run(p, typo(label) + " ", size=SZ_CAPTION, color=INK, bold=True)
         run(p, typo(m.group(2)), size=SZ_CAPTION, color=STEEL)
     else:
         run(p, typo(text), size=SZ_CAPTION, color=STEEL)
@@ -629,17 +641,20 @@ def photo_block(doc, title: str, image: str, info: list[list[dict]]):
     p = para(doc, space_before=260, space_after=80, line=252, keep_next=True)
     run(p, typo(title), size=SZ_BODY, color=INK, bold=True)
     figure(doc, image, max_w_cm=12.4, max_h_cm=9.4)
+    # Beschriftung und Wert stehen in zwei Spalten. Ohne Tabulator beginnen
+    # die Werte je nach Länge der Beschriftung an verschiedenen Stellen.
     box = para(doc, space_before=0, space_after=200, line=LINE_TIGHT,
-               indent_left=560, indent_right=560, align=ALIGN["left"],
-               hyphenate=False)
+               indent_left=560, indent_right=560, hanging=PHOTO_LABEL_W,
+               align=ALIGN["left"], hyphenate=False)
     borders(box, top=(HAIR, 4, 6))
+    tabs(box, [(560 + PHOTO_LABEL_W, "left", "none")])
     for i, row in enumerate(info):
         if i:
             box.add_run().add_break()
         label = row[0]["text"] if row else ""
         value = row[1]["text"] if len(row) > 1 else ""
-        run(box, typo(label) + "   ", size=SZ_CAPTION, color=INK, bold=True)
-        run(box, typo(value), size=SZ_CAPTION, color=STEEL)
+        run(box, typo(label), size=SZ_CAPTION, color=INK, bold=True)
+        run(box, "\t" + typo(value), size=SZ_CAPTION, color=STEEL)
     return box
 
 
@@ -758,6 +773,13 @@ def build(blocks, pages: dict[str, str]):
                 entries.append((block["level"], block["text"], anchor))
 
     body = blocks[6:-4]
+    figure_numbers = {
+        id(b): n
+        for n, b in enumerate(
+            (b for b in body if b["type"] == "caption" and CAPTION_RE.match(b["text"])),
+            start=1,
+        )
+    }
     i, ordered_seq, in_list = 0, -1, False
     while i < len(body):
         block = body[i]
@@ -786,14 +808,15 @@ def build(blocks, pages: dict[str, str]):
             has_caption = i + 1 < len(body) and body[i + 1]["type"] == "caption"
             figure(doc, block["image"], keep_next=has_caption)
             if has_caption:
-                caption(doc, body[i + 1]["text"])
+                nxt = body[i + 1]
+                caption(doc, nxt["text"], figure_numbers.get(id(nxt)))
                 i += 2
                 continue
             i += 1
             continue
 
         if kind == "caption":
-            caption(doc, block["text"])
+            caption(doc, block["text"], figure_numbers.get(id(block)))
         elif kind == "paragraph":
             following = body[i + 1]["type"] if i + 1 < len(body) else None
             body_text(doc, block["text"], leads_into=following)
