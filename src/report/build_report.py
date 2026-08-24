@@ -27,6 +27,7 @@ from docx.oxml.ns import qn
 from docx.shared import Cm, Emu, Pt
 from PIL import Image
 
+import variants
 from design import (
     ACCENT, ALIGN, BAND, BODY, CONTENT_W, FONT, HAIR, INK, LANG, LINE_BODY,
     LINE_TIGHT, MARGIN_BOT, MARGIN_TOP, MARGIN_X, MONO, NBSP, PAGE_H, PAGE_W,
@@ -39,10 +40,8 @@ from design import (
 
 ROOT = Path(__file__).resolve().parents[2]
 CONTENT = ROOT / "build" / "content.json"
-TOC_PAGES = ROOT / "build" / "toc_pages.json"
 MEDIA = ROOT / "assets" / "report" / "media"
 LOGO = ROOT / "assets" / "report" / "logo"
-OUT_DOCX = ROOT / "Schlussbericht_Kreuz_Zuzwil.docx"
 OUT_DOTX = ROOT / "Vorlage_kabuu_Bericht.dotx"
 
 TITLE = "Netzqualitätsmessung und Ursachenanalyse Lichtflackern"
@@ -969,14 +968,20 @@ def _as_template(path: Path, out: Path):
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--template", action="store_true", help="zusätzlich .dotx schreiben")
+    variants.add_argument(ap)
     args = ap.parse_args()
 
-    blocks = json.loads(CONTENT.read_text(encoding="utf-8"))["blocks"]
-    pages = json.loads(TOC_PAGES.read_text(encoding="utf-8")) if TOC_PAGES.exists() else {}
+    spec = variants.VARIANTS[args.variante]
+    blocks = variants.select(
+        json.loads(CONTENT.read_text(encoding="utf-8"))["blocks"], args.variante
+    )
+    toc_file = spec["toc"]
+    pages = json.loads(toc_file.read_text(encoding="utf-8")) if toc_file.exists() else {}
     doc, entries = build(blocks, pages)
-    doc.save(OUT_DOCX)
-    print(f"{OUT_DOCX.relative_to(ROOT)}  ·  {len(entries)} Verzeichniseinträge"
-          f"  ·  {'Seitenzahlen gesetzt' if pages else 'Seitenzahlen noch offen'}")
+    doc.save(spec["docx"])
+    print(f"{spec['docx'].relative_to(ROOT)}  ·  {len(entries)} Verzeichniseinträge"
+          f"  ·  {'Seitenzahlen gesetzt' if pages else 'Seitenzahlen noch offen'}"
+          f"  ·  {spec['label']}")
 
     if args.template:
         skeleton = ROOT / "build" / "vorlage.docx"

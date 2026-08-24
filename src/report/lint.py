@@ -19,9 +19,11 @@ import unicodedata
 import zipfile
 from pathlib import Path
 
+import variants
+
 ROOT = Path(__file__).resolve().parents[2]
-PDF = ROOT / "Schlussbericht_Kreuz_Zuzwil.pdf"
-DOCX = ROOT / "Schlussbericht_Kreuz_Zuzwil.docx"
+PDF = variants.VARIANTS[variants.DEFAULT]["pdf"]
+DOCX = variants.VARIANTS[variants.DEFAULT]["docx"]
 W = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
 
 PAGE_TOP, PAGE_BOTTOM = 70.0, 770.0  # Satzspiegel in PDF-Punkten
@@ -326,6 +328,35 @@ def check_figure_order() -> list[str]:
     return []
 
 
+# Formulierungen, die es nur im internen Anhang gibt. Taucht eine davon in
+# der Fassung zur Weitergabe auf, ist beim Abtrennen etwas hängengeblieben.
+INTERNAL_MARKERS = (
+    "Anhang C", "Interne Hinweise", "Nur intern", "Prüfvermerk",
+    "Korrekturen eigener", "nicht Bestandteil des Kundenberichts",
+)
+
+
+def check_no_internals(variant: str) -> list[str]:
+    """Die Fassung zur Weitergabe darf nichts aus dem internen Anhang enthalten.
+
+    Diese Prüfung ist der eigentliche Zweck der zweiten Fassung: interne
+    Arbeitsnotizen dürfen nicht beim Auftraggeber landen. Sie läuft deshalb
+    über den sichtbaren Text der ganzen Datei, nicht nur über das PDF.
+    """
+    if variant != "kunde":
+        return []
+    import xml.etree.ElementTree as ET
+
+    with zipfile.ZipFile(DOCX) as z:
+        root = ET.fromstring(z.read("word/document.xml"))
+    text = "".join(t.text or "" for t in root.iter(W + "t"))
+    return [
+        f"internes Stichwort in der Kundenfassung: «{marker}» ({text.count(marker)}×)"
+        for marker in INTERNAL_MARKERS
+        if marker in text
+    ]
+
+
 def check_typography() -> list[str]:
     """Zahlensatz im DOCX prüfen.
 
@@ -369,6 +400,15 @@ def check_typography() -> list[str]:
 
 
 def main() -> int:
+    global PDF, DOCX
+    import argparse
+
+    ap = argparse.ArgumentParser(description=__doc__)
+    variants.add_argument(ap)
+    args = ap.parse_args()
+    spec = variants.VARIANTS[args.variante]
+    PDF, DOCX = spec["pdf"], spec["docx"]
+
     if not PDF.exists():
         print("PDF fehlt. Zuerst src/report/make.py laufen lassen.")
         return 2
@@ -389,10 +429,12 @@ def main() -> int:
         ("Kapitelnummerierung", check_headings_order(headings)),
         ("Abbildungsnummerierung", check_figure_order()),
         ("Innerer Zusammenhalt der Datei", check_structure()),
+        ("Kein interner Inhalt", check_no_internals(args.variante)),
         ("Zahlensatz", check_typography()),
     ]
 
-    print(f"{len(pages)} Seiten · {len(headings)} Überschriften\n")
+    print(f"{len(pages)} Seiten · {len(headings)} Überschriften · "
+          f"{spec['label']}\n")
     total = 0
     for name, hits in groups:
         total += len(hits)

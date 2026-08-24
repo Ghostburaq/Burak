@@ -5,29 +5,44 @@ gesetzt. Inhalt und Gestaltung sind dabei getrennt: `extract.py` liest den
 Originalbericht in ein Inhaltsmodell, `build_report.py` setzt daraus das
 Dokument nach dem Gestaltungssystem in `design.py`.
 
-**Ergebnis:**
-[`Schlussbericht_Kreuz_Zuzwil.docx`](../Schlussbericht_Kreuz_Zuzwil.docx) ·
-[`Schlussbericht_Kreuz_Zuzwil.pdf`](../Schlussbericht_Kreuz_Zuzwil.pdf) ·
-[`Vorlage_kabuu_Bericht.dotx`](../Vorlage_kabuu_Bericht.dotx)
+## Zwei Fassungen
 
-62 Seiten, 101 Verzeichniseinträge, Inhalt zeichengenau wie im Original.
+Der Bericht erscheint in zwei Fassungen aus derselben Quelle. Was sie
+unterscheidet, steht ausschliesslich in `variants.py`.
+
+| Fassung | Datei | Umfang |
+|---------|-------|--------|
+| Arbeitsfassung, mit Anhang C | [`Schlussbericht_Kreuz_Zuzwil.docx`](../Schlussbericht_Kreuz_Zuzwil.docx) · [PDF](../Schlussbericht_Kreuz_Zuzwil.pdf) | 62 Seiten, 101 Verzeichniseinträge |
+| Zur Weitergabe, ohne Anhang C | [`Schlussbericht_Kreuz_Zuzwil_Kundenversion.docx`](../Schlussbericht_Kreuz_Zuzwil_Kundenversion.docx) · [PDF](../Schlussbericht_Kreuz_Zuzwil_Kundenversion.pdf) | 60 Seiten, 96 Verzeichniseinträge |
+
+Dazu die [`Wordvorlage`](../Vorlage_kabuu_Bericht.dotx) für künftige Berichte.
+
+In der Fassung zur Weitergabe fällt Anhang C weg — und mit ihm der Satz auf
+dem Deckblatt, der ihn ankündigt; er ginge sonst ins Leere. Alles andere ist
+identisch, Seitenzahlen und Inhaltsverzeichnis werden neu gerechnet. Eine
+eigene Prüfung sucht in dieser Fassung nach Formulierungen, die es nur im
+internen Anhang gibt, damit nichts Internes beim Auftraggeber landet.
+
+Der Inhalt der Arbeitsfassung ist zeichengenau der des Originals.
 
 ## Neu bauen
 
 ```bash
 pip install python-docx Pillow
-python3 src/report/make.py
+python3 src/report/make.py                    # beide Fassungen
+python3 src/report/make.py --variante kunde   # nur die zur Weitergabe
 ```
 
-Der Lauf macht alles: Inhalt auslesen, Logo erzeugen, Bericht setzen,
+Der Lauf macht alles: Inhalt auslesen, Logo erzeugen, beide Fassungen setzen,
 PDF exportieren, Seitenzahlen ins Inhaltsverzeichnis zurückschreiben,
-Wordvorlage schreiben und den Inhalt gegen das Original prüfen.
-`python3 src/report/lint.py` sucht anschliessend nach Satzfehlern.
+Wordvorlage schreiben, jede Fassung auf Satzfehler prüfen und den Inhalt der
+Arbeitsfassung gegen das Original vergleichen.
 
 | Datei | Zweck |
 |-------|-------|
-| `src/report/make.py` | Gesamtlauf, wiederholt bis die Seitenzahlen stabil sind |
+| `src/report/make.py` | Gesamtlauf über beide Fassungen |
 | `src/report/extract.py` | Originalbericht → `build/content.json` |
+| `src/report/variants.py` | Die zwei Fassungen und was sie unterscheidet |
 | `src/report/design.py` | Farben, Masse, Typografie, OOXML-Werkzeug |
 | `src/report/build_report.py` | Satz des Berichts und der Wordvorlage |
 | `src/report/make_logo.py` | kabuu-Logo in allen benötigten Varianten |
@@ -102,7 +117,8 @@ Drei Prüfungen, alle grün:
   fehlende Kopf- oder Fusszeilen, Lücken in der Kapitel- und
   Abbildungsnummerierung, Abweichungen im Zahlensatz sowie den inneren
   Zusammenhalt der Datei — Verweise ohne Ziel, Bildbeziehungen ohne Datei,
-  Listenbezüge ohne Definition.
+  Listenbezüge ohne Definition. In der Fassung zur Weitergabe zusätzlich:
+  keine Formulierung aus dem internen Anhang.
 
 Zwei Stellen sind bewusst ausgenommen und deshalb in der Prüfung vermerkt: die
 letzte Seite eines Kapitels darf kurz ausfallen, weil jedes Kapitel auf einer

@@ -19,13 +19,26 @@ import subprocess
 import unicodedata
 from pathlib import Path
 
+import variants
+
 ROOT = Path(__file__).resolve().parents[2]
-DOCX = ROOT / "Schlussbericht_Kreuz_Zuzwil.docx"
-PDF = ROOT / "Schlussbericht_Kreuz_Zuzwil.pdf"
 CONTENT = ROOT / "build" / "content.json"
-TOC_PAGES = ROOT / "build" / "toc_pages.json"
 PREVIEW = ROOT / "build" / "preview"
 PROFILE = ROOT / "build" / ".soffice"
+
+# Die Fassung, auf die sich der Lauf bezieht. ``use()`` setzt sie um; die
+# Vorschau-Hilfen lassen sich dadurch weiter ohne Argumente aufrufen.
+DOCX = variants.VARIANTS[variants.DEFAULT]["docx"]
+PDF = variants.VARIANTS[variants.DEFAULT]["pdf"]
+TOC_PAGES = variants.VARIANTS[variants.DEFAULT]["toc"]
+
+
+def use(variant: str) -> dict:
+    """Auf eine Fassung umschalten."""
+    global DOCX, PDF, TOC_PAGES
+    spec = variants.VARIANTS[variant]
+    DOCX, PDF, TOC_PAGES = spec["docx"], spec["pdf"], spec["toc"]
+    return spec
 
 
 def to_pdf() -> Path:
@@ -110,12 +123,16 @@ def main() -> None:
     ap.add_argument("--pages", type=int, nargs="*", help="nur diese Seiten rendern")
     ap.add_argument("--no-preview", action="store_true")
     ap.add_argument("--dpi", type=int, default=70)
+    variants.add_argument(ap)
     args = ap.parse_args()
 
+    use(args.variante)
     to_pdf()
     print(f"{PDF.relative_to(ROOT)}  ·  {page_count()} Seiten")
 
-    blocks = json.loads(CONTENT.read_text(encoding="utf-8"))["blocks"]
+    blocks = variants.select(
+        json.loads(CONTENT.read_text(encoding="utf-8"))["blocks"], args.variante
+    )
     entries, bid = [], 1000
     for block in blocks[6:-4]:
         if block["type"] == "heading" and block["level"] <= 2:

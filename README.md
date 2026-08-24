@@ -62,11 +62,13 @@ PREVIEW_W=2600 PREVIEW_PDF=docs/Pitch_Burak_AVIA_VOLT_vorschau.pdf \
 ## Zweites Projekt im selben Repo: Schlussbericht Netzqualität
 
 Der Schlussbericht *Gasthaus Kreuz, Zuzwil SG* wird ebenfalls per Python
-gesetzt — Inhalt und Gestaltung getrennt, 62 Seiten, Inhaltsverzeichnis mit
+gesetzt — Inhalt und Gestaltung getrennt, in zwei Fassungen, Inhaltsverzeichnis mit
 echten Seitenzahlen, dazu eine Wordvorlage im selben Look.
 
-**Ergebnis:** [`Schlussbericht_Kreuz_Zuzwil.docx`](Schlussbericht_Kreuz_Zuzwil.docx)
-&nbsp;·&nbsp; [PDF](Schlussbericht_Kreuz_Zuzwil.pdf)
+**Ergebnis:** Arbeitsfassung mit Anhang C
+([Word](Schlussbericht_Kreuz_Zuzwil.docx) &nbsp;·&nbsp; [PDF](Schlussbericht_Kreuz_Zuzwil.pdf)),
+Fassung zur Weitergabe ohne Anhang C
+([Word](Schlussbericht_Kreuz_Zuzwil_Kundenversion.docx) &nbsp;·&nbsp; [PDF](Schlussbericht_Kreuz_Zuzwil_Kundenversion.pdf))
 &nbsp;·&nbsp; [Wordvorlage](Vorlage_kabuu_Bericht.dotx)
 
 ```bash

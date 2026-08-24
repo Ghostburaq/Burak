@@ -17,9 +17,11 @@ import unicodedata
 import zipfile
 from pathlib import Path
 
+import variants
+
 ROOT = Path(__file__).resolve().parents[2]
 ORIGINAL = ROOT / "assets" / "report" / "Schlussbericht_Kreuz_Zuzwil_original.docx"
-REBUILT = ROOT / "Schlussbericht_Kreuz_Zuzwil.docx"
+REBUILT = variants.VARIANTS[variants.DEFAULT]["docx"]
 W = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
 
 # Texte, die es im Original nicht gab: Verzeichnis, Kopf-/Fusszeile, Kicker.
