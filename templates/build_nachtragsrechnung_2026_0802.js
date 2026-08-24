@@ -92,17 +92,20 @@ const footer = new Footer({
     }),
     new Paragraph({
       alignment: AlignmentType.LEFT,
-      tabStops: [
-        { type: TabStopType.CENTER, position: 4536 },
-        { type: TabStopType.RIGHT,  position: 9072 },
-      ],
+      tabStops: [{ type: TabStopType.RIGHT, position: 9072 }],
       children: [
-        new TextRun({ text: `${SENDER.brand}  ·  ${SENDER.role}`, font: FONT, size: 16, color: NAVY, bold: true }),
-        new TextRun({ text: `\t${SENDER.street} · ${SENDER.city} · ${SENDER.phone} · ${SENDER.email}`, font: FONT, size: 16, color: GREY_M }),
-        new TextRun({ text: "\tSeite ", font: FONT, size: 16, color: GREY_M }),
-        new TextRun({ children: [PageNumber.CURRENT], font: FONT, size: 16, color: NAVY, bold: true }),
-        new TextRun({ text: " / ", font: FONT, size: 16, color: GREY_M }),
-        new TextRun({ children: [PageNumber.TOTAL_PAGES], font: FONT, size: 16, color: NAVY, bold: true }),
+        new TextRun({ text: `${SENDER.brand}  ·  ${SENDER.role}`, font: FONT, size: 15, color: NAVY, bold: true }),
+        new TextRun({ text: "\tSeite ", font: FONT, size: 15, color: GREY_M }),
+        new TextRun({ children: [PageNumber.CURRENT], font: FONT, size: 15, color: NAVY, bold: true }),
+        new TextRun({ text: " / ", font: FONT, size: 15, color: GREY_M }),
+        new TextRun({ children: [PageNumber.TOTAL_PAGES], font: FONT, size: 15, color: NAVY, bold: true }),
+      ],
+    }),
+    new Paragraph({
+      alignment: AlignmentType.LEFT,
+      spacing: { before: 20 },
+      children: [
+        new TextRun({ text: `${SENDER.street} · ${SENDER.city}  ·  ${SENDER.phone}  ·  ${SENDER.email}`, font: FONT, size: 15, color: GREY_M }),
       ],
     }),
   ],
@@ -206,9 +209,9 @@ const factsRow = new Table({
   rows: [
     new TableRow({
       children: [
-        fact("BEZUG",             "Rechnung 2026-0801 vom 04.08.2026 über CHF 1'850.00"),
         fact("OBJEKT",            "Gasthaus Kreuz, Oberdorfstrasse 16, 9524 Zuzwil SG"),
         fact("LEISTUNGSZEITRAUM", "05.08.2026 bis 17.08.2026 (verlängerte Messdauer)"),
+        fact("MESSDAUER",         "12 statt 7 Tage (+5 Tage / +71 %)"),
       ],
     }),
   ],
@@ -797,9 +800,6 @@ const doc = new Document({
       salutation,
       intro,
       invoiceTable,
-      new Paragraph({ spacing: { before: 220 }, children: [new TextRun({ text: "GESAMTSUMME PROJEKT", font: FONT, size: 14, color: CYAN, bold: true, allCaps: true, characterSpacing: 80 })] }),
-      new Paragraph({ spacing: { after: 100 }, children: [new TextRun("")] }),
-      projStrip,
       mwstNote,
       ibanBlock(),
       ...closing,
@@ -844,11 +844,7 @@ const doc = new Document({
       new Paragraph({ spacing: { before: 40 }, children: [new TextRun("")] }),
       s7Totals,
 
-      h2("8  Einordnung"),
-      s8Table,
-      s8Note,
-
-      h2("9  Was zusätzlich geleistet und nicht verrechnet wurde"),
+      h2("8  Was zusätzlich geleistet und nicht verrechnet wurde"),
       s9Intro,
       s9Table,
       new Paragraph({ spacing: { before: 220 }, children: [new TextRun("")] }),
