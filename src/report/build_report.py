@@ -27,6 +27,7 @@ from docx.oxml.ns import qn
 from docx.shared import Cm, Emu, Pt
 from PIL import Image
 
+import corrections
 import variants
 from design import (
     ACCENT, ALIGN, BAND, BODY, CONTENT_W, FONT, HAIR, INK, LANG, LINE_BODY,
@@ -949,6 +950,24 @@ def build_template():
     return doc
 
 
+def _corrected(blocks: list[dict]) -> list[dict]:
+    """Die in ``corrections.py`` festgehaltenen Textkorrekturen anwenden."""
+    fixed = []
+    for block in blocks:
+        block = dict(block)
+        if "text" in block:
+            block["text"] = corrections.apply(block["text"])
+        if block.get("type") == "callout":
+            block["body"] = [corrections.apply(s) for s in block["body"]]
+        if block.get("type") == "table":
+            block["rows"] = [
+                [{**c, "text": corrections.apply(c["text"])} for c in row]
+                for row in block["rows"]
+            ]
+        fixed.append(block)
+    return fixed
+
+
 def _as_template(path: Path, out: Path):
     """Als .dotx auszeichnen — Word legt daraus neue Dokumente an."""
     import zipfile
@@ -973,7 +992,8 @@ def main() -> None:
 
     spec = variants.VARIANTS[args.variante]
     blocks = variants.select(
-        json.loads(CONTENT.read_text(encoding="utf-8"))["blocks"], args.variante
+        _corrected(json.loads(CONTENT.read_text(encoding="utf-8"))["blocks"]),
+        args.variante,
     )
     toc_file = spec["toc"]
     pages = json.loads(toc_file.read_text(encoding="utf-8")) if toc_file.exists() else {}

@@ -17,6 +17,7 @@ import unicodedata
 import zipfile
 from pathlib import Path
 
+import corrections
 import variants
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -54,6 +55,9 @@ def canonical(text: str) -> str:
     # werden beim Satz in Lesereihenfolge durchgezählt. Für den Vergleich
     # zählt die Legende, nicht ihre Nummer.
     text = re.sub(r"Abbildung[\s\u00a0]+\d+", "Abbildung#", text)
+    # Die drei berichtigten Querverweise stehen in corrections.py; das
+    # Original wird für den Vergleich auf dieselbe Form gebracht.
+    text = corrections.normalize(text)
     # Grossschreibung ist im neuen Bericht eine Auszeichnung (w:caps), keine
     # Texteigenschaft — für den Inhaltsvergleich also ohne Belang.
     text = re.sub(r"\s+", "", text).casefold()
