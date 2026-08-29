@@ -1,0 +1,9 @@
+# Backups des Radars, Muster aus CLAUDE.md Abschnitt 5
+*_backup_*.xlsx
+
+# Excel-Sperrdateien
+~$*.xlsx
+.~lock.*#
+
+__pycache__/
+*.pyc
