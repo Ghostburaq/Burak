@@ -105,6 +105,9 @@ Satztypen: `W` Warmup · `A` Arbeitssatz (Basis aller Kennzahlen) ·
 | `Schritt (kg)` | kleinste sinnvolle Laststufe an diesem Gerät; steuert, wie viel bei einer Gewichtssteigerung draufkommt |
 | `Start (kg)` | Einstiegsgewicht für Übungen ohne Historie; speist die Plan-Spalte, bis die erste Einheit erfasst ist |
 | `Max (kg)` | deckelt den Zielvorschlag, z. B. am Ende des Steckgewichts; das Trainingsblatt weist dann auf Tempo-Progression hin |
+| `Anpassung %` | drosselt den Zielvorschlag ohne die Rechnung zu verfälschen: `100` normal, `80` = 80 % des berechneten Ziels. Für den Wiedereinstieg nach Pause oder Verletzung; Warmups und Back-off-Sätze rechnen automatisch mit dem gedrosselten Wert. Das Trainingsblatt schreibt dann `Wiedereinstieg: 80 % des berechneten Ziels` statt des Progressionshinweises |
+| `Aktiv = ja` | Übung läuft normal im Plan |
+| `Aktiv = pause` | vorübergehend ausgesetzt: das Trainingsblatt zeigt statt der Gewichte einen roten Pausenvermerk, die Übung bleibt aber in allen Auswertungen sichtbar |
 | `Aktiv = nein` | Archiv: raus aus Trainingsblatt und Reha-Modus, Historie bleibt in Log, Auswertung, Progression und Rekorden — dort grau und kursiv |
 | `Reha frei ab Woche` | steuert die Ampel im `Reha-Modus` und den Sperrvermerk auf dem Trainingsblatt |
 | `Ersatz in der Sperrzeit` | erscheint automatisch, solange die Übung gesperrt ist |
@@ -170,17 +173,34 @@ steht — ab vier wird die Zeile gelb.
 
 ## Plan
 
-Neun aktive Übungen in zwei Blöcken, schwere Grundübung zuerst:
+Elf aktive Übungen in zwei Blöcken, schwere Grundübung zuerst:
 
-- **Beine vorne:** Beinpresse · Split Squat · Beinstrecker · Adduktion
-- **Beine hinten:** Rumänisches Kreuzheben · Hip Thrust · Beinbeuger · Seitliche Kickbacks · Waden
+- **Beine vorne:** Beinpresse enger Stand · Split Squat · Beinstrecker · Adduktion
+- **Beine hinten:** Rumänisches Kreuzheben · Beinpresse breiter Stand · Hip Thrust · Hip & Glute · Beinbeuger · Seitliche Kickbacks · Waden
 
 Lunges und Kickback sind archiviert; ihre Historie bleibt in allen
 Auswertungen sichtbar.
 
-Beinpresse und Rumänisches Kreuzheben sind neu und haben noch keine Historie —
-bis ein `Start (kg)` eingetragen ist, bleibt ihre Plan-Spalte auf dem
-Trainingsblatt leer.
+Das Wochenraster steht im Blatt `Wochenplan`: Montag Beine vorne, Donnerstag
+Beine hinten, dazwischen mindestens 72 Stunden.
+
+### Wiedereinstieg nach der Trainingspause
+
+Nach einer Zerrung der linken Adduktoren läuft die erste Woche zurück
+gedrosselt — gesteuert über `Anpassung %` und `Aktiv = pause`, nicht über
+veränderte Zielgewichte. Die Begründung je Stufe steht im Blatt `Wochenplan`.
+
+| Stufe | Übungen |
+|---|---|
+| Pause | Adduktion, Beinpresse breiter Stand |
+| 70 % | Split Squat |
+| 80 % | Rumänisches Kreuzheben, Hip Thrust, Hip & Glute |
+| 90 % | Beinpresse eng, Beinstrecker, Beinbeuger, Seitliche Kickbacks, Waden |
+
+Zusätzlich zwei statt drei Arbeitssätze (`Ziel-Sätze = 2`). Nach der ersten
+beschwerdefreien Woche `Anpassung %` wieder auf `100`, `Ziel-Sätze` auf `3`
+und die pausierten Übungen auf `ja` setzen — die Progression läuft dann ohne
+Bruch weiter, weil die Historie unverändert geblieben ist.
 
 Die Beinpresse hat die Hackenschmidt-Kniebeuge ersetzt. Sie war bisher als
 Ersatzübung für deren Sperrzeit hinterlegt, war also vor Woche 6 nutzbar —
@@ -190,7 +210,8 @@ auf dem Blatt `Start` sowie als Frage in der Vorbereitungs-Checkliste.
 
 ## Datenstand
 
-Einheit 1 bis 4, aufbereitet aus `Loewin_Training_260727.pdf`. Bekannte
+Einheit 1 bis 9. Einheit 1 bis 4 aufbereitet aus
+`Loewin_Training_260727.pdf`, Einheit 5 bis 9 direkt erfasst. Bekannte
 Unschärfen der Quelle (fehlende Wiederholungen bei Kickback-Warmups und
 Lunges, Hip-Thrust-Dropsätze ohne Absolutgewicht, Adduktion Einheit 4 mit
 152.2 statt 152.5 kg) sind im Blatt `Start` dokumentiert und im Log als Notiz
