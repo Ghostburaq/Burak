@@ -25,8 +25,11 @@ Ordner, Abschnitt 6, ohne Abkürzung:
 8. Datei speichern, danach `python3 scripts/check_radar.py` und
    `python3 scripts/eval_dashboard.py` laufen lassen. Prüfen, ob alle sieben Blätter, die
    Dropdowns und die Formeln in R und S intakt sind.
-9. Bericht im Terminal exakt im Format aus CLAUDE.md Abschnitt 6, Schritt 6.
-   Maximal drei Projekte unter "Fenster offen".
+9. `python3 scripts/build_dashboard_html.py` ausführen und die erzeugte
+   `MiT_DC_Radar_Dashboard.html` auf die bestehende Artifact-URL neu
+   publizieren, damit die Web-Ansicht dem Radar entspricht.
+10. Bericht im Terminal exakt im Format aus CLAUDE.md Abschnitt 6, Schritt 6.
+    Maximal drei Projekte unter "Fenster offen".
 
 Wenn WebSearch nicht verfügbar ist: abbrechen, Datei unverändert lassen und
 das sagen. Kein Update aus dem Gedächtnis.

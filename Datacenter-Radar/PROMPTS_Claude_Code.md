@@ -254,3 +254,99 @@ Am Schluss die offenen Punkte für den Innendienst und für Owen.
 - `NACHFASSEN:` startet Prompt 5
 - `ANTWORT:` gefolgt vom Text startet Prompt 6
 - `STANDORT:` gefolgt vom Ort startet Prompt 7
+
+---
+
+## 12 — Fachplaner-Mapping (der Multiplikator-Prompt)
+
+Der wichtigste neue Prompt. Ein Planer ist zehn Projekte.
+
+```
+Nimm das Blatt 03_Kontakte und alle Radar-Projekte ohne belegten
+Fachplaner. Recherchiere pro Planerfirma (Amstein + Walthert, Gruner,
+HKG Engineering, AFRY, plus was du findest) die oeffentlich belegten
+Datacenter-Referenzen und ordne sie den Radar-Projekten zu.
+
+Regeln: Nur Zuordnungen mit URL-Beleg. Eine Referenz auf der
+Planer-Website zaehlt als "beteiligt, Rolle pruefen", nie als
+"Fachplaner Elektro bestaetigt". Personennamen nur, wenn sie auf der
+Firmenwebsite oeffentlich mit Funktion stehen. Keine E-Mail-Adressen
+aus Namensmustern.
+
+Ergebnis: aktualisierte Zeilen fuer 02_Projekt_Radar Spalte J und
+03_Kontakte, dazu pro Firma ein Satz, warum sie fuer MiT relevant ist.
+```
+
+---
+
+## 13 — Planer-Erstansprache
+
+Wenn eine Planerfirma einem Projekt zugeordnet ist.
+
+```
+Erstansprache an [Planerfirma] zum Projekt [Radar-Projekt].
+
+Kontext aus dem Radar uebernehmen (Phase, IBN, was belegt ist).
+Zwei Varianten, zurueckhaltend und offensiv, je eine Zeile Begruendung.
+
+Kernbotschaft: Lastbank und PQ-Messung gehoeren ins LV, nicht in den
+Nachtrag. Fachanker: IEC 61000-4-30:2025 Klasse A, EN 50160-Reporting,
+Abnahmen unter definierter Last. Aggreko in der ersten Zeile.
+Projektbezug als Vermutung. Betreff konkret, ohne Fragezeichen.
+Kein CHF-Wert. Anruftermin mit Datum und Uhrzeit, volle Signatur.
+```
+
+---
+
+## 14 — Campus-Doppelspiel Bestand plus Neubau
+
+Fuer Standorte wie Glattbrugg, wo Betrieb und Baustelle nebeneinander liegen.
+
+```
+Am Standort [Ort] betreibt [Betreiber] Bestandsbauten und baut gleichzeitig
+neu. Bau mir die Argumentation fuer ein einziges Gespraech, das beides
+abdeckt: Wartungsfenster und NEA-Tests im Bestand, Baustrom und Trocknung
+auf der Baustelle, Lastbank im kommenden Cx.
+
+Dazu: welcher Ansprechpartner-Typ deckt beides ab, und welcher der beiden
+Einstiege ist der leichtere. Kein erfundener Name, keine Preise.
+```
+
+---
+
+## 15 — Dashboard-Refresh
+
+Nach jedem Montags-Lauf.
+
+```
+Fuehre python3 scripts/build_dashboard_html.py aus und publiziere die
+HTML-Datei neu auf die bestehende Artifact-URL. Danach in einer Zeile:
+was sich im Dashboard gegenueber letzter Woche sichtbar geaendert hat.
+```
+
+---
+
+## 16 — Einwand-Matrix Commissioning
+
+Vor jedem Cx-Gespraech.
+
+```
+Gespraech mit [Rolle] bei [Firma] zum Projekt [Projekt], Phase laut
+Radar: [Phase]. Gib mir die drei wahrscheinlichsten Einwaende mit je
+einer Antwort in zwei, drei Saetzen.
+
+Typische Kandidaten: "Lastbank stellt der Elektriker", "ist im
+MEP-Vertrag drin", "zu frueh", "zu teuer", "machen wir mit dem
+Generator-Lieferanten". Antworten aus der MiT-Logik: L4 durchgehetzt
+heisst teurer IST, PQ-Messung Klasse A als Differenzierung, Vorlaufzeiten.
+Keine Preise, keine Fleetzusagen.
+```
+
+---
+
+## Kürzel, erweitert
+
+- `PLANER:` gefolgt von Firma startet Prompt 12 oder 13
+- `CAMPUS:` gefolgt vom Ort startet Prompt 14
+- `DASH:` startet Prompt 15
+- `EINWAND:` gefolgt von Firma und Projekt startet Prompt 16

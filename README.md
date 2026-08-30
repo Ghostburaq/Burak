@@ -12,10 +12,25 @@ Datacenter-Radar/
   CLAUDE.md                        Anweisung für das Radar, gilt in diesem Unterordner
   PROMPTS_Claude_Code.md           Prompt-Bibliothek für den Alltag
   MiT_Datacenter_Radar_CH_V1.0.xlsx
+  MiT_DC_Radar_Dashboard.html      generierte Web-Ansicht des Radars
   scripts/build_radar.py           Erstaufbau der Datei, nur einmalig
+  scripts/update_*.py              dokumentierte schreibende Läufe, je Datum
   scripts/check_radar.py           Prüfung nach jedem schreibenden Lauf
   scripts/eval_dashboard.py        Dashboard-Formeln nachrechnen ohne Excel
+  scripts/build_dashboard_html.py  erzeugt die HTML-Ansicht aus der Excel
 ```
+
+## Web-Dashboard
+
+`python3 scripts/build_dashboard_html.py` liest die Excel und erzeugt
+`MiT_DC_Radar_Dashboard.html`: Kennzahlen, die drei offenen Fenster der Woche,
+filterbare Projekttabelle mit Quellen je Zeile, Phasen- und Kantonsverteilung,
+Changelog. Läuft nur lesend, die Excel bleibt unangetastet.
+
+Die Datei ist als privates Artifact publiziert; der Link bleibt bei jedem
+Neu-Publish gleich. In Claude Code öffnet ctrl+] das letzte Artifact,
+`/artifacts` listet alle. Nach jedem Montags-Lauf neu generieren und auf
+dieselbe URL publizieren (Prompt `DASH:`).
 
 ## Wochenlauf
 

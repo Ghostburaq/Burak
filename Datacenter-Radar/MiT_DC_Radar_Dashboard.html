@@ -1,0 +1,312 @@
+<title>MiT Datacenter-Radar</title>
+<meta name="color-scheme" content="light dark">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --navy:#1F3A5F; --orange:#E8740C;
+  --ground:#F4F5F7; --surface:#FFFFFF; --surface2:#EDEFF3;
+  --ink:#1D2734; --ink2:#4C5866; --ink3:#7C8794;
+  --linie:#D9DDE3; --bar:#1F3A5F;
+  --pruefen-bg:#FFF2CC; --pruefen-ink:#6B5A16;
+  --rot:#B3372B; --gruen:#2E6E4E;
+  --chip-bau:#DEE7F2; --chip-bau-ink:#274B75;
+  --chip-cx:#F8E3CC; --chip-cx-ink:#8A4A0C;
+  --chip-betrieb:#E4E7EB; --chip-betrieb-ink:#4C5866;
+  --chip-frueh:#E3EDE7; --chip-frueh-ink:#2E6E4E;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --navy:#8FB0D9; --orange:#F0954A;
+    --ground:#12161D; --surface:#1A2029; --surface2:#222935;
+    --ink:#E7EBF1; --ink2:#AEB8C4; --ink3:#79838F;
+    --linie:#303945; --bar:#6E93C4;
+    --pruefen-bg:#3B3418; --pruefen-ink:#E4CF7B;
+    --rot:#E2725F; --gruen:#6FBF97;
+    --chip-bau:#243A50; --chip-bau-ink:#B9CFEA;
+    --chip-cx:#453020; --chip-cx-ink:#F2C089;
+    --chip-betrieb:#2A323D; --chip-betrieb-ink:#AEB8C4;
+    --chip-frueh:#22382E; --chip-frueh-ink:#8FD1AF;
+  }
+}
+:root[data-theme="dark"]{
+  --navy:#8FB0D9; --orange:#F0954A;
+  --ground:#12161D; --surface:#1A2029; --surface2:#222935;
+  --ink:#E7EBF1; --ink2:#AEB8C4; --ink3:#79838F;
+  --linie:#303945; --bar:#6E93C4;
+  --pruefen-bg:#3B3418; --pruefen-ink:#E4CF7B;
+  --rot:#E2725F; --gruen:#6FBF97;
+  --chip-bau:#243A50; --chip-bau-ink:#B9CFEA;
+  --chip-cx:#453020; --chip-cx-ink:#F2C089;
+  --chip-betrieb:#2A323D; --chip-betrieb-ink:#AEB8C4;
+  --chip-frueh:#22382E; --chip-frueh-ink:#8FD1AF;
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);margin:0;
+  font-family:"Source Sans 3","Helvetica Neue",Arial,sans-serif;font-size:15px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px 60px}
+header.top{border-bottom:3px solid var(--orange);background:var(--surface);
+  position:sticky;top:0;z-index:5;box-shadow:0 1px 0 var(--linie)}
+.top-inner{max-width:1180px;margin:0 auto;padding:14px 20px;display:flex;
+  align-items:baseline;gap:14px;flex-wrap:wrap}
+h1{font-family:Archivo,"Arial Narrow",Arial,sans-serif;font-weight:700;
+  font-size:1.35rem;margin:0;letter-spacing:.01em}
+h1 small{color:var(--ink3);font-weight:500}
+.stand{font-family:"IBM Plex Mono",monospace;font-size:.8rem;color:var(--ink2)}
+.intern{margin-left:auto;font-family:"IBM Plex Mono",monospace;font-size:.7rem;
+  letter-spacing:.12em;color:var(--rot);border:1px solid currentColor;
+  padding:2px 8px;border-radius:3px}
+h2{font-family:Archivo,Arial,sans-serif;font-weight:600;font-size:1.02rem;
+  letter-spacing:.05em;text-transform:uppercase;color:var(--ink2);
+  margin:38px 0 14px;text-wrap:balance}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-top:26px}
+.kpi{background:var(--surface);border:1px solid var(--linie);border-radius:6px;
+  padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.kpi-label{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3)}
+.kpi-wert{font-family:"IBM Plex Mono",monospace;font-size:1.7rem;font-weight:500;
+  font-variant-numeric:tabular-nums;color:var(--navy)}
+.kpi-sub{font-size:.75rem;color:var(--ink3)}
+.fenster{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:12px}
+.fenster-karte{background:var(--surface);border:1px solid var(--linie);
+  border-left:4px solid var(--orange);border-radius:6px;padding:16px 18px;position:relative}
+.fenster-nr{position:absolute;top:12px;right:14px;font-family:"IBM Plex Mono",monospace;
+  color:var(--orange);font-size:1rem}
+.fenster-karte h3{font-family:Archivo,Arial,sans-serif;font-size:1.05rem;margin:0 0 6px;padding-right:26px}
+.fenster-meta{font-size:.82rem;color:var(--ink2);margin:0 0 10px}
+.fenster-schritt{margin:0;font-size:.92rem}
+.chip{display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:.7rem;
+  padding:1px 7px;border-radius:9px;white-space:nowrap}
+.chip-bau{background:var(--chip-bau);color:var(--chip-bau-ink)}
+.chip-cx{background:var(--chip-cx);color:var(--chip-cx-ink)}
+.chip-betrieb{background:var(--chip-betrieb);color:var(--chip-betrieb-ink)}
+.chip-frueh{background:var(--chip-frueh);color:var(--chip-frueh-ink)}
+.chip-pruefen{background:var(--pruefen-bg);color:var(--pruefen-ink)}
+.chip-prio-A{background:var(--orange);color:#fff}
+:root[data-theme="dark"] .chip-prio-A{color:#1A1208}
+.filterzeile{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
+.filterzeile input[type=search]{background:var(--surface);border:1px solid var(--linie);
+  color:var(--ink);border-radius:5px;padding:6px 10px;font:inherit;font-size:.88rem;min-width:200px}
+.fbtn{background:var(--surface);border:1px solid var(--linie);color:var(--ink2);
+  border-radius:14px;padding:4px 12px;font:inherit;font-size:.8rem;cursor:pointer}
+.fbtn[aria-pressed=true]{background:var(--navy);border-color:var(--navy);color:var(--ground)}
+.fbtn:focus-visible,.zeile:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
+.tabelle-huelle{overflow-x:auto;background:var(--surface);border:1px solid var(--linie);border-radius:6px}
+table{border-collapse:collapse;width:100%;min-width:900px;font-size:.86rem}
+th{font-family:Archivo,Arial,sans-serif;font-size:.7rem;text-transform:uppercase;
+  letter-spacing:.07em;color:var(--ink3);text-align:left;padding:10px 12px;
+  border-bottom:2px solid var(--linie);white-space:nowrap}
+td{padding:9px 12px;border-bottom:1px solid var(--linie);vertical-align:top}
+tr.zeile{cursor:pointer}
+tr.zeile:hover td{background:var(--surface2)}
+tr.detail td{background:var(--surface2);font-size:.85rem;padding:14px 16px 16px}
+tr.detail p{margin:.25em 0}
+tr.detail a{color:var(--navy);word-break:break-all}
+td.num{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
+.pruefen{background:var(--pruefen-bg);color:var(--pruefen-ink);
+  font-family:"IBM Plex Mono",monospace;font-size:.72rem;padding:1px 6px;border-radius:3px}
+.panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+.panel{background:var(--surface);border:1px solid var(--linie);border-radius:6px;padding:16px 18px}
+.panel h2{margin-top:0}
+.balken-zeile{display:grid;grid-template-columns:110px 1fr auto;gap:10px;
+  align-items:center;padding:3px 0}
+.balken-label{font-size:.82rem;color:var(--ink2)}
+.balken-spur{height:14px;background:var(--surface2);border-radius:4px;overflow:hidden}
+.balken{display:block;height:100%;background:var(--bar);border-radius:0 4px 4px 0;min-width:2px}
+.balken-wert{font-family:"IBM Plex Mono",monospace;font-size:.76rem;
+  color:var(--ink2);font-variant-numeric:tabular-nums;white-space:nowrap}
+.panel ul{margin:0;padding-left:18px}
+.panel li{margin:.35em 0;font-size:.88rem}
+.log{border-left:2px solid var(--linie);padding-left:18px;display:flex;flex-direction:column;gap:14px}
+.log-eintrag{position:relative}
+.log-eintrag::before{content:"";position:absolute;left:-23px;top:6px;width:8px;height:8px;
+  border-radius:50%;background:var(--navy)}
+.log-datum{font-family:"IBM Plex Mono",monospace;font-size:.72rem;color:var(--ink3)}
+.log-eintrag h3{font-size:.92rem;margin:2px 0 4px;font-family:Archivo,Arial,sans-serif}
+.log-eintrag p{margin:0;font-size:.86rem;color:var(--ink2)}
+.log-eintrag .kons{color:var(--ink);margin-top:3px}
+.log-eintrag .kons::before{content:"Konsequenz: ";font-weight:600;color:var(--orange)}
+footer{margin-top:50px;padding-top:16px;border-top:1px solid var(--linie);
+  font-size:.75rem;color:var(--ink3);display:flex;gap:16px;flex-wrap:wrap}
+@media (prefers-reduced-motion: no-preference){
+  .balken{transition:width .5s ease}
+}
+</style>
+
+<header class="top"><div class="top-inner">
+  <h1>MiT Datacenter-Radar <small>Schweiz</small></h1>
+  <span class="stand">KW 35 · Stand 30.08.2026</span>
+  <span class="intern">INTERN VERTRAULICH</span>
+</div></header>
+
+<div class="wrap">
+  <section class="kpis" aria-label="Kennzahlen"><div class="kpi"><span class="kpi-label">Projekte im Radar</span><span class="kpi-wert">17</span><span class="kpi-sub"></span></div>
+<div class="kpi"><span class="kpi-label">Belegte Kapazitaet</span><span class="kpi-wert">211</span><span class="kpi-sub">MW</span></div>
+<div class="kpi"><span class="kpi-label">Prio A</span><span class="kpi-wert">5</span><span class="kpi-sub">von 17</span></div>
+<div class="kpi"><span class="kpi-label">Bau laeuft</span><span class="kpi-wert">5</span><span class="kpi-sub">Baustart + Rohbau</span></div>
+<div class="kpi"><span class="kpi-label">Fachplaner offen</span><span class="kpi-wert">15</span><span class="kpi-sub">grösste Lücke</span></div>
+<div class="kpi"><span class="kpi-label">Ohne Wiedervorlage</span><span class="kpi-wert">17</span><span class="kpi-sub">Spalte Q leer</span></div></section>
+
+  <h2>Fenster offen, diese Woche handeln</h2>
+  <section class="fenster">
+    <article class="fenster-karte">
+      <div class="fenster-nr">1</div>
+      <h3>Metro-Campus Zuerich West, Datacenter 4</h3>
+      <p class="fenster-meta">Green (green.ch) · Lupfig AG
+        · 12 MW · <span class="chip chip-phase">Rohbau</span>
+        · Kanal GU/TU</p>
+      <p class="fenster-schritt">Implenia Bauleitung ueber Cx-Paket und Lastbank ansprechen, Fachplaner Elektro ueber Implenia erfragen</p>
+    </article>
+    <article class="fenster-karte">
+      <div class="fenster-nr">2</div>
+      <h3>ZUR02 Beringen</h3>
+      <p class="fenster-meta">STACK Infrastructure · Beringen SH
+        · 36 MW · <span class="chip chip-phase">Rohbau</span>
+        · Kanal GU/TU</p>
+      <p class="fenster-schritt">Cx-Verantwortlichen ueber GU suchen, EKS wegen Unterwerk-Termin kontaktieren</p>
+    </article>
+    <article class="fenster-karte">
+      <div class="fenster-nr">3</div>
+      <h3>ZUR4 Glattbrugg</h3>
+      <p class="fenster-meta">Digital Realty · Glattbrugg (Opfikon) ZH
+        · 15 MW · <span class="chip chip-phase">Baustart</span>
+        · Kanal GU/TU</p>
+      <p class="fenster-schritt">GU des Spatenstichs ueber Baublatt oder Gemeinde Opfikon identifizieren, dann Baustrom anbieten</p>
+    </article></section>
+
+  <h2>Projekt-Radar</h2>
+  <div class="filterzeile" role="group" aria-label="Filter">
+    <input type="search" id="suche" placeholder="Suche Projekt, Betreiber, Ort" aria-label="Suche">
+    <button class="fbtn" data-f="alle" aria-pressed="true">Alle</button>
+    <button class="fbtn" data-f="bau" aria-pressed="false">Bau laeuft</button>
+    <button class="fbtn" data-f="cx" aria-pressed="false">Cx-Fenster</button>
+    <button class="fbtn" data-f="frueh" aria-pressed="false">Frueh</button>
+    <button class="fbtn" data-f="betrieb" aria-pressed="false">Betrieb</button>
+    <button class="fbtn" data-f="prioA" aria-pressed="false">Nur Prio A</button>
+    <button class="fbtn" data-f="luecken" aria-pressed="false">Mit Luecken</button>
+  </div>
+  <div class="tabelle-huelle">
+    <table id="radar">
+      <thead><tr>
+        <th>Projekt</th><th>Betreiber</th><th>Ort</th><th>Kt.</th><th>MW</th>
+        <th>Phase</th><th>IBN</th><th>GU/TU</th><th>Fachplaner</th><th>Kanal</th><th>Prio</th>
+      </tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <p style="font-size:.78rem;color:var(--ink3)">Zeile anklicken fuer Chance, naechsten Schritt, Bemerkung und Quellen.
+  Gelb markierte Werte sind nicht belegt und beim naechsten Lauf zu klaeren.</p>
+
+  <div class="panels">
+    <div class="panel"><h2>Projekte nach Phase</h2><div class="balken-zeile"><span class="balken-label">Planung</span><span class="balken-spur"><span class="balken" style="width:50%"></span></span><span class="balken-wert">2</span></div>
+<div class="balken-zeile"><span class="balken-label">Bewilligung</span><span class="balken-spur"><span class="balken" style="width:25%"></span></span><span class="balken-wert">1</span></div>
+<div class="balken-zeile"><span class="balken-label">Baustart</span><span class="balken-spur"><span class="balken" style="width:50%"></span></span><span class="balken-wert">2</span></div>
+<div class="balken-zeile"><span class="balken-label">Rohbau</span><span class="balken-spur"><span class="balken" style="width:75%"></span></span><span class="balken-wert">3</span></div>
+<div class="balken-zeile"><span class="balken-label">Betrieb</span><span class="balken-spur"><span class="balken" style="width:100%"></span></span><span class="balken-wert">4</span></div>
+<div class="balken-zeile"><span class="balken-label">Ausbau</span><span class="balken-spur"><span class="balken" style="width:50%"></span></span><span class="balken-wert">2</span></div>
+<div class="balken-zeile"><span class="balken-label">offen</span><span class="balken-spur"><span class="balken" style="width:75%"></span></span><span class="balken-wert">3</span></div></div>
+    <div class="panel"><h2>Belegte Kapazitaet nach Kanton</h2><div class="balken-zeile"><span class="balken-label">ZH</span><span class="balken-spur"><span class="balken" style="width:100%"></span></span><span class="balken-wert">154 MW · 10 Proj.</span></div>
+<div class="balken-zeile"><span class="balken-label">SH</span><span class="balken-spur"><span class="balken" style="width:23%"></span></span><span class="balken-wert">36 MW · 1 Proj.</span></div>
+<div class="balken-zeile"><span class="balken-label">AG</span><span class="balken-spur"><span class="balken" style="width:8%"></span></span><span class="balken-wert">12 MW · 2 Proj.</span></div>
+<div class="balken-zeile"><span class="balken-label">GE</span><span class="balken-spur"><span class="balken" style="width:3%"></span></span><span class="balken-wert">4 MW · 1 Proj.</span></div>
+<div class="balken-zeile"><span class="balken-label">pruefen</span><span class="balken-spur"><span class="balken" style="width:3%"></span></span><span class="balken-wert">4 MW · 2 Proj.</span></div>
+<div class="balken-zeile"><span class="balken-label">VD</span><span class="balken-spur"><span class="balken" style="width:2%"></span></span><span class="balken-wert">0 MW · 1 Proj.</span></div>
+      <p style="font-size:.75rem;color:var(--ink3);margin-bottom:0">Nur belegte MW-Werte. Projekte mit Kapazitaet "pruefen" zaehlen hier nicht mit.</p></div>
+    <div class="panel"><h2>Fachplaner-Kanal</h2>
+      <ul><li><strong>Amstein + Walthert AG</strong>: ZUR02 Beringen (STACK Infrastructure)</li>
+<li><strong>Gruner AG</strong>: ZUR3 Glattbrugg (Digital Realty)</li>
+<li><strong>HKG Engineering AG</strong>: noch keinem Projekt zugeordnet</li>
+<li><strong>AFRY Schweiz</strong>: noch keinem Projekt zugeordnet</li></ul>
+      <p style="font-size:.8rem;color:var(--ink2)">Ein Planer ist zehn Projekte, ein Betreiber ist eines.
+      Naechster Schritt je Firma: DC-Verantwortlichen ueber die Firmenwebsite identifizieren.</p></div>
+  </div>
+
+  <h2>Changelog</h2>
+  <div class="log" id="log"></div>
+
+  <footer>
+    <span>INTERN VERTRAULICH. Keine Preise, keine Fleetzusagen. Owen-Gate und CHF-Sperre gelten.</span>
+    <span>Quelle: MiT_Datacenter_Radar_CH_V1.0.xlsx, Blatt 02, 03, 06.</span>
+  </footer>
+</div>
+
+<script>
+const DATA = {"stand": "30.08.2026", "kw": 35, "projekte": [{"projekt": "Metro-Campus Zuerich West, Datacenter 4", "betreiber": "Green (green.ch)", "standort": "Lupfig", "kt": "AG", "mw": 12.0, "mw_txt": "12", "phase": "Rohbau", "ibn": "Anfang 2027", "gu": "Implenia (Shell and Core)", "planer": "pruefen", "kanal": "GU/TU", "chance": "Commissioning-Lastbank, Heat-Load-Test, Bautrocknung im Ausbau, PQ-Messung Klasse A", "fenster": "jetzt, Fit-out minus sechs Monate", "prio": "A", "status": "", "wv": "", "tage": null, "ampel": "-", "quellen": ["https://www.aargauerzeitung.ch/aargau/brugg/lupfig-green-startet-mit-dem-bau-seines-vierten-datencenters-in-der-gemeinde-2026-soll-es-in-betrieb-genommen-werden-ld.2660374", "https://implenia.com/medien/artikel/implenia-gewinnt-attraktive-neue-projekte-in-den-bereichen-datacenter-gesundheit-sowie-energie-und-verkehrsinfrastruktur/"], "stand": "29.08.2026", "schritt": "Implenia Bauleitung ueber Cx-Paket und Lastbank ansprechen, Fachplaner Elektro ueber Implenia erfragen", "bemerkung": "12 MW IT-Leistung fuer Kundensysteme, 5526 m2 Datacenter-Flaeche, 2000 m2 Buero. Rohbau 30 m hoch in zehn Monaten erstellt. Widerspruch: Aargauer Zeitung meldet Inbetriebnahme 2026, Green und Implenia nennen Anfang 2027. Auftragsvolumen Implenia ueber CHF 150 Mio. Fachplaner Elektro nicht belegt."}, {"projekt": "ZUR02 Beringen", "betreiber": "STACK Infrastructure", "standort": "Beringen", "kt": "SH", "mw": 36.0, "mw_txt": "36", "phase": "Rohbau", "ibn": "2026", "gu": "pruefen", "planer": "Amstein + Walthert (beteiligt, Rolle pruefen)", "kanal": "GU/TU", "chance": "Lastbank Voll- und Teillast im IST, Generator-Abnahme, USV-Test, PQ-Audit Klasse A", "fenster": "jetzt, Aufrichte gemeldet, Cx-Vergabe laeuft", "prio": "A", "status": "", "wv": "", "tage": null, "ampel": "-", "quellen": ["https://www.datacenterdynamics.com/en/news/stack-tops-out-swiss-data-center-completes-construction-in-melbourne/", "https://amstein-walthert.ch/de/projekte/rechenzentrum-beringen-schaffhausen/", "https://algorithmwatch.ch/de/recherche-rechenzentren-schweiz/"], "stand": "29.08.2026", "schritt": "Cx-Verantwortlichen ueber GU suchen, EKS wegen Unterwerk-Termin kontaktieren", "bemerkung": "36 MW, gebaut auf dem Areal des ehemaligen SIG-Tennisclubs. Kanton musste ein neues Unterwerk bauen, finanziert vom Betreiber. Netzanschluss-Termin ist der Hebel fuer Bridging Power. Baubewilligung in rund drei Monaten erteilt. GU nicht belegt. Amstein + Walthert fuehrt das RZ Beringen als eigenes Projekt, genaue Rolle und Gewerk pruefen."}, {"projekt": "ZUR4 Glattbrugg", "betreiber": "Digital Realty", "standort": "Glattbrugg (Opfikon)", "kt": "ZH", "mw": 15.0, "mw_txt": "15", "phase": "Baustart", "ibn": "2028", "gu": "pruefen", "planer": "pruefen", "kanal": "GU/TU", "chance": "Baustrom aus Generator, Bauheizung, Bautrocknung, spaeter Lastbank im Cx", "fenster": "jetzt fuer Baustrom und Trocknung, Cx-Ansprache ab 2027", "prio": "A", "status": "", "wv": "", "tage": null, "ampel": "-", "quellen": ["https://www.inside-it.ch/spatenstich-fuer-neues-rz-von-digital-reality-in-glattbrugg-20260827", "https://www.globenewswire.com/news-release/2026/08/27/3351782/0/en/digital-realty-breaks-ground-on-new-state-of-the-art-data-center-in-switzerland.html"], "stand": "27.08.2026", "schritt": "GU des Spatenstichs ueber Baublatt oder Gemeinde Opfikon identifizieren, dann Baustrom anbieten", "bemerkung": "Spatenstich am 26.08.2026. 15 MW IT-Leistung auf rund 6300 m2, sechs Datenhallen. Fertigstellung 2028, danach rund 60 MW Campus-Gesamtleistung. Abwaermenetz zusammen mit der Gemeinde Opfikon. Vorlaufzeit Trocknung rund fuenf Monate, das Fenster ist jetzt. GU und Fachplaner nicht belegt."}, {"projekt": "Metro-Campus Zuerich, Datacenter N und O", "betreiber": "Green (green.ch)", "standort": "Dielsdorf", "kt": "ZH", "mw": 35.0, "mw_txt": "35", "phase": "Rohbau", "ibn": "pruefen", "gu": "Implenia", "planer": "pruefen", "kanal": "GU/TU", "chance": "Bautrocknung, temporaere Klimatisierung im Ausbau, Lastbank im Cx, PQ-Messung", "fenster": "Cx-Entscheid faellt in den naechsten Monaten, jetzt Planer- und GU-Kanal aufbauen", "prio": "A", "status": "", "wv": "", "tage": null, "ampel": "-", "quellen": ["https://www.presseportal.de/pm/152183/5635701", "https://www.baublatt.ch/bauprojekte/baustart-fuer-zwei-neue-datacenter-auf-metro-campus-in-dielsdorf-erfolgt-35044"], "stand": "29.08.2026", "schritt": "Implenia Projektleitung Dielsdorf ansprechen, Abwaerme-Zeitplan mit Energie 360 abgleichen", "bemerkung": "Zwei Gebaeude, zusammen 35 MW, rund 4000 Racks auf 11600 m2. Campus 46000 m2. Implenia hat auf dem Campus bereits zwei Datacenter und ein Buerogebaeude gebaut. Abwaermenutzung durch Energie 360. IBN-Termin nicht belegt, Fachplaner nicht belegt."}, {"projekt": "The Hive Campus Genf", "betreiber": "NorthC", "standort": "Genf", "kt": "GE", "mw": 4.5, "mw_txt": "4.5", "phase": "Baustart", "ibn": "Q2 2028", "gu": "pruefen", "planer": "pruefen", "kanal": "Fachplaner", "chance": "Baustrom, Bautrocknung, spaeter Lastbank und PQ-Messung im Cx", "fenster": "jetzt Planer-Kanal, Cx-Ansprache ab 2027", "prio": "B", "status": "", "wv": "", "tage": null, "ampel": "-", "quellen": ["https://www.northcdatacenters.com/en/press-releases/northc-group-to-build-new-high-tech-data-center-in-geneva-switzerland/", "https://www.netzwoche.ch/news/2026-01-13/northc-errichtet-sechstes-rechenzentrum-in-der-schweiz"], "stand": "13.01.2026", "schritt": "Fachplaner Elektro ueber NorthC Schweiz erfragen, Romandie-Ansprache auf Franzoesisch", "bemerkung": "Sechstes NorthC-Rechenzentrum in der Schweiz. Baustart Q1 2026, rund 4.5 MW IT-Leistung auf 5400 m2, Fertigstellung Q2 2028. Direct-to-Chip-Fluessigkuehlung vorgesehen. Ansprache auf Franzoesisch, vous-Form. GU und Fachplaner nicht belegt."}, {"projekt": "Technologiezentrum Laufenburg (TZL)", "betreiber": "FlexBase", "standort": "Laufenburg", "kt": "AG", "mw": null, "mw_txt": "pruefen", "phase": "Bewilligung", "ibn": "Sommer 2028", "gu": "ERNE Gruppe (GU)", "planer": "pruefen", "kanal": "GU/TU", "chance": "Baustrom, Bautrocknung, Bridging Power bis Netzanschluss, spaeter Lastbank im Cx", "fenster": "jetzt, GU steht fest und Bauvorbereitung laeuft", "prio": "A", "status": "", "wv": "", "tage": null, "ampel": "-", "quellen": ["https://www.erne-gruppe.ch/de/news/newsdetail/ernenews/medienmitteilung-flexbase/", "https://www.zhk.ch/de/wirtschaft-und-politik/news/flexbase-erhaelt-baufreigabe-fuer-technologiezentrum.html", "https://www.datacenter-insider.de/flexbase-errichtet-technologiezentrum-mit-480-mw-ki-rechenzentrum-a-befea6134cb5045aba28a650a2ef6206/"], "stand": "29.08.2026", "schritt": "ERNE Gruppe direkt ansprechen, Baustrom und Trocknung fuer 20000 m2 Baufeld", "bemerkung": "Baufreigabe erteilt. KI-Rechenzentrum mit bis zu 480 MW Rechenleistung auf rund 12000 m2 IT-Netzflaeche, dazu Redox-Flow-Speicher mit ueber 1.6 GWh und ueber 800 MW auf rund 20000 m2, direkt beim Unterwerk Stern von Laufenburg. 480 MW ist Rechenleistung laut Quelle, nicht als elektrische Anschlussleistung uebernehmen, deshalb Spalte F auf pruefen. Inbetriebnahme Sommer 2028."}, {"projekt": "Metro-Campus Zuerich, weiteres Datacenter", "betreiber": "Green (green.ch)", "standort": "Dielsdorf", "kt": "ZH", "mw": null, "mw_txt": "pruefen", "phase": "Planung", "ibn": "pruefen", "gu": "pruefen", "planer": "pruefen", "kanal": "Fachplaner", "chance": "frueher Planer-Kontakt, damit Lastbank und PQ-Messung ins LV kommen", "fenster": "Planungsphase, Beziehungsaufbau beim Fachplaner", "prio": "B", "status": "", "wv": "", "tage": null, "ampel": "-", "quellen": ["https://www.baublatt.ch/bauprojekte/green-baut-viertes-rechenzentrum-auf-metro-campus-in-dielsdorf-zh-36395", "https://www.netzwoche.ch/news/2026-06-03/so-praesentiert-sich-der-schweizer-markt-fuer-rechenzentren", "https://www.tagesanzeiger.ch/millionen-campus-in-dielsdorf-der-bau-von-zwei-weiteren-rechenzentren-hat-begonnen-440633753636"], "stand": "29.08.2026", "schritt": "Green Bauherrenvertretung nach dem Fachplaner Elektro fragen", "bemerkung": "Zaehlung eingeordnet: Der Campus umfasst die Gebaeude M (Betrieb seit Anfang 2023) sowie N und O (im Bau). Das hier gemeldete weitere Datacenter waere das vierte Gebaeude. Baublatt zaehlt es als viertes, Netzwoche als drittes mit Baustart 2026 und 5800 m2, je nachdem ob N und O einzeln gezaehlt werden. Beide URLs in T. Kapazitaet, IBN, GU und Fachplaner nicht belegt. Green investiert laut Tages-Anzeiger insgesamt rund CHF 500 Mio in den Campus."}, {"projekt": "ZH4 Zuerich, sechste Ausbauphase", "betreiber": "Equinix", "standort": "Zuerich", "kt": "ZH", "mw": null, "mw_txt": "pruefen", "phase": "Ausbau", "ibn": "2027", "gu": "pruefen", "planer": "pruefen", "kanal": "Betreiber", "chance": "Bridging Power im laufenden Betrieb, temporaere Kaelte, PQ-Audit bei Umschaltungen", "fenster": "Ausbau im laufenden Betrieb, Wartungs- und Umschaltfenster", "prio": "B", "status": "", "wv": "", "tage": null, "ampel": "-", "quellen": ["https://www.inside-it.ch/equinix-baut-data-center-in-zuerich-aus-20241112", "https://www.netzwoche.ch/news/2024-11-13/equinix-baut-zuercher-rechenzentrum-aus"], "stand": "13.11.2024", "schritt": "Site-Verantwortlichen ZH4 zum Umschaltkonzept ansprechen, Quelle ist aelter als ein Jahr, Stand pruefen", "bemerkung": "Sechste Ausbauphase, Investition rund CHF 40 Mio, Abschluss 2027. Rund 680 m2 zusaetzlicher Whitespace und rund 200 neue Cabinets. Ausbau im laufenden Betrieb, deshalb Betreiber-Kanal statt GU. Quelle vom November 2024, aktuelleren Stand suchen."}, {"projekt": "UptownBasel Campus", "betreiber": "NorthC", "standort": "pruefen", "kt": "pruefen", "mw": 4.5, "mw_txt": "4.5", "phase": "offen", "ibn": "2027", "gu": "pruefen", "planer": "pruefen", "kanal": "", "chance": "Lastbank im Cx, PQ-Messung Klasse A, spaeter Wartungsfenster", "fenster": "Cx-Fenster vermutlich 2026 bis 2027, Termin verifizieren", "prio": "B", "status": "", "wv": "", "tage": null, "ampel": "-", "quellen": ["https://www.netzwoche.ch/news/2026-06-03/so-praesentiert-sich-der-schweizer-markt-fuer-rechenzentren", "https://www.datacenter-insider.de/northc-plant-sechstes-schweizer-rechenzentrum-in-basel-a-d051a0a594bcb4f730589892caf8a25f/"], "stand": "03.06.2026", "schritt": "Standort und Kanton ueber northcdatacenters.com verifizieren, danach Kanal festlegen", "bemerkung": "4.5 MW IT-Leistung, Betrieb ab 2027 gemeldet. Der Campus UptownBasel ist in den Quellen nur als Campusname belegt, Gemeinde und Kanton stehen dort nicht. Deshalb Standort und Kt. auf pruefen, Phase und Kanal leer. Beim naechsten Lauf ueber die Betreiberseite aufloesen."}, {"projekt": "ZRH1 Winterthur", "betreiber": "Vantage Data Centers", "standort": "Winterthur", "kt": "ZH", "mw": 40.0, "mw_txt": "40", "phase": "Ausbau", "ibn": "pruefen", "gu": "DPR Construction (Gebaeude 1)", "planer": "pruefen", "kanal": "Betreiber", "chance": "Lastbank fuer die noch nicht gebauten Gebaeude, Bridging und PQ-Audit im Bestand", "fenster": "Campus im Etappenausbau, Fenster je Gebaeude pruefen", "prio": "B", "status": "", "wv": "", "tage": null, "ampel": "-", "quellen": ["https://vantage-dc.com/data-center-locations/emea/zurich-i-switzerland/", "https://www.dpr.com/projects/vantage-data-centers-zurich-campus-building-1-zrh11"], "stand": "29.08.2026", "schritt": "Etappenplan der Gebaeude 2 bis 4 erfragen, dann Cx-Fenster je Gebaeude setzen", "bemerkung": "Vier Gebaeude auf rund sieben Acres, im Vollausbau 40 MW. Erstes Gebaeude im Dezember 2021 eroeffnet, Landkauf Februar 2020. Adresse Fabrikstrasse 12, Winterthur. Betreiberseiten ohne Datum, Abrufdatum 29.08.2026. Termine der Folgegebaeude nicht belegt."}, {"projekt": "ZRH2 Glattfelden", "betreiber": "Vantage Data Centers", "standort": "Glattfelden", "kt": "ZH", "mw": 24.0, "mw_txt": "24", "phase": "Betrieb", "ibn": "eroeffnet Sommer 2024", "gu": "pruefen", "planer": "pruefen", "kanal": "Betreiber", "chance": "wiederkehrende NEA-Tests, Wartungsfenster, Bridging Power, PQ-Audit", "fenster": "Betrieb: Wartungsfenster, NEA-Testzyklus, PQ-Audit", "prio": "C", "status": "", "wv": "", "tage": null, "ampel": "-", "quellen": ["https://vantage-dc.com/news/vantage-data-centers-expands-emea-portfolio-with-second-zurich-campus-fueled-by-more-than-chf-370-million-investment/", "https://www.datacenterdynamics.com/en/news/vantage-launches-second-data-center-in-switzerland/"], "stand": "29.08.2026", "schritt": "Betriebsstatus ueber vantage-dc.com verifizieren, erst danach Phase setzen", "bemerkung": "24 MW kritische IT-Kapazitaet, rund 21000 m2, Investition ueber CHF 370 Mio, rund 30 km noerdlich von Zuerich, zusammen mit ZRH1 64 MW. Widerspruch vom Erstlauf aufgeloest: Firmenmeldung und DCD belegen die Eroeffnung im Sommer 2024. Die Meldung zu einer Eroeffnung im Sommer 2026 bezog sich auf eine weitere Ausbauetappe, Etappenplan pruefen. N+1-Redundanz, Abwaerme an Hotel und Seminarzentrum."}, {"projekt": "ZUR01A Rafz", "betreiber": "STACK Infrastructure", "standort": "Rafz", "kt": "ZH", "mw": 10.0, "mw_txt": "10", "phase": "Betrieb", "ibn": "pruefen", "gu": "pruefen", "planer": "pruefen", "kanal": "Betreiber", "chance": "Baustrom und Trocknung falls noch im Bau, sonst Lastbank im Cx", "fenster": "Betrieb: Wartungsfenster, NEA-Tests, Bridging bei Umbauten", "prio": "C", "status": "", "wv": "", "tage": null, "ampel": "-", "quellen": ["https://www.stackinfra.com/locations/emea/zurich/zur01/", "https://www.datacenters.com/stack-infrastructure-zur01a-zurich"], "stand": "29.08.2026", "schritt": "Bau- oder Betriebsstatus ueber Gemeinde Rafz und stackinfra.com klaeren", "bemerkung": "10 MW, Industriestrasse 16, 8197 Rafz. Anlage ist kommissioniert und in Betrieb, keine weitere vermietbare Leistung im Bau gemeldet. Hauptgebaeude mit Datenhalle, Buerogebaeude, separates Generatorgebaeude. Damit kein Neubaufenster mehr, sondern Betriebsgeschaeft."}, {"projekt": "ZUR03 Niederweningen", "betreiber": "STACK Infrastructure", "standort": "Niederweningen", "kt": "ZH", "mw": 30.0, "mw_txt": "30", "phase": "offen", "ibn": "pruefen", "gu": "pruefen", "planer": "pruefen", "kanal": "", "chance": "Lastbank im Cx, Bridging Power, PQ-Audit", "fenster": "Status unklar, zuerst verifizieren", "prio": "C", "status": "", "wv": "", "tage": null, "ampel": "-", "quellen": ["https://baxtel.com/data-center/stack-zur03"], "stand": "29.08.2026", "schritt": "Ueber stackinfra.com oder das kantonale Baugesuchsportal ZH verifizieren", "bemerkung": "30 MW Hyperscale-Campus auf rund sieben Acres, ein Gebaeude. Nur Aggregator-Quelle, kein Firmen- oder Fachmedien-Beleg. Phase und Termine nicht belegt. Beim naechsten Lauf entweder belegen oder Zeile auf Gestoppt setzen."}, {"projekt": "ZUR3 Glattbrugg", "betreiber": "Digital Realty", "standort": "Glattbrugg (Opfikon)", "kt": "ZH", "mw": null, "mw_txt": "pruefen", "phase": "Betrieb", "ibn": "pruefen", "gu": "pruefen", "planer": "Gruner (beteiligt, Rolle pruefen)", "kanal": "Betreiber", "chance": "Wartungsfenster, NEA-Test, Bridging Power waehrend Campus-Bauarbeiten ZUR4", "fenster": "waehrend der ZUR4-Bauphase, Bestand und Baustelle auf einem Campus", "prio": "B", "status": "", "wv": "", "tage": null, "ampel": "-", "quellen": ["https://www.netzwoche.ch/news/2026-06-03/so-praesentiert-sich-der-schweizer-markt-fuer-rechenzentren", "https://www.grunerfriends.com/projects/data-center-zur3-zurich", "https://www.ikon.ch/referenzprojekte/neubau-rechenzentrum-digital-realty-zuerich-zur3-vormals-interxion-zur3"], "stand": "29.08.2026", "schritt": "Zusammen mit ZUR4 ansprechen, ein Ansprechpartner fuer Bestand und Neubau", "bemerkung": "Eines der flaechenmaessig groessten Rechenzentren der Schweiz, 11400 m2 Nutzflaeche, frueher Interxion ZUR3. Liegt auf demselben Campus wie der ZUR4-Neubau. Kapazitaet in MW nicht belegt. Gruner nennt ZUR3 als Projekt im eigenen Portfolio, Rolle pruefen. Gleicher Planer-Kreis koennte beim ZUR4-Neubau wieder drin sein."}, {"projekt": "Rechenzentrum Hoenggerberg (HRZ)", "betreiber": "ETH Zuerich", "standort": "Zuerich", "kt": "ZH", "mw": null, "mw_txt": "pruefen", "phase": "offen", "ibn": "Anfang 2026", "gu": "pruefen", "planer": "pruefen", "kanal": "Betreiber", "chance": "NEA-Test, Wartungsfenster, PQ-Audit nach Inbetriebnahme", "fenster": "nach Betriebsaufnahme, Wartungs- und Testzyklus", "prio": "C", "status": "", "wv": "", "tage": null, "ampel": "-", "quellen": ["https://www.inside-it.ch/bald-ist-baubeginn-fuer-das-49-millionen-rechenzentrum-der-eth-zuerich-20230908"], "stand": "08.09.2023", "schritt": "Aktuellen Stand ueber ethz.ch pruefen, Quelle ist drei Jahre alt", "bemerkung": "Fuenfgeschossig, ueber 4000 m2, Baukosten rund CHF 49 Mio. Spatenstich April 2024, Bauarbeiten bis Ende 2025 geplant, IT-Betrieb ab Anfang 2026. Quelle von 2023, aktueller Stand nicht belegt, deshalb Phase leer. Oeffentlicher Bauherr, Beschaffung laeuft ueber simap.ch."}, {"projekt": "Rechenzentrum Bonvillars", "betreiber": "Swisscom", "standort": "Bonvillars", "kt": "VD", "mw": null, "mw_txt": "pruefen", "phase": "Betrieb", "ibn": "pruefen", "gu": "pruefen", "planer": "pruefen", "kanal": "Betreiber", "chance": "Wartungsfenster, NEA-Test, Bridging Power bei Umbauten", "fenster": "Betrieb, Rahmenvertrag statt Projektgeschaeft", "prio": "C", "status": "", "wv": "", "tage": null, "ampel": "-", "quellen": ["https://www.netzwoche.ch/news/2026-06-03/so-praesentiert-sich-der-schweizer-markt-fuer-rechenzentren"], "stand": "03.06.2026", "schritt": "Ueber Swisscom Facility Management den Rahmenvertragsweg pruefen, Ansprache auf Franzoesisch", "bemerkung": "Elftes Swisscom-Rechenzentrum, Ende 2024 von Philip Morris uebernommen, 1100 m2 Nutzflaeche. Kleinvolumen, aber Tuer zu den zehn weiteren Swisscom-Standorten. Ansprache Romandie auf Franzoesisch, vous-Form."}, {"projekt": "KI-Infrastruktur-Ausbau Schweiz", "betreiber": "Microsoft", "standort": "pruefen", "kt": "pruefen", "mw": null, "mw_txt": "pruefen", "phase": "Planung", "ibn": "pruefen", "gu": "pruefen", "planer": "pruefen", "kanal": "Betreiber", "chance": "Lastbank und PQ bei Erweiterungen in den Partner-Rechenzentren, Bridging bei Kapazitaetsengpaessen", "fenster": "frueh, zuerst klaeren in welchen Colocation-Standorten ausgebaut wird", "prio": "B", "status": "", "wv": "", "tage": null, "ampel": "-", "quellen": ["https://www.datacenter-insider.de/microsoft-baut-ki-infrastruktur-in-der-schweiz-aus-a-60195c56e70961bf22a9eb82c859339b/", "https://news.microsoft.com/de-ch/2024/08/29/5-jahre-microsoft-rechenzentren-in-der-schweiz-500-lokale-services-50000-kunden/"], "stand": "29.08.2026", "schritt": "Klaeren, in welchen Colocation-Standorten der Ausbau physisch stattfindet", "bemerkung": "Microsoft investiert 400 Mio US-Dollar in der Schweiz, Ausbau der Rechenzentren bei Zuerich und Genf fuer KI-Workloads. Vier bestehende Standorte, Switzerland North war zeitweise nur fuer Bestandskunden verfuegbar, also Kapazitaetsdruck. Microsoft baut in der Schweiz ueblicherweise in Partner-Rechenzentren, der physische Ausbau landet also vermutlich bei einem Colocation-Betreiber im Radar. Standorte pruefen."}], "changelog": [{"datum": "29.08.2026", "projekt": "03_Kontakte, Fachplaner-Kanal", "was": "Vier Planerfirmen mit belegten DC-Referenzen ergaenzt: Amstein + Walthert (Beringen), Gruner (ZUR3), HKG (Ritex Zofingen, baut Datacenter-Team aus), AFRY (Suisse romande). Personennamen und Kontaktdaten stehen als FEHLT, nichts abgeleitet.", "url": "https://amstein-walthert.ch/de/projekte/rechenzentrum-beringen-schaffhausen/", "konsequenz": "Die groesste Luecke des Erstlaufs beginnt sich zu schliessen. Naechster Schritt: pro Firma den DC-Bereichsleiter ueber die Firmenwebsite identifizieren, nicht raten."}, {"datum": "29.08.2026", "projekt": "KI-Infrastruktur-Ausbau Schweiz (Microsoft)", "was": "Neu im Radar. 400 Mio US-Dollar Investition, Ausbau bei Zuerich und Genf fuer KI-Workloads, Kapazitaetsdruck in Switzerland North belegt.", "url": "https://www.datacenter-insider.de/microsoft-baut-ki-infrastruktur-in-der-schweiz-aus-a-60195c56e70961bf22a9eb82c859339b/", "konsequenz": "Der physische Ausbau landet vermutlich in Partner-Rechenzentren, die schon im Radar stehen. Wer die Colocation-Standorte kennt, weiss wo als naechstes Cx-Last anfaellt."}, {"datum": "29.08.2026", "projekt": "Metro-Campus Dielsdorf, weiteres Datacenter (Green)", "was": "Zaehlungs-Widerspruch eingeordnet: Campus ist M plus N plus O, das gemeldete neue Gebaeude waere das vierte. Die Quellen zaehlen unterschiedlich, weil N und O teils zusammengefasst werden.", "url": "https://www.tagesanzeiger.ch/millionen-campus-in-dielsdorf-der-bau-von-zwei-weiteren-rechenzentren-hat-begonnen-440633753636", "konsequenz": "Planungsphase bestaetigt. Fachplaner-Kanal, und zwar derselbe Zugang wie fuer N und O, ein Gespraech deckt drei Gebaeude ab."}, {"datum": "29.08.2026", "projekt": "ZUR3 Glattbrugg (Digital Realty)", "was": "Gruner nennt ZUR3 als eigenes Projekt. Als beteiligter Planer eingetragen, Rolle offen.", "url": "https://www.grunerfriends.com/projects/data-center-zur3-zurich", "konsequenz": "Wer ZUR3 geplant hat, sitzt womoeglich auch bei ZUR4 am Tisch. Gruner auf beide Campus-Bauten ansprechen, bevor das ZUR4-LV geschrieben ist."}, {"datum": "29.08.2026", "projekt": "ZUR02 Beringen (STACK)", "was": "Amstein + Walthert fuehrt das Rechenzentrum Beringen als Referenzprojekt auf der eigenen Projektseite. Rolle und Gewerk noch offen, als beteiligter Planer eingetragen.", "url": "https://amstein-walthert.ch/de/projekte/rechenzentrum-beringen-schaffhausen/", "konsequenz": "Erster belegter Planer-Einstieg ins groesste Cx-Volumen im Radar. A+W Zuerich auf das Projekt ansprechen, ein Planer oeffnet mehr als ein Betreiber."}, {"datum": "29.08.2026", "projekt": "ZUR01A Rafz (STACK)", "was": "Status geklaert: Anlage ist kommissioniert und in Betrieb, keine zusaetzliche Leistung im Bau. Phase von leer auf Betrieb gesetzt.", "url": "https://www.stackinfra.com/locations/emea/zurich/zur01/", "konsequenz": "Aus der Neubau-Liste raus. Rafz laeuft als Betriebsgeschaeft zusammen mit Beringen ueber denselben Betreiber, ein Ansprechpartner fuer beide Standorte."}, {"datum": "29.08.2026", "projekt": "ZRH2 Glattfelden (Vantage)", "was": "Widerspruch aufgeloest: Campus wurde im Sommer 2024 eroeffnet, Firmenmeldung und DCD stimmen ueberein. Phase von leer auf Betrieb gesetzt, die 2026er-Meldung betrifft eine weitere Ausbauetappe.", "url": "https://www.datacenterdynamics.com/en/news/vantage-launches-second-data-center-in-switzerland/", "konsequenz": "Fenster ist Betrieb, nicht Neubau: NEA-Testzyklus, Wartungsfenster, PQ-Audit. Etappenplan fuer weitere Gebaeude erfragen, dort ergibt sich das naechste Cx-Fenster."}, {"datum": "29.08.2026", "projekt": "Blatt 05_Quellen_Montag", "was": "Pruefdatum nur bei Fachmedien, Firmenmeldungen, Baumedien und Regionalzeitungen gesetzt. Amtliche Portale, simap.ch, LinkedIn und EVU blieben ungeprueft.", "url": "", "konsequenz": "Luecke ist bewusst und sichtbar. Der naechste Lauf muss dort anfangen, dort liegen die Ausschreibungen und die Netzanschlusstermine."}, {"datum": "29.08.2026", "projekt": "ETH Rechenzentrum Hoenggerberg", "was": "Neu im Radar. CHF 49 Mio, ueber 4000 m2, IT-Betrieb ab Anfang 2026 geplant. Einzige Quelle ist von 2023.", "url": "https://www.inside-it.ch/bald-ist-baubeginn-fuer-das-49-millionen-rechenzentrum-der-eth-zuerich-20230908", "konsequenz": "Oeffentlicher Bauherr, Beschaffung ueber simap.ch. Wiederkehrende NEA-Tests laufen dort ueber Ausschreibung, nicht ueber Beziehung."}, {"datum": "29.08.2026", "projekt": "STACK Rafz und Niederweningen", "was": "Neu im Radar, aber nur ueber Aggregator-Quellen belegt. 10 MW Rafz, 30 MW Niederweningen, Phase und Termine offen.", "url": "https://baxtel.com/data-center/stack-zur03", "konsequenz": "Zwei potenziell grosse Objekte ohne belastbaren Stand. Naechster Lauf: ueber stackinfra.com und die Gemeinden belegen oder die Zeilen auf Gestoppt setzen."}, {"datum": "29.08.2026", "projekt": "Metro-Campus Zuerich, weiteres Datacenter (Green, Dielsdorf)", "was": "Neu im Radar mit offenem Widerspruch in der Zaehlung: Baublatt meldet ein viertes Datacenter in Dielsdorf, Netzwoche fuer 2026 den Baustart eines dritten mit 5800 m2.", "url": "https://www.baublatt.ch/bauprojekte/green-baut-viertes-rechenzentrum-auf-metro-campus-in-dielsdorf-zh-36395", "konsequenz": "Planungsphase, also Fachplaner-Kanal. Wer jetzt beim Planer sitzt, steht spaeter im LV."}, {"datum": "29.08.2026", "projekt": "ZRH2 Glattfelden (Vantage)", "was": "Neu im Radar mit offenem Widerspruch: eine Quelle nennt die Eroeffnung im Sommer 2024, eine zweite im Sommer 2026. Beide URLs in Spalte T, Phase bleibt leer.", "url": "https://vantage-dc.com/news/vantage-data-centers-expands-emea-portfolio-with-second-zurich-campus-fueled-by-more-than-chf-370-million-investment/", "konsequenz": "Solange der Betriebsstatus offen ist, keine Ansprache. Erst Status klaeren, sonst laufen wir in ein falsches Fenster."}, {"datum": "29.08.2026", "projekt": "ZH4 Zuerich (Equinix)", "was": "Neu im Radar. Sechste Ausbauphase, rund CHF 40 Mio, 680 m2 Whitespace, Abschluss 2027.", "url": "https://www.inside-it.ch/equinix-baut-data-center-in-zuerich-aus-20241112", "konsequenz": "Ausbau im laufenden Betrieb. Umschaltungen brauchen Bridging Power und eine PQ-Messung. Quelle ist vom November 2024, Stand verifizieren."}, {"datum": "29.08.2026", "projekt": "The Hive Campus Genf (NorthC)", "was": "Neu im Radar. Baustart Q1 2026, 4.5 MW auf 5400 m2, Fertigstellung Q2 2028, Direct-to-Chip-Fluessigkuehlung vorgesehen.", "url": "https://www.northcdatacenters.com/en/press-releases/northc-group-to-build-new-high-tech-data-center-in-geneva-switzerland/", "konsequenz": "Romandie, Ansprache auf Franzoesisch. Fluessigkuehlung heisst hohe Leistungsdichte, der Lasttest wird anspruchsvoller und damit unser Thema."}], "planer_firmen": [{"firma": "Amstein + Walthert AG", "ref": "ZUR02 Beringen (STACK Infrastructure)", "notiz": "Fuehrt das RZ Beringen als eigenes Projekt, Rolle pruefen. Weitere DC-Referenzen: Raiffeisen St. Gallen (USV-Ersatz), ETH LEE, Accarda Bruettisellen. Quelle: amstein-walthert.ch/de/projekte/rechenzentrum-beringen-schaffhausen/"}, {"firma": "Gruner AG", "ref": "ZUR3 Glattbrugg (Digital Realty)", "notiz": "Nennt ZUR3 im eigenen Portfolio, Rolle pruefen. Plant nach eigenen Angaben seit ueber 20 Jahren Datacenter, Referenz auch Suva Luzern RZ-Ersatz. Quelle: grunerfriends.com/projects/data-center-zur3-zurich"}, {"firma": "HKG Engineering AG", "ref": "FEHLT", "notiz": "DC-Referenz Post-RZ Ritex Zofingen. Sucht aktuell Datacenter-Projektleiter Elektroplanung, baut das Feld also aus. Noch keinem Radar-Projekt zugeordnet. Quelle: hkg.ch/referenzen/detail/rechenzentrum-ritex-gebaeude-zofingen/"}, {"firma": "AFRY Schweiz", "ref": "FEHLT", "notiz": "Fuehrt ein Datacenter-Projekt Suisse romande als Referenz, Projekt und Rolle pruefen. Kandidat fuer den Romandie-Kanal, NorthC The Hive. Quelle: afry.com/fr-ch/projet/datacenter-suisse-romande"}]};
+const BAU = ["Baustart","Rohbau"], CX = ["Fit-out","Commissioning"],
+      FRUEH = ["Planung","Bewilligung"], BETRIEB = ["Betrieb","Ausbau"];
+const tb = document.querySelector("#radar tbody");
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function phaseChip(ph){
+  let k = "chip-betrieb";
+  if (BAU.includes(ph)) k = "chip-bau";
+  else if (CX.includes(ph)) k = "chip-cx";
+  else if (FRUEH.includes(ph)) k = "chip-frueh";
+  else if (ph === "offen" || ph === "Verzoegert" || ph === "Gestoppt") k = "chip-pruefen";
+  return `<span class="chip ${k}">${esc(ph)}</span>`;
+}
+const zelle = v => (v === "" || v === "pruefen" || v === "prüfen" || v === "FEHLT")
+  ? `<span class="pruefen">${v === "" ? "offen" : "pruefen"}</span>` : esc(v);
+
+function hatLuecke(p){
+  return [p.mw_txt, p.phase === "offen" ? "" : "x", p.ibn, p.gu, p.planer]
+    .some(v => v === "" || v === "pruefen" || v === "prüfen") ;
+}
+
+function render(filter, suchtext){
+  tb.innerHTML = "";
+  DATA.projekte.forEach((p, i) => {
+    if (filter === "bau" && !BAU.includes(p.phase)) return;
+    if (filter === "cx" && !CX.includes(p.phase)) return;
+    if (filter === "frueh" && !FRUEH.includes(p.phase)) return;
+    if (filter === "betrieb" && !BETRIEB.includes(p.phase)) return;
+    if (filter === "prioA" && p.prio !== "A") return;
+    if (filter === "luecken" && !hatLuecke(p)) return;
+    if (suchtext){
+      const heu = (p.projekt + " " + p.betreiber + " " + p.standort + " " + p.gu + " " + p.planer).toLowerCase();
+      if (!heu.includes(suchtext)) return;
+    }
+    const tr = document.createElement("tr");
+    tr.className = "zeile"; tr.tabIndex = 0;
+    tr.setAttribute("aria-expanded", "false");
+    tr.innerHTML = `<td><strong>${esc(p.projekt)}</strong></td><td>${esc(p.betreiber)}</td>
+      <td>${zelle(p.standort)}</td><td>${zelle(p.kt)}</td>
+      <td class="num">${p.mw !== null ? p.mw : `<span class="pruefen">pruefen</span>`}</td>
+      <td>${phaseChip(p.phase)}</td><td>${zelle(p.ibn)}</td>
+      <td>${zelle(p.gu)}</td><td>${zelle(p.planer)}</td><td>${zelle(p.kanal)}</td>
+      <td>${p.prio === "A" ? `<span class="chip chip-prio-A">A</span>` : esc(p.prio)}</td>`;
+    const det = document.createElement("tr");
+    det.className = "detail"; det.hidden = true;
+    det.innerHTML = `<td colspan="11">
+      <p><strong>MiT-Chance:</strong> ${esc(p.chance)}</p>
+      <p><strong>Fenster:</strong> ${esc(p.fenster)}</p>
+      ${p.schritt ? `<p><strong>Naechster Schritt:</strong> ${esc(p.schritt)}</p>` : ""}
+      <p><strong>Bemerkung:</strong> ${esc(p.bemerkung)}</p>
+      <p><strong>Quellen (Stand ${esc(p.stand)}):</strong> ${
+        p.quellen.map(u => `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(u)}</a>`).join("<br>")}</p>
+    </td>`;
+    const toggle = () => { det.hidden = !det.hidden; tr.setAttribute("aria-expanded", String(!det.hidden)); };
+    tr.addEventListener("click", toggle);
+    tr.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); }});
+    tb.append(tr, det);
+  });
+}
+
+let aktFilter = "alle";
+document.querySelectorAll(".fbtn").forEach(b => b.addEventListener("click", () => {
+  aktFilter = b.dataset.f;
+  document.querySelectorAll(".fbtn").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+  render(aktFilter, document.getElementById("suche").value.trim().toLowerCase());
+}));
+document.getElementById("suche").addEventListener("input", e =>
+  render(aktFilter, e.target.value.trim().toLowerCase()));
+
+document.getElementById("log").innerHTML = DATA.changelog.map(c => `
+  <div class="log-eintrag">
+    <span class="log-datum">${esc(c.datum)}</span>
+    <h3>${esc(c.projekt)}</h3>
+    <p>${esc(c.was)}</p>
+    <p class="kons">${esc(c.konsequenz)}</p>
+  </div>`).join("");
+
+render("alle", "");
+</script>
