@@ -214,11 +214,11 @@ def _bauen(roh: dict, quelle: str, quelle_hash: str) -> Aktivitaet:
 
     if a.notizen:
         notiz = f"{a.notizen} | {notiz}" if notiz else a.notizen
-    a.notizen = notiz[:2000]
+    a.notizen = notiz[:3000]
 
     # Strukturierte Formulare und Visitenkarten in der Terminnotiz
     formular = {**felder.crm_block(kern), **felder.kontaktkarte(kern),
-                **felder.formularfelder(kern)}
+                **felder.formularfelder(kern), **felder.kontaktzeile(kern)}
     # Steht die Projektbezeichnung auch im Titel, ist der Rest der Kontaktname
     projekt = formular.pop("projekt", "")
     if projekt and projekt.lower() in titel.lower():
@@ -269,7 +269,10 @@ def _bauen(roh: dict, quelle: str, quelle_hash: str) -> Aktivitaet:
         # Bei selbst gesetzten Terminen steht der Ansprechpartner oft als erste
         # Zeile der Notiz (kopierte Signatur / Visitenkarte).
         erste = next((z for z in kern.splitlines() if z.strip()), "")
-        a.kontakt = felder.personenname(erste) or felder.name_aus_mail(a.email)
+        # Nur "Vorname Nachname" — drei Woerter sind meist ein Sachtext
+        # ("Trafostation Umbau Generator")
+        kandidat = felder.personenname(erste) if len(erste.split()) == 2 else ""
+        a.kontakt = kandidat or felder.name_aus_mail(a.email)
 
     # Ein einzelnes Wort ist kein Personenname — dann lieber aus der Mailadresse
     if a.kontakt and " " not in a.kontakt and a.email:
@@ -284,6 +287,8 @@ def _bauen(roh: dict, quelle: str, quelle_hash: str) -> Aktivitaet:
     # Runde mit Kolleginnen und Kollegen: interner Termin, keine Alleinarbeit
     if intern and not externe and a.kategorie in ("Interne Arbeit", "Sonstiges"):
         a.kategorie = "Interner Termin"
+    if a.firma in felder.PARTNER_FIRMEN and a.kategorie in ("Interne Arbeit", "Sonstiges"):
+        a.kategorie = "Partner / Lieferant"
     # Selbst gesetzter Termin mit fremder Visitenkarte = ausgehender Erstkontakt
     if a.kategorie in ("Interne Arbeit", "Sonstiges") and not roh["attendees"] \
             and formular.get("email") and felder.firma_aus_domain(formular["email"]):

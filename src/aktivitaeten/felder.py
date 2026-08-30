@@ -12,7 +12,7 @@ import unicodedata
 
 from .konfig import (EIGENE_ADRESSE, EIGENE_DOMAINS, FIRMEN_ALIASE,
                      FIRMEN_STICHWORTE, KATEGORIE_REGELN, PARTNER_DOMAINS,
-                     TECHNISCHE_HOSTS)
+                     PARTNER_FIRMEN, TECHNISCHE_HOSTS)
 
 # ---------------------------------------------------------------------------
 # Rauschen, das in Outlook-/Teams-Einladungen immer mitkommt
@@ -57,6 +57,8 @@ AKQUISE_LABELS: list[tuple[str, str]] = [
     ("wert_chf", r"Wert"),
     ("notiz_extra", r"Notizen"),
     ("website", r"Website"),
+    ("follow_up", r"Wiedervorlage"),
+    ("status", r"Ergebnis"),
 ]
 
 EMAIL_RE = re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+")
@@ -279,9 +281,50 @@ def _wert_passt(feld: str, wert: str) -> bool:
     if feld == "email":
         return bool(EMAIL_RE.fullmatch(wert.strip()))
     if feld in ("firma", "kontakt", "funktion"):
-        # ein ganzer Satz ist kein Firmen- oder Personenname
+        # ein ganzer Satz ist kein Firmen- oder Personenname, eine Nummer auch nicht
+        if not any(z.isalpha() for z in wert) or TEL_RE.fullmatch(wert.strip()):
+            return False
         return len(wert.split()) <= 5 and not wert.endswith((".", "!", "?"))
     return True
+
+
+KONTAKT_ZEILE = re.compile(r"^\s*Kontakt\s*:\s*(.+)$", re.I | re.M)
+KUNDE_ZEILE = re.compile(r"^\s*(?:Kunde|Firma)\s*:\s*(.+)$", re.I | re.M)
+ADRESS_HINWEIS = re.compile(r"\d{4}\s|strasse|str\.|weg |gasse|platz|route|rue ", re.I)
+
+
+def kontaktzeile(text: str) -> dict[str, str]:
+    """Zerlegt eine Zeile 'Kontakt: Name, Funktion, Firma'."""
+    treffer = KONTAKT_ZEILE.search(_norm(text))
+    if not treffer:
+        return {}
+    teile = [t.strip(" /|") for t in treffer.group(1).split(",") if t.strip(" /|")]
+    if not teile:
+        return {}
+
+    ergebnis: dict[str, str] = {}
+    name = personenname(teile[0]) or (teile[0] if len(teile[0].split()) <= 4 else "")
+    if name:
+        ergebnis["kontakt"] = name
+    if len(teile) > 1:
+        ergebnis["funktion"] = teile[1]
+    # Firma: erster weiterer Teil, der weder Adresse noch Kontaktdatum ist
+    for teil in teile[2:]:
+        if ADRESS_HINWEIS.search(teil) or "@" in teil or TEL_RE.search(teil):
+            continue
+        kandidat = re.sub(r"\s*\(.*?\)\s*", " ", teil).strip(" /|")
+        if any(z.isalpha() for z in kandidat):
+            ergebnis["firma"] = kandidat
+            break
+
+    # "Kunde: EWO Gebäudetechnik AG, Stanserstrasse 8, 6064 Kerns" — der
+    # erste Abschnitt ist der Firmenname, der Rest die Adresse
+    kunde = KUNDE_ZEILE.search(_norm(text))
+    if kunde:
+        erster = kunde.group(1).split(",")[0].strip(" /|[]")
+        if erster and any(z.isalpha() for z in erster) and not erster.startswith("["):
+            ergebnis["firma"] = erster
+    return ergebnis
 
 
 def kontaktkarte(text: str) -> dict[str, str]:
@@ -475,6 +518,11 @@ def firma_aus_stichwort(titel: str) -> str:
     return ""
 
 
+# Begriffe, die nach dem Praefix stehen koennen, aber keine Gegenstelle sind
+GENERISCH = {"data center", "datacenter", "rechenzentrum", "kunden", "kunde",
+             "diverse", "allgemein", "verschiedene", "offen", "intern"}
+
+
 def firma_aus_titel(titel: str) -> str:
     t = _norm(titel).strip()
 
@@ -493,7 +541,9 @@ def firma_aus_titel(titel: str) -> str:
 
     # 2. Nach "Telefon/Call/Anruf" folgt in der Regel die Gegenstelle.
     rest = KONTAKT_PRAEFIXE.sub("", t).strip(" —–-:·|")
-    if rest and rest.lower() != t.lower() and len(rest.split()) <= 3:
+    rest = re.sub(r"^\((.*)\)$", r"\1", rest).strip()
+    if (rest and rest.lower() != t.lower() and len(rest.split()) <= 3
+            and rest.lower() not in GENERISCH and any(z.isalpha() for z in rest)):
         return rest
 
     # 3. Nach "Besprechung/Termin/Meeting" folgt ein Thema -> keine Firma raten.
@@ -519,8 +569,10 @@ def kategorie_bestimmen(titel: str, notizen: str, typ: str, ort: str = "") -> st
     titel_klein = _norm(titel).lower()
     gesamt = f"{titel} {notizen} {ort}".lower()
 
+    # Eigene Regeln greifen bewusst nur auf den Titel — sonst zieht ein
+    # beilaeufig erwaehnter Projektname in der Notiz die Kategorie um.
     for muster, kategorie in KATEGORIE_REGELN:
-        if re.search(muster, gesamt, re.I):
+        if re.search(muster, titel_klein, re.I):
             return kategorie
 
     if re.search(r"\b(werkstatt|garage|arzt|zahnarzt|ferien|urlaub|privat|"
@@ -530,7 +582,8 @@ def kategorie_bestimmen(titel: str, notizen: str, typ: str, ort: str = "") -> st
         return "E-Mail"
     if re.search(r"\b(akquise|kaltakquise|erstkontakt|cold call)\b", gesamt) \
             or re.search(r"\b(offerten?|richtofferten?|angebote?|ausschreibung|"
-                         r"ausarbeitung|auslegung)\b", titel_klein):
+                         r"ausarbeitung|auslegung|kontaktiert|erstkontakt)\b",
+                         titel_klein):
         return "Akquise"
     if re.search(r"\b(messe|fair|kongress|expo)\b", gesamt) or "maintenance schweiz" in gesamt:
         return "Messe / Event"

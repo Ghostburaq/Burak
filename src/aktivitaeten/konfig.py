@@ -12,6 +12,10 @@ EIGENE_DOMAINS = {"mobilintime.com"}
 # Die eigene Adresse — wird aus Teilnehmerlisten herausgefiltert.
 EIGENE_ADRESSE = "uecoez@mobilintime.com"
 
+# Firmennamen, die als Partner/Lieferant gelten — Rechnungspruefung und
+# Bestellwesen mit ihnen ist keine reine Bueroarbeit.
+PARTNER_FIRMEN = {"Aggreko"}
+
 # Domains von Partnern, Lieferanten und Konzerngesellschaften.
 # Termine mit diesen Gegenstellen werden als "Partner / Lieferant" gefuehrt,
 # nicht als Kundentermin.
@@ -54,6 +58,15 @@ FIRMEN_STICHWORTE = {
     "gampel": "Rock Hock Verein Gampel",
     "rock hock": "Rock Hock Verein Gampel",
     "ekz": "EKZ Elektrizitätswerke Kanton Zürich",
+    "ekt": "EKT (Kanton Thurgau)",
+    "enastra": "Enastra AG",
+    "flexbase": "FlexBase Laufenburg",
+    "axpo": "Axpo",
+    "agroscope": "Agroscope (WBF)",
+    "aggroscope": "Agroscope (WBF)",
+    "ewo": "EWO Gebäudetechnik AG",
+    "lidl": "Lidl Schweiz",
+    "erne": "Erne AG Bauunternehmung",
 }
 
 # Eigene Kategorie-Regeln. Werden VOR den Standardregeln geprueft.
