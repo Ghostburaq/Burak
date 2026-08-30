@@ -304,3 +304,27 @@ Neben dem Wochenlauf kann hier anfallen:
 
 Am Ende komplexer Themen: der eine Hebel mit dem grössten Wirkungsgrad,
 nicht zehn Optionen.
+
+---
+
+## 10. Der Aktualisiere-Trigger und die Kontakte-Datei
+
+Sagt Burak "aktualisiere" (auch "aktualisiere, recherchiere und mache weiter"),
+laeuft der volle Montags-Lauf aus Abschnitt 6, plus:
+
+1. `MiT_DC_Schweiz_Kontakte_Maerz2026.xlsx` mitpflegen: neue Erkenntnisse aus
+   der Recherche als neue Zeilen, nie bestehende Eintraege von Burak
+   ueberschreiben. Blaetter nie loeschen oder umbauen, Auswertungen nur als
+   neues Blatt.
+2. Wochenplan als neues Blatt `Wochenplan_KWxx` in die Kontakte-Datei:
+   fuenf Kontakte pro Tag, Montag bis Freitag, kuratiert nach Radar-Fenster.
+   Bereits kontaktierte Personen (Status im Kontakt-Log) rotieren nach hinten,
+   Wiedervorlagen haben Vorrang vor Neukontakten.
+3. Dashboard regenerieren und auf die bestehende Artifact-URL publizieren.
+4. Alles committen und pushen.
+
+**Datenqualitaet Kontakt-Log:** Im Log aus dem Aggreko-Tracker sind in
+mehreren Zeilen Name, Firma und E-Mail gegeneinander verschoben. Jede
+E-Mail-Adresse, deren Namensteil nicht zum Kontaktnamen passt, gilt als
+unverifiziert: erst telefonisch klaeren, nie auf die Log-Mail schreiben.
+Im Wochenplan sind solche Zeilen mit DATENQUALITAET PRUEFEN markiert.
