@@ -350,3 +350,23 @@ Keine Preise, keine Fleetzusagen.
 - `CAMPUS:` gefolgt vom Ort startet Prompt 14
 - `DASH:` startet Prompt 15
 - `EINWAND:` gefolgt von Firma und Projekt startet Prompt 16
+
+---
+
+## 17 — Der Kunden-Befehl (ersetzt Prompt 2 im Alltag)
+
+```
+/kunde Stefan Walser
+```
+
+Name genügt. Der Befehl prüft zuerst Kontakt-Log und Radar auf Dubletten,
+recherchiert dann Person, Firma und Projekt, baut die Analyse (Rolle, Fenster,
+Multiplikatorwert, Chance, Risiko, Lücke), schreibt zwei Mailvarianten mit
+Empfehlung, die Outlook-Notiz und die vorbereitete Log-Zeile.
+
+Mehr Kontext geht auch:
+```
+/kunde Martin Diaz, CCHE, NorthC Genf, Französisch
+```
+
+Die Log-Zeile wird erst geschrieben, wenn du `LOG` sagst.
