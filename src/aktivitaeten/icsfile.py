@@ -257,6 +257,13 @@ def _bauen(roh: dict, quelle: str, quelle_hash: str) -> Aktivitaet:
     elif True:
         a.firma = aus_domain if gepflegt else (aus_titel or aus_domain)
 
+    # Firmenschreibweise vereinheitlichen: "Erne" und "ERNE AG Bauunternehmung"
+    # sollen in Pipeline und Kontaktliste dieselbe Zeile sein
+    if a.firma:
+        a.firma = felder.firma_aus_stichwort(a.firma) or a.firma
+    if a.follow_up:
+        a.follow_up = a.follow_up.strip(" ,;.-")
+
     eigener_termin = not externe and (organisator_mail.split("@")[-1].lower()
                                       in felder.EIGENE_DOMAINS or not organisator_mail)
     if a.kontakt:

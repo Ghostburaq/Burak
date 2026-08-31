@@ -67,6 +67,11 @@ FIRMEN_STICHWORTE = {
     "ewo": "EWO Gebäudetechnik AG",
     "lidl": "Lidl Schweiz",
     "erne": "Erne AG Bauunternehmung",
+    "gtr": "Global Technical Realty",
+    "global technical realty": "Global Technical Realty",
+    "amstein": "Amstein + Walthert",
+    "amstein+walthert": "Amstein + Walthert",
+    "drost": "Amstein + Walthert",
 }
 
 # Eigene Kategorie-Regeln. Werden VOR den Standardregeln geprueft.
@@ -74,6 +79,7 @@ FIRMEN_STICHWORTE = {
 KATEGORIE_REGELN: list[tuple[str, str]] = [
     (r"\b(amag|skoda)\b", "Privat"),                 # eigenes Auto
     (r"\b(dpr|vantage)\b", "Projekt"),               # Projekt ZRH12
+    (r"\bekt\b", "Akquise"),                         # EKT Basadingen, Offerte laeuft
     # (r"loadbank|cross[- ]hire", "Partner / Lieferant"),
 ]
 

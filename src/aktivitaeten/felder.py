@@ -291,6 +291,11 @@ def _wert_passt(feld: str, wert: str) -> bool:
 KONTAKT_ZEILE = re.compile(r"^\s*Kontakt\s*:\s*(.+)$", re.I | re.M)
 KUNDE_ZEILE = re.compile(r"^\s*(?:Kunde|Firma)\s*:\s*(.+)$", re.I | re.M)
 ADRESS_HINWEIS = re.compile(r"\d{4}\s|strasse|str\.|weg |gasse|platz|route|rue ", re.I)
+# Endet ein Kandidat auf Artikel oder Praeposition, ist die Zeile mitten im
+# Satz umgebrochen — "Mitglied der" ist kein Firmenname.
+SATZ_ENDE_OFFEN = re.compile(
+    r"\b(der|die|das|des|dem|den|ein|eine|einer|und|von|vom|im|in|mit|"
+    r"fuer|für|auf|bei|zur|zum|als|an)$", re.I)
 
 
 def kontaktzeile(text: str) -> dict[str, str]:
@@ -313,7 +318,7 @@ def kontaktzeile(text: str) -> dict[str, str]:
         if ADRESS_HINWEIS.search(teil) or "@" in teil or TEL_RE.search(teil):
             continue
         kandidat = re.sub(r"\s*\(.*?\)\s*", " ", teil).strip(" /|")
-        if any(z.isalpha() for z in kandidat):
+        if any(z.isalpha() for z in kandidat) and not SATZ_ENDE_OFFEN.search(kandidat):
             ergebnis["firma"] = kandidat
             break
 
@@ -510,10 +515,10 @@ VORWORTE = {
 
 
 def firma_aus_stichwort(titel: str) -> str:
-    """Gepflegter Firmenname, wenn ein Stichwort im Titel vorkommt."""
+    """Gepflegter Firmenname, wenn ein Stichwort als ganzes Wort im Titel steht."""
     klein = _norm(titel).lower()
     for stichwort, name in sorted(FIRMEN_STICHWORTE.items(), key=lambda kv: -len(kv[0])):
-        if stichwort in klein:
+        if re.search(rf"(?<![\w-]){re.escape(stichwort)}(?![\w-])", klein):
             return name
     return ""
 
@@ -580,6 +585,10 @@ def kategorie_bestimmen(titel: str, notizen: str, typ: str, ort: str = "") -> st
         return "Privat"
     if typ.startswith("E-Mail"):
         return "E-Mail"
+    # Formulierungen, die es nur in Akquise-Notizen gibt
+    if re.search(r"(wiedervorlage|angesprochen am|ziel des anrufs|owen-gate|"
+                 r"rolle im deal)", gesamt):
+        return "Akquise"
     if re.search(r"\b(akquise|kaltakquise|erstkontakt|cold call)\b", gesamt) \
             or re.search(r"\b(offerten?|richtofferten?|angebote?|ausschreibung|"
                          r"ausarbeitung|auslegung|kontaktiert|erstkontakt)\b",
