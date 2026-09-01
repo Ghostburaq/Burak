@@ -587,7 +587,8 @@ def kategorie_bestimmen(titel: str, notizen: str, typ: str, ort: str = "") -> st
         return "E-Mail"
     # Formulierungen, die es nur in Akquise-Notizen gibt
     if re.search(r"(wiedervorlage|angesprochen am|ziel des anrufs|owen-gate|"
-                 r"rolle im deal)", gesamt):
+                 r"rolle im deal|ausschreibungsdokument|vergaberecht|"
+                 r"offertabgabe)", gesamt):
         return "Akquise"
     if re.search(r"\b(akquise|kaltakquise|erstkontakt|cold call)\b", gesamt) \
             or re.search(r"\b(offerten?|richtofferten?|angebote?|ausschreibung|"

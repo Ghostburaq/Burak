@@ -38,6 +38,11 @@ FIRMEN_ALIASE = {
     "amag": "AMAG",
     "ekz": "EKZ Elektrizitätswerke Kanton Zürich",
     "implenia": "Implenia",
+    "hiag": "HIAG Immobilien",
+    "einsgruppe": "eins Gruppe AG",
+    "roth": "Roth Gruppe AG",
+    "pamax": "Pamax AG",
+    "pbpag": "pbp ag engineering",
 }
 
 # Firmennamen, die auch ohne Rechtsform im Termintitel erkannt werden sollen.
@@ -72,6 +77,14 @@ FIRMEN_STICHWORTE = {
     "amstein": "Amstein + Walthert",
     "amstein+walthert": "Amstein + Walthert",
     "drost": "Amstein + Walthert",
+    "hiag": "HIAG Immobilien",
+    "einsgruppe": "eins Gruppe AG",
+    "eins gruppe": "eins Gruppe AG",
+    "roth": "Roth Gruppe AG",
+    "pamax": "Pamax AG",
+    "pbp": "pbp ag engineering",
+    "pbpag": "pbp ag engineering",
+    "crans-montana": "Crans-Montana 2027 (FIS Ski-WM)",
 }
 
 # Eigene Kategorie-Regeln. Werden VOR den Standardregeln geprueft.
