@@ -186,32 +186,40 @@ Beine hinten, dazwischen mindestens 72 Stunden.
 
 ### Wiedereinstieg nach der Trainingspause
 
-Nach einer Zerrung der linken Adduktoren läuft die erste Woche zurück
-gedrosselt — gesteuert über `Anpassung %` und `Aktiv = pause`, nicht über
-veränderte Zielgewichte. Die Begründung je Stufe steht im Blatt `Wochenplan`.
+Nach der Zerrung der linken Adduktoren lief eine Woche Pause, danach Einheit 11
+(Beine hinten) und 12 (Beine vorne) gedrosselt über `Anpassung %` und
+`Aktiv = pause` — die Historie blieb dabei unangetastet. Beide Einheiten sind
+ohne Beschwerden durch, deshalb stehen neun Übungen wieder auf `100` und drei
+Sätzen. Nur die zwei Übungen, die den verletzten Muskel direkt treffen, laufen
+weiter reduziert:
 
-| Stufe | Übungen |
-|---|---|
-| Pause | Adduktion, Beinpresse breiter Stand |
-| 70 % | Split Squat |
-| 80 % | Rumänisches Kreuzheben, Hip Thrust, Hip & Glute |
-| 90 % | Beinpresse eng, Beinstrecker, Beinbeuger, Seitliche Kickbacks, Waden |
+| Übung | Anpassung | Sätze |
+|---|---|---|
+| Adduktion | 80 % | 2 |
+| Beinpresse breiter Stand | 85 % | 2 |
 
-Zusätzlich zwei statt drei Arbeitssätze (`Ziel-Sätze = 2`). Nach der ersten
-beschwerdefreien Woche `Anpassung %` wieder auf `100`, `Ziel-Sätze` auf `3`
-und die pausierten Übungen auf `ja` setzen — die Progression läuft dann ohne
-Bruch weiter, weil die Historie unverändert geblieben ist.
+Nach zwei beschwerdefreien Einheiten auch dort auf `100` und drei Sätze. Die
+Begründung je Stufe steht im Blatt `Wochenplan`.
 
-Die Beinpresse hat die Hackenschmidt-Kniebeuge ersetzt. Sie war bisher als
-Ersatzübung für deren Sperrzeit hinterlegt, war also vor Woche 6 nutzbar —
-daraus ist die Freigabe ab Woche 2 abgeleitet. Dieser Wert ist eine Ableitung
-aus dem eigenen Plan, keine ärztliche Freigabe, und steht als offener Punkt
-auf dem Blatt `Start` sowie als Frage in der Vorbereitungs-Checkliste.
+### Zielbereich 5 bis 6
+
+Alle Übungen laufen im Bereich 5 bis 6 Wiederholungen, Schritt 1 % auf das
+letzte Top-Gewicht. Weil eine Laststufe an groben Maschinen mehr als 1 % ist,
+steht der tatsächliche Zuwachs in Prozent neben jedem Vorschlag.
+
+Liegt der letzte Top-Satz zwei oder mehr Wiederholungen über der Obergrenze,
+war schlicht die Last zu niedrig — ein Prozent holt das nicht auf. Das
+Trainingsblatt schreibt dann `Last war zu leicht (8 statt 6 Wdh) — Richtwert
+260 kg` statt des normalen Schritt-Hinweises. Der Richtwert kommt aus dem
+e1RM nach Epley, abgerundet auf die Laststufe des Geräts; er ist als Ziel für
+zwei bis drei Einheiten gedacht, nicht als Sprung für die nächste.
 
 ## Datenstand
 
-Einheit 1 bis 9. Einheit 1 bis 4 aufbereitet aus
-`Loewin_Training_260727.pdf`, Einheit 5 bis 9 direkt erfasst. Bekannte
+Einheit 1 bis 12. Einheit 1 bis 4 aufbereitet aus
+`Loewin_Training_260727.pdf`, Einheit 5 bis 12 direkt erfasst.
+Einheit 11 ohne Beinbeuger und Seitliche Kickbacks, Einheit 10 und 12
+ohne Adduktion — nicht ausgeführt, im Log als Notiz vermerkt. Bekannte
 Unschärfen der Quelle (fehlende Wiederholungen bei Kickback-Warmups und
 Lunges, Hip-Thrust-Dropsätze ohne Absolutgewicht, Adduktion Einheit 4 mit
 152.2 statt 152.5 kg) sind im Blatt `Start` dokumentiert und im Log als Notiz

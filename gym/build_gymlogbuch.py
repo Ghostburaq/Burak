@@ -70,74 +70,83 @@ UEB = "'Übungen'"       # Blattname mit Umlaut -> in Formeln immer quoten
 # reha_daten.py und werden unten anhand des Übungsnamens zugeordnet.
 UEBUNGEN = [
     dict(name="Beinpresse eng", block="Beine vorne",
-         geraet="Beinpresse, enger Stand, tiefe Fussposition", von=5, bis=7, saetze=2,
+         geraet="Beinpresse, enger Stand, tiefe Fussposition", von=5, bis=6, saetze=3,
          rpe="8-9", start=None, maxlast=None, schritt=5, letzter="A",
-         anpassung=90, aktiv="ja",
+         anpassung=100, aktiv="ja",
          notiz="Ersetzt Hackenschmidt-Kniebeuge und Lunges. Schwere "
                "Grundübung zuerst. Hände seitlich ablegen statt an den "
                "Griffen ziehen - dann bleibt die Schulter aussen vor."),
     dict(name="Split Squat", block="Beine vorne",
-         geraet="Multipresse / Hantel", von=5, bis=7, saetze=2, rpe="8",
-         start=None, maxlast=None, schritt=2.5, letzter="A", anpassung=70, aktiv="ja",
+         geraet="Multipresse / Hantel", von=5, bis=6, saetze=3, rpe="8",
+         start=None, maxlast=None, schritt=2.5, letzter="A", anpassung=100, aktiv="ja",
          notiz="Wdh-Bereich von 5-8 auf 8-10 je Bein. Limiter soll der "
                "Muskel sein, nicht die Stabilität."),
     dict(name="Beinstrecker", block="Beine vorne", geraet="Maschine",
-         von=5, bis=7, saetze=2, rpe="9", start=None, maxlast=None,
-         schritt=5, letzter="A", anpassung=90, aktiv="ja",
+         von=5, bis=6, saetze=3, rpe="9", start=None, maxlast=None,
+         schritt=5, letzter="A", anpassung=100, aktiv="ja",
          notiz="Dritter Arbeitssatz läuft als Reduktionssatz aus."),
     dict(name="Adduktion", block="Beine vorne", geraet="Maschine",
-         von=5, bis=7, saetze=2, rpe="9", start=None, maxlast=None,
-         schritt=2.5, letzter="A", anpassung=100, aktiv="pause",
-         notiz="Deckel entfernt: in Einheit 5 lagen 162.5 kg an, die frühere "
-               "Annahme 152.5 kg als Stackende stimmt also nicht. Falls doch "
-               "eine Obergrenze existiert, hier unter 'Max (kg)' "
-               "eintragen."),
+         von=5, bis=6, saetze=2, rpe="9", start=None, maxlast=None,
+         schritt=2.5, letzter="A", anpassung=80, aktiv="ja",
+         notiz="Kommt nach der Adduktoren-Zerrung zurück, aber gedrosselt: "
+               "Anpassung 80 Prozent und zwei statt drei Sätze. Sie war die "
+               "einzige Übung mit dem verletzten Muskel als Zielmuskel und "
+               "hat eine Woche pausiert. Erst wenn zwei Einheiten ohne "
+               "Ziehen durch sind, Anpassung auf 100 und Sätze auf 3. "
+               "Deckel entfernt: in Einheit 5 lagen 162.5 kg an, die "
+               "frühere Annahme 152.5 kg als Stackende stimmt also nicht. "
+               "Falls doch eine Obergrenze existiert, hier unter "
+               "'Max (kg)' eintragen."),
     dict(name="Rumänisches Kreuzheben", block="Beine hinten",
-         geraet="Langhantel", von=5, bis=7, saetze=2, rpe="8", start=None,
-         maxlast=None, schritt=2.5, letzter="A", anpassung=80, aktiv="ja",
+         geraet="Langhantel", von=5, bis=6, saetze=3, rpe="8", start=None,
+         maxlast=None, schritt=2.5, letzter="A", anpassung=100, aktiv="ja",
          notiz="Ersetzt Kickback. Schliesst die Lücke Hüftstreckung bei "
                "gestrecktem Knie, Ischiokrurale und Gluteus in der Dehnung."),
     dict(name="Beinpresse breit", block="Beine hinten",
-         geraet="Beinpresse, breiter Stand, Füsse hoch", von=5, bis=7,
+         geraet="Beinpresse, breiter Stand, Füsse hoch", von=5, bis=6,
          saetze=2, rpe="8-9", start=260, maxlast=None, schritt=5,
-         letzter="A", anpassung=100, aktiv="pause",
+         letzter="A", anpassung=85, aktiv="ja",
          notiz="Neu. Startgewicht 260 kg = 85 Prozent des Top-Satzes der "
                "engen Beinpresse (303 kg), auf 10 kg gerundet. Breiter "
                "Stand mit höherer Fussposition holt Adduktoren und Gesäss "
-               "stärker rein. Die erste Einheit ist eine Eichung - danach "
-               "rechnet die Progression aus deinen echten Werten weiter."),
+               "stärker rein. Genau deshalb hat sie in der Woche nach der "
+               "Zerrung pausiert und kommt jetzt mit Anpassung 85 Prozent "
+               "und zwei Sätzen zurück - der breite Stand zieht die "
+               "Adduktoren in die Dehnung. Die erste Einheit ist eine "
+               "Eichung - danach rechnet die Progression aus deinen echten "
+               "Werten weiter."),
     dict(name="Hip Thrust", block="Beine hinten", geraet="Langhantel",
-         von=5, bis=7, saetze=2, rpe="8-9", start=None, maxlast=None,
-         schritt=5, letzter="A", anpassung=80, aktiv="ja",
+         von=5, bis=6, saetze=3, rpe="8-9", start=None, maxlast=None,
+         schritt=5, letzter="A", anpassung=100, aktiv="ja",
          notiz="Gesamtgewicht inkl. Stange notieren, auch bei "
                "Reduktionssätzen."),
     dict(name="Hip & Glute", block="Beine hinten", geraet="Maschine",
-         von=5, bis=7, saetze=2, rpe="8-9", start=None, maxlast=None,
-         schritt=5, letzter="A", anpassung=80, aktiv="ja",
+         von=5, bis=6, saetze=3, rpe="8-9", start=None, maxlast=None,
+         schritt=5, letzter="A", anpassung=100, aktiv="ja",
          notiz="Neu ab Einheit 7, ergänzt den Hip Thrust mit der Langhantel. "
                "Reha-Freigabe ab Woche 2 abgeleitet aus der Hip-Thrust-"
                "Maschine im Fahrplan - mit Operateur oder Physiotherapie "
                "bestätigen."),
     dict(name="Beinbeuger", block="Beine hinten", geraet="Maschine, sitzend",
-         von=5, bis=7, saetze=2, rpe="9", start=None, maxlast=None,
-         schritt=2.5, letzter="A", anpassung=90, aktiv="ja",
+         von=5, bis=6, saetze=3, rpe="9", start=None, maxlast=None,
+         schritt=2.5, letzter="A", anpassung=100, aktiv="ja",
          notiz="Sitzend statt liegend: Hüfte gebeugt, Ischiokrurale "
                "vorgedehnt, mehr Reiz pro Satz. Dritter Satz als "
                "Reduktionssatz."),
     dict(name="Seitliche Kickbacks", block="Beine hinten", geraet="Kabel",
-         von=5, bis=7, saetze=2, rpe="9", start=None, maxlast=None,
-         schritt=2, letzter="A", anpassung=90, aktiv="ja",
+         von=5, bis=6, saetze=3, rpe="9", start=None, maxlast=None,
+         schritt=2, letzter="A", anpassung=100, aktiv="ja",
          notiz="Gluteus medius, relevant für die Silhouette von vorne."),
-    dict(name="Waden", block="Beine hinten", geraet="Maschine", von=5, bis=7, saetze=2, rpe="9", start=None, maxlast=None, schritt=5,
-         letzter="A", anpassung=90, aktiv="ja",
+    dict(name="Waden", block="Beine hinten", geraet="Maschine", von=5, bis=6, saetze=3, rpe="9", start=None, maxlast=None, schritt=5,
+         letzter="A", anpassung=100, aktiv="ja",
          notiz="In jede Beineinheit, bisher nur in jeder zweiten."),
     # Archiv: raus aus der Planung, Historie bleibt in Log und Auswertung.
-    dict(name="Lunges", block="Beine vorne", geraet="Kurzhantel", von=5, bis=7, saetze=None, rpe=None, start=None, maxlast=None,
+    dict(name="Lunges", block="Beine vorne", geraet="Kurzhantel", von=5, bis=6, saetze=None, rpe=None, start=None, maxlast=None,
          schritt=None, letzter="A", anpassung=100, aktiv="nein",
          notiz="Archiv. Redundant zum Split Squat, Historie bleibt in den "
                "Auswertungen sichtbar."),
     dict(name="Kickback", block="Beine hinten", geraet="Maschine / Kabel",
-         von=5, bis=7, saetze=None, rpe=None, start=None, maxlast=None,
+         von=5, bis=6, saetze=None, rpe=None, start=None, maxlast=None,
          schritt=None, letzter="A", anpassung=100, aktiv="nein",
          notiz="Archiv. Von Hip Thrust und RDL abgedeckt, Historie bleibt "
                "erhalten."),
@@ -539,23 +548,23 @@ for lab, txt in [
      "Anstrengung 6 bis 10. 10 = keine Wiederholung mehr möglich. Optional, "
      "aber sehr hilfreich für die Steuerung. Die Zielwerte je Übung stehen "
      "im Blatt 'Übungen'."),
-    ("Zielbereich 5 bis 7 Wdh",
-     "Alle Übungen laufen im selben Bereich: 5 bis 7 Wiederholungen je "
+    ("Zielbereich 5 bis 6 Wdh",
+     "Alle Übungen laufen im selben Bereich: 5 bis 6 Wiederholungen je "
      "Arbeitssatz. Kraftlastig, dafür brauchen die Sätze längere Pausen - "
      "drei bis vier Minuten bei den schweren Übungen."),
     ("Drei Sätze, absteigend",
      "Immer genau drei Arbeitssätze, keine Reduktionssätze mehr. Satz 1 ist "
      "der schwere Top-Satz und bestimmt allein die Progression. Satz 2 "
      "läuft mit 95 Prozent, Satz 3 mit 90 Prozent davon - beide dürfen eine "
-     "beziehungsweise zwei Wiederholungen mehr, aber nie über 8. Auf dem "
+     "beziehungsweise zwei Wiederholungen mehr, aber nie über 6. Auf dem "
      "Trainingsblatt steht je Satz das eigene Gewicht: "
      "Warmup 1 mit 40 und Warmup 2 mit 70 Prozent, dann Arbeitssatz 1 "
      "mit 100, Arbeitssatz 2 mit 95 und Arbeitssatz 3 mit 90 Prozent. "
-     "Alle drei Arbeitssätze bleiben im Bereich 5 bis 7 Wiederholungen."),
+     "Alle drei Arbeitssätze bleiben im Bereich 5 bis 6 Wiederholungen."),
     ("Doppelte Progression",
      "So wird gesteigert, und zwar nach jedem Training neu: Solange der "
-     "schwächste Arbeitssatz unter 7 Wdh liegt, bleibt das Gewicht stehen "
-     "und es kommt eine Wiederholung dazu. Schaffen alle Sätze 7, kommt "
+     "schwächste Arbeitssatz unter 6 Wdh liegt, bleibt das Gewicht stehen "
+     "und es kommt eine Wiederholung dazu. Schaffen alle Sätze 6, kommt "
      "Gewicht drauf und die Wiederholungen fangen bei 5 wieder an. Bezug "
      "ist immer der schwächste Satz, nicht der beste. Sobald du die "
      "Einheit ins Log tippst, steht der nächste Schritt da."),
@@ -1262,9 +1271,27 @@ for k in range(EX_SLOTS):
              "IF(%s,%s,IF(OR($N%d=\"\",$N%d<%s),%s,MIN(%s,$N%d+1))))))"
              % (u_von, row, row, u_von, reif, u_von, row, row, u_von,
                 u_von, u_bis, row))
+    # Lag der letzte Top-Satz deutlich über dem Zielbereich, war das
+    # Gewicht schlicht zu leicht. Ein Prozent holt das nicht auf, deshalb
+    # steht der rechnerische Richtwert für die Obergrenze daneben -
+    # nach Epley über den e1RM, abgerundet auf die Laststufe.
+    e1rm = "$L%d*(1+$N%d/30)" % (row, row)
+    richtwert = "(%s)/(1+%s/30)" % (e1rm, u_bis)
+    richtwert = ("IF(OR(%s=\"\",%s=0),ROUND((%s)*2,0)/2,"
+                 "FLOOR((%s)/%s,1)*%s)"
+                 % (u_schritt, u_schritt, richtwert, richtwert, u_schritt,
+                    u_schritt))
+    # Zwei oder mehr Wdh über der Obergrenze: dann ist nicht der nächste
+    # Schritt das Thema, sondern die Last selbst. Diese Meldung ersetzt
+    # den normalen Hinweis, sonst wird die Zeile auf A4 abgeschnitten.
+    zuleicht_wenn = ("AND($L%d<>\"\",$N%d<>\"\",%s<>\"\",$N%d>=%s+2)"
+                     % (row, row, u_bis, row, u_bis))
+    zuleicht_text = ("\"Last war zu leicht (\"&TEXT($N%d,\"0\")&\" statt \"&"
+                     "%s&\" Wdh) - Richtwert \"&TEXT(%s,\"0.#\")&\" kg\""
+                     % (row, u_bis, richtwert))
     # Klartext, was der Schritt bedeutet
     wsr.cell(row, 17,
-             "=IF($O%d=\"\",\"\",IF($L%d=\"\",\"Einstieg mit "
+             "=IF(%s,%s,IF($O%d=\"\",\"\",IF($L%d=\"\",\"Einstieg mit "
              "Startgewicht\",IF(AND(%s,$O%d>$L%d),\"Gewicht +\"&"
              "TEXT($O%d-$L%d,\"0.#\")&\" kg (\"&"
              "TEXT(($O%d-$L%d)/$L%d,\"0.0%%\")&\"), Wdh zurück auf \"&%s,"
@@ -1275,8 +1302,9 @@ for k in range(EX_SLOTS):
              "erst \"&%s&"
              "\" Wdh sauber schaffen\",\"Wdh +1 auf \"&$P%d&"
              "\" bei gleichem Gewicht\"))))))"
-             % (row, row, reif, row, row, row, row, row, row, row, u_von,
-                reif, u_schritt, reif, row, row, u_von, u_von, row))
+             % (zuleicht_wenn, zuleicht_text, row, row, reif, row, row,
+                row, row, row, row, row, u_von, reif, u_schritt, reif,
+                row, row, u_von, u_von, row))
     fmts = {3: NF_INT, 4: NF_INT, 5: NF_INT, 6: NF_KG, 7: NF_INT, 8: NF_KG,
             9: NF_INT, 10: NF_INT, 11: NF_INT, 12: NF_KG, 13: NF_INT,
             14: NF_INT, 15: NF_KG, 16: NF_INT}
@@ -2109,13 +2137,15 @@ abschnitt(wsw, r, 2, 5,
 r += 1
 wsw.merge_cells(start_row=r, start_column=2, end_row=r, end_column=5)
 c = wsw.cell(r, 2,
-             "Eine Woche Trainingspause wegen einer Zerrung in der linken "
-             "Oberschenkelinnenseite. Kraft geht in sieben Tagen praktisch "
-             "nicht verloren - die Belastbarkeit des verletzten Gewebes "
-             "schon. Deshalb wird die erste Woche über die Spalte "
-             "'Anpassung %' im Blatt 'Übungen' gedrosselt, nicht über neue "
-             "Zielgewichte. Zwei Arbeitssätze statt drei, danach Spalte "
-             "wieder auf 100 setzen.")
+             "Die Rückkehrwoche nach der Zerrung in der linken "
+             "Oberschenkelinnenseite ist durch: Einheit 11 (Beine hinten) "
+             "und Einheit 12 (Beine vorne) sind gelaufen, beide ohne "
+             "gemeldete Beschwerden. Neun Übungen stehen deshalb wieder auf "
+             "Anpassung 100 Prozent und drei Arbeitssätzen. Nur die zwei "
+             "Übungen, die den verletzten Muskel direkt treffen, kommen "
+             "gedrosselt zurück - Stand unten. Nach zwei beschwerdefreien "
+             "Einheiten auch dort im Blatt 'Übungen' die Anpassung auf 100 "
+             "und die Ziel-Sätze auf 3 setzen.")
 c.font, c.alignment = F_BODY, LW
 c.fill = PatternFill("solid", fgColor="FEF6E7")
 for col in range(2, 6):
@@ -2131,24 +2161,21 @@ wsw.row_dimensions[r].height = 20
 r += 1
 
 WIEDER = [
-    ("Pause", "Adduktion (Maschine), Beinpresse breiter Stand",
-     "diese Woche komplett aussetzen",
-     "Beide belasten die Adduktoren direkt - die Maschine als Zielmuskel, "
-     "der breite Stand über die Aussenrotation. Sie kommen erst zurück, "
-     "wenn Alltag und Warmup schmerzfrei sind."),
-    ("80 %", "RDL, Hip Thrust, Hip & Glute",
-     "80 % der letzten Arbeitslast",
-     "Der Adductor magnus arbeitet bei jeder Hüftstreckung mit. Die "
-     "Bewegung bleibt, die Last geht deutlich zurück."),
-    ("70 %", "Split Squat",
-     "70 % der letzten Arbeitslast",
-     "Einbeinig und mit seitlicher Stabilisierung - die anspruchsvollste "
-     "Position für einen frisch verletzten Adduktor."),
-    ("90 %", "Beinpresse eng, Beinstrecker, Beinbeuger, "
-     "Seitliche Kickbacks, Waden",
-     "90 % der letzten Arbeitslast",
-     "Geführt und adduktorenarm. Hier geht es nur darum, nach sieben Tagen "
-     "Pause nicht sofort wieder ans Limit zu gehen."),
+    ("80 %", "Adduktion (Maschine)",
+     "2 Sätze, Anpassung 80 %",
+     "Einzige Übung mit dem verletzten Muskel als Zielmuskel, hat eine "
+     "Woche komplett pausiert. Kommt jetzt mit reduzierter Last und einem "
+     "Satz weniger zurück, nicht mit dem alten Arbeitsgewicht."),
+    ("85 %", "Beinpresse breiter Stand",
+     "2 Sätze, Anpassung 85 %",
+     "Der breite Stand zieht die Adduktoren in die Dehnung - genau die "
+     "Position, die eine frische Zerrung nicht mag. Die erste Einheit "
+     "ist ohnehin eine Eichung, sie muss nicht schwer sein."),
+    ("100 %", "alle übrigen neun Übungen",
+     "3 Sätze, volle Progression",
+     "Zwei Einheiten nach der Pause ohne Beschwerden gelaufen. Die "
+     "Drosselung hat ihren Zweck erfüllt und würde ab jetzt nur noch "
+     "Fortschritt kosten."),
     ("Abbruch", "alle Übungen",
      "bei Ziehen sofort beenden",
      "Ein Ziehen in der Leiste ist kein Muskelkater. Die Einheit endet, "
@@ -2178,9 +2205,9 @@ REGELN = [
      "Muskelprotein-Synthese läuft nach einer schweren Einheit rund zwei "
      "bis drei Tage. Wer früher wieder schwer belastet, sammelt Ermüdung "
      "statt Anpassung. Zwei Einheiten je Woche reichen bei drei "
-     "Arbeitssätzen im Bereich 5 bis 7 vollkommen aus."),
+     "Arbeitssätzen im Bereich 5 bis 6 vollkommen aus."),
     ("Satzpausen: 3 bis 4 Minuten schwer, 2 Minuten Isolation",
-     "Im Bereich 5 bis 7 Wiederholungen ist die Last hoch. Zu kurze Pausen "
+     "Im Bereich 5 bis 6 Wiederholungen ist die Last hoch. Zu kurze Pausen "
      "kosten Wiederholungen im nächsten Satz und verfälschen damit die "
      "Progression - der schwächste Satz ist die Rechengrundlage."),
     ("Schlaf 7 bis 9 Stunden",
@@ -2498,7 +2525,7 @@ wst.conditional_formatting.add(
 druck(wst, "A1:I%d" % (row - 1), margins=(0.45, 0.35, 0.45, 0.45),
       fussnote="Warmup 1 = 40 %, Warmup 2 = 70 %  ·  Arbeitssatz 1 = "
                "100 % (Top-Satz), 2 = 95 %, 3 = 90 %  ·  alle Arbeitssätze "
-               "5-7 Wdh")
+               "5-6 Wdh")
 
 # ==========================================================================
 # DASHBOARD
