@@ -231,7 +231,8 @@ def akquise_felder(text: str) -> dict[str, object]:
 # Der Wert steht entweder direkt dahinter ("OrtZug 6301") oder in der
 # nächsten Zeile ("Firma" \n "Gemeinde Hombrechtikon").
 FORMULAR_LABELS: list[tuple[str, str]] = [
-    ("kontakt", r"Vor-\s*und\s*Nachname|Ansprechpartner(?:in\b)?|Kontaktperson|Name"),
+    ("kontakt", r"Vor-\s*und\s*Nachname|Ansprechpartner(?:in\b)?|Kontaktperson|"
+                r"Kontakt|Name"),
     ("firma", r"Firma|Unternehmen|Kundenname"),
     ("email", r"E-?Mail(?:adresse)?"),
     ("telefon", r"Telefon(?:nummer)?|Tel\.|Mobiltelefon|Handy|Natel"),
@@ -245,6 +246,11 @@ FORMULAR_LABELS: list[tuple[str, str]] = [
 
 # Werte, die nichts aussagen
 LEERWERTE = {"—", "-", "–", "✕", "x", "n/a", "keine", "offen?"}
+
+# Formulierungen, die im Tracker anstelle eines Namens stehen
+PLATZHALTER = re.compile(
+    r"^(kein[e]?\s|unbekannt|nicht bekannt|n/a|tbd|offen$|sammeladresse|"
+    r"vorname und|\[)", re.I)
 
 
 def formularfelder(text: str) -> dict[str, str]:
@@ -268,14 +274,33 @@ def formularfelder(text: str) -> dict[str, str]:
                 if not any(re.match(rf"^(?:{lb})\b", naechste, re.I)
                            for _, lb in FORMULAR_LABELS):
                     wert = naechste.strip(" :-—·")
+            if feld == "kontakt" and "," in wert:
+                wert = wert.split(",")[0].strip()   # Rolle hinter dem Namen abtrennen
             if wert and wert.lower() not in LEERWERTE and _wert_passt(feld, wert):
                 ergebnis[feld] = wert
             break
     return ergebnis
 
 
+WIEDERVORLAGE_DATUM = re.compile(
+    r"^(?:\d\s*[:.]\s*)?"                                  # Zaehler "2:"
+    r"(?:(?:Mo|Di|Mi|Do|Fr|Sa|So)[a-z]*\.?\s+)?"            # Wochentag
+    r"(\d{1,2}\.\d{1,2}\.\d{2,4})"
+    r"(?:[,\s]+(?:um\s+)?(\d{1,2}[:.]\d{2}))?", re.I)
+
+
+def termin_kuerzen(wert: str) -> str:
+    """'02.09.2026 bis 17:00 Telefonat Janek Mettler' -> '02.09.2026'."""
+    treffer = WIEDERVORLAGE_DATUM.match(_norm(wert).strip())
+    if not treffer:
+        return wert
+    return treffer.group(1) + (f", {treffer.group(2)}" if treffer.group(2) else "")
+
+
 def _wert_passt(feld: str, wert: str) -> bool:
     """Sicherheitsnetz gegen falsch zugeordnete Beschriftungen."""
+    if PLATZHALTER.match(wert.strip()):
+        return False
     if feld == "telefon":
         return len(re.sub(r"\D", "", wert)) >= 9
     if feld == "email":
@@ -324,11 +349,19 @@ def kontaktzeile(text: str) -> dict[str, str]:
 
     # "Kunde: EWO Gebäudetechnik AG, Stanserstrasse 8, 6064 Kerns" — der
     # erste Abschnitt ist der Firmenname, der Rest die Adresse
-    kunde = KUNDE_ZEILE.search(_norm(text))
-    if kunde:
-        erster = kunde.group(1).split(",")[0].strip(" /|[]")
-        if erster and any(z.isalpha() for z in erster) and not erster.startswith("["):
-            ergebnis["firma"] = erster
+    if "firma" not in ergebnis:
+        kunde = KUNDE_ZEILE.search(_norm(text))
+        if kunde:
+            erster = kunde.group(1).split(",")[0].strip(" /|[]")
+            # "Firma: seit 1967 aktiv, ueber 73 Mitarbeitende" ist eine
+            # Beschreibung, kein Name — Namen beginnen gross
+            if (erster and erster[:1].isupper() and any(z.isalpha() for z in erster)
+                    and not PLATZHALTER.match(erster)):
+                ergebnis["firma"] = erster
+
+    for feld in ("kontakt", "funktion", "firma"):
+        if feld in ergebnis and PLATZHALTER.match(ergebnis[feld]):
+            del ergebnis[feld]
     return ergebnis
 
 
@@ -511,6 +544,8 @@ VORWORTE = {
     "telefonat", "anruf", "call", "kontakt", "notiz", "screenshot", "info",
     "akquise", "beratung", "nachfassen", "follow-up", "protokoll", "projekt",
     "ort", "besuch", "vor",
+    "inhaber", "leiter", "geschaeftsleitung", "geschäftsleitung", "gl",
+    "project", "manager", "assistant", "director", "site",
 }
 
 
@@ -592,7 +627,8 @@ def kategorie_bestimmen(titel: str, notizen: str, typ: str, ort: str = "") -> st
         return "Akquise"
     if re.search(r"\b(akquise|kaltakquise|erstkontakt|cold call)\b", gesamt) \
             or re.search(r"\b(offerten?|richtofferten?|angebote?|ausschreibung|"
-                         r"ausarbeitung|auslegung|kontaktiert|erstkontakt)\b",
+                         r"ausarbeitung|auslegung|kontaktiert|erstkontakt|"
+                         r"tender|submission)\b",
                          titel_klein):
         return "Akquise"
     if re.search(r"\b(messe|fair|kongress|expo)\b", gesamt) or "maintenance schweiz" in gesamt:

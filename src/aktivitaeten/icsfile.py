@@ -147,7 +147,8 @@ def _bauen(roh: dict, quelle: str, quelle_hash: str) -> Aktivitaet:
     ende, _ = roh.get("DTEND", (None, False))
     stempel, _ = roh.get("DTSTAMP", (None, False))
 
-    titel = (roh.get("SUMMARY") or "(ohne Titel)").strip()
+    # Outlook laesst gelegentlich Zeilenumbrueche im Betreff stehen
+    titel = " ".join((roh.get("SUMMARY") or "(ohne Titel)").split()).strip(" ,;|")
     beschreibung_roh = _beste_beschreibung(roh)
     ort = felder.saeubern(roh.get("LOCATION", ""))
     if ort.lower() in ("microsoft teams meeting", "microsoft teams-besprechung"):
@@ -262,7 +263,7 @@ def _bauen(roh: dict, quelle: str, quelle_hash: str) -> Aktivitaet:
     if a.firma:
         a.firma = felder.firma_aus_stichwort(a.firma) or a.firma
     if a.follow_up:
-        a.follow_up = a.follow_up.strip(" ,;.-")
+        a.follow_up = felder.termin_kuerzen(a.follow_up.strip(" ,;.-"))
 
     eigener_termin = not externe and (organisator_mail.split("@")[-1].lower()
                                       in felder.EIGENE_DOMAINS or not organisator_mail)

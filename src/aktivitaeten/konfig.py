@@ -19,7 +19,8 @@ PARTNER_FIRMEN = {"Aggreko"}
 # Domains von Partnern, Lieferanten und Konzerngesellschaften.
 # Termine mit diesen Gegenstellen werden als "Partner / Lieferant" gefuehrt,
 # nicht als Kundentermin.
-PARTNER_DOMAINS = {"aggreko.de", "aggreko.com"}
+PARTNER_DOMAINS = {"aggreko.de", "aggreko.com", "aggreko.be",
+                   "aggreko.co.uk", "aggreko.fr"}
 
 # Saubere Firmennamen je Mail-Domain (erste Ebene vor dem Punkt).
 # Steht hier ein Eintrag, gewinnt er gegen den aus dem Termintitel geratenen Namen.
@@ -85,6 +86,15 @@ FIRMEN_STICHWORTE = {
     "pbp": "pbp ag engineering",
     "pbpag": "pbp ag engineering",
     "crans-montana": "Crans-Montana 2027 (FIS Ski-WM)",
+    "crans montana": "Crans-Montana 2027 (FIS Ski-WM)",
+    "mettler engineering": "Mettler Engineering GmbH",
+    "burkhalter": "Burkhalter Technics AG",
+    "mba projektmanagement": "mba projektmanagement ag",
+    "eberhard": "Eberhard Bau AG",
+    "greuter": "Greuter AG",
+    "ab bauten": "AB Bauten AG",
+    "flexbelag": "flexBelag bau ag",
+    "kibag": "KIBAG",
 }
 
 # Eigene Kategorie-Regeln. Werden VOR den Standardregeln geprueft.
