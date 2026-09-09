@@ -11,6 +11,12 @@ Der Bericht erscheint in zwei Fassungen aus derselben Quelle:
     Die Fassung zur Weitergabe. Anhang C fällt weg, ebenso der Satz auf dem
     Deckblatt, der ihn ankündigt — er ginge sonst ins Leere.
 
+``muster``
+    Der Musterbericht. Vollständiger Aufbau, aber ohne jede Angabe, die den
+    Kunden erkennen liesse: Objekt, Betreiber, Auftraggeber, Netzbetreiber und
+    beteiligte Firmen sind durch Muster- und Beispielangaben ersetzt, die
+    Bilddokumentation durch Platzhalterflächen. Gedacht als Arbeitsprobe.
+
 Beide Fassungen entstehen im selben Lauf und mit denselben Prüfungen. Der
 Unterschied steht ausschliesslich hier, damit er sich an einer Stelle
 nachlesen und ändern lässt.
@@ -30,15 +36,45 @@ COVER_NOTE_TITLE = "Hinweis zur Verwendung dieses Berichts"
 VARIANTS = {
     "voll": {
         "label": "Arbeitsfassung mit Anhang C",
+        "running_title": "Schlussbericht Netzqualitätsmessung",
         "docx": ROOT / "Schlussbericht_Kreuz_Zuzwil.docx",
         "pdf": ROOT / "Schlussbericht_Kreuz_Zuzwil.pdf",
         "toc": ROOT / "build" / "toc_pages.json",
     },
     "kunde": {
         "label": "Fassung zur Weitergabe, ohne Anhang C",
+        "running_title": "Schlussbericht Netzqualitätsmessung",
         "docx": ROOT / "Schlussbericht_Kreuz_Zuzwil_Kundenversion.docx",
         "pdf": ROOT / "Schlussbericht_Kreuz_Zuzwil_Kundenversion.pdf",
         "toc": ROOT / "build" / "toc_pages_kunde.json",
+    },
+    "muster": {
+        "label": "Musterbericht, ohne Kundendaten",
+        "docx": ROOT / "Musterbericht_Netzqualitaetsmessung.docx",
+        "pdf": ROOT / "Musterbericht_Netzqualitaetsmessung.pdf",
+        "toc": ROOT / "build" / "toc_pages_muster.json",
+        "anonym": True,
+        "media": ROOT / "build" / "media_muster",
+        "object": "Gasthaus Muster, Musterstrasse 16, 0000 Musterhausen",
+        "short": "Gasthaus Muster, Musterhausen",
+        "running_title": "Musterbericht Netzqualitätsmessung",
+        "kicker": "Musterbericht",
+        # Der Leser muss wissen, was ersetzt wurde und was nicht: die Zahlen
+        # sind echt, nur die Identitäten nicht.
+        "cover_note": (
+            "Dies ist ein Musterbericht. Objekt, Betreiber, Auftraggeber, "
+            "Netzbetreiber und beteiligte Firmen sind durch Muster- und "
+            "Beispielangaben ersetzt, die Bilddokumentation durch Platzhalter. "
+            "Messwerte, Rechenwege, Bewertung und Massnahmenkatalog sind "
+            "unverändert."
+        ),
+        "doc_title": "Musterbericht Netzqualitätsmessung und Ursachenanalyse "
+                     "Lichtflackern",
+        "keywords": "Musterbericht, Arbeitsprobe, Netzqualität, EN 50160, "
+                    "Flicker, Rundsteuerung, IEC 61000-4-30",
+        "doc_description": "Musterbericht ohne Kundendaten: vollständiger Aufbau "
+                           "einer Netzqualitätsmessung mit Ursachenanalyse und "
+                           "Massnahmenkatalog.",
     },
 }
 DEFAULT = "voll"
@@ -53,6 +89,10 @@ def add_argument(parser) -> None:
 
 def select(blocks: list[dict], variant: str) -> list[dict]:
     """Die Blöcke, die in dieser Fassung gesetzt werden."""
+    if VARIANTS[variant].get("anonym"):
+        import anonymise
+
+        blocks = anonymise.blocks(blocks)
     if variant != "kunde":
         return blocks
 

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Baut beide Fassungen des Berichts, die Wordvorlage und die PDFs.
+"""Baut alle Fassungen des Berichts, die Wordvorlage und die PDFs.
 
-    python3 src/report/make.py              # beide Fassungen
-    python3 src/report/make.py --variante kunde   # nur die Fassung zur Weitergabe
+    python3 src/report/make.py                     # alle drei Fassungen
+    python3 src/report/make.py --variante muster   # nur den Musterbericht
 
 Je Fassung wiederholt der Lauf Bau und PDF-Export, bis die Seitenzahlen im
 Inhaltsverzeichnis stabil sind. Nötig ist das, weil das Verzeichnis selbst
@@ -60,15 +60,16 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument(
         "--variante", choices=sorted(variants.VARIANTS),
-        help="nur diese Fassung bauen; ohne Angabe werden beide gebaut",
+        help="nur diese Fassung bauen; ohne Angabe werden alle gebaut",
     )
     args = ap.parse_args()
 
     step(str(HERE / "extract.py"))
     step(str(HERE / "make_logo.py"))
+    step(str(HERE / "make_placeholders.py"))
 
     # Die Wordvorlage hängt nicht an der Fassung und wird einmal geschrieben.
-    names = [args.variante] if args.variante else ["voll", "kunde"]
+    names = [args.variante] if args.variante else ["voll", "kunde", "muster"]
     for i, name in enumerate(names):
         build_variant(name, with_template=(i == 0))
 

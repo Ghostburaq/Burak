@@ -659,13 +659,14 @@ def photo_block(doc, title: str, image: str, info: list[list[dict]]):
 
 
 # ------------------------------------------------------------------- Deckblatt --
-def cover(doc, meta_rows, note, *, title=TITLE, object_line=OBJECT, campaign=CAMPAIGN):
+def cover(doc, meta_rows, note, *, title=TITLE, object_line=OBJECT, campaign=CAMPAIGN,
+          kicker="Schlussbericht"):
     p = para(doc, space_before=0, space_after=440, line=240, keep_next=True)
     _logo_run(p, "logo_lockup.png", 4.4)
 
     rule(doc, color=INK, size=14, after=0)
     p = para(doc, space_before=180, space_after=60, line=240, keep_next=True)
-    run(p, "Schlussbericht", size=19, color=STEEL, bold=True, spacing=54, caps=True)
+    run(p, kicker, size=19, color=STEEL, bold=True, spacing=54, caps=True)
 
     p = para(doc, space_before=0, space_after=90, line=276, keep_next=True)
     run(p, typo(title), size=44, color=INK, bold=True)
@@ -756,11 +757,22 @@ def closing(doc, lines: list[str]):
 
 
 # ---------------------------------------------------------------------- Aufbau --
-def build(blocks, pages: dict[str, str]):
-    doc = new_document()
+def build(blocks, pages: dict[str, str], spec: dict | None = None):
+    spec = spec or {}
+    global MEDIA
+    MEDIA = spec.get("media", ROOT / "assets" / "report" / "media")
+    doc = new_document(
+        subject=spec.get("short", SHORT),
+        running_title=spec.get("running_title", RUNNING_TITLE),
+    )
 
     meta_rows = blocks[4]["rows"]
-    cover(doc, meta_rows, blocks[5])
+    note = blocks[5]
+    if spec.get("cover_note"):
+        note = {**note, "body": [spec["cover_note"], *note["body"]]}
+    cover(doc, meta_rows, note,
+          object_line=spec.get("object", OBJECT),
+          kicker=spec.get("kicker", "Schlussbericht"))
 
     anchors, entries = {}, []
     bid = 1000
@@ -839,12 +851,18 @@ def build(blocks, pages: dict[str, str]):
     closing(doc, [b["text"] for b in blocks[-4:]])
     _properties(
         doc,
-        title=f"Schlussbericht {TITLE} — {SHORT}",
+        title=spec.get("doc_title", f"Schlussbericht {TITLE} — {SHORT}"),
         subject=CAMPAIGN,
-        keywords="Netzqualität, EN 50160, Flicker, Rundsteuerung, "
-                 "IEC 61000-4-30, Photovoltaik, Zuzwil",
-        description="Netzqualitätsmessung an drei Messpunkten mit Ursachenanalyse "
-                    "des Lichtflackerns und Massnahmenkatalog.",
+        keywords=spec.get(
+            "keywords",
+            "Netzqualität, EN 50160, Flicker, Rundsteuerung, "
+            "IEC 61000-4-30, Photovoltaik, Zuzwil",
+        ),
+        description=spec.get(
+            "doc_description",
+            "Netzqualitätsmessung an drei Messpunkten mit Ursachenanalyse "
+            "des Lichtflackerns und Massnahmenkatalog.",
+        ),
     )
     _finish(doc)
     return doc, entries
@@ -997,7 +1015,7 @@ def main() -> None:
     )
     toc_file = spec["toc"]
     pages = json.loads(toc_file.read_text(encoding="utf-8")) if toc_file.exists() else {}
-    doc, entries = build(blocks, pages)
+    doc, entries = build(blocks, pages, spec)
     doc.save(spec["docx"])
     print(f"{spec['docx'].relative_to(ROOT)}  ·  {len(entries)} Verzeichniseinträge"
           f"  ·  {'Seitenzahlen gesetzt' if pages else 'Seitenzahlen noch offen'}"

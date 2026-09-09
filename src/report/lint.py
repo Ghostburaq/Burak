@@ -222,11 +222,11 @@ def check_toc(pages: list[str]) -> list[str]:
     return hits, len(entries)
 
 
-def check_running_titles(pages: list[str]) -> list[str]:
+def check_running_titles(pages: list[str], running_title: str) -> list[str]:
     hits = []
     for n, page in enumerate(pages, 1):
         lines = [l for l in page.split("\n") if l.strip()]
-        if n > 1 and not any("Schlussbericht Netzqualitätsmessung" in l for l in lines[:3]):
+        if n > 1 and not any(running_title in l for l in lines[:3]):
             hits.append(f"Seite {n}: Kopfzeile fehlt")
         if not any(re.search(r"Seite\s+\d+\s+von\s+\d+", l) for l in lines[-3:]) and n > 1:
             hits.append(f"Seite {n}: Fusszeile ohne Seitenzahl")
@@ -357,6 +357,49 @@ def check_no_internals(variant: str) -> list[str]:
     ]
 
 
+def check_no_customer_data(variant: str) -> list[str]:
+    """Der Musterbericht darf keine identifizierende Angabe mehr enthalten.
+
+    Geprüft wird beides: der sichtbare Text und — per Texterkennung — jedes
+    eingebettete Bild. Die Bildprüfung ist der eigentliche Punkt: im
+    Übersichtsschema steht der Betriebsname in der Titelzeile, in der
+    Sonnenuntergangs-Grafik stehen die Geokoordinaten des Objekts. Beides
+    fände keine Prüfung, die nur den Text liest.
+    """
+    if not variants.VARIANTS[variant].get("anonym"):
+        return []
+    import shutil
+    import tempfile
+    import xml.etree.ElementTree as ET
+
+    import anonymise
+
+    hits = []
+    with zipfile.ZipFile(DOCX) as z:
+        root = ET.fromstring(z.read("word/document.xml"))
+        text = "".join(t.text or "" for t in root.iter(W + "t"))
+        for term in anonymise.residue(text):
+            hits.append(f"«{term}» steht noch im Text ({text.count(term)}×)")
+
+        images = [n for n in z.namelist()
+                  if n.startswith("word/media/") and not n.endswith("/")]
+        if not shutil.which("tesseract"):
+            return hits + ["Bilder ungeprüft: tesseract nicht verfügbar"]
+        with tempfile.TemporaryDirectory() as tmp:
+            for name in images:
+                path = Path(tmp) / Path(name).name
+                path.write_bytes(z.read(name))
+                found = anonymise.residue(
+                    subprocess.run(
+                        ["tesseract", str(path), "stdout", "-l", "deu", "--psm", "6"],
+                        capture_output=True, timeout=300,
+                    ).stdout.decode("utf-8", "replace")
+                )
+                for term in found:
+                    hits.append(f"«{term}» steht im Bild {Path(name).name[:12]}…")
+    return hits
+
+
 def check_typography() -> list[str]:
     """Zahlensatz im DOCX prüfen.
 
@@ -425,11 +468,13 @@ def main() -> int:
         ("Löcher im Satz", check_gaps(boxes, images)),
         ("Verwaiste Restzeilen", check_orphans(boxes)),
         (f"Inhaltsverzeichnis ({toc_count} Einträge)", toc_hits),
-        ("Kopf- und Fusszeilen", check_running_titles(pages)),
+        ("Kopf- und Fusszeilen",
+         check_running_titles(pages, spec["running_title"])),
         ("Kapitelnummerierung", check_headings_order(headings)),
         ("Abbildungsnummerierung", check_figure_order()),
         ("Innerer Zusammenhalt der Datei", check_structure()),
         ("Kein interner Inhalt", check_no_internals(args.variante)),
+        ("Keine Kundendaten", check_no_customer_data(args.variante)),
         ("Zahlensatz", check_typography()),
     ]
 

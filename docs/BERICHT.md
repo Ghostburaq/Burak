@@ -5,35 +5,66 @@ gesetzt. Inhalt und Gestaltung sind dabei getrennt: `extract.py` liest den
 Originalbericht in ein Inhaltsmodell, `build_report.py` setzt daraus das
 Dokument nach dem Gestaltungssystem in `design.py`.
 
-## Zwei Fassungen
+## Drei Fassungen
 
-Der Bericht erscheint in zwei Fassungen aus derselben Quelle. Was sie
+Der Bericht erscheint in drei Fassungen aus derselben Quelle. Was sie
 unterscheidet, steht ausschliesslich in `variants.py`.
 
 | Fassung | Datei | Umfang |
 |---------|-------|--------|
 | Arbeitsfassung, mit Anhang C | [`Schlussbericht_Kreuz_Zuzwil.docx`](../Schlussbericht_Kreuz_Zuzwil.docx) · [PDF](../Schlussbericht_Kreuz_Zuzwil.pdf) | 62 Seiten, 101 Verzeichniseinträge |
 | Zur Weitergabe, ohne Anhang C | [`Schlussbericht_Kreuz_Zuzwil_Kundenversion.docx`](../Schlussbericht_Kreuz_Zuzwil_Kundenversion.docx) · [PDF](../Schlussbericht_Kreuz_Zuzwil_Kundenversion.pdf) | 60 Seiten, 96 Verzeichniseinträge |
+| Musterbericht, ohne Kundendaten | [`Musterbericht_Netzqualitaetsmessung.docx`](../Musterbericht_Netzqualitaetsmessung.docx) · [PDF](../Musterbericht_Netzqualitaetsmessung.pdf) | 62 Seiten, 101 Verzeichniseinträge |
 
 Dazu die [`Wordvorlage`](../Vorlage_kabuu_Bericht.dotx) für künftige Berichte.
 
-In der Fassung zur Weitergabe fällt Anhang C weg — und mit ihm der Satz auf
-dem Deckblatt, der ihn ankündigt; er ginge sonst ins Leere. Alles andere ist
-identisch, Seitenzahlen und Inhaltsverzeichnis werden neu gerechnet. Eine
-eigene Prüfung sucht in dieser Fassung nach Formulierungen, die es nur im
-internen Anhang gibt, damit nichts Internes beim Auftraggeber landet.
+**Zur Weitergabe** fällt Anhang C weg — und mit ihm der Satz auf dem Deckblatt,
+der ihn ankündigt; er ginge sonst ins Leere. Eine eigene Prüfung sucht in
+dieser Fassung nach Formulierungen, die es nur im internen Anhang gibt, damit
+nichts Internes beim Auftraggeber landet.
 
-Der Inhalt der Arbeitsfassung ist zeichengenau der des Originals.
+**Der Musterbericht** trägt den vollständigen Aufbau, gibt aber niemanden
+preis. Der Inhalt der Arbeitsfassung ist zeichengenau der des Originals;
+Seitenzahlen und Inhaltsverzeichnis werden je Fassung neu gerechnet.
+
+## Wie der Musterbericht anonymisiert wird
+
+Ersetzt wird alles, was Ort, Betrieb, Personen oder beteiligte Firmen benennt
+(`anonymise.py`). Die technische Beschreibung, alle Messwerte, Rechenwege und
+der Massnahmenkatalog bleiben — sie machen den Musterbericht erst brauchbar
+und geben niemanden preis. Der Briefkopf von kabuu bleibt ebenfalls: der
+Musterbericht ist ein eigenes Dokument von kabuu. Auf dem Deckblatt steht, was
+ersetzt wurde und was nicht.
+
+Ersetzt wird in **einem** Durchgang, längster Treffer zuerst. Das ist keine
+Feinheit, sondern nötig: eine Ersetzung von «Kreuz» würde sonst aus
+«Kreuzvergleich» «Musterbetriebvergleich» machen, und «Zuzwil» würde die
+verschriebene Form «Zuzwill» im internen Anhang zerlegen.
+
+**Bilder lassen sich nicht Wort für Wort anonymisieren.** Deshalb gilt in
+`make_placeholders.py` eine strenge Regel statt einer Stichwortliste: ein Bild
+wird nur übernommen, wenn sein vollständig ausgelesener Text keine einzige
+identifizierende Angabe enthält. Von 18 Bildern besteht genau eines diese
+Prüfung. Die übrigen werden durch gestaltete Platzhalterflächen in
+Originalabmessung ersetzt, beschriftet mit dem, was sie zeigten.
+
+Dass die Regel streng sein muss, zeigen die Funde: das Übersichtsschema trägt
+den Betriebsnamen in der Titelzeile und die Errichterfirma der Photovoltaik in
+einer Fussnote, die Sonnenuntergangs-Grafik die **Geokoordinaten des Objekts**.
+Die Koordinaten hätte keine Namensliste gefunden. Die Aufnahmen der
+Bilddokumentation zeigen die realen Räume des Betriebs; daran lässt sich
+nichts anonymisieren.
 
 ## Neu bauen
 
 ```bash
 pip install python-docx Pillow
-python3 src/report/make.py                    # beide Fassungen
-python3 src/report/make.py --variante kunde   # nur die zur Weitergabe
+python3 src/report/make.py                     # alle drei Fassungen
+python3 src/report/make.py --variante muster   # nur den Musterbericht
 ```
 
-Der Lauf macht alles: Inhalt auslesen, Logo erzeugen, beide Fassungen setzen,
+Der Lauf macht alles: Inhalt auslesen, Logo und Platzhalter erzeugen,
+alle Fassungen setzen,
 PDF exportieren, Seitenzahlen ins Inhaltsverzeichnis zurückschreiben,
 Wordvorlage schreiben, jede Fassung auf Satzfehler prüfen und den Inhalt der
 Arbeitsfassung gegen das Original vergleichen.
@@ -42,7 +73,10 @@ Arbeitsfassung gegen das Original vergleichen.
 |-------|-------|
 | `src/report/make.py` | Gesamtlauf über beide Fassungen |
 | `src/report/extract.py` | Originalbericht → `build/content.json` |
-| `src/report/variants.py` | Die zwei Fassungen und was sie unterscheidet |
+| `src/report/variants.py` | Die drei Fassungen und was sie unterscheidet |
+| `src/report/anonymise.py` | Ersetzungstabelle für den Musterbericht |
+| `src/report/make_placeholders.py` | Prüft Bilder per Texterkennung, ersetzt was preisgibt |
+| `src/report/corrections.py` | Sachliche Korrekturen am Ausgangstext |
 | `src/report/design.py` | Farben, Masse, Typografie, OOXML-Werkzeug |
 | `src/report/build_report.py` | Satz des Berichts und der Wordvorlage |
 | `src/report/make_logo.py` | kabuu-Logo in allen benötigten Varianten |
@@ -118,7 +152,9 @@ Drei Prüfungen, alle grün:
   Abbildungsnummerierung, Abweichungen im Zahlensatz sowie den inneren
   Zusammenhalt der Datei — Verweise ohne Ziel, Bildbeziehungen ohne Datei,
   Listenbezüge ohne Definition. In der Fassung zur Weitergabe zusätzlich:
-  keine Formulierung aus dem internen Anhang.
+  keine Formulierung aus dem internen Anhang. Im Musterbericht zusätzlich:
+  keine identifizierende Angabe — im Text **und**, per Texterkennung, in jedem
+  eingebetteten Bild.
 
 Zwei Stellen sind bewusst ausgenommen und deshalb in der Prüfung vermerkt: die
 letzte Seite eines Kapitels darf kurz ausfallen, weil jedes Kapitel auf einer

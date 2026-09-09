@@ -208,7 +208,9 @@ def extract() -> dict:
         num_fmt = _num_formats(z.read("word/numbering.xml"))
         MEDIA_DIR.mkdir(parents=True, exist_ok=True)
         for name in z.namelist():
-            if name.startswith("word/media/"):
+            # Der Verzeichniseintrag «word/media/» selbst steht ebenfalls in der
+            # Liste; ohne diese Prüfung entstünde daraus eine leere Datei.
+            if name.startswith("word/media/") and not name.endswith("/"):
                 with z.open(name) as fh, (MEDIA_DIR / Path(name).name).open("wb") as out:
                     shutil.copyfileobj(fh, out)
 
