@@ -575,6 +575,17 @@ for lab, txt in [
      "mehr als ein Prozent - der tatsächliche Zuwachs steht deshalb in "
      "Prozent neben dem Vorschlag. Wird ein Sprung zu gross, im Blatt "
      "'Übungen' eine kleinere Laststufe eintragen."),
+    ("RM-Korrektur",
+     "Ein Prozent gilt nur, solange die Last stimmt. Lief der letzte "
+     "Top-Satz zwei oder mehr Wiederholungen über der Obergrenze, war "
+     "nicht der Schritt zu klein, sondern das Gewicht zu niedrig - und "
+     "ein Prozent holt das nie auf. Dann rechnet der Plan aus genau "
+     "diesem Satz den geschätzten Einer-Maximalwert nach Epley, leitet "
+     "daraus die Last für die Obergrenze ab und springt direkt dorthin. "
+     "Auf dem Trainingsblatt steht dann 'RM-Korrektur nach 8 Wdh' statt "
+     "des normalen Schritts. Die Schätzung kommt aus dem eigenen Satz, "
+     "also korrigiert sie sich über zwei bis drei Einheiten selbst ein - "
+     "sie ersetzt keinen echten Maximalversuch."),
     ("Archiv",
      "Übung im Blatt 'Übungen' auf Aktiv = nein setzen. Sie verschwindet aus "
      "dem Trainingsblatt, bleibt in Log, Auswertung, Progression und "
@@ -1257,10 +1268,28 @@ for k in range(EX_SLOTS):
                                                 u_max)
     reif = "AND($N%d<>\"\",%s<>\"\",$N%d>=%s)" % (row, u_bis, row, u_bis)
 
+    # Lag der letzte Top-Satz zwei oder mehr Wiederholungen über der
+    # Obergrenze, war nicht der Schritt zu klein, sondern die Last zu
+    # niedrig. Ein Prozent holt das nie auf. Dann rechnet der Plan aus
+    # diesem Satz den e1RM nach Epley, leitet daraus die Last für die
+    # Obergrenze ab und springt direkt dorthin. Weil die Schätzung aus
+    # dem eigenen Satz kommt, korrigiert sie sich in zwei bis drei
+    # Einheiten selbst ein.
+    e1rm = "$L%d*(1+$N%d/30)" % (row, row)
+    rm_last = "(%s)/(1+%s/30)" % (e1rm, u_bis)
+    richtwert = ("IF(%s=0,ROUND((%s)*2,0)/2,FLOOR((%s)/%s,1)*%s)"
+                 % (schritt, rm_last, rm_last, schritt, schritt))
+    # Nie unter den normalen Schritt und nie über die Lastobergrenze.
+    rm_ziel = "MAX(%s,%s)" % (kandidat, richtwert)
+    rm_ziel = "IF(%s=\"\",%s,MIN(%s,%s))" % (u_max, rm_ziel, rm_ziel, u_max)
+    zuleicht = ("AND($L%d<>\"\",$N%d<>\"\",%s<>\"\",$N%d>=%s+2)"
+                % (row, row, u_bis, row, u_bis))
+
     # Nächstes Zielgewicht, danach mit 'Anpassung %' skaliert und auf
     # die Laststufe abgerundet - so wirkt ein Deload sofort überall.
-    roh = ("IF($L%d=\"\",IF(%s=\"\",\"\",%s),IF(%s,%s,$L%d))"
-           % (row, u_start, u_start, reif, gedeckelt, row))
+    roh = ("IF($L%d=\"\",IF(%s=\"\",\"\",%s),IF(%s,%s,IF(%s,%s,$L%d)))"
+           % (row, u_start, u_start, zuleicht, rm_ziel, reif, gedeckelt,
+              row))
     wsr.cell(row, 15,
              "=IF(%s=\"\",\"\",IF(OR(%s=\"\",%s=100),%s,"
              "FLOOR(%s*%s/100/%s,1)*%s))"
@@ -1271,24 +1300,13 @@ for k in range(EX_SLOTS):
              "IF(%s,%s,IF(OR($N%d=\"\",$N%d<%s),%s,MIN(%s,$N%d+1))))))"
              % (u_von, row, row, u_von, reif, u_von, row, row, u_von,
                 u_von, u_bis, row))
-    # Lag der letzte Top-Satz deutlich über dem Zielbereich, war das
-    # Gewicht schlicht zu leicht. Ein Prozent holt das nicht auf, deshalb
-    # steht der rechnerische Richtwert für die Obergrenze daneben -
-    # nach Epley über den e1RM, abgerundet auf die Laststufe.
-    e1rm = "$L%d*(1+$N%d/30)" % (row, row)
-    richtwert = "(%s)/(1+%s/30)" % (e1rm, u_bis)
-    richtwert = ("IF(OR(%s=\"\",%s=0),ROUND((%s)*2,0)/2,"
-                 "FLOOR((%s)/%s,1)*%s)"
-                 % (u_schritt, u_schritt, richtwert, richtwert, u_schritt,
-                    u_schritt))
-    # Zwei oder mehr Wdh über der Obergrenze: dann ist nicht der nächste
-    # Schritt das Thema, sondern die Last selbst. Diese Meldung ersetzt
-    # den normalen Hinweis, sonst wird die Zeile auf A4 abgeschnitten.
-    zuleicht_wenn = ("AND($L%d<>\"\",$N%d<>\"\",%s<>\"\",$N%d>=%s+2)"
-                     % (row, row, u_bis, row, u_bis))
-    zuleicht_text = ("\"Last war zu leicht (\"&TEXT($N%d,\"0\")&\" statt \"&"
-                     "%s&\" Wdh) - Richtwert \"&TEXT(%s,\"0.#\")&\" kg\""
-                     % (row, u_bis, richtwert))
+    # Diese Meldung ersetzt den normalen Hinweis, sonst wird die Zeile
+    # auf A4 abgeschnitten.
+    zuleicht_wenn = "AND(%s,$O%d>$L%d)" % (zuleicht, row, row)
+    zuleicht_text = ("\"RM-Korrektur nach \"&TEXT($N%d,\"0\")&\" Wdh: +\"&"
+                     "TEXT($O%d-$L%d,\"0.#\")&\" kg (\"&"
+                     "TEXT(($O%d-$L%d)/$L%d,\"0.0%%\")&\"), Wdh zurück auf \""
+                     "&%s" % (row, row, row, row, row, row, u_von))
     # Klartext, was der Schritt bedeutet
     wsr.cell(row, 17,
              "=IF(%s,%s,IF($O%d=\"\",\"\",IF($L%d=\"\",\"Einstieg mit "

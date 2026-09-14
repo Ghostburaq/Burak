@@ -137,34 +137,28 @@ bleibt das Blatt druckbar, egal wie lang die Historie wird.
 So entsteht der Vorschlag für die nächste Einheit — er rechnet sich nach
 jedem Log-Eintrag neu:
 
-**Zielbereich: 5 bis 8 Wiederholungen, für alle Übungen gleich.**
+**Zielbereich: 5 bis 6 Wiederholungen, für alle Übungen gleich.**
 **Immer genau drei Arbeitssätze, absteigend:** Satz 1 schwer (Top-Satz),
 Satz 2 mit 95 %, Satz 3 mit 90 % des Zielgewichts. Die leichteren Sätze
-dürfen eine bzw. zwei Wiederholungen mehr, nie über 8. Reduktionssätze
+dürfen eine bzw. zwei Wiederholungen mehr, nie über 6. Reduktionssätze
 entfallen.
 
 Die Progression hängt allein am **Top-Satz** — Satz 2 und 3 sind Volumen,
 kein Steuersignal.
 
-1. **Wiederholungen zuerst.** Solange der *schwächste* Arbeitssatz unter 8
+1. **Wiederholungen zuerst.** Solange der *schwächste* Arbeitssatz unter 6
    liegt, bleibt das Gewicht stehen und es kommt eine Wiederholung dazu.
-2. **Dann Gewicht.** Schaffen alle Arbeitssätze 8, kommt eine Laststufe
-   (`Schritt (kg)`) drauf und die Wiederholungen fangen bei 5 wieder an.
+2. **Dann Gewicht.** Schaffen alle Arbeitssätze 6, kommt 1 % drauf,
+   aufgerundet auf die Laststufe (`Schritt (kg)`), und die Wiederholungen
+   fangen bei 5 wieder an.
 3. **Unter 5 Wdh** bleibt das Gewicht stehen, bis die untere Grenze steht.
-4. **Am Deckel** (`Max (kg)`) steigt die Last nicht weiter — der Hinweis
+4. **Ab 2 Wdh über der Obergrenze** greift die RM-Korrektur (unten) statt
+   des 1-%-Schritts.
+5. **Am Deckel** (`Max (kg)`) steigt die Last nicht weiter — der Hinweis
    verweist auf Tempo und Pausen.
 
-Beispiel: Beinpresse, zuletzt 290 kg × 5/5/5 → *Wdh +1 auf 6*. Nach
-290 kg × 8/8/8 → *Gewicht +10 kg, Wdh zurück auf 5*.
-
-### Umstellungsphase
-
-Der Bereich wechselt von 10–20 auf 5–8 Wiederholungen, die bisherigen
-Gewichte sind dafür zu leicht. Liegt der schwächste Satz deutlich über 8 Wdh,
-springt der Vorschlag entsprechend grösser — rund 2.5 % je Wiederholung
-darüber, höchstens 15 % pro Einheit. Nach zwei bis drei Einheiten bist du im
-Bereich, danach läuft die normale Progression. Solche Sprünge sind auf dem
-Trainingsblatt mit *(Umstellung auf den neuen Bereich)* gekennzeichnet.
+Beispiel: Beinpresse, zuletzt 250 kg × 5/5/5 → *Wdh +1 auf 6*. Nach
+250 kg × 6/6/6 → *Gewicht +5 kg (2.0 %), Wdh zurück auf 5*.
 
 Das Blatt `Rekorde` zeigt je Übung `Nächstes Ziel (kg)`, `Ziel-Wdh nächste
 Einheit` und den Schritt im Klartext; das `Trainingsblatt` übernimmt beides.
@@ -207,12 +201,18 @@ Alle Übungen laufen im Bereich 5 bis 6 Wiederholungen, Schritt 1 % auf das
 letzte Top-Gewicht. Weil eine Laststufe an groben Maschinen mehr als 1 % ist,
 steht der tatsächliche Zuwachs in Prozent neben jedem Vorschlag.
 
-Liegt der letzte Top-Satz zwei oder mehr Wiederholungen über der Obergrenze,
-war schlicht die Last zu niedrig — ein Prozent holt das nicht auf. Das
-Trainingsblatt schreibt dann `Last war zu leicht (8 statt 6 Wdh) — Richtwert
-260 kg` statt des normalen Schritt-Hinweises. Der Richtwert kommt aus dem
-e1RM nach Epley, abgerundet auf die Laststufe des Geräts; er ist als Ziel für
-zwei bis drei Einheiten gedacht, nicht als Sprung für die nächste.
+### RM-Korrektur
+
+Ein Prozent gilt nur, solange die Last stimmt. Lief der letzte Top-Satz zwei
+oder mehr Wiederholungen über der Obergrenze, war nicht der Schritt zu klein,
+sondern das Gewicht zu niedrig — und ein Prozent holt das nie auf. In diesem
+Fall rechnet der Plan aus genau diesem Satz den e1RM nach Epley, leitet daraus
+die Last für die Obergrenze ab und springt direkt dorthin, abgerundet auf die
+Laststufe des Geräts und begrenzt durch `Max (kg)`. Das Trainingsblatt schreibt
+dann `RM-Korrektur nach 8 Wdh: +10 kg (4.0%), Wdh zurück auf 5`.
+
+Die Schätzung stammt aus dem eigenen Satz und korrigiert sich über zwei bis
+drei Einheiten selbst ein. Sie ersetzt keinen echten Maximalversuch.
 
 ## Datenstand
 
