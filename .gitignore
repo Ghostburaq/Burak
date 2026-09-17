@@ -2,3 +2,7 @@ __pycache__/
 *.pyc
 .DS_Store
 /tmp/
+
+# Klientenunterlagen enthalten Gesundheitsdaten (DSG, besonders schuetzenswert).
+# Dieses Repo ist oeffentlich, deshalb bleibt training/ lokal.
+training/
