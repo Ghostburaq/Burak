@@ -160,15 +160,13 @@
 
 <script id="app-state" type="application/json">
 {
+  "rev": 2,
   "intervalDays": 3,
   "people": [
-    {"id":"burak","name":"Burak","emoji":"🐯","sign":"Tiger","def":{"Testosteron":1.5,"Primobolan":1}},
-    {"id":"aileen","name":"Aileen","emoji":"🦁","sign":"Löwin","def":{"Testosteron":1,"Primobolan":1}}
+    {"id":"burak","name":"Burak","emoji":"\ud83d\udc2f","sign":"Tiger","def":{"Testosteron":1.5,"Primobolan":1}},
+    {"id":"aileen","name":"Aileen","emoji":"\ud83e\udd81","sign":"L\u00f6win","def":{"Testosteron":1,"Primobolan":1}}
   ],
-  "entries": [
-    {"id":"seed-burak","p":"burak","ts":"2026-08-28T20:00","subs":[{"n":"Testosteron","ml":1.5},{"n":"Primobolan","ml":1}],"site":"","note":""},
-    {"id":"seed-aileen","p":"aileen","ts":"2026-08-28T20:00","subs":[{"n":"Testosteron","ml":1},{"n":"Primobolan","ml":1}],"site":"","note":""}
-  ]
+  "entries": []
 }
 </script>
 
@@ -189,18 +187,20 @@
     return JSON.parse(document.getElementById("app-state").textContent);
   }
   function load(){
+    // Der Stand mit der höheren Revision gewinnt: so setzt eine neu
+    // veröffentlichte Version auch einen alten Browser-Stand zurück.
     var seed = baseState();
     try{
       var raw = localStorage.getItem(KEY);
       if(raw){
         var s = JSON.parse(raw);
-        if(s && s.entries && s.entries.length >= seed.entries.length) return s;
-        if(s && s.entries) return s;
+        if(s && s.entries && s.people && (+s.rev || 0) >= (+seed.rev || 0)) return s;
       }
     }catch(e){}
     return seed;
   }
   function save(){
+    state.rev = (+state.rev || 0) + 1;
     try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){}
     schedulePublish();
   }
@@ -328,7 +328,7 @@
       box.className = "next st-none";
       box.appendChild(elText("div", "lbl", "Nächste Injektion"));
       box.appendChild(elText("div", "cd", "—"));
-      box.appendChild(elText("div", "when", "Noch kein Eintrag vorhanden"));
+      box.appendChild(elText("div", "when", "Erster Eintrag startet den Countdown"));
     }else{
       var span = state.intervalDays * 86400000;
       var next = new Date(last.getTime() + span);
@@ -363,7 +363,7 @@
     hist.appendChild(hh);
 
     if(!list.length){
-      hist.appendChild(elText("div", "empty", "Noch nichts eingetragen."));
+      hist.appendChild(elText("div", "empty", "Noch nichts eingetragen — die heutige Injektion eintragen, dann läuft der Rhythmus."));
     }else{
       var ul = el("ul", "entries");
       list.forEach(function(e, i){
