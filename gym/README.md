@@ -6,8 +6,8 @@ von selbst.
 
 | Fassung | Datei | Gilt | Umfang |
 |---|---|---|---|
-| **Vor der OP** | `GymLogbuch_Beine_PreOP.xlsx` | bis 30.09.2026 | 13 Blätter, 30 A4-Seiten |
-| **Reha** | `GymLogbuch_Beine.xlsx` | ab dem OP-Tag | 12 Blätter, 29 A4-Seiten |
+| **Vor der OP** | `GymLogbuch_Beine_PreOP.xlsx` | bis 30.09.2026 | 14 Blätter, 40 A4-Seiten |
+| **Reha** | `GymLogbuch_Beine.xlsx` | ab dem OP-Tag | 13 Blätter, 38 A4-Seiten |
 
 Beide entstehen aus demselben Generator und sind in `Log`, `Einheiten`,
 `Auswertung`, `Progression`, `Rekorde`, `Trainingsblatt` und `Übungen`
@@ -25,6 +25,38 @@ eintragen und im `Reha-Log` das OP-Datum.
 > Anweisung. Das schriftliche Nachbehandlungsschema des Operateurs und die
 > Ansagen der Physiotherapie haben in jedem Punkt Vorrang.
 
+## Der Eingriff
+
+Laut Operationsaufklärung: **Arthroskopie mit Sehnennaht und Bizepstenodese,
+rechte Schulter**, Diagnose Läsion am Oberrand des Subscapularis mit
+Bizepssehnen-Instabilität. Termin 30.09.2026, Ruhigstellung im Gilchrist.
+
+Das ist **nicht** der Eingriff, für den die erste Fassung des Reha-Fahrplans
+geschrieben war. Die galt für eine isolierte Bizepstenodese und enthielt
+selbst die Regel: *„Rotatorenmanschette oder Labrum mitversorgt — deren
+Protokoll gilt, es ist deutlich restriktiver. Diese Tabelle dann nicht
+verwenden."* Der Subscapularis ist Teil der Rotatorenmanschette, also greift
+genau dieser Satz.
+
+`reha_daten.py` ist deshalb vollständig neu geschrieben: Phasen, Grundregeln,
+Notfallzeichen und alle Freigabewochen. Die Freigaben liegen jetzt rund
+doppelt so spät:
+
+| Übung | vorher | jetzt |
+|---|---|---|
+| Beinstrecker, Adduktion, Beinbeuger | Woche 1 | Woche 2 |
+| Waden (sitzend) | Woche 2 | Woche 2 |
+| Beinpresse eng / breit | Woche 2 | Woche 6 |
+| Hip & Glute, Seitliche Kickbacks | Woche 2 | Woche 6 |
+| Hip Thrust (Langhantel) | Woche 4 | Woche 12 |
+| Split Squat | Woche 8 | Woche 12 |
+| Reverse V-Squat | Woche 8 | Woche 12 |
+| Rumänisches Kreuzheben | Woche 12 | Woche 16 |
+
+Alle Werte sind konservativ abgeleitet und **nicht ärztlich bestätigt**. Sie
+stehen im Blatt `Übungen` in der Spalte `Reha frei ab Woche` und werden dort
+überschrieben, sobald das Schema des Operateurs vorliegt.
+
 ## Blätter der Vor-OP-Fassung
 
 Zusätzlich zu den gemeinsamen Blättern:
@@ -32,7 +64,7 @@ Zusätzlich zu den gemeinsamen Blättern:
 | Blatt | Zweck | Druck |
 |---|---|---|
 | `OP-Countdown` | Tage und Wochen bis zum Termin; je Übung, wie lange sie danach ausfällt und welcher Ersatz einspringt | A4 quer, 2 S. |
-| `Vorbereitung` | 25-Punkte-Checkliste: Fragen an Operateur und Physiotherapie, Organisation, Gym-Logistik | A4 hoch |
+| `Vorbereitung` | Checkliste bis zum OP-Tag: Fragen an Operateur und Physiotherapie, Organisation, Gym-Logistik | A4 hoch |
 | `Baseline Schulter` | Ausgangswerte beider Schultern: Beweglichkeit, Schmerz, Curl-Testgewicht | A4 quer |
 
 Das `Trainingsblatt` sperrt vor der OP nichts, vermerkt aber hinter jeder
@@ -41,10 +73,13 @@ entfallen, der `Reha-Fahrplan` ist enthalten — er lohnt sich vorher zu lesen.
 
 ### Warum die Baseline wichtig ist
 
-Der Reha-Fahrplan misst zwei Meilensteine am Vergleich zur Gegenseite
-(Beugekraft 70 % in Phase 4, 90 % in Phase 5). Ohne einen vor der OP
+Der Reha-Fahrplan misst zwei Meilensteine am Vergleich zur Gegenseite: in
+Phase 4 etwa 70–80 %, in Phase 5 mindestens 90 % — und zwar für
+**Innenrotation und Ellenbogenbeugung**. Die Innenrotation ist neu dazugekommen,
+weil der Subscapularis genau dieser Muskel ist. Ohne einen vor der OP
 gemessenen Ausgangswert der gesunden Seite sind diese Prozentwerte später
 nicht überprüfbar — und nachholen lässt sich die Messung dann nicht mehr.
+Bei 9 Tagen bis zum Termin ist das der dringlichste offene Punkt.
 
 ## Gemeinsame Blätter
 

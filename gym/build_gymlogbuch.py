@@ -167,35 +167,10 @@ UEBUNGEN = [
 # hinterlegt, weil sie bis eben die Ersatzübung war - die Werte hier sind
 # aus genau dieser Ersatzangabe abgeleitet und im Blatt 'Start' als offener
 # Punkt vermerkt.
-REHA_ZUSATZ = {
-    "Reverse V-Squat": (
-        8,
-        "Beinpresse enger Stand, ab Woche 2 frei",
-        "Freigabewoche abgeleitet, nicht ärztlich bestätigt: die Polster "
-        "liegen auf Schulter und Nacken, die Last geht also direkt über den "
-        "Schultergürtel. Deshalb wie beim Split Squat Woche 8 angesetzt und "
-        "nicht Woche 2 wie bei der Beinpresse. Mit Operateur oder "
-        "Physiotherapie bestätigen."),
-    "Beinpresse breit": (
-        2,
-        "Beinbeuger sitzend, ab Woche 1 frei",
-        "Freigabewoche wie bei der engen Beinpresse abgeleitet, nicht "
-        "ärztlich bestätigt. Hände seitlich ablegen, nicht an den Griffen "
-        "ziehen."),
-    "Hip & Glute": (
-        2,
-        "Beinbeuger sitzend, ab Woche 1 frei",
-        "Freigabewoche abgeleitet aus der Hip-Thrust-Maschine im Fahrplan "
-        "(dort ab Woche 2). Arme vor der Brust kreuzen, nicht am Gerät "
-        "abstützen. Woche mit Operateur oder Physiotherapie bestätigen."),
-    "Beinpresse eng": (
-        2,
-        "Beinstrecker und Beinbeuger sitzend, beide ab Woche 1 frei",
-        "Freigabewoche abgeleitet: die Beinpresse war im bisherigen Plan die "
-        "Ersatzübung für die Hackenschmidt-Sperre, also vor Woche 6 nutzbar. "
-        "Tiefe Fussposition, Hände seitlich ablegen, nicht an den Griffen "
-        "ziehen. Woche mit Operateur oder Physiotherapie bestätigen."),
-}
+# Alle Reha-Freigaben stehen in reha_daten.py. Der frühere
+# Zusatz-Block ist entfallen, weil die Werte dort nach der
+# Operationsaufklärung ohnehin komplett neu gesetzt wurden.
+REHA_ZUSATZ = {}
 
 for _u in UEBUNGEN:
     _woche, _ersatz, _hinweis = REHA_ZUSATZ.get(
@@ -1418,12 +1393,15 @@ if PREOP:
                  "=IF(%s=\"\",\"\",IF(TODAY()>%s,\"OP-Termin liegt "
                  "zurück - ab jetzt die Reha-Fassung des Logbuchs "
                  "verwenden.\",IF(%s-TODAY()<=7,\"Letzte Woche: "
-                 "Organisation abschliessen, Baseline messen, Training "
-                 "zurückfahren wie besprochen.\",IF(%s-TODAY()<=28,"
+                 "Organisation abschliessen, Baseline messen, letzte "
+                 "schwere Einheit 2 bis 3 Tage vor der OP.\","
+                 "IF(%s-TODAY()<=14,\"Zwei Wochen: Baseline jetzt messen, "
+                 "Checkliste abarbeiten, Reha-Fassung ausdrucken.\","
+                 "IF(%s-TODAY()<=28,"
                  "\"Letzte vier Wochen: Ersatzübungen einarbeiten und "
                  "Baseline-Werte erfassen.\",\"Normalbetrieb: regulär "
-                 "weitertrainieren, Werte sauber protokollieren.\"))))"
-                 % (OPD, OPD, OPD, OPD))
+                 "weitertrainieren, Werte sauber protokollieren.\")))))"
+                 % (OPD, OPD, OPD, OPD, OPD))
     c.font, c.alignment, c.fill = F_BOLD, LW, FILL_CALC
     wsc.row_dimensions[4].height = 30
 
@@ -1445,8 +1423,10 @@ if PREOP:
         row = CD_FIRST + k
         ur = UEB_FIRST + k
         aktiv = "%s!$L%d" % (UEB, ur)
-        wsc.cell(row, 1, "=IF(%s=\"nein\",\"\",%s!$A%d)" % (aktiv, UEB, ur))
-        wsc.cell(row, 2, "=IF(%s=\"nein\",\"\",%s!$M%d)" % (aktiv, UEB, ur))
+        # Leerer Slot oder Archiv: Zeile bleibt leer statt Nullen zu zeigen.
+        leer = "OR(%s!$A%d=\"\",%s=\"nein\")" % (UEB, ur, aktiv)
+        wsc.cell(row, 1, "=IF(%s,\"\",%s!$A%d)" % (leer, UEB, ur))
+        wsc.cell(row, 2, "=IF(%s,\"\",%s!$M%d)" % (leer, UEB, ur))
         wsc.cell(row, 3, "=IF($B%d=\"\",\"\",MAX(0,$B%d-1))" % (row, row))
         wsc.cell(row, 4, "=IF(OR($B%d=\"\",%s=\"\"),\"\",%s+($B%d-1)*7)"
                  % (row, OPD, OPD, row))
@@ -1559,28 +1539,43 @@ if PREOP:
 
     CHECKLISTE = [
         ("Fragen an Operateur und Physiotherapie", [
-            "Tenodese oder Tenotomie - welche Technik ist geplant? Der "
-            "Reha-Fahrplan gilt nur für die Tenodese.",
-            "Wird zusätzlich an Rotatorenmanschette oder Labrum gearbeitet? "
-            "Dann gilt deren Protokoll.",
-            "Wie lange Schlinge, und ab wann darf sie abgebaut werden?",
-            "Ab wann ist Beintraining im Sitzen wieder erlaubt?",
-            "Ab wann ist die Beinpresse erlaubt? Im Logbuch steht Woche 2 "
+            "Das schriftliche Nachbehandlungsschema mitgeben lassen - alle "
+            "Wochenangaben im Logbuch sind bis dahin nur abgeleitet.",
+            "Wie gross ist die Subscapularis-Läsion, und wie wird genäht? "
+            "Davon hängt ab, wie streng die ersten 6 Wochen laufen.",
+            "Wie lange Gilchrist, Tag und Nacht? Ab wann abbauen?",
+            "Bis zu welchem Winkel darf passiv bewegt werden - Flexion, "
+            "Abduktion, und vor allem Aussenrotation?",
+            "Ab wann aktive Innenrotation ohne Widerstand, ab wann gegen "
+            "Widerstand?",
+            "Ab wann Ellenbogenbeugung und Supination gegen Widerstand? "
+            "(Tenodese-Protokoll, läuft parallel zum Naht-Protokoll.)",
+            "Ab wann ist Beintraining im Sitzen wieder erlaubt? Im Logbuch "
+            "steht Tag 10 bis 14 als abgeleiteter Wert.",
+            "Ab wann ist die Beinpresse erlaubt? Im Logbuch steht Woche 6 "
             "als abgeleiteter Wert, nicht als ärztliche Freigabe.",
+            "Ab wann darf eine Langhantel wieder gehalten werden? Davon "
+            "hängen Hip Thrust und Rumänisches Kreuzheben ab.",
             "Ab wann darf der Arm wieder Hebelast tragen, und wie viel?",
-            "Ab wann Bizeps-Curls gegen Widerstand?",
-            "Welches schriftliche Nachbehandlungsschema bekomme ich mit?",
             "Wann ist der erste Physiotermin, und ist die Verordnung da?",
             "Welche Schmerzmedikation, und wie lange? (Der Fahrplan "
             "vermerkt, dass dauerhaft hochdosierte NSAR die Heilung "
             "bremsen - Rückfrage lohnt.)",
+            "Autofahren ab wann? Rechte Schulter heisst Schalten, Lenken "
+            "und Gurt.",
         ]),
         ("Organisation", [
             "OP-Termin, Anreise und Begleitung für den Heimweg geklärt",
             "Arbeitsausfall angemeldet, Krankschreibung besprochen",
             "Schlinge, Kühlpackungen und Verbandsmaterial zu Hause",
             "Kleidung zum Knöpfen bereitgelegt - über den Kopf ziehen fällt "
-            "weg",
+            "weg. Weite Ärmel rechts, damit der Arm nicht verdreht werden "
+            "muss",
+            "Alltag rechts durchgespielt: Haare, BH, Gürtel, Gesässtasche, "
+            "Anschnallen. Was nur hinter dem Rücken geht, fällt wochenlang "
+            "aus - jetzt Alternativen festlegen",
+            "Hilfe für die erste Woche organisiert, nicht nur für den "
+            "OP-Tag",
             "Schlafplatz halbsitzend vorbereitet, Kissen besorgt",
             "Einkäufe und Haushalt für die erste Woche vorbereitet",
             "Wichtige Telefonnummern notiert: Klinik, Operateur, Physio",
@@ -1589,7 +1584,10 @@ if PREOP:
             "Ersatzübungen im Blatt 'OP-Countdown' durchgespielt und "
             "Arbeitsgewichte eingetragen",
             "Baseline Schulter gemessen, beide Seiten, mindestens zwei "
-            "Messpunkte",
+            "Messpunkte - inklusive Innenrotationskraft, die misst der "
+            "Fahrplan in Phase 4 und 5",
+            "Letzte schwere Beineinheit spätestens 2 bis 3 Tage vor der "
+            "OP, danach nur noch Gehen",
             "Gym-Mitgliedschaft: Pausierung geklärt, falls längere "
             "Unterbrechung",
             "Trainingsblätter der Reha-Fassung einmal ausgedruckt und "
@@ -1724,12 +1722,13 @@ if PREOP:
         wsb.row_dimensions[row].height = 18
     wsb.merge_cells(start_row=5, start_column=6, end_row=8, end_column=10)
     c = wsb.cell(5, 6,
-                 "Der Reha-Fahrplan nennt für Phase 4 eine Beugekraft von "
-                 "etwa 70 Prozent der Gegenseite und für Phase 5 mindestens "
-                 "90 Prozent. Diese Prozentwerte sind nur überprüfbar, wenn "
-                 "der Ausgangswert der Gegenseite hier steht. Curl-Test "
-                 "immer gleich ausführen: gleiches Gerät, gleiche "
-                 "Wiederholungszahl, gleiche Tageszeit.")
+                 "Der Reha-Fahrplan misst Phase 4 an etwa 70 bis 80 Prozent "
+                 "und Phase 5 an mindestens 90 Prozent der Gegenseite - und "
+                 "zwar für Innenrotation UND Ellenbogenbeugung. Beides hier "
+                 "vorher messen, sonst sind die Prozentwerte später nicht "
+                 "überprüfbar. Innenrotation im Sitzen am Kabel mit "
+                 "angelegtem Ellenbogen testen, Curl am immer gleichen "
+                 "Gerät. Gleiche Wiederholungszahl, gleiche Tageszeit.")
     c.font, c.alignment, c.fill = F_BODY, LW, FILL_LIGHT
     for rr in range(5, 9):
         for col in range(6, 11):
@@ -1786,6 +1785,35 @@ wsf.row_dimensions[2].height = 26
 wsf.cell(2, 1).alignment = LW
 
 r = 4
+abschnitt(wsf, r, 1, 7, "Der geplante Eingriff")
+r += 1
+for lab, txt in RD.OP_DATEN:
+    wsf.cell(r, 1, lab).font = F_BOLD
+    wsf.cell(r, 1).alignment = Alignment(horizontal="left", vertical="top",
+                                         wrap_text=True)
+    wsf.merge_cells(start_row=r, start_column=2, end_row=r, end_column=7)
+    c = wsf.cell(r, 2, txt)
+    c.font, c.alignment = F_BODY, LW
+    for col in range(1, 8):
+        wsf.cell(r, col).border = B_ALL
+    wsf.row_dimensions[r].height = 18
+    r += 1
+wsf.merge_cells(start_row=r, start_column=1, end_row=r, end_column=7)
+c = wsf.cell(r, 1,
+             "Quelle: Operationsaufklärung. Die Freigabewochen in diesem "
+             "Blatt und im Blatt 'Übungen' sind daraus abgeleitet und "
+             "konservativ gesetzt - sie sind KEINE ärztliche Vorgabe. "
+             "Sobald das schriftliche Nachbehandlungsschema des Operateurs "
+             "vorliegt, gilt ausschliesslich dieses; Abweichungen im Blatt "
+             "'Übungen' in der Spalte 'Reha frei ab Woche' eintragen.")
+c.font = Font(name=FONT, size=9, bold=True, color=RED)
+c.alignment, c.fill = LW, PatternFill("solid", fgColor="FDECEC")
+for col in range(1, 8):
+    wsf.cell(r, col).fill = PatternFill("solid", fgColor="FDECEC")
+    wsf.cell(r, col).border = B_ALL
+wsf.row_dimensions[r].height = 30
+r += 2
+
 abschnitt(wsf, r, 1, 7, "Grundregeln über die gesamte Zeit")
 r += 1
 for lab, txt in RD.GRUNDREGELN:
@@ -1879,9 +1907,9 @@ if not PREOP:
     c.fill, c.alignment, c.border = FILL_INPUT, C, B_ALL
     c.number_format = NF_INT
     WOCHE = "$B$4"
-    phase_f = ("=IF({w}=\"\",\"\",IF({w}<=2,\"Phase 1 Schutz\","
-               "IF({w}<=6,\"Phase 2 Beweglichkeit\",IF({w}<=12,"
-               "\"Phase 3 erste Last\",IF({w}<=16,\"Phase 4 Aufbau\","
+    phase_f = ("=IF({w}=\"\",\"\",IF({w}<=6,\"Phase 1 Schutz\","
+               "IF({w}<=12,\"Phase 2 Beweglichkeit\",IF({w}<=16,"
+               "\"Phase 3 erste Last\",IF({w}<=26,\"Phase 4 Aufbau\","
                "\"Phase 5 Rückkehr\")))))").format(w=WOCHE)
     c = wsm.cell(4, 3, phase_f)
     c.font = Font(name=FONT, size=11, bold=True, color="FFFFFF")
@@ -1905,16 +1933,19 @@ if not PREOP:
         row = MOD_FIRST + k
         ur = UEB_FIRST + k
         aktiv = "%s!$L%d" % (UEB, ur)
-        wsm.cell(row, 1, "=IF(%s=\"nein\",\"\",%s!$A%d)" % (aktiv, UEB, ur))
-        wsm.cell(row, 2, "=IF(%s=\"nein\",\"\",%s!$M%d)" % (aktiv, UEB, ur))
+        # Leerer Slot oder archivierte Übung: Zeile bleibt komplett leer,
+        # sonst stehen dort Nullen aus den leeren Stammdatenzellen.
+        leer = "OR(%s!$A%d=\"\",%s=\"nein\")" % (UEB, ur, aktiv)
+        wsm.cell(row, 1, "=IF(%s,\"\",%s!$A%d)" % (leer, UEB, ur))
+        wsm.cell(row, 2, "=IF(%s,\"\",%s!$M%d)" % (leer, UEB, ur))
         wsm.cell(row, 3, "=IF($A%d=\"\",\"\",IF($B%d=\"\",\"offen\","
                          "IF(%s>=$B%d,\"FREI\",\"GESPERRT\")))"
                  % (row, row, WOCHE, row))
-        wsm.cell(row, 4, "=IF(%s=\"nein\",\"\",%s!$F%d)" % (aktiv, UEB, ur))
-        wsm.cell(row, 5, "=IF(%s=\"nein\",\"\",%s!$D%d&\"-\"&%s!$E%d)"
-                 % (aktiv, UEB, ur, UEB, ur))
+        wsm.cell(row, 4, "=IF(%s,\"\",%s!$F%d)" % (leer, UEB, ur))
+        wsm.cell(row, 5, "=IF(%s,\"\",%s!$D%d&\"-\"&%s!$E%d)"
+                 % (leer, UEB, ur, UEB, ur))
         wsm.cell(row, 6, "=IF($C%d=\"GESPERRT\",%s!$O%d,\"\")" % (row, UEB, ur))
-        wsm.cell(row, 7, "=IF(%s=\"nein\",\"\",%s!$P%d)" % (aktiv, UEB, ur))
+        wsm.cell(row, 7, "=IF(%s,\"\",%s!$P%d)" % (leer, UEB, ur))
         for col in range(1, 8):
             c = wsm.cell(row, col)
             c.border = B_ALL
@@ -2281,18 +2312,32 @@ if not PREOP:
     abschnitt(wsw, r, 2, 5, "Was sich nach der Operation ändert")
     r += 1
     for lab, txt in [
-        ("Phase 1 und 2, Woche 0 bis 6",
-         "Erhalt statt Aufbau. Zwei Einheiten je Woche, nur die im Blatt "
-         "'Reha-Modus' freigegebenen Übungen, alles im Sitzen. Die "
-         "Progression läuft weiter, springt aber selten - das ist richtig "
-         "so."),
-        ("Phase 3, ab Woche 6",
-         "Beinpresse und Split Squat kommen zurück, das Wochenraster oben "
-         "gilt wieder vollständig."),
+        ("Phase 1, Woche 0 bis 6",
+         "Gilchrist Tag und Nacht. Ab Tag 10 bis 14 zwei Einheiten je "
+         "Woche mit vier sitzenden Maschinen: Beinstrecker, Adduktion, "
+         "Beinbeuger, Waden sitzend. Erhalt statt Aufbau - die "
+         "Progression läuft weiter, springt aber selten, und das ist "
+         "richtig so."),
+        ("Phase 2, Woche 6 bis 12",
+         "Schlinge weg. Beinpresse eng und breit, Hip & Glute, seitliche "
+         "Kickbacks und Waden stehend kommen dazu. Damit stehen acht "
+         "Übungen zur Verfügung und beide Blöcke laufen wieder."),
+        ("Phase 3, ab Woche 12",
+         "Hip Thrust mit Stange, Reverse V-Squat und Split Squat in der "
+         "Multipresse kommen zurück. Das Wochenraster oben gilt wieder "
+         "vollständig - bis auf das Rumänische Kreuzheben."),
+        ("Rumänisches Kreuzheben, ab Monat 4",
+         "Die letzte Übung, die zurückkommt. Griffbelastung plus Dauerzug "
+         "am hängenden Arm ist für eine genähte Sehne und eine Tenodese "
+         "die ungünstigste Kombination im ganzen Plan."),
         ("Bauchpresse und Blutdruck",
          "Schweres Pressen erhöht den Druck über den Schultergürtel. In "
-         "den ersten Wochen bewusst ausatmen statt pressen, auch wenn das "
-         "eine Wiederholung kostet."),
+         "den ersten 12 Wochen bewusst ausatmen statt pressen und bei "
+         "RPE 8 stoppen, auch wenn das eine Wiederholung kostet."),
+        ("Nicht nach hinten greifen",
+         "Beim Aufsetzen an der Maschine nie rückwärts nach Sitz oder "
+         "Lehne greifen. Das ist Aussenrotation plus Streckung - die "
+         "Position, in der eine frische Subscapularis-Naht versagt."),
     ]:
         wsw.cell(r, 2, lab).font = F_BOLD
         wsw.cell(r, 2).alignment = LW
