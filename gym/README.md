@@ -119,7 +119,7 @@ Satztypen: `W` Warmup · `A` Arbeitssatz (Basis aller Kennzahlen) ·
 | Log | 1200 Sätze | rund 60 Einheiten |
 | Einheiten | 60 | etwa 30 Wochen bei 2 Beineinheiten |
 | Reha-Log | 240 Tage | rund 8 Monate täglich |
-| Übungen | 14 Slots | 11 belegt |
+| Übungen | 16 Slots | 14 belegt |
 
 Die `Auswertung` zeigt 16 Einheiten nebeneinander. Mit der Zahl in Zelle `B3`
 verschiebt sich das Fenster (z. B. `17` zeigt Einheit 17 bis 32) — die
@@ -167,10 +167,14 @@ steht — ab vier wird die Zeile gelb.
 
 ## Plan
 
-Elf aktive Übungen in zwei Blöcken, schwere Grundübung zuerst:
+Zwölf aktive Übungen in zwei Blöcken, schwere Grundübung zuerst:
 
 - **Beine vorne:** Beinpresse enger Stand · Split Squat · Beinstrecker · Adduktion
-- **Beine hinten:** Rumänisches Kreuzheben · Beinpresse breiter Stand · Hip Thrust · Hip & Glute · Beinbeuger · Seitliche Kickbacks · Waden
+- **Beine hinten:** Reverse V-Squat · Rumänisches Kreuzheben · Beinpresse breiter Stand · Hip Thrust · Hip & Glute · Beinbeuger · Seitliche Kickbacks · Waden
+
+Der **Reverse V-Squat** kam mit Einheit 13 dazu. Alle Gewichte inklusive der
+50 kg Eigengewicht des Schlittens notieren, sonst rechnet die Progression
+falsch. Kleinste Steigerung sind 1.25 kg je Seite, also 5 kg gesamt.
 
 Lunges und Kickback sind archiviert; ihre Historie bleibt in allen
 Auswertungen sichtbar.
@@ -181,19 +185,20 @@ Beine hinten, dazwischen mindestens 72 Stunden.
 ### Wiedereinstieg nach der Trainingspause
 
 Nach der Zerrung der linken Adduktoren lief eine Woche Pause, danach Einheit 11
-(Beine hinten) und 12 (Beine vorne) gedrosselt über `Anpassung %` und
-`Aktiv = pause` — die Historie blieb dabei unangetastet. Beide Einheiten sind
-ohne Beschwerden durch, deshalb stehen neun Übungen wieder auf `100` und drei
-Sätzen. Nur die zwei Übungen, die den verletzten Muskel direkt treffen, laufen
-weiter reduziert:
+bis 13 gedrosselt über `Anpassung %` und `Aktiv = pause` — die Historie blieb
+dabei unangetastet. Alle drei Einheiten sind ohne Beschwerden durch, deshalb
+stehen zehn Übungen wieder auf `100` und drei Sätzen. Nur die zwei Übungen, die
+den verletzten Muskel direkt treffen, laufen noch gesondert:
 
-| Übung | Anpassung | Sätze |
+| Übung | Stand | Sätze |
 |---|---|---|
-| Adduktion | 80 % | 2 |
-| Beinpresse breiter Stand | 85 % | 2 |
+| Adduktion | Anpassung 90 % | 2 |
+| Beinpresse breiter Stand | Start 220 kg (Eichung) | 3 |
 
-Nach zwei beschwerdefreien Einheiten auch dort auf `100` und drei Sätze. Die
-Begründung je Stufe steht im Blatt `Wochenplan`.
+Adduktion wurde seit Einheit 8 nicht mehr ausgeführt — läuft die erste
+Einheit sauber, auf `100` und drei Sätze. Beinpresse breiter Stand ist bis
+heute nie gelaufen; das Startgewicht bleibt eine Schätzung. Die Begründung je
+Zeile steht im Blatt `Wochenplan`.
 
 ### Zielbereich 5 bis 6
 
@@ -216,8 +221,8 @@ drei Einheiten selbst ein. Sie ersetzt keinen echten Maximalversuch.
 
 ## Datenstand
 
-Einheit 1 bis 12. Einheit 1 bis 4 aufbereitet aus
-`Loewin_Training_260727.pdf`, Einheit 5 bis 12 direkt erfasst.
+Einheit 1 bis 13. Einheit 1 bis 4 aufbereitet aus
+`Loewin_Training_260727.pdf`, Einheit 5 bis 13 direkt erfasst.
 Einheit 11 ohne Beinbeuger und Seitliche Kickbacks, Einheit 10 und 12
 ohne Adduktion — nicht ausgeführt, im Log als Notiz vermerkt. Bekannte
 Unschärfen der Quelle (fehlende Wiederholungen bei Kickback-Warmups und

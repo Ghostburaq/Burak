@@ -271,4 +271,32 @@ ROWS = [
     [12, 'Beine vorne', 'Beinstrecker', 'A', 65, 8, None, None],
     [12, 'Beine vorne', 'Beinstrecker', 'A', 70, 8, None, None],
     [12, 'Beine vorne', 'Beinstrecker', 'A', 77.5, 8, None, None],
+    # --- Einheit 13, Beine hinten ---------------------------------
+    # Reverse V-Squat neu im Plan, Gewichte inkl. 50 kg Eigengewicht des
+    # Schlittens. RDL, Beinpresse breit und Seitliche Kickbacks nicht
+    # ausgefuehrt.
+    [13, 'Beine hinten', 'Reverse V-Squat', 'W', 50, None, None,
+     'leerer Schlitten, 50 kg Eigengewicht'],
+    [13, 'Beine hinten', 'Reverse V-Squat', 'W', 100, None, None, None],
+    [13, 'Beine hinten', 'Reverse V-Squat', 'A', 180, 8, None, None],
+    [13, 'Beine hinten', 'Reverse V-Squat', 'A', 190, 8, None, None],
+    [13, 'Beine hinten', 'Reverse V-Squat', 'A', 210, 6, None, None],
+    [13, 'Beine hinten', 'Hip Thrust', 'W', 100, None, None, None],
+    [13, 'Beine hinten', 'Hip Thrust', 'W', 170, None, None, None],
+    [13, 'Beine hinten', 'Hip Thrust', 'A', 250, 10, None, None],
+    [13, 'Beine hinten', 'Hip Thrust', 'A', 270, 8, None, None],
+    [13, 'Beine hinten', 'Hip Thrust', 'A', 280, 6, None, None],
+    [13, 'Beine hinten', 'Hip & Glute', 'W', 70, None, None, None],
+    [13, 'Beine hinten', 'Hip & Glute', 'W', 103, None, None, None],
+    [13, 'Beine hinten', 'Hip & Glute', 'A', 168, 7, None,
+     'Stack 138 plus Zusatzscheiben 25 und 5, nur ein Arbeitssatz'],
+    [13, 'Beine hinten', 'Beinbeuger', 'W', 25, None, None, None],
+    [13, 'Beine hinten', 'Beinbeuger', 'W', 30, None, None, None],
+    [13, 'Beine hinten', 'Beinbeuger', 'A', 40, 8, None,
+     'deutlich leichter als Einheit 9 mit 57.5 kg - anderes Geraet?'],
+    [13, 'Beine hinten', 'Beinbeuger', 'A', 42.5, 7, None, None],
+    [13, 'Beine hinten', 'Waden', 'W', 70, None, None, None],
+    [13, 'Beine hinten', 'Waden', 'W', 122.5, None, None, None],
+    [13, 'Beine hinten', 'Waden', 'A', 175, 6, None, None],
+    [13, 'Beine hinten', 'Waden', 'A', 185, 6, None, None],
 ]

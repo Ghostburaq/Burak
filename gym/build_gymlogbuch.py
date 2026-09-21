@@ -45,7 +45,7 @@ QUELLE = "Löwin_Training_260727.pdf"
 STAND = "31.07.2026"
 
 SESSIONS = 16          # gleichzeitig angezeigte Einheiten (rollendes Fenster)
-EX_SLOTS = 16          # Übungs-Slots im Stammblatt (13 belegt)
+EX_SLOTS = 16          # Übungs-Slots im Stammblatt (14 belegt)
 SESSION_SLOTS = 60     # vorbereitete Zeilen im Blatt 'Einheiten'
 LOG_ROWS = 1200        # vorbereitete Satzzeilen im Log
 BLATT_KOPIEN = 4       # Trainingsblätter je Block auf Vorrat
@@ -87,9 +87,9 @@ UEBUNGEN = [
          notiz="Dritter Arbeitssatz läuft als Reduktionssatz aus."),
     dict(name="Adduktion", block="Beine vorne", geraet="Maschine",
          von=5, bis=6, saetze=2, rpe="9", start=None, maxlast=None,
-         schritt=2.5, letzter="A", anpassung=80, aktiv="ja",
+         schritt=2.5, letzter="A", anpassung=90, aktiv="ja",
          notiz="Kommt nach der Adduktoren-Zerrung zurück, aber gedrosselt: "
-               "Anpassung 80 Prozent und zwei statt drei Sätze. Sie war die "
+               "Anpassung 90 Prozent und zwei statt drei Sätze. Sie war die "
                "einzige Übung mit dem verletzten Muskel als Zielmuskel und "
                "hat eine Woche pausiert. Erst wenn zwei Einheiten ohne "
                "Ziehen durch sind, Anpassung auf 100 und Sätze auf 3. "
@@ -97,6 +97,16 @@ UEBUNGEN = [
                "frühere Annahme 152.5 kg als Stackende stimmt also nicht. "
                "Falls doch eine Obergrenze existiert, hier unter "
                "'Max (kg)' eintragen."),
+    dict(name="Reverse V-Squat", block="Beine hinten",
+         geraet="Maschine, Scheiben, Eigengewicht 50 kg", von=5, bis=6,
+         saetze=3, rpe="8-9", start=None, maxlast=None, schritt=5,
+         letzter="A", anpassung=100, aktiv="ja",
+         notiz="Neu ab Einheit 13, steht als schwere Grundübung am Anfang "
+               "der Rückseite. Alle Gewichte inklusive der 50 kg "
+               "Eigengewicht des Schlittens notieren, sonst stimmt die "
+               "Progression nicht. Kleinste sinnvolle Steigerung sind "
+               "1.25 kg je Seite, also 5 kg gesamt - deshalb steht "
+               "'Schritt (kg)' auf 5."),
     dict(name="Rumänisches Kreuzheben", block="Beine hinten",
          geraet="Langhantel", von=5, bis=6, saetze=3, rpe="8", start=None,
          maxlast=None, schritt=2.5, letzter="A", anpassung=100, aktiv="ja",
@@ -104,17 +114,18 @@ UEBUNGEN = [
                "gestrecktem Knie, Ischiokrurale und Gluteus in der Dehnung."),
     dict(name="Beinpresse breit", block="Beine hinten",
          geraet="Beinpresse, breiter Stand, Füsse hoch", von=5, bis=6,
-         saetze=2, rpe="8-9", start=260, maxlast=None, schritt=5,
-         letzter="A", anpassung=85, aktiv="ja",
-         notiz="Neu. Startgewicht 260 kg = 85 Prozent des Top-Satzes der "
-               "engen Beinpresse (303 kg), auf 10 kg gerundet. Breiter "
-               "Stand mit höherer Fussposition holt Adduktoren und Gesäss "
-               "stärker rein. Genau deshalb hat sie in der Woche nach der "
-               "Zerrung pausiert und kommt jetzt mit Anpassung 85 Prozent "
-               "und zwei Sätzen zurück - der breite Stand zieht die "
-               "Adduktoren in die Dehnung. Die erste Einheit ist eine "
-               "Eichung - danach rechnet die Progression aus deinen echten "
-               "Werten weiter."),
+         saetze=3, rpe="8-9", start=220, maxlast=None, schritt=5,
+         letzter="A", anpassung=100, aktiv="ja",
+         notiz="Bisher nie ausgeführt: in Einheit 11 bis 13 jedes Mal "
+               "ausgelassen, davor wegen der Adduktoren-Zerrung pausiert. "
+               "Das Startgewicht ist deshalb weiter eine Schätzung und "
+               "steht bewusst auf 220 kg statt der ursprünglich "
+               "abgeleiteten 260 kg - die erste Einheit ist eine Eichung, "
+               "danach rechnet die Progression aus echten Werten weiter. "
+               "Breiter Stand mit höherer Fussposition holt Adduktoren und "
+               "Gesäss stärker rein; wenn dort noch etwas zieht, lieber "
+               "eine Woche später anfangen. Bleibt sie dauerhaft aus dem "
+               "Plan, im Feld 'Aktiv' auf 'nein' setzen."),
     dict(name="Hip Thrust", block="Beine hinten", geraet="Langhantel",
          von=5, bis=6, saetze=3, rpe="8-9", start=None, maxlast=None,
          schritt=5, letzter="A", anpassung=100, aktiv="ja",
@@ -157,6 +168,14 @@ UEBUNGEN = [
 # aus genau dieser Ersatzangabe abgeleitet und im Blatt 'Start' als offener
 # Punkt vermerkt.
 REHA_ZUSATZ = {
+    "Reverse V-Squat": (
+        8,
+        "Beinpresse enger Stand, ab Woche 2 frei",
+        "Freigabewoche abgeleitet, nicht ärztlich bestätigt: die Polster "
+        "liegen auf Schulter und Nacken, die Last geht also direkt über den "
+        "Schultergürtel. Deshalb wie beim Split Squat Woche 8 angesetzt und "
+        "nicht Woche 2 wie bei der Beinpresse. Mit Operateur oder "
+        "Physiotherapie bestätigen."),
     "Beinpresse breit": (
         2,
         "Beinbeuger sitzend, ab Woche 1 frei",
@@ -2123,8 +2142,8 @@ TAGE = [
      "Durchblutung fördert die Erholung, ohne neuen Reiz zu setzen."),
     ("Mittwoch", "frei", "Oberkörper oder Ruhetag",
      "Beine bleiben unbelastet."),
-    ("Donnerstag", "Beine hinten", "RDL · Beinpresse breit · Hip Thrust · "
-     "Hip & Glute · Beinbeuger · Seitl. Kickbacks · Waden",
+    ("Donnerstag", "Beine hinten", "Reverse V-Squat · RDL · Beinpresse breit · "
+     "Hip Thrust · Hip & Glute · Beinbeuger · Seitl. Kickbacks · Waden",
      "72 Stunden nach Montag - die Vorderseite ist wieder erholt."),
     ("Freitag", "frei", "Oberkörper oder Ruhetag", "Erholung."),
     ("Samstag", "frei", "Gehen, Mobilität",
@@ -2179,21 +2198,23 @@ wsw.row_dimensions[r].height = 20
 r += 1
 
 WIEDER = [
-    ("80 %", "Adduktion (Maschine)",
-     "2 Sätze, Anpassung 80 %",
-     "Einzige Übung mit dem verletzten Muskel als Zielmuskel, hat eine "
-     "Woche komplett pausiert. Kommt jetzt mit reduzierter Last und einem "
-     "Satz weniger zurück, nicht mit dem alten Arbeitsgewicht."),
-    ("85 %", "Beinpresse breiter Stand",
-     "2 Sätze, Anpassung 85 %",
-     "Der breite Stand zieht die Adduktoren in die Dehnung - genau die "
-     "Position, die eine frische Zerrung nicht mag. Die erste Einheit "
-     "ist ohnehin eine Eichung, sie muss nicht schwer sein."),
-    ("100 %", "alle übrigen neun Übungen",
+    ("90 %", "Adduktion (Maschine)",
+     "2 Sätze, Anpassung 90 %",
+     "Einzige Übung mit dem verletzten Muskel als Zielmuskel und seit "
+     "Einheit 8 nicht mehr ausgeführt. Von 80 auf 90 Prozent angehoben, "
+     "weil drei Einheiten ohne Beschwerden gelaufen sind - aber noch "
+     "nicht auf 100, weil genau dieser Muskel noch nicht belastet "
+     "wurde. Läuft die erste Einheit sauber, auf 100 und drei Sätze."),
+    ("Eichung", "Beinpresse breiter Stand",
+     "3 Sätze, Start 220 kg",
+     "Drosselung aufgehoben, aber bis heute nie ausgeführt. Das "
+     "Startgewicht bleibt eine Schätzung und steht vorsichtig bei "
+     "220 kg statt 260 - die erste Einheit ist eine Eichung."),
+    ("100 %", "alle übrigen zehn Übungen",
      "3 Sätze, volle Progression",
-     "Zwei Einheiten nach der Pause ohne Beschwerden gelaufen. Die "
-     "Drosselung hat ihren Zweck erfüllt und würde ab jetzt nur noch "
-     "Fortschritt kosten."),
+     "Einheit 11, 12 und 13 nach der Pause ohne Beschwerden gelaufen. "
+     "Die Drosselung hat ihren Zweck erfüllt und würde ab jetzt nur "
+     "noch Fortschritt kosten."),
     ("Abbruch", "alle Übungen",
      "bei Ziehen sofort beenden",
      "Ein Ziehen in der Leiste ist kein Muskelkater. Die Einheit endet, "
