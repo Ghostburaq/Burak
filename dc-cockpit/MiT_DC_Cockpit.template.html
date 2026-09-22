@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="de-CH" data-theme="">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MiT Datacenter Cockpit</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" crossorigin="">
+<style>
+:root{
+  color-scheme: light;
+  --plane:#f9f9f7; --surface:#fcfcfb; --surface-2:#f3f2ef;
+  --ink:#0b0b0b; --ink-2:#52514e; --muted:#898781;
+  --grid:#e1e0d9; --axis:#c3c2b7; --ring:rgba(11,11,11,0.10);
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a;
+  --seq-100:#cde2fb; --seq-250:#86b6ef; --seq-400:#3987e5; --seq-450:#2a78d6; --seq-550:#1c5cab; --seq-650:#104281;
+  --good:#0ca30c; --warning:#fab219; --serious:#ec835a; --critical:#d03b3b;
+  --good-ink:#006300;
+  --radius:10px;
+  --font: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:where(:not([data-theme="light"])){
+    color-scheme: dark;
+    --plane:#0d0d0d; --surface:#1a1a19; --surface-2:#232321;
+    --ink:#ffffff; --ink-2:#c3c2b7; --muted:#898781;
+    --grid:#2c2c2a; --axis:#383835; --ring:rgba(255,255,255,0.10);
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70;
+    --seq-100:#104281; --seq-250:#184f95; --seq-400:#2a78d6; --seq-450:#3987e5; --seq-550:#5598e7; --seq-650:#86b6ef;
+    --good-ink:#0ca30c;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --plane:#0d0d0d; --surface:#1a1a19; --surface-2:#232321;
+  --ink:#ffffff; --ink-2:#c3c2b7; --muted:#898781;
+  --grid:#2c2c2a; --axis:#383835; --ring:rgba(255,255,255,0.10);
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70;
+  --seq-100:#104281; --seq-250:#184f95; --seq-400:#2a78d6; --seq-450:#3987e5; --seq-550:#5598e7; --seq-650:#86b6ef;
+  --good-ink:#0ca30c;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--plane);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+a{color:var(--s1)}
+h1,h2,h3{margin:0 0 .4em;font-weight:650;letter-spacing:-.01em}
+h1{font-size:1.15rem} h2{font-size:1.02rem} h3{font-size:.92rem}
+code,kbd{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.85em;background:var(--surface-2);padding:.1em .35em;border-radius:4px}
+
+/* ---------- Kopf ---------- */
+header{position:sticky;top:0;z-index:500;background:var(--surface);border-bottom:1px solid var(--ring)}
+.kopf{max-width:1280px;margin:0 auto;padding:10px 16px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.marke{display:flex;flex-direction:column;gap:1px;margin-right:auto;min-width:0}
+.marke b{font-size:1.02rem;letter-spacing:-.01em}
+.marke span{font-size:.74rem;color:var(--muted)}
+.kopf-akt{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:.72rem;padding:4px 9px;border-radius:999px;border:1px solid var(--ring);background:var(--surface-2);color:var(--ink-2);white-space:nowrap}
+.badge .punkt{width:7px;height:7px;border-radius:50%;flex:none}
+.p-good{background:var(--good)} .p-warn{background:var(--warning)} .p-crit{background:var(--critical)} .p-mute{background:var(--muted)}
+button,.knopf{font:inherit;font-size:.8rem;padding:6px 11px;border-radius:8px;border:1px solid var(--ring);background:var(--surface-2);color:var(--ink);cursor:pointer;white-space:nowrap}
+button:hover,.knopf:hover{background:var(--grid)}
+button.primaer{background:var(--s1);border-color:var(--s1);color:#fff}
+button.primaer:hover{filter:brightness(1.08)}
+button:disabled{opacity:.45;cursor:not-allowed}
+
+nav.tabs{max-width:1280px;margin:0 auto;padding:0 16px;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+nav.tabs::-webkit-scrollbar{display:none}
+nav.tabs button{border:0;border-bottom:2px solid transparent;background:none;border-radius:0;padding:9px 12px;color:var(--ink-2);font-size:.86rem}
+nav.tabs button:hover{background:var(--surface-2)}
+nav.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--s1);font-weight:600}
+nav.tabs .zahl{display:inline-block;margin-left:5px;font-size:.7rem;padding:1px 6px;border-radius:999px;background:var(--surface-2);color:var(--ink-2);font-variant-numeric:tabular-nums}
+nav.tabs .zahl.crit{background:var(--critical);color:#fff}
+
+main{max-width:1280px;margin:0 auto;padding:18px 16px 70px}
+section[hidden]{display:none}
+.karte{background:var(--surface);border:1px solid var(--ring);border-radius:var(--radius);padding:14px}
+.karte + .karte{margin-top:12px}
+.zeile{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.rechts{margin-left:auto}
+.hinweis{font-size:.78rem;color:var(--muted)}
+.trenner{height:1px;background:var(--grid);margin:12px 0;border:0}
+
+/* ---------- Kennzahlkacheln ---------- */
+.kacheln{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.kachel{background:var(--surface);border:1px solid var(--ring);border-radius:var(--radius);padding:13px 14px;cursor:pointer;text-align:left;display:block;width:100%}
+.kachel:hover{background:var(--surface-2)}
+.kachel .wert{font-size:2rem;font-weight:660;line-height:1.05;letter-spacing:-.02em}
+.kachel .titel{font-size:.78rem;color:var(--ink-2);margin-top:3px}
+.kachel .unten{font-size:.72rem;color:var(--muted);margin-top:5px;display:flex;align-items:center;gap:5px}
+.kachel[data-status="critical"] .wert{color:var(--critical)}
+.kachel[data-status="warning"] .wert{color:var(--good-ink)}
+.ikon{width:13px;height:13px;flex:none;display:inline-block;vertical-align:-2px}
+
+/* ---------- Anrufkarten ---------- */
+.gruppe-titel{font-size:.76rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:16px 0 7px;display:flex;align-items:center;gap:7px}
+.anruf{background:var(--surface);border:1px solid var(--ring);border-left:3px solid var(--axis);border-radius:var(--radius);padding:12px 14px;margin-bottom:8px}
+.anruf[data-status="ueberfaellig"]{border-left-color:var(--critical)}
+.anruf[data-status="heute"]{border-left-color:var(--warning)}
+.anruf[data-status="geplant"]{border-left-color:var(--s1)}
+.anruf[data-status="erledigt"]{border-left-color:var(--good);opacity:.72}
+.anruf[data-status="ohne_termin"]{border-left-color:var(--serious)}
+.anruf-kopf{display:flex;gap:9px;align-items:baseline;flex-wrap:wrap}
+.anruf-kopf .name{font-weight:640;font-size:.97rem}
+.anruf-kopf .firma{color:var(--ink-2);font-size:.88rem}
+.prio{font-size:.68rem;font-weight:700;padding:2px 6px;border-radius:5px;border:1px solid var(--ring);background:var(--surface-2);color:var(--ink-2)}
+.prio-A{background:var(--s1);color:#fff;border-color:var(--s1)}
+.prio-B{background:var(--surface-2)}
+.prio-C{background:var(--surface-2);color:var(--muted)}
+.termin{font-size:.78rem;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.verzug{font-size:.72rem;font-weight:640;color:var(--critical)}
+.anruf-feld{margin-top:7px;font-size:.87rem}
+.anruf-feld b{display:block;font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600;margin-bottom:1px}
+.anruf-akt{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.warnbox{margin-top:8px;padding:7px 9px;border-radius:7px;background:color-mix(in srgb,var(--warning) 12%,var(--surface));border:1px solid color-mix(in srgb,var(--warning) 40%,var(--ring));font-size:.79rem;color:var(--ink-2)}
+.fehlt{color:var(--critical);font-weight:640}
+.abgeleitet{color:var(--serious);font-weight:600}
+
+/* ---------- Tabellen ---------- */
+.tabelle-huelle{overflow-x:auto;border:1px solid var(--ring);border-radius:var(--radius)}
+table{border-collapse:collapse;width:100%;font-size:.85rem;background:var(--surface)}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--grid);vertical-align:top}
+th{font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:600;position:sticky;top:0;background:var(--surface);cursor:pointer;white-space:nowrap}
+th:hover{color:var(--ink)}
+tbody tr:hover{background:var(--surface-2)}
+td.num{font-variant-numeric:tabular-nums;text-align:right}
+tr:last-child td{border-bottom:0}
+
+/* ---------- Filter ---------- */
+.filter{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-bottom:11px}
+input[type=search],input[type=text],select,textarea{font:inherit;font-size:.85rem;padding:6px 9px;border-radius:8px;border:1px solid var(--ring);background:var(--surface);color:var(--ink)}
+input[type=search]{min-width:190px}
+textarea{width:100%;min-height:62px;resize:vertical}
+.chip{font-size:.76rem;padding:4px 10px;border-radius:999px;border:1px solid var(--ring);background:var(--surface);cursor:pointer;color:var(--ink-2)}
+.chip[aria-pressed="true"]{background:var(--s1);border-color:var(--s1);color:#fff;font-weight:600}
+
+/* ---------- Balken ---------- */
+.balken-reihe{display:grid;grid-template-columns:minmax(120px,190px) 1fr 62px;gap:9px;align-items:center;padding:3px 0}
+.balken-spur{height:15px;background:var(--surface-2);border-radius:3px;position:relative;overflow:hidden}
+.balken{height:100%;border-radius:0 4px 4px 0;background:var(--seq-450);position:relative}
+.balken-reihe:hover .balken{filter:brightness(1.12)}
+.balken-label{font-size:.82rem;color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.balken-wert{font-size:.8rem;font-variant-numeric:tabular-nums;color:var(--ink);text-align:right}
+.balken-leer{font-size:.76rem;color:var(--muted);font-style:italic}
+
+/* ---------- Karte ---------- */
+#leaflet{height:min(62vh,540px);border-radius:var(--radius);border:1px solid var(--ring);background:var(--surface-2)}
+.legende{display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--ink-2);margin-top:9px}
+.legende span{display:flex;align-items:center;gap:6px}
+.legende i{width:15px;height:15px;border-radius:50%;display:inline-block;color:#fff;font-size:.6rem;font-style:normal;text-align:center;line-height:15px;font-weight:700}
+.mk{border-radius:50%;border:2px solid var(--surface);color:#fff;font-size:.62rem;font-weight:700;text-align:center;line-height:17px;box-shadow:0 1px 4px rgba(0,0,0,.35)}
+
+/* ---------- News ---------- */
+.news-eintrag{padding:10px 0;border-bottom:1px solid var(--grid)}
+.news-eintrag:last-child{border-bottom:0}
+.news-eintrag .kopf{display:flex;gap:9px;align-items:baseline;flex-wrap:wrap;font-size:.74rem;color:var(--muted)}
+.news-eintrag .titel{font-weight:600;font-size:.94rem;margin:2px 0 3px;display:block;color:var(--ink);text-decoration:none}
+.news-eintrag .titel:hover{color:var(--s1)}
+.news-eintrag .text{font-size:.84rem;color:var(--ink-2)}
+.schlag{font-size:.68rem;padding:1px 6px;border-radius:999px;background:var(--surface-2);color:var(--ink-2);border:1px solid var(--ring)}
+
+/* ---------- Dialog ---------- */
+dialog{border:1px solid var(--ring);border-radius:12px;background:var(--surface);color:var(--ink);padding:0;max-width:560px;width:calc(100% - 32px)}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+.dlg-kopf{padding:14px 16px;border-bottom:1px solid var(--grid)}
+.dlg-leib{padding:14px 16px;max-height:62vh;overflow-y:auto}
+.dlg-fuss{padding:12px 16px;border-top:1px solid var(--grid);display:flex;gap:8px;justify-content:flex-end}
+.feld{margin-bottom:11px}
+.feld label{display:block;font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:600;margin-bottom:3px}
+.feld input,.feld select,.feld textarea{width:100%}
+.gate{display:flex;gap:8px;align-items:flex-start;font-size:.83rem;padding:4px 0;color:var(--ink-2)}
+.gate input{margin-top:3px;flex:none}
+
+pre.sig{background:var(--surface-2);border:1px solid var(--ring);border-radius:8px;padding:11px 13px;font-size:.84rem;white-space:pre-wrap;margin:0;font-family:var(--font)}
+ol.regeln{padding-left:20px;margin:0}
+ol.regeln li{margin-bottom:7px;font-size:.87rem}
+ul.liste{padding-left:19px;margin:0}
+ul.liste li{margin-bottom:5px;font-size:.86rem;color:var(--ink-2)}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:var(--plane);padding:9px 16px;border-radius:9px;font-size:.84rem;z-index:9999;opacity:0;transition:opacity .18s;pointer-events:none}
+.toast.an{opacity:1}
+@media (max-width:640px){
+  .balken-reihe{grid-template-columns:1fr 60px;}
+  .balken-spur{grid-column:1 / -1;}
+  main{padding:14px 16px 60px}
+}
+@media print{
+  header,nav.tabs,.anruf-akt,button{display:none!important}
+  body{background:#fff}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="kopf">
+    <div class="marke">
+      <b>MiT Datacenter Cockpit</b>
+      <span id="kopf-zeit">&nbsp;</span>
+    </div>
+    <div class="kopf-akt">
+      <span class="badge" id="badge-daten" title="Alter des Datenstands"><span class="punkt p-mute"></span><span>Daten</span></span>
+      <span class="badge" id="badge-modus" title="Verbindungsmodus"><span class="punkt p-mute"></span><span>Modus</span></span>
+      <button id="btn-neu" title="Jetzt neu laden">Aktualisieren</button>
+      <button id="btn-melden" title="Desktop-Hinweis bei faelligen Anrufen">Hinweise</button>
+      <button id="btn-thema" title="Hell oder dunkel">Thema</button>
+    </div>
+  </div>
+  <nav class="tabs" id="tabs" role="tablist"></nav>
+</header>
+
+<main>
+  <!-- ============ COCKPIT ============ -->
+  <section id="tab-cockpit" role="tabpanel">
+    <div class="kacheln" id="kacheln"></div>
+
+    <div class="karte" style="margin-top:12px">
+      <div class="zeile">
+        <h2 style="margin:0">Anrufliste</h2>
+        <div class="rechts zeile">
+          <span class="chip" role="button" tabindex="0" data-f="alle" aria-pressed="true">Alle</span>
+          <span class="chip" role="button" tabindex="0" data-f="ueberfaellig" aria-pressed="false">Überfällig</span>
+          <span class="chip" role="button" tabindex="0" data-f="heute" aria-pressed="false">Heute</span>
+          <span class="chip" role="button" tabindex="0" data-f="offen" aria-pressed="false">Ohne Ergebnis</span>
+          <span class="chip" role="button" tabindex="0" data-f="A" aria-pressed="false">Nur Prio A</span>
+          <button id="btn-ics" title="Alle offenen Anrufe als Kalenderdatei fuer Outlook">Kalender (.ics)</button>
+        </div>
+      </div>
+      <hr class="trenner">
+      <div id="anrufliste"></div>
+    </div>
+  </section>
+
+  <!-- ============ KONTAKTE ============ -->
+  <section id="tab-kontakte" role="tabpanel" hidden>
+    <div class="karte">
+      <div class="filter">
+        <input type="search" id="suche-k" placeholder="Name, Firma, Projekt suchen">
+        <select id="filter-prio"><option value="">Alle Prioritäten</option><option>A</option><option>B</option><option>C</option></select>
+        <select id="filter-kanal"><option value="">Alle Kanäle</option></select>
+        <span class="chip" role="button" tabindex="0" id="chip-luecke" aria-pressed="false">Nur Datenlücken</span>
+        <span class="rechts hinweis" id="kontakte-zahl"></span>
+      </div>
+      <div class="tabelle-huelle">
+        <table id="tab-k">
+          <thead><tr>
+            <th data-sort="prio">Prio</th><th data-sort="datum">Termin</th><th data-sort="name">Kontakt</th>
+            <th data-sort="firma">Firma</th><th data-sort="projekt">Projekt</th><th data-sort="kanal">Kanal</th>
+            <th data-sort="mail">Mail</th><th data-sort="tel">Telefon</th><th data-sort="status">Status</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="karte">
+      <h2>Gestrichen</h2>
+      <p class="hinweis">Nicht anschreiben. Grund und Quelle stehen dabei, damit der Eintrag nicht versehentlich reaktiviert wird.</p>
+      <div class="tabelle-huelle">
+        <table id="tab-gestrichen"><thead><tr><th>Kontakt</th><th>Firma</th><th>Grund</th><th>Quelle</th></tr></thead><tbody></tbody></table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ KARTE ============ -->
+  <section id="tab-karte" role="tabpanel" hidden>
+    <div class="karte">
+      <div class="filter">
+        <span class="chip" role="button" tabindex="0" data-m="neubau" aria-pressed="true">Neubau-Pipeline</span>
+        <span class="chip" role="button" tabindex="0" data-m="bestand" aria-pressed="true">Bestand Schweiz</span>
+        <span class="chip" role="button" tabindex="0" data-m="fl" aria-pressed="true">Liechtenstein</span>
+        <span class="rechts hinweis" id="karte-stand"></span>
+      </div>
+      <div id="leaflet"></div>
+      <div class="legende">
+        <span><i style="background:var(--s1)">N</i> Neubau, Testlast L3 bis L5</span>
+        <span><i style="background:var(--s2)">B</i> Bestand, NEA- und USV-Tests, PQ-Audit</span>
+        <span><i style="background:var(--s3)">L</i> Liechtenstein, Bestand und Carrier</span>
+      </div>
+      <p class="hinweis" id="karte-hinweis" style="margin-top:9px"></p>
+    </div>
+  </section>
+
+  <!-- ============ PIPELINE ============ -->
+  <section id="tab-pipeline" role="tabpanel" hidden>
+    <div class="karte">
+      <h2>Neubau-Pipeline nach Leistung</h2>
+      <p class="hinweis">Angaben aus MARKT_DC.md, Stand öffentliche Quellen September 2026. Projekte ohne MW-Angabe stehen als Liste darunter, nicht als Nullbalken.</p>
+      <div id="balken" style="margin-top:11px"></div>
+      <div id="balken-ohne" style="margin-top:9px"></div>
+    </div>
+    <div class="karte">
+      <h2>Projekte</h2>
+      <div class="tabelle-huelle">
+        <table id="tab-pipeline"><thead><tr>
+          <th data-sort="projekt">Projekt</th><th data-sort="betreiber">Betreiber</th><th data-sort="groesse">Grösse</th>
+          <th data-sort="ibn">IBN</th><th data-sort="beteiligte">Beteiligte</th><th data-sort="stand">Stand</th>
+        </tr></thead><tbody></tbody></table>
+      </div>
+    </div>
+    <div class="karte">
+      <h2>Laufende Aufträge mit Aggreko-Bezug</h2>
+      <div class="tabelle-huelle">
+        <table id="tab-auftraege"><thead><tr><th>Projekt</th><th>Inhalt</th><th>Hinweis</th></tr></thead><tbody></tbody></table>
+      </div>
+    </div>
+    <div class="karte">
+      <h2>Branchenanlässe</h2>
+      <div id="anlaesse"></div>
+    </div>
+  </section>
+
+  <!-- ============ NEWS ============ -->
+  <section id="tab-news" role="tabpanel" hidden>
+    <div class="karte">
+      <div class="filter">
+        <input type="search" id="suche-n" placeholder="News durchsuchen">
+        <span class="rechts hinweis" id="news-stand"></span>
+      </div>
+      <div id="newsliste"></div>
+    </div>
+  </section>
+
+  <!-- ============ LOG ============ -->
+  <section id="tab-log" role="tabpanel" hidden>
+    <div class="karte">
+      <div class="zeile">
+        <h2 style="margin:0">Anrufergebnisse</h2>
+        <div class="rechts zeile">
+          <button id="btn-csv">CSV für Excel</button>
+          <button id="btn-md">Markdown für KONTAKTE_STATUS.md</button>
+          <button id="btn-log-leer">Leeren</button>
+        </div>
+      </div>
+      <p class="hinweis">Liegt im Browserspeicher dieses Rechners. Der Rückweg in die Excel läuft über
+        <code>CSV für Excel</code>, Datei als <code>anruf_log.csv</code> neben das Cockpit legen, dann
+        <code>python3 dc_update.py --merge-log</code>. Das Skript legt vorher eine Sicherung der Mappe an.</p>
+      <hr class="trenner">
+      <div id="logliste"></div>
+    </div>
+  </section>
+
+  <!-- ============ REGELN ============ -->
+  <section id="tab-regeln" role="tabpanel" hidden>
+    <div class="karte">
+      <div class="zeile"><h2 style="margin:0">Signatur</h2><button class="rechts" id="btn-sig">Kopieren</button></div>
+      <pre class="sig" id="sig"></pre>
+      <p class="hinweis" id="sig-alt" style="margin-top:8px"></p>
+    </div>
+    <div class="karte">
+      <h2>Harte Regeln, ausnahmslos</h2>
+      <ol class="regeln" id="regelliste"></ol>
+    </div>
+    <div class="karte">
+      <h2>Gates vor jedem Kontakt</h2>
+      <div id="gateliste"></div>
+    </div>
+    <div class="karte">
+      <h2>Datenqualität Aggreko-Tracker</h2>
+      <ul class="liste" id="dqliste"></ul>
+    </div>
+    <div class="karte">
+      <h2>Wer entscheidet was</h2>
+      <ul class="liste">
+        <li><b>Commissioning Agent:</b> Testmatrix, Cx-Level, kW-Stufen, Messprotokoll. Wichtigster Kontakt, fehlt im Tracker komplett.</li>
+        <li><b>Elektroplaner, MEP:</b> Leistungsverzeichnis. Entscheidet, ob Lastbank und PQ im LV stehen. Höchster Multiplikator.</li>
+        <li><b>GU, Construction Management:</b> vergibt das Cx-Paket.</li>
+        <li><b>Elektro-Unternehmer:</b> preist Inbetriebsetzung oft selbst ein, kauft Lastbänke als Subleistung.</li>
+        <li><b>Rückbau, Spezialtiefbau:</b> vor dem Netzanschluss, Baustrom mit Ausfallrisiko bei Grundwasserhaltung.</li>
+        <li><b>Betreiber:</b> bei Neubau zu spät. Richtig für Bestand: NEA-Tests, USV-Tests, PQ-Audits, Wartungsfenster.</li>
+        <li><b>Einkauf:</b> zuletzt, nie zuerst.</li>
+      </ul>
+      <hr class="trenner">
+      <h3>Bauphasen und Andockpunkte</h3>
+      <p style="font-size:.86rem;color:var(--ink-2);margin:0">
+        Rohbau: Baustrom, Heizung, Trocknung · L1/L2: Trocknung, Klimatisierung · L3: Generator- und USV-Tests ·
+        L4: Lastbänke, Wärmelast · L5 IST: Volllast, Netzausfall, PQ Klasse A · Betrieb: NEA-Tests, Wartung.<br><br>
+        Argument: Wird L4 durchgehetzt, fällt der IST über Probleme, deren Nachtest teuer ist, weil Lastbänke gemietet
+        sind, OEM-Techniker vor Ort stehen und der Terminplan keine Reserve hat.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ QUELLEN ============ -->
+  <section id="tab-quellen" role="tabpanel" hidden>
+    <div class="karte">
+      <h2>Feed-Status</h2>
+      <p class="hinweis">Der Updater testet jede Quelle bei jedem Lauf. Tote Feeds werden abgeschaltet und hier
+        benannt, statt stillschweigend nichts zu liefern. URL ersetzen in <code>config.json</code>.</p>
+      <div class="tabelle-huelle" style="margin-top:9px">
+        <table id="tab-quellen"><thead><tr><th>Quelle</th><th>Zustand</th><th>Detail</th><th>URL</th><th>Geprüft</th></tr></thead><tbody></tbody></table>
+      </div>
+    </div>
+    <div class="karte">
+      <h2>Datenstand</h2>
+      <div id="standinfo"></div>
+    </div>
+    <div class="karte">
+      <h2>Ungelöste Orte</h2>
+      <p class="hinweis">Adressen, die Nominatim nicht auflösen konnte. Sie fehlen auf der Karte, es wird nichts geschätzt.</p>
+      <ul class="liste" id="geo-offen"></ul>
+    </div>
+  </section>
+</main>
+
+<!-- Dialog: Anruf loggen -->
+<dialog id="dlg">
+  <form method="dialog">
+    <div class="dlg-kopf"><b id="dlg-titel">Anruf</b><div class="hinweis" id="dlg-sub"></div></div>
+    <div class="dlg-leib">
+      <div class="feld"><label>Erreicht</label>
+        <select id="f-erreicht"><option value="ja">ja</option><option value="nein">nein</option><option value="Rückruf vereinbart">Rückruf vereinbart</option></select></div>
+      <div class="feld"><label>Ergebnis in einem Satz</label><textarea id="f-ergebnis" placeholder="Was kam raus"></textarea></div>
+      <div class="feld"><label>Nächster Schritt</label><input type="text" id="f-naechster" placeholder="Was passiert als Nächstes"></div>
+      <div class="feld"><label>Wiedervorlage</label><input type="date" id="f-wv"></div>
+      <hr class="trenner">
+      <label style="font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:600">Gates</label>
+      <div id="dlg-gates"></div>
+    </div>
+    <div class="dlg-fuss">
+      <button value="abbruch">Abbrechen</button>
+      <button value="ok" class="primaer" id="dlg-ok">Speichern</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" crossorigin=""></script>
+<script>
+/*SEED_START*/
+const SEED = {"meta":{"titel":"MiT Datacenter Cockpit","hinweis":"Vorlage ohne Daten. Fuellen mit: python3 dc_update.py --once"},"signatur":"","signatur_alt":[],"regeln":[],"gates":[],"datenqualitaet":[],"kontakte":[],"gestrichen":[],"pipeline":[],"liechtenstein":[],"bestand":[],"auftraege":[],"anlaesse":[],"news":[],"quellen_status":[],"geo":{}};
+/*SEED_END*/
+
+// ===========================================================================
+// Zustand
+// ===========================================================================
+let D = SEED;                       // aktueller Datensatz
+let MODUS = "einzeldatei";          // oder "verbunden"
+const LS = {
+  log:   "mit_dc_log_v1",
+  thema: "mit_dc_thema_v1",
+  gates: "mit_dc_gates_v1"
+};
+const POLL_MIN = 5;                 // wie oft dc_data.json neu geholt wird
+const TICK_SEK = 30;                // wie oft Termine gegen die Uhr neu gerechnet werden
+
+const sicher = {
+  lies(k, fallback){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : fallback; }catch(e){ return fallback; } },
+  schreib(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); return true; }catch(e){ return false; } }
+};
+
+const heuteISO = () => new Date().toISOString().slice(0,10);
+const esc = s => String(s==null?"":s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const deDatum = iso => { if(!iso) return ""; const [j,m,t] = iso.split("-"); return `${t}.${m}.${j}`; };
+
+function toast(text){
+  const el = document.getElementById("toast");
+  el.textContent = text; el.classList.add("an");
+  clearTimeout(el._t); el._t = setTimeout(()=>el.classList.remove("an"), 2200);
+}
+async function kopiere(text, meldung){
+  try{ await navigator.clipboard.writeText(text); toast(meldung||"Kopiert"); }
+  catch(e){
+    const ta = document.createElement("textarea");
+    ta.value = text; ta.style.position="fixed"; ta.style.opacity="0";
+    document.body.appendChild(ta); ta.select();
+    try{ document.execCommand("copy"); toast(meldung||"Kopiert"); }
+    catch(e2){ toast("Kopieren blockiert, bitte von Hand markieren"); }
+    ta.remove();
+  }
+}
+
+// ===========================================================================
+// Ableitungen
+// ===========================================================================
+function logEintraege(){ return sicher.lies(LS.log, {}); }
+
+function status(k){
+  const log = logEintraege()[k.id];
+  if(log) return "erledigt";
+  if(k.ergebnis && k.ergebnis.trim()) return "erledigt";
+  if(!k.datum) return "ohne_termin";
+  const h = heuteISO();
+  if(k.datum < h) return "ueberfaellig";
+  if(k.datum === h){
+    if(k.zeit){
+      const jetzt = new Date();
+      const [st,mi] = k.zeit.split(":").map(Number);
+      const term = new Date(); term.setHours(st||0, mi||0, 0, 0);
+      if(jetzt > term) return "ueberfaellig";
+    }
+    return "heute";
+  }
+  return "geplant";
+}
+function tageVerzug(k){
+  if(!k.datum) return 0;
+  const a = new Date(k.datum + "T00:00:00"), b = new Date(heuteISO() + "T00:00:00");
+  return Math.round((b - a) / 86400000);
+}
+function kontakteMitStatus(){ return (D.kontakte||[]).map(k => ({...k, _status: status(k), _verzug: tageVerzug(k)})); }
+
+const IKON = {
+  critical: '<svg class="ikon" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1.6 15 14H1L8 1.6Zm0 4.2a.8.8 0 0 0-.8.85l.2 3.1a.6.6 0 0 0 1.2 0l.2-3.1A.8.8 0 0 0 8 5.8Zm0 5.2a.85.85 0 1 0 0 1.7.85.85 0 0 0 0-1.7Z"/></svg>',
+  warning:  '<svg class="ikon" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><circle cx="8" cy="8" r="6.6" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 4.3v4.2M8 10.8v.1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
+  good:     '<svg class="ikon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m3 8.4 3.3 3.2L13 4.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  info:     '<svg class="ikon" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><circle cx="8" cy="8" r="6.6" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 7.2v4M8 4.6v.1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>'
+};
+
+// ===========================================================================
+// Tabs
+// ===========================================================================
+const TABS = [
+  {id:"cockpit",  label:"Cockpit",  zahl:() => kontakteMitStatus().filter(k=>k._status==="ueberfaellig").length, krit:true},
+  {id:"kontakte", label:"Kontakte", zahl:() => (D.kontakte||[]).length},
+  {id:"karte",    label:"Karte"},
+  {id:"pipeline", label:"Pipeline", zahl:() => (D.pipeline||[]).length},
+  {id:"news",     label:"News",     zahl:() => (D.news||[]).length},
+  {id:"log",      label:"Log",      zahl:() => Object.keys(logEintraege()).length},
+  {id:"regeln",   label:"Regeln"},
+  {id:"quellen",  label:"Quellen"}
+];
+let aktiverTab = "cockpit";
+
+function zeichneTabs(){
+  const nav = document.getElementById("tabs");
+  nav.innerHTML = TABS.map(t => {
+    const n = t.zahl ? t.zahl() : null;
+    const kl = (t.krit && n > 0) ? "zahl crit" : "zahl";
+    return `<button role="tab" data-tab="${t.id}" aria-selected="${t.id===aktiverTab}">${t.label}${
+      n !== null && n !== undefined ? `<span class="${kl}">${n}</span>` : ""}</button>`;
+  }).join("");
+  nav.querySelectorAll("button").forEach(b => b.onclick = () => waehleTab(b.dataset.tab));
+}
+function waehleTab(id){
+  aktiverTab = id;
+  TABS.forEach(t => document.getElementById("tab-" + t.id).hidden = (t.id !== id));
+  zeichneTabs();
+  if(id === "karte") setTimeout(zeichneKarte, 40);
+  location.hash = id;
+}
+
+// ===========================================================================
+// Cockpit
+// ===========================================================================
+let anruffilter = "alle";
+
+function zeichneKacheln(){
+  const ks = kontakteMitStatus();
+  const ueber = ks.filter(k=>k._status==="ueberfaellig");
+  const aeltester = ueber.length ? Math.max(...ueber.map(k=>k._verzug)) : 0;
+  const heute = ks.filter(k=>k._status==="heute");
+  const woche = ks.filter(k=>{
+    if(!k.datum) return false;
+    const d = new Date(k.datum+"T00:00:00"), h = new Date(heuteISO()+"T00:00:00");
+    const diff = (d-h)/86400000; return diff >= 0 && diff <= 7;
+  });
+  const ohneTermin = ks.filter(k=>k._status==="ohne_termin");
+  const ohneMail = ks.filter(k=>k.mailq==="fehlt" || k.mailq==="opt-out");
+  const erledigt = ks.filter(k=>k._status==="erledigt");
+  const prioA = ks.filter(k=>k.prio==="A" && k._status!=="erledigt");
+
+  const kacheln = [
+    {wert:ueber.length, titel:"Überfällig, ohne Ergebnis", unten: aeltester>0 ? `ältester Termin ${aeltester} Tage her` : "nichts offen", st:"critical", f:"ueberfaellig"},
+    {wert:heute.length, titel:"Heute fällig", unten:"noch nicht verstrichen", st:"", f:"heute"},
+    {wert:woche.length, titel:"Nächste 7 Tage", unten:"inklusive heute", st:"", f:"alle"},
+    {wert:prioA.length, titel:"Prio A offen", unten:"höchster Hebel", st:"", f:"A"},
+    {wert:ohneTermin.length, titel:"Ohne Termin", unten:"kein Kontakt ohne Wiedervorlage", st:"", f:"alle"},
+    {wert:ohneMail.length, titel:"Ohne belegte Mailadresse", unten:"FEHLT oder Opt-out", st:"", f:"alle"},
+    {wert:erledigt.length, titel:"Ergebnis erfasst", unten:"in dieser Sitzung und Excel", st:"warning", f:"alle"}
+  ];
+  document.getElementById("kacheln").innerHTML = kacheln.map(k => `
+    <button class="kachel" data-status="${k.st}" data-f="${k.f}">
+      <div class="wert">${k.wert}</div>
+      <div class="titel">${esc(k.titel)}</div>
+      <div class="unten">${k.st==="critical"&&k.wert>0?IKON.critical:(k.st==="warning"?IKON.good:IKON.info)} ${esc(k.unten)}</div>
+    </button>`).join("");
+  document.querySelectorAll("#kacheln .kachel").forEach(b => b.onclick = () => {
+    setFilter(b.dataset.f); waehleTab("cockpit");
+    document.getElementById("anrufliste").scrollIntoView({behavior:"smooth", block:"start"});
+  });
+}
+
+function setFilter(f){
+  anruffilter = f;
+  document.querySelectorAll('#tab-cockpit .chip').forEach(c => c.setAttribute("aria-pressed", String(c.dataset.f === f)));
+  zeichneAnrufliste();
+}
+
+const GRUPPEN = [
+  {k:"ueberfaellig", label:"Überfällig", ikon:IKON.critical},
+  {k:"heute",        label:"Heute",      ikon:IKON.warning},
+  {k:"ohne_termin",  label:"Ohne Termin", ikon:IKON.warning},
+  {k:"geplant",      label:"Geplant",    ikon:IKON.info},
+  {k:"erledigt",     label:"Erledigt",   ikon:IKON.good}
+];
+
+function mailFeld(k){
+  if(k.mailq === "fehlt")   return `<span class="fehlt">FEHLT</span>`;
+  if(k.mailq === "opt-out") return `<span class="fehlt">${esc(k.mail)}</span>`;
+  if(k.mailq === "abgeleitet") return `<span class="abgeleitet">${esc(k.mail)}</span> <span class="hinweis">abgeleitet, unbestätigt</span>`;
+  return esc(k.mail);
+}
+
+function zeichneAnrufliste(){
+  let ks = kontakteMitStatus();
+  if(anruffilter === "ueberfaellig") ks = ks.filter(k=>k._status==="ueberfaellig");
+  else if(anruffilter === "heute")   ks = ks.filter(k=>k._status==="heute");
+  else if(anruffilter === "offen")   ks = ks.filter(k=>k._status!=="erledigt");
+  else if(anruffilter === "A")       ks = ks.filter(k=>k.prio==="A");
+
+  const html = GRUPPEN.map(g => {
+    const teil = ks.filter(k=>k._status===g.k)
+      .sort((a,b)=> (a.datum||"9").localeCompare(b.datum||"9") || (a.zeit||"").localeCompare(b.zeit||""));
+    if(!teil.length) return "";
+    return `<div class="gruppe-titel">${g.ikon} ${g.label} <span style="color:var(--muted)">(${teil.length})</span></div>`
+      + teil.map(karteAnruf).join("");
+  }).join("");
+  document.getElementById("anrufliste").innerHTML = html || `<p class="hinweis">Kein Kontakt in diesem Filter.</p>`;
+
+  document.querySelectorAll("[data-log]").forEach(b => b.onclick = () => oeffneDialog(b.dataset.log));
+  document.querySelectorAll("[data-kopie]").forEach(b => b.onclick = () => {
+    const k = (D.kontakte||[]).find(x=>x.id===b.dataset.kopie);
+    kopiere(notizText(k), "Outlook-Notiz kopiert");
+  });
+  document.querySelectorAll("[data-sig]").forEach(b => b.onclick = () => kopiere(D.signatur, "Signatur kopiert"));
+}
+
+function karteAnruf(k){
+  const verzug = k._status==="ueberfaellig" && k._verzug>0 ? `<span class="verzug">${k._verzug} Tage überfällig</span>` : "";
+  const log = logEintraege()[k.id];
+  return `<div class="anruf" data-status="${k._status}">
+    <div class="anruf-kopf">
+      <span class="prio prio-${esc(k.prio||"")}">${esc(k.prio||"—")}</span>
+      <span class="name">${esc(k.name)}</span>
+      <span class="firma">${esc(k.firma)}</span>
+      <span class="rechts termin">${k.datum ? deDatum(k.datum) + (k.zeit? " " + k.zeit : "") : "kein Termin"}</span>
+      ${verzug}
+    </div>
+    <div class="anruf-feld"><b>Projekt</b>${esc(k.projekt)} · Kanal ${esc(k.bisher||k.kanal||"FEHLT")}</div>
+    ${k.einstieg ? `<div class="anruf-feld"><b>Gesprächseinstieg</b>${esc(k.einstieg)}</div>` : ""}
+    ${k.ziel ? `<div class="anruf-feld"><b>Ziel des Anrufs</b>${esc(k.ziel)}</div>` : ""}
+    <div class="anruf-feld"><b>Kontakt</b>${mailFeld(k)} · ${k.telq==="fehlt" ? '<span class="fehlt">Telefon FEHLT</span>' : esc(k.tel) + (k.telq==="zentrale" ? ' <span class="hinweis">Zentrale, Durchwahl unbekannt</span>' : "")}</div>
+    ${k.warnung ? `<div class="warnbox">${IKON.warning} ${esc(k.warnung)}</div>` : ""}
+    ${log ? `<div class="warnbox" style="background:color-mix(in srgb,var(--good) 10%,var(--surface));border-color:color-mix(in srgb,var(--good) 35%,var(--ring))">
+        ${IKON.good} <b>${esc(log.erreicht)}</b> · ${esc(log.ergebnis)}${log.naechster?` · nächster Schritt: ${esc(log.naechster)}`:""}${log.wv?` · Wiedervorlage ${deDatum(log.wv)}`:""}</div>` : ""}
+    <div class="anruf-akt">
+      <button class="primaer" data-log="${k.id}">${log ? "Ergebnis ändern" : "Anruf loggen"}</button>
+      <button data-kopie="${k.id}">Outlook-Notiz</button>
+      ${k.mailq==="tracker" ? `<a class="knopf" href="mailto:${encodeURIComponent(k.mail)}">Mail öffnen</a>` : ""}
+      ${k.telq!=="fehlt" ? `<a class="knopf" href="tel:${esc((k.tel||"").replace(/\s/g,""))}">Anrufen</a>` : ""}
+      <button data-sig="1">Signatur</button>
+    </div>
+  </div>`;
+}
+
+function notizText(k){
+  if(!k) return "";
+  const t = k.datum ? deDatum(k.datum).replace(/\./g,".") : "TT.MM.JJJJ";
+  return `Titel: MiT Power | Anruf ${k.name}, ${k.firma} | ${k.projekt} | ${t} ${k.zeit||"HH:MM"}
+
+Kontakt: ${k.name}, ${k.firma}
+Mail: ${k.mailq==="fehlt"?"FEHLT":k.mail}${k.mailq==="abgeleitet"?" (abgeleitet, unbestätigt)":""}
+Telefon: ${k.telq==="fehlt"?"FEHLT":k.tel}${k.telq==="zentrale"?" (Zentrale)":""}
+Projekt: ${k.projekt}
+Rolle im Deal: aus Firma ableiten, Tracker-Rollen sind unzuverlässig
+Angesprochen am: ${k.bisher||"FEHLT"}
+Inhalt: ${k.inhalt||"FEHLT"}
+Gesprächseinstieg: ${k.einstieg||"FEHLT"}
+Ziel des Anrufs: ${k.ziel||"FEHLT"}
+Wiedervorlage: ${k.wiedervorlage||"offen"}
+Gates: Owen-Gate, CHF-Sperre, keine kVA ohne 8-Schritt-Rechenweg, PQ Klasse A als Standard, ZRH12 nur anonymisiert
+Koordination: ${k.warnung||"keine besondere"}
+
+${D.signatur}`;
+}
+
+// ===========================================================================
+// Dialog
+// ===========================================================================
+let dlgId = null;
+function oeffneDialog(id){
+  const k = (D.kontakte||[]).find(x=>x.id===id); if(!k) return;
+  dlgId = id;
+  const log = logEintraege()[id] || {};
+  document.getElementById("dlg-titel").textContent = `${k.name}, ${k.firma}`;
+  document.getElementById("dlg-sub").textContent = `${k.projekt} · Termin ${k.datum ? deDatum(k.datum) : "keiner"}`;
+  document.getElementById("f-erreicht").value = log.erreicht || "ja";
+  document.getElementById("f-ergebnis").value = log.ergebnis || "";
+  document.getElementById("f-naechster").value = log.naechster || "";
+  document.getElementById("f-wv").value = log.wv || "";
+  const gates = sicher.lies(LS.gates, {})[id] || {};
+  document.getElementById("dlg-gates").innerHTML = (D.gates||[]).map(g =>
+    `<label class="gate"><input type="checkbox" data-gate="${g.id}" ${gates[g.id]?"checked":""}><span>${esc(g.label)}</span></label>`).join("");
+  document.getElementById("dlg").showModal();
+}
+document.getElementById("dlg").addEventListener("close", function(){
+  if(this.returnValue !== "ok" || !dlgId) return;
+  const log = logEintraege();
+  log[dlgId] = {
+    name: ((D.kontakte||[]).find(x=>x.id===dlgId)||{}).name || "",
+    erreicht: document.getElementById("f-erreicht").value,
+    ergebnis: document.getElementById("f-ergebnis").value.trim(),
+    naechster: document.getElementById("f-naechster").value.trim(),
+    wv: document.getElementById("f-wv").value,
+    erfasst: new Date().toISOString().slice(0,16).replace("T"," ")
+  };
+  if(!sicher.schreib(LS.log, log)){ toast("Browserspeicher blockiert, Eintrag nicht gesichert"); return; }
+  const alleGates = sicher.lies(LS.gates, {});
+  alleGates[dlgId] = {};
+  document.querySelectorAll("#dlg-gates input").forEach(i => alleGates[dlgId][i.dataset.gate] = i.checked);
+  sicher.schreib(LS.gates, alleGates);
+  dlgId = null;
+  alles();
+  toast("Ergebnis gespeichert");
+});
+
+// ===========================================================================
+// Kontakte
+// ===========================================================================
+let kSort = {feld:"datum", auf:true}, nurLuecke = false;
+function zeichneKontakte(){
+  const such = (document.getElementById("suche-k").value||"").toLowerCase();
+  const prio = document.getElementById("filter-prio").value;
+  const kanal = document.getElementById("filter-kanal").value;
+  let ks = kontakteMitStatus();
+  if(such)  ks = ks.filter(k => `${k.name} ${k.firma} ${k.projekt} ${k.mail}`.toLowerCase().includes(such));
+  if(prio)  ks = ks.filter(k => k.prio === prio);
+  if(kanal) ks = ks.filter(k => (k.bisher||"") === kanal);
+  if(nurLuecke) ks = ks.filter(k => k.mailq !== "tracker" || k.telq === "fehlt" || k.warnung);
+
+  ks.sort((a,b)=>{
+    const va = String(a[kSort.feld]||""), vb = String(b[kSort.feld]||"");
+    return (kSort.auf?1:-1) * va.localeCompare(vb, "de");
+  });
+
+  document.querySelector("#tab-k tbody").innerHTML = ks.map(k => `<tr>
+    <td><span class="prio prio-${esc(k.prio)}">${esc(k.prio)}</span></td>
+    <td class="num">${k.datum ? deDatum(k.datum) : '<span class="fehlt">keiner</span>'}${k.zeit?" "+esc(k.zeit):""}</td>
+    <td><b>${esc(k.name)}</b>${k.warnung?` ${IKON.warning}`:""}</td>
+    <td>${esc(k.firma)}</td><td>${esc(k.projekt)}</td><td>${esc(k.bisher||"")}</td>
+    <td>${mailFeld(k)}</td>
+    <td>${k.telq==="fehlt"?'<span class="fehlt">FEHLT</span>':esc(k.tel)}</td>
+    <td>${statusText(k._status)}</td></tr>`).join("");
+  document.getElementById("kontakte-zahl").textContent = `${ks.length} von ${(D.kontakte||[]).length} Kontakten`;
+
+  document.querySelector("#tab-gestrichen tbody").innerHTML = (D.gestrichen||[]).map(g => `<tr>
+    <td>${esc(g.name)}</td><td>${esc(g.firma)}</td><td>${esc(g.grund)}</td><td class="hinweis">${esc(g.quelle)}</td></tr>`).join("");
+}
+function statusText(s){
+  const m = {ueberfaellig:[IKON.critical,"überfällig"], heute:[IKON.warning,"heute"], geplant:[IKON.info,"geplant"],
+             erledigt:[IKON.good,"erledigt"], ohne_termin:[IKON.warning,"ohne Termin"]};
+  const [i,t] = m[s] || [IKON.info, s];
+  return `${i} ${t}`;
+}
+
+// ===========================================================================
+// Pipeline
+// ===========================================================================
+function zeichnePipeline(){
+  const mit = (D.pipeline||[]).filter(p => typeof p.mw === "number").sort((a,b)=>b.mw-a.mw);
+  const ohne = (D.pipeline||[]).filter(p => typeof p.mw !== "number");
+  const max = mit.length ? mit[0].mw : 1;
+  const stufe = w => { const a = w/max; return a>.75?"var(--seq-650)":a>.45?"var(--seq-550)":a>.2?"var(--seq-450)":"var(--seq-400)"; };
+
+  document.getElementById("balken").innerHTML = mit.map(p => `
+    <div class="balken-reihe" title="${esc(p.projekt)}: ${esc(p.groesse)} · ${esc(p.betreiber)} · IBN ${esc(p.ibn)}">
+      <div class="balken-label">${esc(p.projekt)}</div>
+      <div class="balken-spur"><div class="balken" style="width:${Math.max(1.5,(p.mw/max)*100)}%;background:${stufe(p.mw)}"></div></div>
+      <div class="balken-wert">${p.mw} MW</div>
+    </div>`).join("");
+  document.getElementById("balken-ohne").innerHTML = ohne.length
+    ? `<p class="balken-leer">Ohne MW-Angabe in der Quelle: ${ohne.map(p=>esc(p.projekt)+" ("+esc(p.groesse)+")").join(" · ")}</p>` : "";
+
+  document.querySelector("#tab-pipeline tbody").innerHTML = (D.pipeline||[]).map(p => `<tr>
+    <td><b>${esc(p.projekt)}</b></td><td>${esc(p.betreiber)}</td><td>${esc(p.groesse)}</td>
+    <td>${esc(p.ibn)}</td><td>${esc(p.beteiligte)}</td><td>${esc(p.stand)}</td></tr>`).join("");
+  document.querySelector("#tab-auftraege tbody").innerHTML = (D.auftraege||[]).map(a => `<tr>
+    <td><b>${esc(a.projekt)}</b></td><td>${esc(a.inhalt)}</td><td class="hinweis">${esc(a.hinweis)}</td></tr>`).join("");
+  document.getElementById("anlaesse").innerHTML = (D.anlaesse||[]).map(a => {
+    const tage = a.datum ? Math.round((new Date(a.datum+"T00:00:00") - new Date(heuteISO()+"T00:00:00"))/86400000) : null;
+    return `<div class="zeile" style="padding:5px 0;border-bottom:1px solid var(--grid)">
+      <span class="prio prio-${esc(a.prio)}">${esc(a.prio)}</span><b>${esc(a.name)}</b>
+      <span class="hinweis">${esc(a.ort)}</span>
+      <span class="rechts termin">${a.datum ? deDatum(a.datum) + (tage>=0?` · in ${tage} Tagen`:" · vorbei") : "Datum offen"}</span></div>`;
+  }).join("");
+}
+
+// ===========================================================================
+// Karte
+// ===========================================================================
+let lmap = null, lschichten = {};
+function zeichneKarte(){
+  const el = document.getElementById("leaflet");
+  if(typeof L === "undefined"){
+    el.style.height = "auto";
+    el.innerHTML = `<div style="padding:20px;color:var(--ink-2);font-size:.88rem">
+      <b>Karte nicht verfügbar.</b><br>Leaflet wird von cdnjs.cloudflare.com geladen und braucht Internet.
+      Blockiert eine Firewall den Aufruf, bleibt dieser Reiter leer, alle anderen laufen weiter.</div>`;
+    document.getElementById("karte-stand").textContent = "Kartenbibliothek fehlt";
+    document.getElementById("karte-hinweis").innerHTML =
+      `Koordinaten im Speicher: ${Object.keys(D.geo||{}).length}. Die Daten sind da, nur die Darstellung fehlt.`;
+    return;
+  }
+  el.style.height = "";
+  const geo = D.geo || {};
+  if(!lmap){
+    lmap = L.map("leaflet", {scrollWheelZoom:false}).setView([46.9, 8.3], 7);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 18, attribution: '&copy; OpenStreetMap'
+    }).addTo(lmap);
+    lschichten = {neubau:L.layerGroup().addTo(lmap), bestand:L.layerGroup().addTo(lmap), fl:L.layerGroup().addTo(lmap)};
+  }
+  Object.values(lschichten).forEach(s => s.clearLayers());
+
+  const stift = (farbe, buchstabe) => L.divIcon({
+    className:"", iconSize:[21,21], iconAnchor:[10,10],
+    html:`<div class="mk" style="background:${farbe};width:21px;height:21px">${buchstabe}</div>`});
+
+  let gesetzt = 0, fehlend = 0;
+  (D.pipeline||[]).forEach(p => {
+    const g = geo[p.ort]; if(!g || !g.lat){ fehlend++; return; }
+    L.marker([g.lat, g.lon], {icon: stift("var(--s1)","N")})
+      .bindPopup(`<b>${esc(p.projekt)}</b><br>${esc(p.betreiber)}<br>${esc(p.groesse)}<br>IBN ${esc(p.ibn)}<br>Stand: ${esc(p.stand)}<br><span style="color:#888">Ortsmarke aus dem Ortsnamen, nicht die Bauparzelle</span>`)
+      .addTo(lschichten.neubau); gesetzt++;
+  });
+  (D.bestand||[]).forEach(b => {
+    const g = geo[b.ort]; if(!g || !g.lat){ fehlend++; return; }
+    L.marker([g.lat, g.lon], {icon: stift("var(--s2)","B")})
+      .bindPopup(`<b>${esc(b.region)}</b><br>${esc(b.anzahl)}<br>${esc(b.betreiber)}<br><span style="color:#888">Regionsmarke, nicht einzelne Standorte</span>`)
+      .addTo(lschichten.bestand); gesetzt++;
+  });
+  (D.liechtenstein||[]).forEach(l => {
+    const g = geo[l.adresse]; if(!g || !g.lat){ fehlend++; return; }
+    L.marker([g.lat, g.lon], {icon: stift("var(--s3)","L")})
+      .bindPopup(`<b>${esc(l.standort)}</b><br>${esc(l.betreiber)}<br>${esc(l.adresse)}`)
+      .addTo(lschichten.fl); gesetzt++;
+  });
+
+  document.querySelectorAll('#tab-karte .chip').forEach(c => {
+    c.onclick = () => {
+      const an = c.getAttribute("aria-pressed") !== "true";
+      c.setAttribute("aria-pressed", String(an));
+      const s = lschichten[c.dataset.m];
+      if(an) s.addTo(lmap); else lmap.removeLayer(s);
+    };
+  });
+  setTimeout(()=>lmap.invalidateSize(), 60);
+
+  const offen = (D.geo_offen||[]).length;
+  document.getElementById("karte-stand").textContent = `${gesetzt} Marken gesetzt`;
+  document.getElementById("karte-hinweis").innerHTML = Object.keys(geo).length === 0
+    ? `Noch keine Koordinaten. Einmal <code>python3 dc_update.py --once</code> laufen lassen, das geocodiert über Nominatim und schreibt <code>geo_cache.json</code>.`
+    : `Marken sitzen auf dem Ortsnamen oder der Adresse aus der Quelle, nicht auf der Bauparzelle.
+       ${fehlend? fehlend+" Einträge ohne Koordinate sind nicht eingezeichnet. ":""}${offen? offen+" Orte ungelöst, siehe Reiter Quellen.":""}`;
+}
+
+// ===========================================================================
+// News
+// ===========================================================================
+function zeichneNews(){
+  const such = (document.getElementById("suche-n").value||"").toLowerCase();
+  let n = D.news || [];
+  if(such) n = n.filter(x => `${x.titel} ${x.text} ${x.quelle}`.toLowerCase().includes(such));
+  const lebend = (D.quellen_status||[]).filter(s=>s.zustand==="ok").length;
+  const alle = (D.quellen_status||[]).length;
+
+  document.getElementById("news-stand").textContent = alle
+    ? `${lebend} von ${alle} Quellen liefern` : "noch kein Feed-Lauf";
+
+  document.getElementById("newsliste").innerHTML = n.length ? n.map(x => `
+    <div class="news-eintrag">
+      <div class="kopf"><span>${esc(x.quelle)}</span>${x.datum?`<span>${deDatum(x.datum)}</span>`:""}
+        ${(x.schlagworte||[]).map(s=>`<span class="schlag">${esc(s)}</span>`).join("")}</div>
+      <a class="titel" href="${esc(x.link)}" target="_blank" rel="noopener">${esc(x.titel)}</a>
+      <div class="text">${esc(x.text)}</div>
+    </div>`).join("")
+    : `<p class="hinweis">Keine Meldungen. ${alle===0
+        ? "Der Updater lief noch nicht: <code>python3 dc_update.py --once</code>."
+        : "Entweder kam nichts Relevantes rein, oder die Quellen antworten nicht. Siehe Reiter Quellen."}</p>`;
+}
+
+// ===========================================================================
+// Log, Export
+// ===========================================================================
+function zeichneLog(){
+  const log = logEintraege();
+  const ids = Object.keys(log);
+  document.getElementById("logliste").innerHTML = ids.length ? ids.map(id => {
+    const e = log[id], k = (D.kontakte||[]).find(x=>x.id===id) || {};
+    return `<div class="anruf" data-status="erledigt">
+      <div class="anruf-kopf"><span class="name">${esc(e.name||k.name)}</span>
+        <span class="firma">${esc(k.firma||"")}</span>
+        <span class="rechts termin">${esc(e.erfasst||"")}</span></div>
+      <div class="anruf-feld"><b>Erreicht</b>${esc(e.erreicht)}</div>
+      <div class="anruf-feld"><b>Ergebnis</b>${esc(e.ergebnis)}</div>
+      ${e.naechster?`<div class="anruf-feld"><b>Nächster Schritt</b>${esc(e.naechster)}</div>`:""}
+      ${e.wv?`<div class="anruf-feld"><b>Wiedervorlage</b>${deDatum(e.wv)}</div>`:""}
+      <div class="anruf-akt"><button data-log="${id}">Ändern</button>
+        <button data-loeschen="${id}">Löschen</button></div></div>`;
+  }).join("") : `<p class="hinweis">Noch nichts erfasst.</p>`;
+
+  document.querySelectorAll("[data-log]").forEach(b => b.onclick = () => oeffneDialog(b.dataset.log));
+  document.querySelectorAll("[data-loeschen]").forEach(b => b.onclick = () => {
+    const log = logEintraege(); delete log[b.dataset.loeschen];
+    sicher.schreib(LS.log, log); alles(); toast("Eintrag gelöscht");
+  });
+}
+
+function datei(name, inhalt, typ){
+  const b = new Blob([inhalt], {type: typ + ";charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(b); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 1500);
+}
+function csvFeld(s){ return '"' + String(s==null?"":s).replace(/"/g,'""') + '"'; }
+
+function exportCSV(){
+  const log = logEintraege();
+  const zeilen = [["id","name","erreicht","ergebnis","naechster_schritt","wiedervorlage","erfasst"].join(";")];
+  Object.keys(log).forEach(id => {
+    const e = log[id];
+    zeilen.push([id, e.name, e.erreicht, e.ergebnis, e.naechster, e.wv, e.erfasst].map(csvFeld).join(";"));
+  });
+  datei("anruf_log.csv", "\ufeff" + zeilen.join("\r\n"), "text/csv");
+  toast("anruf_log.csv neben das Cockpit legen, dann --merge-log");
+}
+function exportMD(){
+  const log = logEintraege();
+  const zeilen = ["| Prio | Kontakt | Firma | Projekt | Kanal | Anruf | Ergebnis |","|---|---|---|---|---|---|---|"];
+  kontakteMitStatus().forEach(k => {
+    const e = log[k.id];
+    const erg = e ? `${e.erreicht}: ${e.ergebnis}${e.wv?` (WV ${deDatum(e.wv)})`:""}` : (k.ergebnis || "offen");
+    zeilen.push(`| ${k.prio} | ${k.name} | ${k.firma} | ${k.projekt} | ${k.bisher||""} | ${k.datum?deDatum(k.datum).slice(0,6):"ohne Termin"} ${k.zeit||""} | ${erg} |`);
+  });
+  datei("KONTAKTE_STATUS_auszug.md", zeilen.join("\n") + "\n", "text/markdown");
+  toast("Markdown exportiert");
+}
+function exportICS(){
+  const pad = n => String(n).padStart(2,"0");
+  const stempel = new Date().toISOString().replace(/[-:]/g,"").split(".")[0] + "Z";
+  const zeilen = ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//MiT//DC Cockpit//DE","CALSCALE:GREGORIAN"];
+  kontakteMitStatus().filter(k => k._status !== "erledigt" && k.datum).forEach(k => {
+    const [j,m,t] = k.datum.split("-");
+    const [st,mi] = (k.zeit || "09:00").split(":");
+    const anf = `${j}${m}${t}T${pad(st)}${pad(mi)}00`;
+    const endStunde = pad((parseInt(st,10) + 1) % 24);
+    const beschr = [`Projekt: ${k.projekt}`, `Einstieg: ${k.einstieg}`, `Ziel: ${k.ziel}`,
+                    `Mail: ${k.mailq==="fehlt"?"FEHLT":k.mail}`, `Telefon: ${k.telq==="fehlt"?"FEHLT":k.tel}`,
+                    k.warnung ? `Achtung: ${k.warnung}` : "",
+                    "Gates: Owen-Gate, CHF-Sperre, keine kVA ohne 8-Schritt-Rechenweg, PQ Klasse A"]
+                   .filter(Boolean).join("\\n").replace(/[,;]/g, m => "\\" + m);
+    zeilen.push("BEGIN:VEVENT", `UID:${k.id}-mitdc@mobilintime`, `DTSTAMP:${stempel}`,
+      `DTSTART:${anf}`, `DTEND:${j}${m}${t}T${endStunde}${pad(mi)}00`,
+      `SUMMARY:MiT Power | Anruf ${k.name}\\, ${k.firma}`, `DESCRIPTION:${beschr}`,
+      "BEGIN:VALARM","TRIGGER:-PT15M","ACTION:DISPLAY","DESCRIPTION:Anruf in 15 Minuten","END:VALARM","END:VEVENT");
+  });
+  zeilen.push("END:VCALENDAR");
+  datei("MiT_DC_Anrufplan.ics", zeilen.join("\r\n"), "text/calendar");
+  toast("Kalenderdatei erzeugt, in Outlook importieren");
+}
+
+// ===========================================================================
+// Regeln, Quellen
+// ===========================================================================
+function zeichneRegeln(){
+  document.getElementById("sig").textContent = D.signatur || "";
+  document.getElementById("sig-alt").innerHTML = (D.signatur_alt||[]).length
+    ? `Falsch und vor Versand zu ersetzen: ${(D.signatur_alt||[]).map(s=>`<code>${esc(s)}</code>`).join(" und ")}.` : "";
+  document.getElementById("regelliste").innerHTML = (D.regeln||[]).map(r=>`<li>${esc(r)}</li>`).join("");
+  document.getElementById("gateliste").innerHTML = (D.gates||[]).map(g=>`<div class="gate">${IKON.info}<span>${esc(g.label)}</span></div>`).join("");
+  document.getElementById("dqliste").innerHTML = (D.datenqualitaet||[]).map(x=>`<li>${esc(x)}</li>`).join("");
+}
+function zeichneQuellen(){
+  const st = D.quellen_status || [];
+  document.querySelector("#tab-quellen tbody").innerHTML = st.length ? st.map(s => {
+    const ik = s.zustand==="ok" ? IKON.good : (s.zustand==="deaktiviert" ? IKON.warning : IKON.critical);
+    return `<tr><td><b>${esc(s.name)}</b></td><td>${ik} ${esc(s.zustand)}</td><td>${esc(s.detail)}</td>
+      <td class="hinweis" style="max-width:240px;overflow-wrap:anywhere">${esc(s.url)}</td>
+      <td class="hinweis">${esc((s.geprueft||"").replace("T"," ").slice(0,16))}</td></tr>`;
+  }).join("") : `<tr><td colspan="5" class="hinweis">Noch kein Feed-Lauf. <code>python3 dc_update.py --test-feeds</code> zeigt dir sofort, welche URLs antworten.</td></tr>`;
+
+  const m = D.meta || {};
+  document.getElementById("standinfo").innerHTML = `<ul class="liste">
+    <li>Modus: <b>${MODUS === "verbunden" ? "verbunden, lädt dc_data.json" : "Einzeldatei, eingebackener Stand"}</b></li>
+    <li>Daten erzeugt: ${esc((m.erzeugt||"unbekannt").replace("T"," "))}</li>
+    <li>Letzte Aktualisierung: ${esc((m.aktualisiert||"noch keine").replace("T"," "))}</li>
+    <li>Quelle Excel: ${esc(m.quelle_excel||"FEHLT")}</li>
+    <li>Kontakte: ${(D.kontakte||[]).length} · Pipeline: ${(D.pipeline||[]).length} · Bestand: ${(D.bestand||[]).length} · Liechtenstein: ${(D.liechtenstein||[]).length}</li>
+    <li>News im Speicher: ${(D.news||[]).length}</li></ul>`;
+
+  document.getElementById("geo-offen").innerHTML = (D.geo_offen||[]).length
+    ? (D.geo_offen||[]).map(o=>`<li>${esc(o)}</li>`).join("")
+    : `<li class="hinweis">Keine offenen Orte.</li>`;
+}
+
+// ===========================================================================
+// Live
+// ===========================================================================
+function badges(){
+  const m = D.meta || {};
+  const stand = m.aktualisiert || m.erzeugt;
+  const b = document.getElementById("badge-daten");
+  let farbe = "p-mute", text = "kein Datum";
+  if(stand){
+    const stunden = (Date.now() - new Date(stand).getTime()) / 3600000;
+    if(stunden < 6){ farbe = "p-good"; text = `frisch, ${Math.max(0,Math.round(stunden))} h`; }
+    else if(stunden < 24){ farbe = "p-warn"; text = `${Math.round(stunden)} h alt`; }
+    else { farbe = "p-crit"; text = `${Math.round(stunden/24)} Tage alt`; }
+  }
+  b.innerHTML = `<span class="punkt ${farbe}"></span><span>Daten ${text}</span>`;
+  document.getElementById("badge-modus").innerHTML =
+    `<span class="punkt ${MODUS==="verbunden"?"p-good":"p-mute"}"></span><span>${MODUS==="verbunden"?"verbunden":"Einzeldatei"}</span>`;
+  const jetzt = new Date();
+  document.getElementById("kopf-zeit").textContent =
+    jetzt.toLocaleDateString("de-CH", {weekday:"long", day:"2-digit", month:"2-digit", year:"numeric"})
+    + " · " + jetzt.toLocaleTimeString("de-CH", {hour:"2-digit", minute:"2-digit"})
+    + " · KW " + kw(jetzt);
+}
+function kw(d){
+  const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  t.setUTCDate(t.getUTCDate() + 4 - (t.getUTCDay()||7));
+  return Math.ceil(((t - new Date(Date.UTC(t.getUTCFullYear(),0,1))) / 86400000 + 1) / 7);
+}
+
+async function ladeDaten(meldung){
+  try{
+    const r = await fetch("dc_data.json?t=" + Date.now(), {cache:"no-store"});
+    if(!r.ok) throw new Error("HTTP " + r.status);
+    const neu = await r.json();
+    if(neu && Array.isArray(neu.kontakte)){
+      D = neu; MODUS = "verbunden";
+      alles();
+      if(meldung) toast("Daten neu geladen");
+      return true;
+    }
+  }catch(e){
+    MODUS = "einzeldatei";
+    if(meldung) toast("dc_data.json nicht erreichbar, eingebackener Stand bleibt");
+  }
+  badges();
+  return false;
+}
+
+let gemeldet = new Set();
+function pruefeHinweise(){
+  if(!("Notification" in window) || Notification.permission !== "granted") return;
+  kontakteMitStatus().filter(k => k._status === "heute").forEach(k => {
+    if(!k.zeit || gemeldet.has(k.id)) return;
+    const [st,mi] = k.zeit.split(":").map(Number);
+    const term = new Date(); term.setHours(st||0, mi||0, 0, 0);
+    const minuten = (term - new Date()) / 60000;
+    if(minuten > 0 && minuten <= 15){
+      gemeldet.add(k.id);
+      new Notification(`Anruf in ${Math.round(minuten)} Minuten`, {body:`${k.name}, ${k.firma}\n${k.ziel||""}`});
+    }
+  });
+}
+
+function alles(){
+  zeichneTabs(); zeichneKacheln(); zeichneAnrufliste(); zeichneKontakte();
+  zeichnePipeline(); zeichneNews(); zeichneLog(); zeichneRegeln(); zeichneQuellen(); badges();
+  if(aktiverTab === "karte") zeichneKarte();
+}
+
+// ===========================================================================
+// Start
+// ===========================================================================
+(function start(){
+  const thema = sicher.lies(LS.thema, "");
+  if(thema) document.documentElement.setAttribute("data-theme", thema);
+
+  const kanaele = [...new Set((SEED.kontakte||[]).map(k=>k.bisher).filter(Boolean))].sort();
+  document.getElementById("filter-kanal").innerHTML =
+    `<option value="">Alle Kanäle</option>` + kanaele.map(k=>`<option>${esc(k)}</option>`).join("");
+
+  document.querySelectorAll('#tab-cockpit .chip').forEach(c => {
+    const los = () => setFilter(c.dataset.f);
+    c.onclick = los;
+    c.onkeydown = e => { if(e.key==="Enter"||e.key===" "){ e.preventDefault(); los(); } };
+  });
+  ["suche-k","filter-prio","filter-kanal"].forEach(id =>
+    document.getElementById(id).addEventListener("input", zeichneKontakte));
+  document.getElementById("chip-luecke").onclick = function(){
+    nurLuecke = !nurLuecke; this.setAttribute("aria-pressed", String(nurLuecke)); zeichneKontakte();
+  };
+  document.querySelectorAll("#tab-k th[data-sort], #tab-pipeline th[data-sort]").forEach(th => th.onclick = () => {
+    kSort = {feld: th.dataset.sort, auf: kSort.feld === th.dataset.sort ? !kSort.auf : true};
+    zeichneKontakte();
+  });
+  document.getElementById("suche-n").addEventListener("input", zeichneNews);
+  document.getElementById("btn-csv").onclick = exportCSV;
+  document.getElementById("btn-md").onclick = exportMD;
+  document.getElementById("btn-ics").onclick = exportICS;
+  document.getElementById("btn-sig").onclick = () => kopiere(D.signatur, "Signatur kopiert");
+  document.getElementById("btn-log-leer").onclick = () => {
+    if(confirm("Alle erfassten Anrufergebnisse in diesem Browser löschen?")){
+      sicher.schreib(LS.log, {}); alles(); toast("Log geleert");
+    }
+  };
+  document.getElementById("btn-neu").onclick = () => ladeDaten(true);
+  document.getElementById("btn-thema").onclick = () => {
+    const jetzt = document.documentElement.getAttribute("data-theme");
+    const neu = jetzt === "dark" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", neu);
+    sicher.schreib(LS.thema, neu);
+  };
+  document.getElementById("btn-melden").onclick = async () => {
+    if(!("Notification" in window)) return toast("Dieser Browser kann keine Hinweise");
+    const e = await Notification.requestPermission();
+    toast(e === "granted" ? "Hinweise an, 15 Minuten vor jedem Anruf" : "Hinweise bleiben aus");
+  };
+
+  alles();
+  const start = (location.hash||"").replace("#","");
+  waehleTab(TABS.some(t=>t.id===start) ? start : "cockpit");
+
+  ladeDaten(false);
+  setInterval(()=>ladeDaten(false), POLL_MIN * 60000);
+  setInterval(()=>{ badges(); zeichneKacheln(); zeichneAnrufliste(); zeichneTabs(); pruefeHinweise(); }, TICK_SEK * 1000);
+  document.addEventListener("visibilitychange", () => { if(!document.hidden){ badges(); ladeDaten(false); } });
+})();
+</script>
+</body>
+</html>

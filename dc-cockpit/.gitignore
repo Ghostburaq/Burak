@@ -1,0 +1,16 @@
+# Vertraulich, gehoert nicht ins Repository
+inhalte.py
+daten/
+dc_data.json
+anruf_log.csv
+config.json
+geo_cache.json
+lauf.log
+*_backup_*.xlsx
+
+# Die ausgelieferte HTML enthaelt den eingebackenen Kontaktstand.
+# Im Git liegt nur MiT_DC_Cockpit.template.html ohne Daten.
+MiT_DC_Cockpit.html
+
+__pycache__/
+*.pyc

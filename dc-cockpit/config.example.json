@@ -1,0 +1,148 @@
+{
+  "_hinweis": "Kopiere diese Datei nach config.json und trage deine Werte ein. config.json gehoert NICHT ins Git.",
+  "kontakt_mail": "uecoez@mobilintime.com",
+  "_kontakt_mail": "Nominatim verlangt eine Kontaktadresse im User-Agent. Wird nur an nominatim.openstreetmap.org gesendet.",
+  "newsapi_key": "",
+  "_newsapi_key": "Optional. Konto auf newsapi.org. Leer lassen, dann laufen nur die RSS-Feeds, die brauchen keinen Key.",
+  "google_maps_key": "",
+  "_google_maps_key": "Nicht noetig. Die Karte laeuft auf OpenStreetMap. Feld existiert nur, falls du spaeter auf Google wechseln willst.",
+  "proxy": "",
+  "_proxy": "Nur setzen, wenn der MiT-Firmenproxy Pflicht ist, Format http://proxy:8080",
+  "max_news": 60,
+  "news_tage": 45,
+  "feeds": [
+    {
+      "name": "Netzwoche",
+      "url": "https://www.netzwoche.ch/rss.xml",
+      "aktiv": true,
+      "geprueft": false
+    },
+    {
+      "name": "Netzwoche News",
+      "url": "https://www.netzwoche.ch/news.rss",
+      "aktiv": true,
+      "geprueft": false
+    },
+    {
+      "name": "inside-it.ch",
+      "url": "https://www.inside-it.ch/rss",
+      "aktiv": true,
+      "geprueft": false
+    },
+    {
+      "name": "inside-it.ch alt",
+      "url": "https://www.inside-it.ch/de/rss",
+      "aktiv": true,
+      "geprueft": false
+    },
+    {
+      "name": "IT-Markt",
+      "url": "https://www.it-markt.ch/rss.xml",
+      "aktiv": true,
+      "geprueft": false
+    },
+    {
+      "name": "Datacenter Dynamics",
+      "url": "https://www.datacenterdynamics.com/en/rss/",
+      "aktiv": true,
+      "geprueft": false
+    },
+    {
+      "name": "Datacenter Dynamics Atom",
+      "url": "https://www.datacenterdynamics.com/en/atom/",
+      "aktiv": true,
+      "geprueft": false
+    },
+    {
+      "name": "Data Center Knowledge",
+      "url": "https://www.datacenterknowledge.com/rss.xml",
+      "aktiv": true,
+      "geprueft": false
+    },
+    {
+      "name": "SRF News Wirtschaft",
+      "url": "https://www.srf.ch/news/bnf/rss/1926",
+      "aktiv": true,
+      "geprueft": false
+    },
+    {
+      "name": "NZZ Technologie",
+      "url": "https://www.nzz.ch/technologie.rss",
+      "aktiv": true,
+      "geprueft": false
+    },
+    {
+      "name": "Aargauer Zeitung Aargau",
+      "url": "https://www.aargauerzeitung.ch/aargau.rss",
+      "aktiv": true,
+      "geprueft": false
+    },
+    {
+      "name": "Volksblatt Liechtenstein",
+      "url": "https://www.volksblatt.li/rss",
+      "aktiv": true,
+      "geprueft": false
+    }
+  ],
+  "_feeds": "Die URLs sind Kandidaten und beim Ausliefern UNGEPRUEFT. Der erste Lauf testet sie, setzt geprueft=true und aktiv=false bei toten Feeds. Im Cockpit siehst du unter Quellen, welcher Feed liefert und welcher nicht. Tote Feeds ersetzt du dort, wo die Seite ihre Feeds listet, zum Beispiel netzwoche.ch/RSS-Feeds.",
+  "schlagworte": [
+    "rechenzentrum",
+    "rechenzentren",
+    "datacenter",
+    "data center",
+    "data centre",
+    "colocation",
+    "hyperscale",
+    "serverfarm",
+    "cloud-standort",
+    "notstrom",
+    "netzersatz",
+    "nea",
+    "usv",
+    "lastbank",
+    "lastbaenke",
+    "netzqualit",
+    "oberschwingung",
+    "en 50160",
+    "batteriespeicher",
+    "bess",
+    "grossspeicher",
+    "speicherkraftwerk",
+    "netzanschluss",
+    "trafostation",
+    "umspannwerk",
+    "flexbase",
+    "vantage",
+    "green datacenter",
+    "digital realty",
+    "equinix",
+    "northc",
+    "stack infrastructure",
+    "safe host",
+    "vaultica",
+    "gtr",
+    "implenia",
+    "erne",
+    "hiag",
+    "amstein",
+    "burkhalter",
+    "swisscom",
+    "laufenburg",
+    "beringen",
+    "dielsdorf",
+    "lupfig",
+    "volketswil",
+    "glattbrugg",
+    "winterthur",
+    "arlesheim",
+    "gland",
+    "liechtenstein",
+    "schaan",
+    "vaduz",
+    "eschen",
+    "ruggell",
+    "balzers"
+  ],
+  "ch_fl_filter": true,
+  "_ch_fl_filter": "true = nur Meldungen mit Schweiz- oder FL-Bezug. false = auch internationale DC-News."
+}
