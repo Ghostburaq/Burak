@@ -2,3 +2,6 @@ __pycache__/
 *.pyc
 .DS_Store
 /tmp/
+
+# Auslieferungspakete: enthalten inhalte.py und dc_data.json mit Kontaktdaten
+*_Paket.zip
