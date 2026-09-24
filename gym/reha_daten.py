@@ -301,6 +301,26 @@ REHA_UEBUNGEN = {
         'Griffbelastung plus Dauerzug am hängenden Arm - die ungünstigste '
         'Kombination für Naht und Tenodese. Ab Monat 4 leicht beginnen, '
         'volle Last frühestens Monat 6.'),
+    'Rumänisches Kreuzheben KH': (
+        16, 'Beinbeuger sitzend, Rückenstrecker mit vor der Brust '
+            'gekreuzten Armen, Kabel-RDL mit Hüftgurt',
+        'Wie die Langhantel-Variante, eher noch ungünstiger: die Hantel '
+        'hängt direkt am Arm und zieht durchgehend an Naht und Tenodese. '
+        'Ab Monat 4 leicht beginnen.'),
+    'Squat Maschine Bülach': (
+        12, 'Beinpresse enger Stand ab Woche 6',
+        'Wie der Reverse V-Squat: Last über Schulter und Nacken. Woche mit '
+        'Operateur bestätigen.'),
+    'Hip Thrust Bülach': (
+        12, 'Hip & Glute Maschine ab Woche 6',
+        'Angesetzt wie die Langhantel-Variante. Ist es eine Maschine mit '
+        'Hüftpolster ohne Hantelhandhabung, geht Woche 6 - dann im Blatt '
+        'Übungen ändern.'),
+    'Beinbeuger Bülach': (
+        2, 'keiner, ab Freigabe der Wunde nutzbar',
+        'Liegend und sitzend beide unkritisch, solange die Griffe nur '
+        'locker aufliegen. Bei der liegenden Variante das Aufstehen über '
+        'die linke Seite.'),
     'Hackenschmidt-Kniebeuge': (
         12, 'Beinpresse mit tiefer Fussposition ab Woche 6',
         'Archiviert, Wert nur noch für die Historie hinterlegt.'),

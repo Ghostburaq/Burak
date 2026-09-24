@@ -45,7 +45,7 @@ QUELLE = "Löwin_Training_260727.pdf"
 STAND = "31.07.2026"
 
 SESSIONS = 16          # gleichzeitig angezeigte Einheiten (rollendes Fenster)
-EX_SLOTS = 16          # Übungs-Slots im Stammblatt (14 belegt)
+EX_SLOTS = 20          # Übungs-Slots im Stammblatt (18 belegt)
 SESSION_SLOTS = 60     # vorbereitete Zeilen im Blatt 'Einheiten'
 LOG_ROWS = 1200        # vorbereitete Satzzeilen im Log
 BLATT_KOPIEN = 4       # Trainingsblätter je Block auf Vorrat
@@ -109,9 +109,23 @@ UEBUNGEN = [
                "'Schritt (kg)' auf 5."),
     dict(name="Rumänisches Kreuzheben", block="Beine hinten",
          geraet="Langhantel", von=5, bis=6, saetze=3, rpe="8", start=None,
-         maxlast=None, schritt=2.5, letzter="A", anpassung=100, aktiv="ja",
-         notiz="Ersetzt Kickback. Schliesst die Lücke Hüftstreckung bei "
-               "gestrecktem Knie, Ischiokrurale und Gluteus in der Dehnung."),
+         maxlast=None, schritt=2.5, letzter="A", anpassung=100,
+         aktiv="pause",
+         notiz="Ab Einheit 14 durch die Kurzhantel-Variante ersetzt, "
+               "deshalb pausiert statt archiviert - die Historie mit bis zu "
+               "135 kg bleibt in allen Auswertungen sichtbar und die Übung "
+               "ist mit einem Klick wieder da. Schliesst die Lücke "
+               "Hüftstreckung bei gestrecktem Knie."),
+    dict(name="Rumänisches Kreuzheben KH", block="Beine hinten",
+         geraet="Kurzhantel, Gewicht je Hantel", von=5, bis=6, saetze=3,
+         rpe="8", start=None, maxlast=None, schritt=2, letzter="A",
+         anpassung=100, aktiv="ja",
+         notiz="Neu ab Einheit 14, ersetzt die Langhantel-Variante. "
+               "WICHTIG: eingetragen wird das Gewicht JE HANTEL, nicht die "
+               "Summe beider - sonst stimmt die Progression nicht. Schritt "
+               "2 kg entspricht der nächsten Hantel im Ständer. Die Zahlen "
+               "sind mit der Langhantel-Historie nicht vergleichbar, "
+               "deshalb eine eigene Übung."),
     dict(name="Beinpresse breit", block="Beine hinten",
          geraet="Beinpresse, breiter Stand, Füsse hoch", von=5, bis=6,
          saetze=3, rpe="8-9", start=220, maxlast=None, schritt=5,
@@ -151,6 +165,32 @@ UEBUNGEN = [
     dict(name="Waden", block="Beine hinten", geraet="Maschine", von=5, bis=6, saetze=3, rpe="9", start=None, maxlast=None, schritt=5,
          letzter="A", anpassung=100, aktiv="ja",
          notiz="In jede Beineinheit, bisher nur in jeder zweiten."),
+    # Zweites Gym. Andere Maschinen, andere Hebel - die Gewichte sind mit
+    # denen zu Hause nicht vergleichbar, deshalb eigene Übungen.
+    dict(name="Squat Maschine Bülach", block="Auswärts Bülach",
+         geraet="Maschine, Bach-Bülach", von=5, bis=6, saetze=3, rpe="8-9",
+         start=None, maxlast=None, schritt=10, letzter="A", anpassung=100,
+         aktiv="ja",
+         notiz="Neu ab Einheit 15. Schritt 10 kg nach den Sprüngen 40 / 80 "
+               "/ 120 der ersten Einheit - falls das Gerät feiner geht, "
+               "hier anpassen."),
+    dict(name="Hip Thrust Bülach", block="Auswärts Bülach",
+         geraet="Bach-Bülach", von=5, bis=6, saetze=3, rpe="8-9",
+         start=None, maxlast=None, schritt=5, letzter="A", anpassung=100,
+         aktiv="ja",
+         notiz="Neu ab Einheit 15. Nicht mit dem Hip Thrust zu Hause "
+               "vergleichen: dort lagen 285 kg an, hier 200 kg bei mehr "
+               "Wiederholungen. Reha-Freigabe Woche 12 angesetzt wie für "
+               "die Langhantel-Variante - ist es eine Maschine mit Polster, "
+               "geht Woche 6, dann hier ändern."),
+    dict(name="Beinbeuger Bülach", block="Auswärts Bülach",
+         geraet="Maschine liegend und sitzend, Bach-Bülach", von=5, bis=6,
+         saetze=3, rpe="9", start=None, maxlast=None, schritt=4.5,
+         letzter="A", anpassung=100, aktiv="ja",
+         notiz="Neu ab Einheit 15, liegend und sitzend kombiniert. Die "
+               "Stufen 27 / 36 / 50 / 54 / 59 passen zu einem Stack in "
+               "4.5 kg-Schritten, also einem Gerät mit Pfund-Gewichten - "
+               "daher Schritt 4.5."),
     # Archiv: raus aus der Planung, Historie bleibt in Log und Auswertung.
     dict(name="Lunges", block="Beine vorne", geraet="Kurzhantel", von=5, bis=6, saetze=None, rpe=None, start=None, maxlast=None,
          schritt=None, letzter="A", anpassung=100, aktiv="nein",
@@ -179,7 +219,10 @@ for _u in UEBUNGEN:
     _u["ersatz"] = _ersatz
     _u["reha_hinweis"] = _hinweis
 
-BLOCKS = ["Beine vorne", "Beine hinten"]
+# Dritter Block: zweites Gym mit anderen Maschinen. Eigene Übungen,
+# damit die Gewichte von dort die Progression zu Hause nicht
+# verfälschen - andere Hebel, andere Last, nicht vergleichbar.
+BLOCKS = ["Beine vorne", "Beine hinten", "Auswärts Bülach"]
 
 # Aufwärm-Rampe für das Trainingsblatt: Anteil vom Zielgewicht je Warmup
 WARMUP_FAKTOR = [0.40, 0.70]
@@ -2173,8 +2216,9 @@ TAGE = [
      "Durchblutung fördert die Erholung, ohne neuen Reiz zu setzen."),
     ("Mittwoch", "frei", "Oberkörper oder Ruhetag",
      "Beine bleiben unbelastet."),
-    ("Donnerstag", "Beine hinten", "Reverse V-Squat · RDL · Beinpresse breit · "
-     "Hip Thrust · Hip & Glute · Beinbeuger · Seitl. Kickbacks · Waden",
+    ("Donnerstag", "Beine hinten", "Reverse V-Squat · RDL Kurzhantel · "
+     "Beinpresse breit · Hip Thrust · Hip & Glute · Beinbeuger · "
+     "Seitl. Kickbacks · Waden",
      "72 Stunden nach Montag - die Vorderseite ist wieder erholt."),
     ("Freitag", "frei", "Oberkörper oder Ruhetag", "Erholung."),
     ("Samstag", "frei", "Gehen, Mobilität",
@@ -2350,6 +2394,21 @@ if not PREOP:
         r += 1
 
 r += 1
+wsw.merge_cells(start_row=r, start_column=2, end_row=r, end_column=5)
+wsw.merge_cells(start_row=r, start_column=2, end_row=r, end_column=5)
+c = wsw.cell(r, 2,
+             "Drittes Trainingsblatt 'Auswärts Bülach': eigene Übungen "
+             "für das zweite Gym. Die Maschinen dort haben andere Hebel, "
+             "deshalb laufen sie mit eigener Historie und eigener "
+             "Progression - sonst würden 200 kg am fremden Hip Thrust "
+             "die 285 kg vom eigenen Gerät überschreiben. Ersetzt eine "
+             "Auswärts-Einheit einen der beiden Tage oben, bleibt der "
+             "72-Stunden-Abstand trotzdem stehen.")
+c.font, c.alignment = F_BODY, LW
+for col in range(2, 6):
+    wsw.cell(r, col).border = B_ALL
+wsw.row_dimensions[r].height = zeilenhoehe(c.value, breite=118)
+r += 2
 wsw.merge_cells(start_row=r, start_column=2, end_row=r, end_column=5)
 c = wsw.cell(r, 2,
              "Zwei Beineinheiten an aufeinanderfolgenden Tagen sind möglich, "

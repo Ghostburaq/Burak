@@ -6,8 +6,8 @@ von selbst.
 
 | Fassung | Datei | Gilt | Umfang |
 |---|---|---|---|
-| **Vor der OP** | `GymLogbuch_Beine_PreOP.xlsx` | bis 30.09.2026 | 14 Blätter, 40 A4-Seiten |
-| **Reha** | `GymLogbuch_Beine.xlsx` | ab dem OP-Tag | 13 Blätter, 38 A4-Seiten |
+| **Vor der OP** | `GymLogbuch_Beine_PreOP.xlsx` | bis 30.09.2026 | 14 Blätter, 45 A4-Seiten |
+| **Reha** | `GymLogbuch_Beine.xlsx` | ab dem OP-Tag | 13 Blätter, 44 A4-Seiten |
 
 Beide entstehen aus demselben Generator und sind in `Log`, `Einheiten`,
 `Auswertung`, `Progression`, `Rekorde`, `Trainingsblatt` und `Übungen`
@@ -98,13 +98,13 @@ Die Reha-Fassung hat statt `OP-Countdown`, `Vorbereitung` und
 | `Auswertung` | Volumen / Top-Gewicht / e1RM je Übung und Einheit | A4 quer, je Tabelle eine Seite |
 | `Progression` | Erste gegen letzte Einheit, Abstand zum Bestwert, Trend | A4 quer |
 | `Rekorde` | Bestwerte je Übung inkl. Einheit, in der sie fielen | A4 quer |
-| `Trainingsblatt` | Vorlage zum Ausdrucken und Mitnehmen, **4 Blätter je Block** | A4 hoch, 8 S. |
+| `Trainingsblatt` | Vorlage zum Ausdrucken und Mitnehmen, **4 Blätter je Block** | A4 hoch, 12 S. |
 | `Übungen` | Stammdaten, Planvorgaben und Reha-Freigaben | A4 quer, 2 S. |
 
 ## Was drucken?
 
-- **Trainingsblatt** — ein Ausdruck liefert acht Seiten: vier Mal Beine vorne
-  und vier Mal Beine hinten. Das deckt rund vier Trainingswochen ab, danach
+- **Trainingsblatt** — ein Ausdruck liefert zwölf Seiten: je vier Mal Beine
+  vorne, Beine hinten und Auswärts Bülach. Das deckt rund vier Trainingswochen ab, danach
   einfach neu drucken. Jedes Blatt zeigt pro Übung das letzte Gewicht, den
   Bestwert, den Zielvorschlag mit Aufwärm-Rampe und die Vorgabe
   (Sätze × Wdh @ RPE). In der Reha-Sperrzeit steht dort stattdessen rot der
@@ -154,7 +154,7 @@ Satztypen: `W` Warmup · `A` Arbeitssatz (Basis aller Kennzahlen) ·
 | Log | 1200 Sätze | rund 60 Einheiten |
 | Einheiten | 60 | etwa 30 Wochen bei 2 Beineinheiten |
 | Reha-Log | 240 Tage | rund 8 Monate täglich |
-| Übungen | 16 Slots | 14 belegt |
+| Übungen | 20 Slots | 18 belegt |
 
 Die `Auswertung` zeigt 16 Einheiten nebeneinander. Mit der Zahl in Zelle `B3`
 verschiebt sich das Fenster (z. B. `17` zeigt Einheit 17 bis 32) — die
@@ -202,10 +202,28 @@ steht — ab vier wird die Zeile gelb.
 
 ## Plan
 
-Zwölf aktive Übungen in zwei Blöcken, schwere Grundübung zuerst:
+Sechzehn aktive Übungen in drei Blöcken, schwere Grundübung zuerst:
 
 - **Beine vorne:** Beinpresse enger Stand · Split Squat · Beinstrecker · Adduktion
-- **Beine hinten:** Reverse V-Squat · Rumänisches Kreuzheben · Beinpresse breiter Stand · Hip Thrust · Hip & Glute · Beinbeuger · Seitliche Kickbacks · Waden
+- **Beine hinten:** Reverse V-Squat · Rumänisches Kreuzheben KH · Beinpresse breiter Stand · Hip Thrust · Hip & Glute · Beinbeuger · Seitliche Kickbacks · Waden
+- **Auswärts Bülach:** Squat Maschine · Hip Thrust · Beinbeuger
+
+### Zweites Gym als eigener Block
+
+Die Maschinen in Bach-Bülach haben andere Hebel als die zu Hause — 200 kg am
+dortigen Hip Thrust sind nicht 200 kg am eigenen Gerät. Deshalb laufen sie als
+eigene Übungen in einem eigenen Block mit eigener Historie und eigener
+Progression. Würde man sie in dieselben Zeilen loggen, würde die erste
+Auswärts-Einheit den Zielwert zu Hause von 285 kg auf rund 205 kg
+zurückwerfen. `BLOCKS` in `build_gymlogbuch.py` erweitern, wenn ein weiteres
+Gym dazukommt — das Trainingsblatt erzeugt den Block dann automatisch.
+
+### Rumänisches Kreuzheben: Langhantel und Kurzhantel getrennt
+
+Ab Einheit 14 läuft die Übung mit Kurzhanteln. Die Langhantel-Variante steht
+auf `pause`, ihre Historie bis 135 kg bleibt in allen Auswertungen sichtbar.
+Bei der Kurzhantel-Variante wird das Gewicht **je Hantel** eingetragen, nicht
+die Summe.
 
 Der **Reverse V-Squat** kam mit Einheit 13 dazu. Alle Gewichte inklusive der
 50 kg Eigengewicht des Schlittens notieren, sonst rechnet die Progression
@@ -256,8 +274,8 @@ drei Einheiten selbst ein. Sie ersetzt keinen echten Maximalversuch.
 
 ## Datenstand
 
-Einheit 1 bis 13. Einheit 1 bis 4 aufbereitet aus
-`Loewin_Training_260727.pdf`, Einheit 5 bis 13 direkt erfasst.
+Einheit 1 bis 15. Einheit 1 bis 4 aufbereitet aus
+`Loewin_Training_260727.pdf`, Einheit 5 bis 15 direkt erfasst.
 Einheit 11 ohne Beinbeuger und Seitliche Kickbacks, Einheit 10 und 12
 ohne Adduktion — nicht ausgeführt, im Log als Notiz vermerkt. Bekannte
 Unschärfen der Quelle (fehlende Wiederholungen bei Kickback-Warmups und
