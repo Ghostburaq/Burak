@@ -365,4 +365,21 @@ ROWS = [
      'sitzend'],
     [15, 'Auswärts Bülach', 'Beinbeuger Bülach', 'R', 54, 4, None,
      'Reduktionssatz direkt im Anschluss'],
+    # --- Einheit 16, Beine vorne ------------------------------------
+    # Aufsteigend gefahren statt absteigend. Adduktion nicht ausgefuehrt.
+    [16, 'Beine vorne', 'Beinpresse eng', 'W', 105, None, None, None],
+    [16, 'Beine vorne', 'Beinpresse eng', 'W', 150, None, None, None],
+    [16, 'Beine vorne', 'Beinpresse eng', 'A', 250, 5, None, None],
+    [16, 'Beine vorne', 'Beinpresse eng', 'A', 270, 5, None, None],
+    [16, 'Beine vorne', 'Beinpresse eng', 'A', 300, 5, None, None],
+    [16, 'Beine vorne', 'Split Squat', 'W', 40, None, None, None],
+    [16, 'Beine vorne', 'Split Squat', 'W', 60, None, None, None],
+    [16, 'Beine vorne', 'Split Squat', 'A', 95, 8, None, None],
+    [16, 'Beine vorne', 'Split Squat', 'A', 100, 5, None, None],
+    [16, 'Beine vorne', 'Split Squat', 'A', 100, 5, None, None],
+    [16, 'Beine vorne', 'Beinstrecker', 'W', 15, None, None, None],
+    [16, 'Beine vorne', 'Beinstrecker', 'W', 40, None, None, None],
+    [16, 'Beine vorne', 'Beinstrecker', 'A', 60, 9, None, None],
+    [16, 'Beine vorne', 'Beinstrecker', 'A', 75, 5, None, None],
+    [16, 'Beine vorne', 'Beinstrecker', 'A', 80, 6, None, None],
 ]

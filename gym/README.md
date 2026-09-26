@@ -274,8 +274,8 @@ drei Einheiten selbst ein. Sie ersetzt keinen echten Maximalversuch.
 
 ## Datenstand
 
-Einheit 1 bis 15. Einheit 1 bis 4 aufbereitet aus
-`Loewin_Training_260727.pdf`, Einheit 5 bis 15 direkt erfasst.
+Einheit 1 bis 16. Einheit 1 bis 4 aufbereitet aus
+`Loewin_Training_260727.pdf`, Einheit 5 bis 16 direkt erfasst.
 Einheit 11 ohne Beinbeuger und Seitliche Kickbacks, Einheit 10 und 12
 ohne Adduktion — nicht ausgeführt, im Log als Notiz vermerkt. Bekannte
 Unschärfen der Quelle (fehlende Wiederholungen bei Kickback-Warmups und
