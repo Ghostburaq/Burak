@@ -382,4 +382,22 @@ ROWS = [
     [16, 'Beine vorne', 'Beinstrecker', 'A', 60, 9, None, None],
     [16, 'Beine vorne', 'Beinstrecker', 'A', 75, 5, None, None],
     [16, 'Beine vorne', 'Beinstrecker', 'A', 80, 6, None, None],
+    # --- Einheit 17, Beine vorne ------------------------------------
+    # Adduktion erneut nicht ausgefuehrt.
+    [17, 'Beine vorne', 'Beinpresse eng', 'W', 120, None, None, None],
+    [17, 'Beine vorne', 'Beinpresse eng', 'W', 210, None, None, None],
+    [17, 'Beine vorne', 'Beinpresse eng', 'A', 300, 6, None, None],
+    [17, 'Beine vorne', 'Beinpresse eng', 'A', 300, 6, None, None],
+    [17, 'Beine vorne', 'Beinpresse eng', 'A', 300, 6, None, None],
+    [17, 'Beine vorne', 'Split Squat', 'W', 40, None, None, None],
+    [17, 'Beine vorne', 'Split Squat', 'W', 70, None, None, None],
+    [17, 'Beine vorne', 'Split Squat', 'A', 100, 6, None, None],
+    [17, 'Beine vorne', 'Split Squat', 'A', 110, 5, None, None],
+    [17, 'Beine vorne', 'Split Squat', 'A', 120, 6, None,
+     'neuer Bestwert, vorher 115 kg'],
+    [17, 'Beine vorne', 'Beinstrecker', 'W', 34, None, None, None],
+    [17, 'Beine vorne', 'Beinstrecker', 'W', 59.5, None, None, None],
+    [17, 'Beine vorne', 'Beinstrecker', 'A', 85, 6, None, None],
+    [17, 'Beine vorne', 'Beinstrecker', 'A', 90, 5, None, None],
+    [17, 'Beine vorne', 'Beinstrecker', 'A', 95, 5, None, None],
 ]
