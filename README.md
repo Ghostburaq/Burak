@@ -56,3 +56,20 @@ PREVIEW_W=2600 PREVIEW_PDF=docs/Pitch_Burak_AVIA_VOLT_vorschau.pdf \
   Schriften, damit die Datei auf jedem Rechner identisch aussieht.
 - Inhaltlich entspricht das Deck dem Original, sprachlich leicht geschärft;
   Layout und Grafik wurden durchgehend angehoben.
+
+## Claude-Skills in diesem Repo
+
+| Skill | Zweck |
+|-------|-------|
+| `.claude/skills/mit-praesentation/` | PPTX im MiT-Design |
+| `.claude/skills/google-maps-scraper/` | Firmenlisten aus Google Maps (Name, Kategorie, Telefon, Website, Adresse, Rating) |
+
+`google-maps-scraper` stammt aus [gosom/google-maps-scraper](https://github.com/gosom/google-maps-scraper)
+(MIT-Lizenz, Stand Commit `d0b51bc`). Voraussetzung: Docker und Node.js lokal.
+Aufruf in Claude Code aus diesem Repo heraus, z. B.:
+
+> Finde alle Rechenzentren im Kanton Zürich mit Telefon und Website
+
+Ergebnisse landen als CSV/JSON unter `/tmp`, nicht im Repo.
+E-Mail-Extraktion (`-email`) nur mit geklärter Rechtsgrundlage nutzen
+(CH: Art. 3 Abs. 1 lit. o UWG, DE: § 7 UWG, DSG/DSGVO).
