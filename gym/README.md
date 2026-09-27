@@ -6,8 +6,8 @@ von selbst.
 
 | Fassung | Datei | Gilt | Umfang |
 |---|---|---|---|
-| **Vor der OP** | `GymLogbuch_Beine_PreOP.xlsx` | bis 30.09.2026 | 14 Blätter, 45 A4-Seiten |
-| **Reha** | `GymLogbuch_Beine.xlsx` | ab dem OP-Tag | 13 Blätter, 44 A4-Seiten |
+| **Vor der OP** | `GymLogbuch_Beine_PreOP.xlsx` | bis 30.09.2026 | 15 Blätter, 49 A4-Seiten |
+| **Reha** | `GymLogbuch_Beine.xlsx` | ab dem OP-Tag | 14 Blätter, 48 A4-Seiten |
 
 Beide entstehen aus demselben Generator und sind in `Log`, `Einheiten`,
 `Auswertung`, `Progression`, `Rekorde`, `Trainingsblatt` und `Übungen`
@@ -91,6 +91,7 @@ Die Reha-Fassung hat statt `OP-Countdown`, `Vorbereitung` und
 | `Start` | Anleitung, Legende, offene Punkte | A4 hoch, 2 S. |
 | `Dashboard` | 12 Kennzahlen-Kacheln und vier Diagramme | A4 hoch |
 | `Reha-Fahrplan` | Phasenplan nach der Schulter-OP: erlaubt, verboten, Meilensteine | A4 quer |
+| `Reha-Plan Beine` | Der Trainingsplan nach der OP: je Phase Übung, Sätze × Wdh und konkretes Startgewicht | A4 quer, 2 S. |
 | `Reha-Modus` | Wochen-Ampel je Übung: FREI / GESPERRT plus Ersatzübung | A4 quer, 2 S. |
 | `Reha-Log` | Täglich Schmerz und Beweglichkeit, mit Statusblock und Verlaufskurven | A4 quer, 2 S. |
 | `Einheiten` | Kopfdaten je Training, 60 Einheiten vorbereitet | A4 quer, 2 S. |
@@ -109,6 +110,9 @@ Die Reha-Fassung hat statt `OP-Countdown`, `Vorbereitung` und
   Bestwert, den Zielvorschlag mit Aufwärm-Rampe und die Vorgabe
   (Sätze × Wdh @ RPE). In der Reha-Sperrzeit steht dort stattdessen rot der
   Sperrvermerk mit der Ersatzübung.
+- **Reha-Plan Beine** — das Blatt für die Reha-Zeit. Ersetzt von Woche 2 bis
+  Monat 4 das Trainingsblatt, weil dessen Zielwerte aus der Historie vor der
+  OP kommen und nach Wochen ohne Last zu schwer sind.
 - **Reha-Modus** — eine Seite an den Spiegel: was diese Woche freigegeben ist.
 - **Reha-Fahrplan** — einmal ausdrucken, ins Ablagefach.
 - **Dashboard** und **Progression** — zur Kontrolle, je eine Seite.
@@ -146,6 +150,25 @@ Satztypen: `W` Warmup · `A` Arbeitssatz (Basis aller Kennzahlen) ·
 | `Aktiv = nein` | Archiv: raus aus Trainingsblatt und Reha-Modus, Historie bleibt in Log, Auswertung, Progression und Rekorden — dort grau und kursiv |
 | `Reha frei ab Woche` | steuert die Ampel im `Reha-Modus` und den Sperrvermerk auf dem Trainingsblatt |
 | `Ersatz in der Sperrzeit` | erscheint automatisch, solange die Übung gesperrt ist |
+
+## Trainingsplan nach der OP
+
+Das Blatt `Reha-Plan Beine` rechnet je Phase ein Startgewicht als Prozentsatz
+des letzten Arbeitsgewichts vor der OP, abgerundet auf die Laststufe des
+Geräts. Es ist formelbasiert: kommt vor der OP noch eine Einheit dazu, ändern
+sich die Reha-Gewichte automatisch mit.
+
+| Phase | Woche | Was dazukommt | Anteil neu | Anteil laufend | Wdh |
+|---|---|---|---|---|---|
+| 1 | 2–6 | Beinstrecker, Beinbeuger, Adduktion, Waden (alle sitzend) | 60 % | — | 12–15 |
+| 2 | 6–12 | Beinpresse eng + breit, Hip & Glute, Seitl. Kickbacks | 55 % | 75 % | 10–12 |
+| 3 | 12–16 | Reverse V-Squat, Hip Thrust, Split Squat | 50 % | 85–95 % | 8–10 |
+| 4 | ab Monat 4 | Rumänisches Kreuzheben KH | 50 % | zurück auf 5–6 | 8–10 |
+
+Der hohe Wiederholungsbereich in Phase 1 bis 3 ist Absicht: weniger Last pro
+Wiederholung heisst weniger Pressatmung, und die erhöht Druck und Zug über den
+Schultergürtel. Ab Phase 4 gilt wieder der normale Zielbereich 5–6 und das
+`Trainingsblatt`.
 
 ## Kapazität
 

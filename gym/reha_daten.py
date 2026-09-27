@@ -205,7 +205,11 @@ HEILUNG = [
 MODUS_TITEL = 'BEINTRAINING IM REHA-MODUS'
 MODUS_SUB = ('Woche nach OP eintragen, die Ampel zeigt je Übung, was heute '
              'erlaubt ist. Die Freigaben stehen im Blatt Übungen und lassen '
-             'sich dort anpassen, sobald das Schema des Operateurs vorliegt.')
+             'sich dort anpassen, sobald das Schema des Operateurs vorliegt. '
+             'Sätze, Wiederholungen und Gewicht für die Reha-Phasen stehen '
+             'NICHT hier, sondern im Blatt Reha-Plan Beine - die Spalten '
+             'Sätze und Ziel-Wdh unten zeigen die Werte für den '
+             'Normalbetrieb ab Phase 4.')
 MODUS_KOPF = ['Übung', 'Frei ab\nWoche', 'Status heute', 'Sätze', 'Ziel-Wdh',
               'Ersatz in der Sperrzeit', 'Hinweis']
 MODUS_REGELN_TITEL = 'REGELN FÜR JEDE BEINEINHEIT IN DER REHA-PHASE'

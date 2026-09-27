@@ -514,6 +514,13 @@ for lab, txt in [
      "welchem Prozentsatz zurückkommt."),
     ("Blatt 'Dashboard'",
      "Kennzahlen und vier Diagramme auf einer Seite. Gut zum Aufhängen."),
+    ("Blatt 'Reha-Plan Beine'",
+     "Der eigentliche Trainingsplan nach der OP. Je Phase steht dort, "
+     "welche Übung läuft, mit wie vielen Sätzen und Wiederholungen und "
+     "mit welchem konkreten Gewicht - gerechnet als Prozentsatz des "
+     "letzten Arbeitsgewichts vor der OP und auf die Laststufe des Geräts "
+     "abgerundet. Dieses Blatt ersetzt in der Reha das Trainingsblatt; ab "
+     "Phase 4 wird wieder das Trainingsblatt genutzt."),
     ("Blatt 'OP-Countdown'" if PREOP else "Blatt 'Reha-Fahrplan'",
      "Tage und Wochen bis zum Termin, und vor allem: welche Übung nach der "
      "OP wie lange ausfällt und welcher Ersatz einspringt. Die Ersatzgeräte "
@@ -2793,16 +2800,195 @@ wsd.cell(ende, 2, "Noch nicht trainierte Einheiten und Übungen erscheinen in "
                   "den Diagrammen ohne Balken.").font = F_SMALL
 druck(wsd, "A1:J%d" % ende)
 
+# ==========================================================================
+# REHA-PLAN BEINE  -  konkrete Gewichte für jede Phase nach der OP
+# ==========================================================================
+# Der Zielvorschlag auf dem Trainingsblatt rechnet aus der Historie vor der
+# OP weiter. Nach Wochen ohne Last ist er zu schwer. Dieses Blatt rechnet
+# stattdessen je Phase einen Prozentsatz des letzten Arbeitsgewichts und
+# ist damit das Blatt, das in der Reha ausgedruckt und mitgenommen wird.
+UEB_INDEX = {u["name"]: i for i, u in enumerate(UEBUNGEN)}
+
+# (Übung, Gerät/Ausführung, Sätze × Wdh, Prozent, Hinweis)
+REHA_PHASEN = [
+    ("Phase 1  ·  Woche 2 bis 6  ·  alles im Sitzen, Arm in der Schlinge",
+     "Frühester Start Tag 10 bis 14 und erst nach Freigabe der Wunde. Zwei "
+     "Einheiten je Woche. Ziel ist Erhalt, nicht Aufbau - die Last ist "
+     "bewusst niedrig, weil der Kreislauf und der Schlaf in diesen Wochen "
+     "nicht mitspielen. Ein- und Aussteigen immer über die linke Seite.",
+     [("Beinstrecker", "Maschine sitzend, Hände im Schoss",
+       "2 × 12-15", 60, "Erste Einheit bewusst eine Stufe darunter."),
+      ("Beinbeuger", "Maschine sitzend, Griffe loslassen",
+       "2 × 12-15", 60, "Das Polster hält das Bein, nicht die Hand."),
+      ("Adduktion", "Maschine, Arm in der Schlinge",
+       "2 × 12-15", 60, "Links war im September die Zerrung - hier "
+       "besonders langsam einsteigen."),
+      ("Waden", "Maschine sitzend", "2 × 15", 60,
+       "Nur die sitzende Variante, kein Schulterpolster.")]),
+    ("Phase 2  ·  Woche 6 bis 12  ·  Schlinge weg, Beinpresse zurück",
+     "Erst nach ärztlicher Freigabe zum Ablegen der Schlinge. Jetzt sind "
+     "zwei volle Beineinheiten je Woche möglich, weiter mit 72 Stunden "
+     "Abstand. Bauchpresse dosieren: bei RPE 8 stoppen, nicht bei 9.",
+     [("Beinpresse eng", "tiefe Fussposition, Hände seitlich ablegen",
+       "3 × 10-12", 55, "Neu in dieser Phase. Nicht an den Griffen ziehen."),
+      ("Beinpresse breit", "breiter Stand, Füsse hoch",
+       "3 × 10-12", 55, "Neu in dieser Phase. Zieht die Adduktoren in die "
+       "Dehnung - links vorsichtig."),
+      ("Hip & Glute", "Maschine, Arme vor der Brust gekreuzt",
+       "3 × 10-12", 55, "Neu in dieser Phase. Ersetzt den Hip Thrust mit "
+       "der Stange."),
+      ("Seitliche Kickbacks", "Kabel, nur links abstützen",
+       "2 × 12-15", 55, "Neu in dieser Phase."),
+      ("Beinstrecker", "wie Phase 1", "3 × 10-12", 75, "läuft weiter"),
+      ("Beinbeuger", "wie Phase 1", "3 × 10-12", 75, "läuft weiter"),
+      ("Adduktion", "wie Phase 1", "3 × 10-12", 75, "läuft weiter"),
+      ("Waden", "jetzt auch stehend ohne Schulterpolster", "3 × 12-15", 75,
+       "läuft weiter")]),
+    ("Phase 3  ·  Woche 12 bis 16  ·  freie Gewichte kommen zurück",
+     "Ab hier darf der Arm wieder halten und stützen. Die drei neuen "
+     "Übungen starten bewusst bei der Hälfte: die Bewegung ist seit drei "
+     "Monaten weg, nicht nur die Kraft.",
+     [("Reverse V-Squat", "Maschine, lockerer Griff", "3 × 8-10", 50,
+       "Neu in dieser Phase. Polster auf Schulter und Nacken - erste "
+       "Einheit nur Technik."),
+      ("Hip Thrust", "Langhantel, Stange auflegen lassen", "3 × 8-10", 50,
+       "Neu in dieser Phase. Arme vor der Brust kreuzen."),
+      ("Split Squat", "Multipresse ohne Zusatzhantel", "3 × 8-10", 50,
+       "Neu in dieser Phase. Kurzhanteln erst ab Monat 4."),
+      ("Beinpresse eng", "wie Phase 2", "3 × 8-10", 85, "läuft weiter"),
+      ("Beinpresse breit", "wie Phase 2", "3 × 8-10", 85, "läuft weiter"),
+      ("Hip & Glute", "wie Phase 2", "3 × 8-10", 85, "läuft weiter"),
+      ("Seitliche Kickbacks", "wie Phase 2", "3 × 10-12", 85,
+       "läuft weiter"),
+      ("Beinstrecker", "wie Phase 1", "3 × 8-10", 95, "läuft weiter"),
+      ("Beinbeuger", "wie Phase 1", "3 × 8-10", 95, "läuft weiter"),
+      ("Adduktion", "wie Phase 1", "3 × 8-10", 95, "läuft weiter"),
+      ("Waden", "sitzend oder stehend", "3 × 10-12", 95, "läuft weiter")]),
+    ("Phase 4  ·  ab Monat 4  ·  zurück zum normalen Plan",
+     "Die letzte Übung kommt zurück, und der Zielbereich geht wieder auf "
+     "5 bis 6 Wiederholungen. Ab hier gilt wieder das Blatt "
+     "'Trainingsblatt' mit der normalen Progression - dieses Blatt wird "
+     "nicht mehr gebraucht.",
+     [("Rumänisches Kreuzheben KH", "Kurzhantel, Gewicht je Hantel",
+       "3 × 8-10", 50, "Letzte Übung zurück im Plan. Technik vor Last, "
+       "volle Last frühestens Monat 6.")]),
+]
+
+wsp = sheet("Reha-Plan Beine")
+for col, w in zip("ABCDEFG", [24, 34, 12, 12, 9, 30, 4]):
+    wsp.column_dimensions[col].width = w
+titelbalken(wsp, 1, 6, "REHA-PLAN BEINE  |  GEWICHTE FÜR JEDE PHASE",
+            "Startgewichte als Prozentsatz des letzten Arbeitsgewichts vor "
+            "der OP, automatisch auf die Laststufe des Geräts abgerundet. "
+            "Dieses Blatt ersetzt in der Reha das Trainingsblatt.")
+
+r = 4
+wsp.merge_cells(start_row=r, start_column=1, end_row=r, end_column=6)
+c = wsp.cell(r, 1,
+             "Die Wochenangaben sind konservativ abgeleitet und NICHT "
+             "ärztlich bestätigt. Das schriftliche Nachbehandlungsschema "
+             "des Operateurs hat Vorrang - weicht es ab, die Wochen im "
+             "Blatt 'Übungen' anpassen, dann stimmt auch die Ampel im "
+             "Blatt 'Reha-Modus'.")
+c.font = Font(name=FONT, size=9, bold=True, color=RED)
+c.alignment, c.fill = LW, PatternFill("solid", fgColor="FDECEC")
+for col in range(1, 7):
+    wsp.cell(r, col).fill = PatternFill("solid", fgColor="FDECEC")
+    wsp.cell(r, col).border = B_ALL
+wsp.row_dimensions[r].height = 28
+r += 2
+
+for titel, sub, zeilen in REHA_PHASEN:
+    abschnitt(wsp, r, 1, 6, titel)
+    r += 1
+    wsp.merge_cells(start_row=r, start_column=1, end_row=r, end_column=6)
+    c = wsp.cell(r, 1, sub)
+    c.font, c.alignment, c.fill = F_BODY, LW, FILL_LIGHT
+    for col in range(1, 7):
+        wsp.cell(r, col).fill = FILL_LIGHT
+        wsp.cell(r, col).border = B_ALL
+    wsp.row_dimensions[r].height = zeilenhoehe(sub, breite=118)
+    r += 1
+    kopfzeile(wsp, r, 1, ["Übung", "Gerät / Ausführung", "Sätze × Wdh",
+                          "Start (kg)", "Anteil", "Hinweis"], height=18)
+    r += 1
+    for name, geraet, saetze, pct, hinweis in zeilen:
+        i = UEB_INDEX[name]
+        rek_l = "Rekorde!$L$%d" % (REK_FIRST + i)
+        u_start = "%s!$H$%d" % (UEB, UEB_FIRST + i)
+        u_schritt = "%s!$J$%d" % (UEB, UEB_FIRST + i)
+        # Basis ist das letzte Arbeitsgewicht; fehlt es, das Startgewicht.
+        basis = "IF(%s=\"\",%s,%s)" % (rek_l, u_start, rek_l)
+        wsp.cell(r, 1, name).font = F_BOLD
+        wsp.cell(r, 1).alignment = LW
+        wsp.cell(r, 2, geraet).font = F_BODY
+        wsp.cell(r, 2).alignment = LW
+        c = wsp.cell(r, 3, saetze)
+        c.font, c.alignment = F_BOLD, C
+        c = wsp.cell(r, 4,
+                     "=IF(%s=\"\",\"offen\",IF(%s=\"\","
+                     "ROUND(%s*%d/100*2,0)/2,"
+                     "FLOOR(%s*%d/100/%s,1)*%s))"
+                     % (basis, u_schritt, basis, pct, basis, pct,
+                        u_schritt, u_schritt))
+        c.font = Font(name=FONT, size=12, bold=True, color=GREEN)
+        c.alignment, c.number_format = C, NF_KG
+        c.fill = FILL_CALC
+        c = wsp.cell(r, 5, "%d %%" % pct)
+        c.font, c.alignment = F_SMALL, C
+        c = wsp.cell(r, 6, hinweis)
+        c.font, c.alignment = F_BODY, LW
+        for col in range(1, 7):
+            wsp.cell(r, col).border = B_ALL
+        wsp.row_dimensions[r].height = max(zeilenhoehe(hinweis, breite=32),
+                                           zeilenhoehe(geraet, breite=36))
+        r += 1
+    r += 1
+
+abschnitt(wsp, r, 1, 6, "Wie in der Reha gesteigert wird")
+r += 1
+for lab, txt in [
+    ("Erst Wiederholungen, dann Gewicht",
+     "Dieselbe doppelte Progression wie sonst, nur mit anderem Bereich. "
+     "Schaffen alle Sätze die obere Zahl, kommt eine Laststufe drauf und "
+     "die Wiederholungen fangen bei der unteren Zahl wieder an."),
+    ("Nicht jede Einheit steigern",
+     "In Phase 1 und 2 zählt, dass die Einheit stattfindet. Bleibt eine "
+     "Übung zwei Einheiten gleich, ist das kein Rückschritt - der Körper "
+     "baut gerade eine Sehne an einen Knochen."),
+    ("Wenn die Schulter meldet, ist Schluss",
+     "Ziehen vorne im Gelenk, Ziehen im Sulcus, oder das Gefühl, dass die "
+     "Hand wegrutscht: Einheit beenden, notieren, zur Physiotherapie. Das "
+     "ist kein Muskelkater."),
+    ("Zurück zum Trainingsblatt",
+     "Ab Phase 4 wird dieses Blatt nicht mehr gebraucht. Dann im Blatt "
+     "'Übungen' alle Zeilen auf 'Aktiv = ja' und 'Anpassung 100' stellen "
+     "und wieder mit dem Trainingsblatt arbeiten - die Progression rechnet "
+     "aus den Reha-Einheiten nahtlos weiter, weil alles im Log steht."),
+]:
+    wsp.cell(r, 1, lab).font = F_BOLD
+    wsp.cell(r, 1).alignment = LW
+    wsp.merge_cells(start_row=r, start_column=2, end_row=r, end_column=6)
+    c = wsp.cell(r, 2, txt)
+    c.font, c.alignment = F_BODY, LW
+    for col in range(1, 7):
+        wsp.cell(r, col).border = B_ALL
+    wsp.row_dimensions[r].height = zeilenhoehe(txt, breite=96)
+    r += 1
+
+druck(wsp, "A1:F%d" % r, landscape=True, titles="1:2")
+
 # --------------------------------------------------------------------------
 # Blattreihenfolge und Speichern
 # --------------------------------------------------------------------------
 if PREOP:
     ORDER = ["Start", "Wochenplan", "Dashboard", "OP-Countdown", "Vorbereitung",
-             "Baseline Schulter", "Reha-Fahrplan", "Einheiten", "Log",
-             "Auswertung", "Progression", "Rekorde", "Trainingsblatt",
-             "Übungen"]
+             "Baseline Schulter", "Reha-Fahrplan", "Reha-Plan Beine",
+             "Einheiten", "Log", "Auswertung", "Progression", "Rekorde",
+             "Trainingsblatt", "Übungen"]
 else:
-    ORDER = ["Start", "Wochenplan", "Dashboard", "Reha-Fahrplan", "Reha-Modus", "Reha-Log",
+    ORDER = ["Start", "Wochenplan", "Dashboard", "Reha-Fahrplan",
+             "Reha-Plan Beine", "Reha-Modus", "Reha-Log",
              "Einheiten", "Log", "Auswertung", "Progression", "Rekorde",
              "Trainingsblatt", "Übungen"]
 wb._sheets = [wb[n] for n in ORDER]
