@@ -1,15 +1,13 @@
-# Zielkundenliste Schweiz: Mobile Energie
+# Top-Player Power Schweiz 2027
 
-**Datei:** [`Kundenliste_MiT_Schweiz.xlsx`](Kundenliste_MiT_Schweiz.xlsx) (Stand 27.09.2026, VERTRAULICH)
+Stand 27.09.2026 · VERTRAULICH, intern
 
-- **Übersicht:** KPIs, Segmentmix Soll/Ist (60/20/20), Regionen x Prio, Gebiet West/Deutschschweiz/Tessin, Kategorien, Kundenstatus. Alles per Formel.
-- **Kundenliste:** 125 Firmen, davon Kernliste 70 (42 Installateure / 14 FM-EVU-Planer / 14 GU/TU+Industrie). Score aus Fit, Volumen, Timing, Zugang, daraus Prio A/B/C mit Begründung, Anlass 2025-2027, Quelle, LinkedIn-Suchlinks. Dropdowns für Prio final, Kundenstatus, Verantwortlich.
-- **Methodik:** Gewichte und Schwellen (änderbar), Legende, Grenzen der Recherche.
+- **[`Top_Player_Power_Schweiz_2027.xlsx`](Top_Player_Power_Schweiz_2027.xlsx)**: 38 Projekte mit mehr als CHF 50'000 Power-Potenzial (Rechenzentren, Infrastruktur, Netz, Spitäler, Industrie, Events, Kanal-Partner). Blätter: Start (Erklärung, Kennzahlen, Top 10), Top-Player, Annahmen (Sätze, gelb = änderbar, Spalte E = MiT-Satz), Beobachten, Wettbewerb, Methode & Quellen.
+- **[`Top_Player_Power_Praesentation.pptx`](Top_Player_Power_Praesentation.pptx)**: 14 Folien im MiT-Master, Diagramme nativ, Sprechernotizen.
 
-Neu erzeugen: `python build_kundenliste.py` (Daten in `daten.py`).
+Rechenlogik: Potenzial = Generator (MVA × Wochen × Satz) + Lastbank (MW × Wochen × Satz) + BESS (MW × Monate × Satz).
+Erwartung 2027 = Potenzial × Anteil 2027 × Gewinnwahrscheinlichkeit. Sätze sind US-Markt-Richtwerte (umgerechnet 0,828 CHF/USD, 24.09.2026), keine MiT-Preise.
 
-## Präsentation
-
-**Datei:** [`Zielkunden_Schweiz_Praesentation.pptx`](Zielkunden_Schweiz_Praesentation.pptx), 13 Folien im Original-Master der Mobil in Time AG, mit Sprechernotizen, Diagramme nativ (in PowerPoint editierbar).
-Schriften: Alata (Titel) und IBM Plex Sans (Text) müssen installiert sein, sonst Fallback.
-Neu erzeugen: `python build_deck_mit.py` (braucht `python-pptx` und die MiT-Assets aus dem Skill `mit-praesentation`, Pfad per `MIT_ASSETS` überschreibbar).
+Neu erzeugen (Daten in `daten_power.py`):
+- `python build_top_player.py` (openpyxl; danach Formeln mit LibreOffice neu berechnen)
+- `python build_deck_power.py` (python-pptx, MiT-Assets aus dem Skill `mit-praesentation`, Pfad per `MIT_ASSETS`)
