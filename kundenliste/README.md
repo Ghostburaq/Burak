@@ -10,5 +10,6 @@ Neu erzeugen: `python build_kundenliste.py` (Daten in `daten.py`).
 
 ## Präsentation
 
-**Datei:** [`Zielkunden_Schweiz_Praesentation.pptx`](Zielkunden_Schweiz_Praesentation.pptx), 12 Folien mit Sprechernotizen, Diagramme nativ (in PowerPoint editierbar).
-Neu erzeugen: `node build_deck.js` (benötigt `pptxgenjs`, `react-icons`, `react`, `react-dom`, `sharp`).
+**Datei:** [`Zielkunden_Schweiz_Praesentation.pptx`](Zielkunden_Schweiz_Praesentation.pptx), 13 Folien im Original-Master der Mobil in Time AG, mit Sprechernotizen, Diagramme nativ (in PowerPoint editierbar).
+Schriften: Alata (Titel) und IBM Plex Sans (Text) müssen installiert sein, sonst Fallback.
+Neu erzeugen: `python build_deck_mit.py` (braucht `python-pptx` und die MiT-Assets aus dem Skill `mit-praesentation`, Pfad per `MIT_ASSETS` überschreibbar).
