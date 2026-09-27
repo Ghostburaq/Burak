@@ -115,11 +115,37 @@ def line(s, x1, y1, x2, y2, color=MID, w=1.5):
     return c
 
 
+IMG = os.path.join(HERE, "bilder")
+
+
+def pic(s, name, x, y, w, h, fx=0.5, fy=0.5):
+    """Bild einfügen und auf Rahmen zuschneiden (fx/fy = Fokus 0..1)."""
+    from PIL import Image
+    path = os.path.join(IMG, name)
+    iw, ih = Image.open(path).size
+    target = w / h
+    src = iw / ih
+    shp = s.shapes.add_picture(path, Inches(x), Inches(y), Inches(w), Inches(h))
+    if src > target:      # zu breit: links/rechts kappen
+        cut = 1 - target / src
+        shp.crop_left, shp.crop_right = cut * fx, cut * (1 - fx)
+    else:                 # zu hoch: oben/unten kappen
+        cut = 1 - src / target
+        shp.crop_top, shp.crop_bottom = cut * fy, cut * (1 - fy)
+    shp.line.fill.background()
+    return shp
+
+
+def caption(s, x, y, w, t):
+    text(s, x, y, w, 0.25, t, 8.5, DARK)
+
+
 # ================================================================ 1 Cover
 s = d.cover(["Top-Player Power", "Schweiz 2027"], "Wo 2027 die Power-Aufträge über CHF 50'000 liegen",
             eyebrow="Mobil in Time AG · An Aggreko Company · Strom Schweiz",
             author="Burak Ücöz · Area Sales Engineer · 27.09.2026",
             stats=[(mio(TOT_POT), "CHF Potenzial brutto"), (mio(TOT_EXP, 2), "CHF Erwartung 2027")])
+pic(s, "generator.png", 9.35, 4.95, 2.95, 1.25, fx=0.75, fy=0.62)
 d.notes(s, "Neu aufgebaut: nur Projekte mit mehr als CHF 50'000 Power-Potenzial. Jede Zahl ist in der Excel "
            "nachvollziehbar und rechnet mit unseren eigenen Sätzen neu.")
 
@@ -135,23 +161,43 @@ d.notes(s, "Erwartung 2027 = Potenzial × Anteil 2027 × Gewinnwahrscheinlichkei
 
 # ================================================================ 3 Treiber
 s = d.content("02 · Warum jetzt", "Drei Treiber machen 2027 zum Power-Jahr")
-d.cards(s, [
-    ("Rechenzentrums-Boom", ["EKZ meldet über 100 Anschlussanfragen von Rechenzentren.",
-                             "6 von 9 neuen EKZ-Unterwerken entstehen für RZ.",
-                             "STACK 36 MW, Digital Realty 15 MW, Vantage 100+ MW."], RED),
-    ("Netzengpass", ["Der Engpass liegt im Vornetz von Axpo und Swissgrid.",
-                     "Neue Unterwerke kommen später als die Gebäude.",
-                     "Dazwischen braucht es Generator- oder BESS-Überbrückung."]),
-    ("Commissioning", ["Integrated Systems Test (Level 5): Last ≈ IT-Last.",
-                       "Stufen 25 / 50 / 75 / 100 %, dann Volllast über Stunden.",
-                       "IST-Fenster 4 bis 6 Wochen je Programm, Mängel erzwingen Re-Tests."]),
-], cols_n=3, h=3.55, bs=12.5)
-text(s, L, 6.1, 11.9, 0.4, "Quellen: ekz.ch (2025), stackinfra.com, investor.digitalrealty.com (27.08.2026), anvilfield.com, sunbeltsolomon.com",
-     9.5, DARK)
-d.notes(s, "Der RZ-Markt wächst schneller als das Netz. Genau diese Lücke füllen wir mit mobiler Power.")
+xs, cw = cols(3)
+drv = [
+    ("rechenzentrum.png", 0.5, "Rechenzentrums-Boom", ["EKZ meldet über 100 Anschlussanfragen von Rechenzentren (RZ).",
+      "6 von 9 neuen EKZ-Unterwerken entstehen für RZ.", "STACK 36 MW, Digital Realty 15 MW, Vantage 100+ MW."], RED),
+    ("foto_einspeisung.jpg", 0.2, "Netzengpass", ["Engpass im Vornetz von Axpo und Swissgrid.",
+      "Neue Unterwerke kommen später als die Gebäude.", "Dazwischen: Generator- oder BESS-Überbrückung."], DARK),
+    ("foto_logger.jpg", 0.45, "Commissioning", ["IST (Integrated Systems Test): Last ≈ IT-Last.",
+      "Stufen 25 / 50 / 75 / 100 %, dann Volllast über Stunden.", "4 bis 6 Wochen, Mängel erzwingen Re-Tests."], DARK),
+]
+for (img, fy, h, t, f), x in zip(drv, xs):
+    pic(s, img, x, 2.05, cw, 1.6, fy=fy)
+    d.rect(s, x, 3.65, cw, 2.55, f)
+    text(s, x + 0.28, 3.82, cw - 0.5, 0.4, h, 15, WHITE, True)
+    text(s, x + 0.28, 4.3, cw - 0.5, 1.9, t, 12, WHITE if f == RED else SOFT)
+text(s, L, 6.35, 11.9, 0.3, "Quellen: ekz.ch (2025), stackinfra.com, investor.digitalrealty.com (27.08.2026), anvilfield.com, sunbeltsolomon.com. "
+     "Fotos: eigene Aufnahmen, Logos unkenntlich.", 8.5, DARK)
+
+# ================================================================ 3b Portfolio
+s = d.content("03 · Portfolio Power", "Was wir vermieten, auf einen Blick")
+xs, cw = cols(5)
+tiles = [
+    ("generator.png", 0.72, 0.6, "Generator", "Diesel oder HVO, 30 bis 2'100 kVA. Baustrom, Netzersatz, Events. Leistung in kVA/MVA (Scheinleistung)."),
+    ("lastbank_detail.png", 0.5, 0.6, "Lastbank", "Künstliche Last bis 6,25 MW für NEA-Tests und RZ-Commissioning (IST)."),
+    ("bess_detail.png", 0.55, 0.5, "BESS", "Battery Energy Storage System: leise, emissionsfrei, kappt Lastspitzen, Hybrid mit Generator."),
+    ("foto_trafo.jpg", 0.5, 0.5, "Mobiler Trafo", "Provisorische Einspeisung MS/NS bei Unterwerk- und Stationsumbau."),
+    ("foto_messung.jpg", 0.5, 0.5, "NEA-Test & Messung", "Netzersatzanlage unter Last prüfen, Netzqualität messen vor und nach der Umschaltung."),
+]
+for (img, fx, fy, h, t), x in zip(tiles, xs):
+    pic(s, img, x, 2.05, cw, 1.75, fx=fx, fy=fy)
+    d.rect(s, x, 3.8, cw, 2.6, LIGHT)
+    d.rect(s, x, 3.8, 0.6, 0.045, RED)
+    text(s, x + 0.18, 3.98, cw - 0.3, 0.4, h, 14, BLACK, True)
+    text(s, x + 0.18, 4.45, cw - 0.32, 2.1, t, 11, DARK)
+caption(s, L, 6.5, 11.9, "Illustrationen: eigene Grafik im MiT-Design. Fotos Trafo und Messung: eigene Aufnahmen, Typenschild unkenntlich. Portfolio laut mobilintime.com und aggreko.com.")
 
 # ================================================================ 4 Pipeline
-s = d.content("03 · Pipeline", "Wo das Geld liegt: Potenzial und Erwartung")
+s = d.content("04 · Pipeline", "Wo das Geld liegt: Potenzial und Erwartung")
 cd = CategoryChartData()
 cats = ["Rechenzentren", "Infrastruktur", "Netz / UW", "Spitäler", "Industrie", "Events", "Kanal-Partner"]
 cd.categories = cats
@@ -180,7 +226,7 @@ d.notes(s, "Grau ist das Brutto-Potenzial, rot die gewichtete Erwartung 2027. Re
            "Infrastruktur die höchste Erwartung, weil die Laufzeiten lang und die Termine fix sind.")
 
 # ================================================================ 5 RZ-Blasen-Zeitstrahl
-s = d.content("04 · Rechenzentren", f"Die Commissioning-Welle: {mio(seg_pot[RZ])} CHF")
+s = d.content("05 · Rechenzentren", f"Die Commissioning-Welle: {mio(seg_pot[RZ])} CHF")
 x0, x1 = 1.3, 11.2
 m0, m1 = 2026 * 12 + 7, 2028 * 12 + 12   # Jul 2026 bis Dez 2028
 X = lambda y, m: x0 + (y * 12 + m - m0) / (m1 - m0) * (x1 - x0)
@@ -217,7 +263,7 @@ d.notes(s, "Hot Leads sind STACK Beringen und Green Lupfig: Commissioning läuft
            "Digital Realty und Vantage kommen 2028, der Zugang muss aber 2027 aufgebaut werden, am besten schon mit Baustrom.")
 
 # ================================================================ 6 Top 10
-s = d.content("05 · Top 10", "Die zehn Projekte mit der höchsten Erwartung")
+s = d.content("06 · Top 10", "Die zehn Projekte mit der höchsten Erwartung")
 top = rows[:10]
 cd = CategoryChartData()
 cd.categories = [x["name"].replace(" (Neue Axenstrasse)", "").replace(" (nächstes RZ)", "") for x in top][::-1]
@@ -244,7 +290,7 @@ text(s, 9.25, 2.75, 2.95, 3.8, ["Rot = Rechenzentrum, grau = übrige.", "",
 d.notes(s, "Die Reihenfolge ergibt sich aus der Erwartung 2027. Ändern sich Wahrscheinlichkeiten, ändert sich das Ranking automatisch in der Excel.")
 
 # ================================================================ 7 Produkt-Matrix
-s = d.content("06 · Produktbedarf", "Was die Top-Player an Power brauchen")
+s = d.content("07 · Produktbedarf", "Was die Top-Player an Power brauchen")
 prods = ["Generator", "Lastbank", "BESS", "Mobiler Trafo", "NEA-Test / USV", "Tank / HVO"]
 mat = {  # 3 = Kernbedarf, 2 = häufig, 1 = gelegentlich, 0 = kaum
     "Rechenzentren": [3, 3, 2, 1, 3, 2],
@@ -272,7 +318,7 @@ d.notes(s, "Generator ist überall Kernprodukt. Lastbank ist das RZ-Produkt, der
            "BESS gewinnt bei Events und Nachtbaustellen, weil es leise ist. Einschätzung aus den Szenarien der Excel.")
 
 # ================================================================ 8 Rechenweg
-s = d.content("07 · Rechenweg", "So entsteht jede Zahl in der Liste")
+s = d.content("08 · Rechenweg", "So entsteht jede Zahl in der Liste")
 bx = [("Generator", f"MVA × Wochen × {chf(G)}"), ("Lastbank", f"MW × Wochen × {chf(LB)}"),
       ("BESS", f"MW × Monate × {chf(B)}")]
 for i, (h, t) in enumerate(bx):
@@ -300,7 +346,7 @@ d.band(s, 5.35, "Sätze sind US-Markt-Richtwerte, umgerechnet mit 0,828 CHF/USD 
 d.notes(s, "Das Modell ist bewusst konservativ. Sobald wir unsere eigenen Sätze eintragen, wird die Zahl belastbar.")
 
 # ================================================================ 9 Cross-Sell
-s = d.content("08 · Cross-Sell", "Power öffnet die Tür, Wärme und Kälte folgen")
+s = d.content("09 · Cross-Sell", "Power öffnet die Tür, Wärme und Kälte folgen")
 cx, cy = 6.43, 4.35
 fuel = RATES["diesel_lh"] * RATES["diesel_chf"]
 cool = RATES["cool_usd_month"] / RATES["cool_mw"] * RATES["fx"]
@@ -323,34 +369,41 @@ d.notes(s, "Wir gehen mit Power rein und nehmen Wärme und Kälte mit. Beim RZ-I
            "auf Winterbaustellen braucht es Bauheizung, und WEF und Ski-WM brauchen Zeltheizung. Dieselpreis TCS 18.09.2026: 2,41 CHF/l.")
 
 # ================================================================ 10 Infra / Netz / Spital / Industrie
-s = d.content("09 · Infrastruktur, Netz, Spital, Industrie", "Das sichere Volumen: lange Laufzeiten")
+s = d.content("10 · Infrastruktur, Netz, Spital, Industrie", "Das sichere Volumen: lange Laufzeiten")
 non = [x for x in rows if x["seg"] in (INF, NETZ, SPI, IND)][:10]
 tbl = [["Projekt", "Einstieg über", "Potenzial CHF", "Erwartung 2027"]]
 for x in non:
     tbl.append([x["name"], x["ein"].split(";")[-1].strip(), f"{x['pot']:,.0f}".replace(",", "'"), f"{x['exp']:,.0f}".replace(",", "'")])
-d.table(s, tbl, colw=[4.2, 3.8, 1.6, 1.7], y=2.05, h=0.42 + 10 * 0.4, fs=11, head_fs=11)
+d.table(s, tbl, colw=[3.3, 2.5, 1.35, 1.35], w=8.3, y=2.05, h=0.42 + 10 * 0.4, fs=10.5, head_fs=10.5)
+pic(s, "tunnel.png", 9.0, 2.05, 3.4, 2.1, fy=0.6)
+pic(s, "spital.png", 9.0, 4.35, 3.4, 2.1, fx=0.6, fy=0.55)
 d.notes(s, "Tunnel, Grimsel und Bachem bringen ganzjährige Mieten. Bei KSA, Axpo Niederurnen und CKW sind die Termine 2027 fix. "
            "Öffentliche Beschaffung bei ASTRA, SBB, ewz, USZ beachten.")
 
 # ================================================================ 11 Events
-s = d.content("10 · Events", "Winter 2027 zuerst, ESAF 2028 jetzt offerieren")
+s = d.content("11 · Events", "Winter 2027 zuerst, ESAF 2028 jetzt offerieren")
 evs = [x for x in rows if x["seg"] == EVT]
 ev_txt = {
     "WEF Annual Meeting 2027": ["18. bis 22.01.2027, Davos", "Pavillons und Sicherheit bei knappem Ortsnetz", "Aufbau ab Dezember"],
     "FIS Ski-WM Crans-Montana 2027": ["01. bis 14.02.2027", "Broadcast, Fan-Zonen, Hospitality", "Offerte auf Französisch"],
     "ESAF 2028 Thun": ["25. bis 27.08.2028, Thuner Allmend", "Arena, Festgelände, Camping", "Konzept 2027, Umsatz 2028"],
 }
-items = []
-for x in evs:
-    items.append((x["name"].replace(" Annual Meeting", ""), ev_txt.get(x["name"], []) + ["", f"Potenzial {chf(x['pot'])}"],
-                  RED if "Ski-WM" in x["name"] else DARK))
-d.cards(s, items, cols_n=3, h=3.35, bs=12.5)
+pic(s, "event.png", L, 2.05, 3.9, 3.45, fx=0.4)
+ev_order = sorted(evs, key=lambda x: ("Ski-WM" not in x["name"], "WEF" not in x["name"]))
+for i, x in enumerate(ev_order):
+    y = 2.05 + i * 1.18
+    f = RED if "Ski-WM" in x["name"] else DARK
+    d.rect(s, 4.6, y, 7.8, 1.08, f)
+    text(s, 4.85, y + 0.14, 4.3, 0.4, x["name"].replace(" Annual Meeting", ""), 14, WHITE, True)
+    text(s, 4.85, y + 0.52, 4.6, 0.5, " · ".join(ev_txt.get(x["name"], [])[:2]), 11, WHITE if f == RED else SOFT)
+    text(s, 9.6, y + 0.14, 2.6, 0.4, chf(x["pot"]), 16, WHITE, True, F_TITLE, PP_ALIGN.RIGHT)
+    text(s, 9.6, y + 0.58, 2.6, 0.4, ev_txt.get(x["name"], ["", "", ""])[2], 10.5, WHITE if f == RED else SOFT, align=PP_ALIGN.RIGHT)
 d.band(s, 5.75, "Sommer-Openairs (St.Gallen, Frauenfeld, Gurten, Paléo, Montreux) liegen einzeln unter CHF 50'000: als Saisonpaket anbieten.",
        fill=LIGHT, h=0.85, fs=12.5)
 d.notes(s, "Szenario-Grössen bei Events sind Annahmen. Die Ski-WM ist rot markiert, weil sie 2027 stattfindet und die Beschaffung jetzt läuft.")
 
 # ================================================================ 12 Wettbewerb
-s = d.content("11 · Wettbewerb", "Wer sonst mobile Power anbietet")
+s = d.content("12 · Wettbewerb", "Wer sonst mobile Power anbietet")
 tbl = [["Anbieter", "Angebot laut eigener Website"]] + [[a, b] for a, b, _ in COMP]
 d.table(s, tbl, colw=[3.2, 8.7], y=2.05, h=0.42 + len(COMP) * 0.38, fs=11, head_fs=11)
 d.band(s, 5.35, "Lastbänke bis 6,25 MW mit Commissioning Level 1 bis 5, BESS, Kühlung und Heizung aus einer Hand, "
@@ -359,7 +412,7 @@ d.notes(s, "Quelle Aggreko-Portfolio: aggreko.com (Data Centre Commissioning, Lo
            "Generator-Vermieter bis 2 MVA; kaum jemand bietet das komplette Commissioning-Paket.")
 
 # ================================================================ 13 90 Tage
-s = d.content("12 · Die nächsten 90 Tage", "Vom Modell zum Auftrag bis Januar 2027")
+s = d.content("13 · Die nächsten 90 Tage", "Vom Modell zum Auftrag bis Januar 2027")
 d.steps(s, [
     ("01", "Oktober", ["Hot Leads: STACK, Green Lupfig, KSA, Ski-WM.", "Commissioning- und Umzugstermine klären."]),
     ("02", "November", ["Rahmengespräche Burkhalter, VINCI, Equans.", "WEF-Offerte abgeben."]),
@@ -369,9 +422,45 @@ d.steps(s, [
 d.band(s, 5.55, "Termine sind ein Vorschlag, bitte im Team bestätigen.", fill=LIGHT, h=0.85, fs=12.5)
 d.notes(s, "Reihenfolge nach Dringlichkeit: Commissioning und Events laufen, bevor die grossen RZ 2028 kommen.")
 
+# ================================================================ Glossar
+s = d.content("Anhang · Glossar", "Abkürzungen in diesem Deck")
+g1 = [["Kürzel", "Bedeutung"],
+      ["BESS", "Battery Energy Storage System, Batteriespeicher"],
+      ["NEA", "Netzersatzanlage (Notstromaggregat)"],
+      ["USV", "Unterbrechungsfreie Stromversorgung"],
+      ["IST / L1-L5", "Integrated Systems Test, RZ-Gesamttest = Level 5"],
+      ["kVA / MVA", "Scheinleistung (Nennleistung Generator)"],
+      ["kW / MW", "Wirkleistung; bei cos phi 0,8: 1 MVA ≈ 0,8 MW"],
+      ["IT-MW", "Elektrische Leistung der Server im RZ"],
+      ["UW / GIS", "Unterwerk / gasisolierte Schaltanlage"],
+      ["HS / MS / NS", "Hoch-, Mittel-, Niederspannung"],
+      ["HVO", "Hydriertes Pflanzenöl, erneuerbarer Diesel"],
+      ["TBM / BSA", "Tunnelbohrmaschine / Tunnel-Sicherheitstechnik"]]
+g2 = [["Kürzel", "Bedeutung"],
+      ["RZ", "Rechenzentrum"],
+      ["GU / TU / ARGE", "General-, Totalunternehmer / Arbeitsgemeinschaft"],
+      ["IBN / PM", "Inbetriebnahme / Projektmanagement"],
+      ["IVöB / simap", "Beschaffungsrecht / Ausschreibungsportal"],
+      ["EMEA", "Europa, Nahost, Afrika: zentraler Einkauf"],
+      ["GMP", "Good Manufacturing Practice (Pharma-Regeln)"],
+      ["ASTRA / SBB", "Bundesamt für Strassen / Schweizerische Bundesbahnen"],
+      ["EKZ / ewz / CKW / IWB", "Stromversorger Kt. Zürich, Stadt Zürich, Zentralschweiz, Basel"],
+      ["KWO / KSA / USZ / KSSG", "Kraftwerke Oberhasli; Spitäler Aarau, Zürich, St.Gallen"],
+      ["WEF / FIS / ESAF", "World Economic Forum / Ski-Weltverband / Schwingfest"],
+      ["CRM / FX", "Kundendatenbank / Wechselkurs"]]
+d.table(s, g1, colw=[1.6, 4.2], x=L, w=5.85, y=2.05, h=0.42 + 11 * 0.38, fs=10, head_fs=10.5)
+d.table(s, g2, colw=[1.9, 3.95], x=L + 6.08, w=5.85, y=2.05, h=0.42 + 11 * 0.38, fs=10, head_fs=10.5)
+
 # ================================================================ 14 Schluss
 d.closing("Der eine Hebel", ["Rechenzentren früh", "im Bau besetzen,", "nicht erst beim IST."],
           ["Burak Ücöz · Area Sales Engineer", "Mobil in Time AG · An Aggreko Company"])
 
+from notizen import build_notes  # noqa: E402
+NOTES = build_notes(dict(n=len(rows), pot=mio(TOT_POT), exp=chf(TOT_EXP), na=N_A, rz_pot=mio(seg_pot[RZ]),
+                         inf_exp=chf(seg_exp[INF]), fuel=f"{RATES['diesel_lh'] * RATES['diesel_chf']:.0f}",
+                         top10=f"{sum(x['exp'] for x in rows[:10]) / TOT_EXP:.0%}".replace("%", " %")))
+for sl, n in zip(d.prs.slides, NOTES):
+    d.notes(sl, n)
+assert len(NOTES) == len(d.prs.slides), (len(NOTES), len(d.prs.slides))
 print(d.save(title="Top-Player Power Schweiz 2027", author="Burak Ücöz"))
 print(len(rows), TOT_POT, TOT_EXP, N_A)
