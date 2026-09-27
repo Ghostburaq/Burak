@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500">
+<rect width="800" height="500" fill="#F2F2F2"/>
+<rect x="0" y="410" width="800" height="90" fill="#E6E6E6"/>
+<g stroke="#58595B" stroke-width="6" fill="none">
+<path d="M90 410 L140 60 L190 410 M105 300 L175 300 M115 220 L165 220 M125 140 L155 140 M105 300 L165 220 M115 220 L155 140"/>
+<path d="M60 110 L220 110 M80 170 L200 170"/>
+<path d="M610 410 L660 60 L710 410 M625 300 L695 300 M635 220 L685 220 M645 140 L675 140 M625 300 L685 220 M635 220 L675 140"/>
+<path d="M580 110 L740 110 M600 170 L720 170"/></g>
+<path d="M220 110 Q 400 170 580 110" stroke="#3C3C3B" stroke-width="3" fill="none"/>
+<path d="M200 170 Q 400 230 600 170" stroke="#3C3C3B" stroke-width="3" fill="none"/>
+<rect x="290" y="250" width="220" height="140" rx="8" fill="#58595B"/>
+<rect x="302" y="265" width="12" height="110" rx="4" fill="#3C3C3B"/>
+<rect x="328" y="265" width="12" height="110" rx="4" fill="#3C3C3B"/>
+<rect x="354" y="265" width="12" height="110" rx="4" fill="#3C3C3B"/>
+<rect x="380" y="265" width="12" height="110" rx="4" fill="#3C3C3B"/>
+<rect x="406" y="265" width="12" height="110" rx="4" fill="#3C3C3B"/>
+<rect x="432" y="265" width="12" height="110" rx="4" fill="#3C3C3B"/>
+<rect x="458" y="265" width="12" height="110" rx="4" fill="#3C3C3B"/>
+<rect x="484" y="265" width="12" height="110" rx="4" fill="#3C3C3B"/>
+<rect x="322" y="195" width="16" height="55" fill="#BDBDBD"/><rect x="316" y="205" width="28" height="6" fill="#FFFFFF"/><rect x="316" y="220" width="28" height="6" fill="#FFFFFF"/><rect x="316" y="235" width="28" height="6" fill="#FFFFFF"/>
+<rect x="392" y="195" width="16" height="55" fill="#BDBDBD"/><rect x="386" y="205" width="28" height="6" fill="#FFFFFF"/><rect x="386" y="220" width="28" height="6" fill="#FFFFFF"/><rect x="386" y="235" width="28" height="6" fill="#FFFFFF"/>
+<rect x="462" y="195" width="16" height="55" fill="#BDBDBD"/><rect x="456" y="205" width="28" height="6" fill="#FFFFFF"/><rect x="456" y="220" width="28" height="6" fill="#FFFFFF"/><rect x="456" y="235" width="28" height="6" fill="#FFFFFF"/>
+<rect x="270" y="390" width="260" height="20" fill="#3C3C3B"/>
+<rect x="560" y="330" width="200" height="60" rx="5" fill="#E00036"/>
+<text x="660" y="368" font-family="Arial" font-size="20" font-weight="bold" fill="#FFFFFF" text-anchor="middle">MOBILER TRAFO</text>
+<circle cx="600" cy="400" r="14" fill="#3C3C3B"/><circle cx="720" cy="400" r="14" fill="#3C3C3B"/>
+</svg>

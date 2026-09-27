@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500">
+<rect width="800" height="500" fill="#3C3C3B"/>
+<circle cx="120" cy="70" r="3" fill="#FFFFFF"/><circle cx="300" cy="40" r="2" fill="#FFFFFF"/><circle cx="660" cy="60" r="3" fill="#FFFFFF"/><circle cx="520" cy="30" r="2" fill="#FFFFFF"/>
+<rect x="0" y="420" width="800" height="80" fill="#1E1E1E"/>
+<path d="M180 330 L460 330 L460 420 L180 420Z" fill="#58595B"/>
+<path d="M170 130 L470 130 L470 150 L170 150Z" fill="#BDBDBD"/><rect x="170" y="130" width="14" height="200" fill="#BDBDBD"/><rect x="456" y="130" width="14" height="200" fill="#BDBDBD"/>
+<path d="M230 150 L200 330 L260 330Z" fill="#E00036" opacity=".45"/><path d="M320 150 L290 330 L350 330Z" fill="#FFD166" opacity=".35"/><path d="M410 150 L380 330 L440 330Z" fill="#E00036" opacity=".45"/>
+<rect x="200" y="200" width="36" height="70" rx="4" fill="#1E1E1E"/><rect x="404" y="200" width="36" height="70" rx="4" fill="#1E1E1E"/>
+<circle cx="70" cy="440" r="16" fill="#111"/>
+<circle cx="120" cy="440" r="16" fill="#111"/>
+<circle cx="170" cy="440" r="16" fill="#111"/>
+<circle cx="220" cy="440" r="16" fill="#111"/>
+<circle cx="270" cy="440" r="16" fill="#111"/>
+<circle cx="320" cy="440" r="16" fill="#111"/>
+<circle cx="370" cy="440" r="16" fill="#111"/>
+<circle cx="420" cy="440" r="16" fill="#111"/>
+<circle cx="470" cy="440" r="16" fill="#111"/>
+<circle cx="520" cy="440" r="16" fill="#111"/>
+<circle cx="570" cy="440" r="16" fill="#111"/>
+<circle cx="620" cy="440" r="16" fill="#111"/>
+<circle cx="670" cy="440" r="16" fill="#111"/>
+<circle cx="720" cy="440" r="16" fill="#111"/>
+<rect x="540" y="330" width="120" height="90" rx="5" fill="#E00036"/>
+<rect x="555" y="345" width="12" height="55" rx="3" fill="#AA0223"/>
+<rect x="579" y="345" width="12" height="55" rx="3" fill="#AA0223"/>
+<rect x="603" y="345" width="12" height="55" rx="3" fill="#AA0223"/>
+<rect x="627" y="345" width="12" height="55" rx="3" fill="#AA0223"/>
+<rect x="670" y="350" width="100" height="70" rx="5" fill="#58595B"/>
+<rect x="690" y="365" width="60" height="30" rx="3" fill="#8FD19E"/><text x="720" y="387" font-family="Arial" font-size="16" font-weight="bold" fill="#3C3C3B" text-anchor="middle">BESS</text>
+<path d="M540 400 L470 400" stroke="#E00036" stroke-width="8"/>
+</svg>
