@@ -7,3 +7,8 @@
 - **Methodik:** Gewichte und Schwellen (änderbar), Legende, Grenzen der Recherche.
 
 Neu erzeugen: `python build_kundenliste.py` (Daten in `daten.py`).
+
+## Präsentation
+
+**Datei:** [`Zielkunden_Schweiz_Praesentation.pptx`](Zielkunden_Schweiz_Praesentation.pptx), 12 Folien mit Sprechernotizen, Diagramme nativ (in PowerPoint editierbar).
+Neu erzeugen: `node build_deck.js` (benötigt `pptxgenjs`, `react-icons`, `react`, `react-dom`, `sharp`).
