@@ -9,7 +9,7 @@ from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.datavalidation import DataValidation
 from openpyxl.worksheet.table import Table, TableStyleInfo
 
-from daten_power import P, W, COMP, RATES, rate_gen, rate_lb, rate_bess, RZ, INF, NETZ, SPI, IND, EVT, KAN
+from daten_power import P, W, COMP, RATES, ZIELROLLE, PRODUKTE, MATRIX, PORTFOLIO, RZ_DETAIL, PLAN, GLOSSAR, rate_gen, rate_lb, rate_bess, RZ, INF, NETZ, SPI, IND, EVT, KAN
 
 OUT = "Top_Player_Power_Schweiz_2027.xlsx"
 STAND = "27.09.2026"
@@ -62,9 +62,14 @@ wb = Workbook()
 st = wb.active
 st.title = "Start"
 tp = wb.create_sheet("Top-Player")
+pl = wb.create_sheet("90-Tage-Plan")
+rzs = wb.create_sheet("Rechenzentren")
+pb = wb.create_sheet("Produktbedarf")
+pf = wb.create_sheet("Portfolio")
 an = wb.create_sheet("Annahmen")
 bo = wb.create_sheet("Beobachten")
 wt = wb.create_sheet("Wettbewerb")
+gl = wb.create_sheet("Glossar")
 me = wb.create_sheet("Methode & Quellen")
 li = wb.create_sheet("Listen")
 
@@ -127,7 +132,8 @@ COLS = [("Rang", 6), ("Prio", 6), ("Segment", 15), ("Projekt / Kunde", 32), ("Ei
         ("Generator MVA", 9), ("Generator Wochen", 9), ("Lastbank MW", 9), ("Lastbank Wochen", 9),
         ("BESS MW", 8), ("BESS Monate", 8), ("Potenzial Power CHF", 13), ("Anteil 2027", 9),
         ("Wahrschein-lichkeit", 10), ("Erwartung 2027 CHF", 13), ("Cross-Sell Wärme / Kälte", 28),
-        ("Nächster Schritt", 38), ("Verantwortlich", 13), ("Status MiT (CRM)", 18), ("Quelle", 9), ("Hinweis / Annahme", 38)]
+        ("Nächster Schritt", 38), ("Verantwortlich", 13), ("Status MiT (CRM)", 18), ("Zielrolle", 30), ("Ansprechperson (Name)", 22),
+        ("Kontakt (Tel. / E-Mail)", 24), ("Letzter Kontakt", 11), ("Nächster Termin", 11), ("Quelle", 9), ("Hinweis / Annahme", 38)]
 H = {n: get_column_letter(i + 1) for i, (n, _) in enumerate(COLS)}
 title(tp, "Top-Player Power Schweiz 2027",
       f"Stand {STAND}  |  {len(rows)} Projekte mit Potenzial über CHF 50'000  |  sortiert nach Erwartung 2027  |  VERTRAULICH")
@@ -140,8 +146,9 @@ header(tp, HR, [c for c, _ in COLS])
 for i, (_, w) in enumerate(COLS):
     tp.column_dimensions[get_column_letter(i + 1)].width = w
 INPUT = {"Generator MVA", "Generator Wochen", "Lastbank MW", "Lastbank Wochen", "BESS MW", "BESS Monate",
-         "Anteil 2027", "Wahrschein-lichkeit", "Verantwortlich", "Status MiT (CRM)", "Nächster Schritt"}
-WRAP = {"Projekt / Kunde", "Einstieg über", "Anlass und Zeitfenster", "Power-Bedarf", "Cross-Sell Wärme / Kälte",
+         "Anteil 2027", "Wahrschein-lichkeit", "Verantwortlich", "Status MiT (CRM)", "Nächster Schritt",
+         "Ansprechperson (Name)", "Kontakt (Tel. / E-Mail)", "Letzter Kontakt", "Nächster Termin"}
+WRAP = {"Zielrolle", "Projekt / Kunde", "Einstieg über", "Anlass und Zeitfenster", "Power-Bedarf", "Cross-Sell Wärme / Kälte",
         "Nächster Schritt", "Hinweis / Annahme", "Ort", "Segment"}
 for n, r in enumerate(rows):
     (seg, proj, ein, ort, kt, reg, spr, anl, bed, gm, gw, lm, lw, bm, bmo, a27, p, cs, step, src, hint) = r
@@ -161,7 +168,9 @@ for n, r in enumerate(rows):
         "Anteil 2027": a27, "Wahrschein-lichkeit": p,
         "Erwartung 2027 CHF": f"=ROUND({L('Potenzial Power CHF')}*{L('Anteil 2027')}*{L('Wahrschein-lichkeit')},-2)",
         "Cross-Sell Wärme / Kälte": cs or None, "Nächster Schritt": step, "Verantwortlich": None,
-        "Status MiT (CRM)": "Offen: CRM prüfen", "Quelle": "Link", "Hinweis / Annahme": hint or None,
+        "Status MiT (CRM)": "Offen: CRM prüfen", "Zielrolle": ZIELROLLE[seg],
+        "Ansprechperson (Name)": None, "Kontakt (Tel. / E-Mail)": None, "Letzter Kontakt": None, "Nächster Termin": None,
+        "Quelle": "Link", "Hinweis / Annahme": hint or None,
     }
     for i, (c, _) in enumerate(COLS):
         cell = tp.cell(x, i + 1, v[c])
@@ -173,6 +182,8 @@ for n, r in enumerate(rows):
         tp[L(c)].number_format = CHF
     for c in ("Anteil 2027", "Wahrschein-lichkeit"):
         tp[L(c)].number_format = "0%"
+    for c in ("Letzter Kontakt", "Nächster Termin"):
+        tp[L(c)].number_format = "DD.MM.YYYY"
     for c in ("Generator MVA", "Lastbank MW", "BESS MW"):
         tp[L(c)].number_format = "0.0"
     tp[L("Quelle")].hyperlink = src
@@ -303,9 +314,136 @@ ch2.y_axis.majorGridlines = None
 ch2.x_axis.scaling.orientation = "maxMin"
 ch2.height, ch2.width = 9, 15
 st.add_chart(ch2, "H31")
+st.cell(39, 1, "Blätter in dieser Datei").font = font(size=12, bold=True, color=RED)
+nav = [("Top-Player", "Die 38 Projekte mit Potenzial, Szenario, Kontakt und nächstem Schritt"),
+       ("90-Tage-Plan", "Aufgaben Okt. 2026 bis Jan. 2027 mit Status zum Abhaken"),
+       ("Rechenzentren", "Alle RZ-Projekte 2026-2028 mit MW, Zeitplan, GU, Netzanschluss"),
+       ("Produktbedarf", "Welches Segment welches Power-Produkt braucht"),
+       ("Portfolio", "Was wir vermieten, Kennwerte, Cross-Sell"),
+       ("Annahmen", "Mietsätze, Kurs, Schwellen: hier MiT-Sätze eintragen"),
+       ("Beobachten", "Unter CHF 50'000 oder noch zu unsicher"),
+       ("Wettbewerb", "Anbieter mobiler Power in der Schweiz"),
+       ("Glossar", "Alle Abkürzungen"),
+       ("Methode & Quellen", "Wie gerechnet wurde und woher die Fakten stammen")]
+for i, (sh_, t_) in enumerate(nav):
+    c = st.cell(40 + i, 1, sh_)
+    c.hyperlink = f"#'{sh_}'!A1"
+    c.font = font(color="0563C1", underline="single", bold=True)
+    st.cell(40 + i, 2, t_).font = font()
+PLR = f"'90-Tage-Plan'!$H$5:$H${4 + len(PLAN)}"
+st.cell(51, 1, "Stand 90-Tage-Plan").font = font(size=12, bold=True, color=RED)
+for i, stt in enumerate(("offen", "in Arbeit", "erledigt", "verschoben")):
+    st.cell(52 + i, 1, stt).font = font()
+    st.cell(52 + i, 2, f'=COUNTIF({PLR},A{52 + i})').font = font(bold=True)
 st.sheet_view.showGridLines = False
 
-# ================================================================= Beobachten
+
+# ================================================================ 90-Tage-Plan
+import datetime as _dt
+from openpyxl.formatting.rule import ColorScaleRule
+title(pl, "90-Tage-Plan Oktober 2026 bis Januar 2027", "Vorschlag, im Team bestätigen. Status per Dropdown, überfällige Termine werden rot.")
+header(pl, 4, ["Nr.", "Monat", "Termin", "Aufgabe", "Projekt / Kunde", "Erwartung 2027 CHF", "Verantwortlich", "Status", "Ergebnis / Notiz"])
+for i, (mon, dat, task, proj) in enumerate(PLAN):
+    r = 5 + i
+    dd_, mm_, yy_ = map(int, dat.split("."))
+    vals = [i + 1, mon, _dt.date(yy_, mm_, dd_), task, proj,
+            ("" if proj == "alle" else "=" + "+".join(
+                f'IFERROR(INDEX({TPR("Erwartung 2027 CHF")},MATCH("{pt}",{TPR("Projekt / Kunde")},0)),0)'
+                for pt in proj.split(" / "))), None, "offen", None]
+    for j, v_ in enumerate(vals):
+        c = pl.cell(r, j + 1, v_)
+        c.font = font(size=10, bold=(j == 4), color="0000FF" if j in (6, 7, 8) else "000000")
+        c.alignment = Alignment(wrap_text=True, vertical="top")
+        c.border = BORDER
+    pl.cell(r, 3).number_format = "DD.MM.YYYY"
+    pl.cell(r, 6).number_format = CHF
+    pl.row_dimensions[r].height = 32
+PL_LAST = 4 + len(PLAN)
+for c_, w_ in zip("ABCDEFGHI", (5, 11, 11, 58, 34, 14, 13, 12, 36)):
+    pl.column_dimensions[c_].width = w_
+d_ = DataValidation(type="list", formula1='"offen,in Arbeit,erledigt,verschoben"', allow_blank=True)
+pl.add_data_validation(d_)
+d_.add(f"H5:H{PL_LAST + 30}")
+d_ = DataValidation(type="list", formula1="=Listen!$B$2:$B$5", allow_blank=True)
+pl.add_data_validation(d_)
+d_.add(f"G5:G{PL_LAST + 30}")
+pl.conditional_formatting.add(f"H5:H{PL_LAST}", CellIsRule(operator="equal", formula=['"erledigt"'], fill=fill("C6EFCE")))
+pl.conditional_formatting.add(f"H5:H{PL_LAST}", CellIsRule(operator="equal", formula=['"in Arbeit"'], fill=fill("FFEB9C")))
+pl.conditional_formatting.add(f"C5:C{PL_LAST}", FormulaRule(formula=['AND(C5<TODAY(),H5<>"erledigt")'], fill=fill("FFC7CE")))
+pl.freeze_panes = "A5"
+
+# ================================================================ Rechenzentren
+title(rzs, "Rechenzentren Schweiz 2026-2028", "Fakten aus öffentlichen Quellen, Stand 27.09.2026. (?) = unsicher. Potenzial nur für Top-Player (Blatt «Top-Player»).")
+header(rzs, 4, ["Betreiber / Projekt", "Standort", "IT-Leistung MW", "Zeitplan", "GU / PM", "Netzanschluss", "Für uns", "Quelle"])
+for i, row in enumerate(RZ_DETAIL):
+    r = 5 + i
+    for j, v_ in enumerate(row):
+        c = rzs.cell(r, j + 1, v_)
+        c.font = font(size=10, bold=(j == 0), color=RED if (j == 6 and v_.startswith("Hot")) else "000000")
+        c.alignment = Alignment(wrap_text=True, vertical="top")
+        c.border = BORDER
+    rzs.row_dimensions[r].height = 42
+rr = 6 + len(RZ_DETAIL)
+rzs.cell(rr, 1, "Commissioning (IST) in Kürze").font = font(size=12, bold=True, color=RED)
+facts = ["IST Level 5: Strom, Kälte und Notstrom laufen gemeinsam auf Design-Last, Netz wird getrennt, Fehler werden simuliert.",
+         "Lastbank-Leistung ≈ Design-IT-Last der getesteten Data Hall, dazu Heizlastbänke im White Space.",
+         "Laststufen 25 / 50 / 75 / 100 %, danach mehrere Stunden Volllast.",
+         "IST-Fenster typisch 4 bis 6 Wochen; 8 bis 16 Wochen von erster Energisierung bis IST-Abschluss je Data Hall.",
+         "Mängel im IST erzwingen Re-Tests und damit erneute Lastbank-Miete.",
+         "Quellen: anvilfield.com (IST Field Guide), sunbeltsolomon.com, hillstone.co.uk (US/UK-Fachquellen)."]
+for i, f_ in enumerate(facts):
+    rzs.cell(rr + 1 + i, 1, f_).font = font(size=10, italic=(i == len(facts) - 1))
+for c_, w_ in zip("ABCDEFGH", (24, 20, 16, 36, 28, 36, 28, 32)):
+    rzs.column_dimensions[c_].width = w_
+rzs.freeze_panes = "B5"
+
+# ================================================================ Produktbedarf
+title(pb, "Produktbedarf je Segment", "3 = Kernbedarf, 2 = häufig, 1 = gelegentlich, 0 = kaum. Einschätzung aus den Szenarien, änderbar.")
+header(pb, 4, ["Segment"] + PRODUKTE + ["Top-Player", "Erwartung 2027 CHF"])
+for i, (sg, vals) in enumerate(MATRIX.items()):
+    r = 5 + i
+    pb.cell(r, 1, sg).font = font(bold=True)
+    for j, v_ in enumerate(vals):
+        c = pb.cell(r, 2 + j, v_)
+        c.alignment = Alignment(horizontal="center", vertical="center")
+        c.font = font(bold=True, color="0000FF")
+    pb.cell(r, 8, f'=COUNTIF({TPR("Segment")},A{r})')
+    pb.cell(r, 9, f'=SUMIF({TPR("Segment")},A{r},{TPR("Erwartung 2027 CHF")})').number_format = CHF
+    for j in range(1, 10):
+        pb.cell(r, j).border = BORDER
+    pb.row_dimensions[r].height = 26
+pb.conditional_formatting.add(f"B5:G{4 + len(MATRIX)}", ColorScaleRule(start_type="num", start_value=0, start_color="F2F2F2",
+                                                                    mid_type="num", mid_value=1.5, mid_color="BDBDBD",
+                                                                    end_type="num", end_value=3, end_color="E00036"))
+for c_, w_ in zip("ABCDEFGHI", (20, 12, 12, 12, 14, 15, 13, 11, 17)):
+    pb.column_dimensions[c_].width = w_
+pb.cell(6 + len(MATRIX), 1, "Lesart: Generator ist überall Türöffner, Lastbank im RZ, Trafo im Netz, BESS bei Events und Nachtbaustellen.").font = font(italic=True)
+
+# ================================================================ Portfolio
+title(pf, "Portfolio Power und Cross-Sell", "Was wir vermieten, wofür, an wen. Kennwerte laut Quelle; fehlende Werte als Lücke markiert.")
+header(pf, 4, ["Produkt", "Wofür", "Typische Kunden", "Kennwerte / Hinweis", "Quelle"])
+for i, row in enumerate(PORTFOLIO):
+    r = 5 + i
+    for j, v_ in enumerate(row):
+        c = pf.cell(r, j + 1, v_)
+        c.font = font(size=10, bold=(j == 0), color=RED if "Wert fehlt" in str(v_) else "000000")
+        c.alignment = Alignment(wrap_text=True, vertical="top")
+        c.border = BORDER
+    pf.row_dimensions[r].height = 48
+for c_, w_ in zip("ABCDE", (22, 40, 34, 60, 30)):
+    pf.column_dimensions[c_].width = w_
+
+# ================================================================ Glossar
+title(gl, "Glossar: Abkürzungen", "Gleiche Liste wie im Anhang der Präsentation.")
+header(gl, 4, ["Kürzel", "Bedeutung"])
+for i, (k_, v_) in enumerate(GLOSSAR):
+    for j, t_ in enumerate((k_, v_)):
+        c = gl.cell(5 + i, j + 1, t_)
+        c.font = font(bold=(j == 0))
+        c.border = BORDER
+gl.column_dimensions["A"].width, gl.column_dimensions["B"].width = 26, 70
+
+# ================================================================ Beobachten
 title(bo, "Beobachten", "Unter CHF 50'000, zu früh oder zu unsicher. Quartalsweise prüfen, bei neuem Anlass in «Top-Player» übernehmen.")
 header(bo, 4, ["Segment", "Projekt / Kunde", "Ort", "Warum (noch) nicht Top", "Quelle"])
 for i, (sg, nm, ort, grund, src) in enumerate(W):

@@ -18,7 +18,7 @@ ASSETS = os.environ.get("MIT_ASSETS") or (glob.glob(
 sys.path.insert(0, ASSETS)
 from mit_deck import Deck, RED, DARK, DARKER, LIGHT, WHITE, BLACK, SOFT, F_BODY, F_TITLE, L, R, cols  # noqa: E402
 
-from daten_power import P, COMP, RATES, rate_gen, rate_lb, rate_bess, RZ, INF, NETZ, SPI, IND, EVT, KAN  # noqa: E402
+from daten_power import P, COMP, RATES, GLOSSAR, PRODUKTE, MATRIX, rate_gen, rate_lb, rate_bess, RZ, INF, NETZ, SPI, IND, EVT, KAN  # noqa: E402
 
 MID = RGBColor(0xBD, 0xBD, 0xBD)
 PALE = RGBColor(0xE6, 0xE6, 0xE6)
@@ -291,16 +291,10 @@ d.notes(s, "Die Reihenfolge ergibt sich aus der Erwartung 2027. Ändern sich Wah
 
 # ================================================================ 7 Produkt-Matrix
 s = d.content("07 · Produktbedarf", "Was die Top-Player an Power brauchen")
-prods = ["Generator", "Lastbank", "BESS", "Mobiler Trafo", "NEA-Test / USV", "Tank / HVO"]
-mat = {  # 3 = Kernbedarf, 2 = häufig, 1 = gelegentlich, 0 = kaum
-    "Rechenzentren": [3, 3, 2, 1, 3, 2],
-    "Infrastruktur": [3, 0, 2, 1, 0, 3],
-    "Netz / Unterwerk": [3, 0, 1, 3, 1, 1],
-    "Spitäler": [2, 2, 2, 1, 3, 1],
-    "Industrie": [3, 1, 1, 1, 2, 1],
-    "Events": [3, 0, 3, 0, 0, 2],
-    "Kanal-Partner": [3, 1, 1, 1, 2, 1],
-}
+prods = PRODUKTE
+seg_label = {RZ: "Rechenzentren", INF: "Infrastruktur", NETZ: "Netz / Unterwerk", SPI: "Spitäler",
+             IND: "Industrie", EVT: "Events", KAN: "Kanal-Partner"}
+mat = {seg_label[k_]: v for k_, v in MATRIX.items()}
 cx0, cy0, cw, chh, lw = L + 2.35, 2.35, 1.55, 0.52, 2.3
 for j, pnm in enumerate(prods):
     text(s, cx0 + j * (cw + 0.05), cy0 - 0.4, cw, 0.35, pnm, 11, BLACK, True, F_BODY, PP_ALIGN.CENTER)
@@ -424,30 +418,8 @@ d.notes(s, "Reihenfolge nach Dringlichkeit: Commissioning und Events laufen, bev
 
 # ================================================================ Glossar
 s = d.content("Anhang · Glossar", "Abkürzungen in diesem Deck")
-g1 = [["Kürzel", "Bedeutung"],
-      ["BESS", "Battery Energy Storage System, Batteriespeicher"],
-      ["NEA", "Netzersatzanlage (Notstromaggregat)"],
-      ["USV", "Unterbrechungsfreie Stromversorgung"],
-      ["IST / L1-L5", "Integrated Systems Test, RZ-Gesamttest = Level 5"],
-      ["kVA / MVA", "Scheinleistung (Nennleistung Generator)"],
-      ["kW / MW", "Wirkleistung; bei cos phi 0,8: 1 MVA ≈ 0,8 MW"],
-      ["IT-MW", "Elektrische Leistung der Server im RZ"],
-      ["UW / GIS", "Unterwerk / gasisolierte Schaltanlage"],
-      ["HS / MS / NS", "Hoch-, Mittel-, Niederspannung"],
-      ["HVO", "Hydriertes Pflanzenöl, erneuerbarer Diesel"],
-      ["TBM / BSA", "Tunnelbohrmaschine / Tunnel-Sicherheitstechnik"]]
-g2 = [["Kürzel", "Bedeutung"],
-      ["RZ", "Rechenzentrum"],
-      ["GU / TU / ARGE", "General-, Totalunternehmer / Arbeitsgemeinschaft"],
-      ["IBN / PM", "Inbetriebnahme / Projektmanagement"],
-      ["IVöB / simap", "Beschaffungsrecht / Ausschreibungsportal"],
-      ["EMEA", "Europa, Nahost, Afrika: zentraler Einkauf"],
-      ["GMP", "Good Manufacturing Practice (Pharma-Regeln)"],
-      ["ASTRA / SBB", "Bundesamt für Strassen / Schweizerische Bundesbahnen"],
-      ["EKZ / ewz / CKW / IWB", "Stromversorger Kt. Zürich, Stadt Zürich, Zentralschweiz, Basel"],
-      ["KWO / KSA / USZ / KSSG", "Kraftwerke Oberhasli; Spitäler Aarau, Zürich, St.Gallen"],
-      ["WEF / FIS / ESAF", "World Economic Forum / Ski-Weltverband / Schwingfest"],
-      ["CRM / FX", "Kundendatenbank / Wechselkurs"]]
+g1 = [["Kürzel", "Bedeutung"]] + [list(x) for x in GLOSSAR[:11]]
+g2 = [["Kürzel", "Bedeutung"]] + [list(x) for x in GLOSSAR[11:]]
 d.table(s, g1, colw=[1.6, 4.2], x=L, w=5.85, y=2.05, h=0.42 + 11 * 0.38, fs=10, head_fs=10.5)
 d.table(s, g2, colw=[1.9, 3.95], x=L + 6.08, w=5.85, y=2.05, h=0.42 + 11 * 0.38, fs=10, head_fs=10.5)
 
