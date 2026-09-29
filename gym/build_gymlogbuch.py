@@ -86,13 +86,15 @@ UEBUNGEN = [
          schritt=5, letzter="A", anpassung=100, aktiv="ja",
          notiz="Dritter Arbeitssatz läuft als Reduktionssatz aus."),
     dict(name="Adduktion", block="Beine vorne", geraet="Maschine",
-         von=5, bis=6, saetze=2, rpe="9", start=None, maxlast=None,
-         schritt=2.5, letzter="A", anpassung=90, aktiv="ja",
-         notiz="Kommt nach der Adduktoren-Zerrung zurück, aber gedrosselt: "
-               "Anpassung 90 Prozent und zwei statt drei Sätze. Sie war die "
-               "einzige Übung mit dem verletzten Muskel als Zielmuskel und "
-               "hat eine Woche pausiert. Erst wenn zwei Einheiten ohne "
-               "Ziehen durch sind, Anpassung auf 100 und Sätze auf 3. "
+         von=5, bis=6, saetze=3, rpe="9", start=None, maxlast=None,
+         schritt=2.5, letzter="A", anpassung=100, aktiv="ja",
+         notiz="Drosselung in Einheit 17 aufgehoben: die erste Einheit nach "
+               "der Adduktoren-Zerrung lief mit 165 x 6 schmerzfrei und "
+               "genau auf der Vorgabe, deshalb zurück auf 100 Prozent und "
+               "drei Sätze. Die Drosselung musste weg, sobald die Übung "
+               "einmal auf dem reduzierten Gewicht gelaufen ist - sonst "
+               "rechnet der Plan 90 Prozent auf ein schon reduziertes "
+               "Ergebnis und das Gewicht sinkt Einheit für Einheit weiter. "
                "Deckel entfernt: in Einheit 5 lagen 162.5 kg an, die "
                "frühere Annahme 152.5 kg als Stackende stimmt also nicht. "
                "Falls doch eine Obergrenze existiert, hier unter "
@@ -555,7 +557,11 @@ for lab, txt in [
      "archiviert sie ganz. Die Spalte 'Anpassung %' drosselt das "
      "Zielgewicht einer Übung, ohne die Rechnung zu verfälschen: 100 ist "
      "normal, 80 heisst 80 Prozent des berechneten Ziels - gedacht für den "
-     "Wiedereinstieg nach Pause oder Verletzung."),
+     "Wiedereinstieg nach Pause oder Verletzung. Wichtig: die Anpassung "
+     "wieder auf 100 setzen, sobald die Übung einmal auf dem reduzierten "
+     "Gewicht gelaufen ist. Sonst rechnet der Plan die Prozente auf ein "
+     "schon reduziertes Ergebnis, und das Zielgewicht sinkt Einheit für "
+     "Einheit weiter statt zu steigen."),
 ]:
     ws.cell(r, 2, lab).font = F_BOLD
     ws.cell(r, 2).alignment = Alignment(horizontal="left", vertical="top")
@@ -2280,13 +2286,13 @@ wsw.row_dimensions[r].height = 20
 r += 1
 
 WIEDER = [
-    ("90 %", "Adduktion (Maschine)",
-     "2 Sätze, Anpassung 90 %",
-     "Einzige Übung mit dem verletzten Muskel als Zielmuskel und seit "
-     "Einheit 8 nicht mehr ausgeführt. Von 80 auf 90 Prozent angehoben, "
-     "weil drei Einheiten ohne Beschwerden gelaufen sind - aber noch "
-     "nicht auf 100, weil genau dieser Muskel noch nicht belastet "
-     "wurde. Läuft die erste Einheit sauber, auf 100 und drei Sätze."),
+    ("erledigt", "Adduktion (Maschine)",
+     "3 Sätze, Anpassung 100 %",
+     "In Einheit 17 mit 165 x 6 schmerzfrei gelaufen, das war die erste "
+     "Einheit seit der Zerrung. Drosselung damit aufgehoben. Wichtig: die "
+     "Anpassung muss weg, sobald eine Übung einmal auf dem reduzierten "
+     "Gewicht gelaufen ist - sonst rechnet der Plan die Prozente auf ein "
+     "schon reduziertes Ergebnis und die Last sinkt weiter."),
     ("Eichung", "Beinpresse breiter Stand",
      "3 Sätze, Start 220 kg",
      "Drosselung aufgehoben, aber bis heute nie ausgeführt. Das "

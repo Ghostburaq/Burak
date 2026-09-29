@@ -258,23 +258,18 @@ Auswertungen sichtbar.
 Das Wochenraster steht im Blatt `Wochenplan`: Montag Beine vorne, Donnerstag
 Beine hinten, dazwischen mindestens 72 Stunden.
 
-### Wiedereinstieg nach der Trainingspause
+### Wiedereinstieg nach der Trainingspause — abgeschlossen
 
-Nach der Zerrung der linken Adduktoren lief eine Woche Pause, danach Einheit 11
-bis 13 gedrosselt über `Anpassung %` und `Aktiv = pause` — die Historie blieb
-dabei unangetastet. Alle drei Einheiten sind ohne Beschwerden durch, deshalb
-stehen zehn Übungen wieder auf `100` und drei Sätzen. Nur die zwei Übungen, die
-den verletzten Muskel direkt treffen, laufen noch gesondert:
+Nach der Zerrung der linken Adduktoren lief eine Woche Pause, danach liefen
+Einheit 11 bis 17 gedrosselt über `Anpassung %`. Die letzte gedrosselte Übung,
+die Adduktion, ist in Einheit 17 mit 165 × 6 schmerzfrei gelaufen — alle
+Übungen stehen damit wieder auf `100` und drei Sätzen.
 
-| Übung | Stand | Sätze |
-|---|---|---|
-| Adduktion | Anpassung 90 % | 2 |
-| Beinpresse breiter Stand | Start 220 kg (Eichung) | 3 |
-
-Adduktion wurde seit Einheit 8 nicht mehr ausgeführt — läuft die erste
-Einheit sauber, auf `100` und drei Sätze. Beinpresse breiter Stand ist bis
-heute nie gelaufen; das Startgewicht bleibt eine Schätzung. Die Begründung je
-Zeile steht im Blatt `Wochenplan`.
+> **Falle bei `Anpassung %`:** die Drosselung muss weg, sobald die Übung einmal
+> auf dem reduzierten Gewicht gelaufen ist. Sonst rechnet der Plan die Prozente
+> auf ein bereits reduziertes Ergebnis, und das Zielgewicht sinkt Einheit für
+> Einheit weiter statt zu steigen. Bei der Adduktion hätte die nächste Vorgabe
+> sonst 150 statt 167,5 kg gelautet.
 
 ### Zielbereich 5 bis 6
 

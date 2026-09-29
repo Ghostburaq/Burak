@@ -400,4 +400,11 @@ ROWS = [
     [17, 'Beine vorne', 'Beinstrecker', 'A', 85, 6, None, None],
     [17, 'Beine vorne', 'Beinstrecker', 'A', 90, 5, None, None],
     [17, 'Beine vorne', 'Beinstrecker', 'A', 95, 5, None, None],
+    # Adduktion nachgetragen: erste Einheit seit Nr. 8, lief genau auf
+    # der Vorgabe 165 x 6 / 157 x 6.
+    [17, 'Beine vorne', 'Adduktion', 'W', 66, None, None, None],
+    [17, 'Beine vorne', 'Adduktion', 'W', 115.5, None, None, None],
+    [17, 'Beine vorne', 'Adduktion', 'A', 165, 6, None,
+     'erste Einheit nach der Adduktoren-Zerrung, schmerzfrei'],
+    [17, 'Beine vorne', 'Adduktion', 'A', 157, 6, None, None],
 ]
