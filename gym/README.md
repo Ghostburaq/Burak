@@ -1,0 +1,326 @@
+# Gym Logbuch — Beintraining, zwei Fassungen
+
+Druckoptimiertes Trainingslogbuch als Excel-Arbeitsmappe. Alle Kennzahlen sind
+Formeln — sobald im Log Zeilen ergänzt werden, aktualisiert sich alles Weitere
+von selbst.
+
+| Fassung | Datei | Gilt | Umfang |
+|---|---|---|---|
+| **Vor der OP** | `GymLogbuch_Beine_PreOP.xlsx` | bis 30.09.2026 | 15 Blätter, 49 A4-Seiten |
+| **Reha** | `GymLogbuch_Beine.xlsx` | ab dem OP-Tag | 14 Blätter, 48 A4-Seiten |
+
+Beide entstehen aus demselben Generator und sind in `Log`, `Einheiten`,
+`Auswertung`, `Progression`, `Rekorde`, `Trainingsblatt` und `Übungen`
+identisch aufgebaut.
+
+## Übergabe am OP-Tag
+
+Zeilen aus `Log` und `Einheiten` aus der Vor-OP-Fassung kopieren und in der
+Reha-Fassung an derselben Stelle einfügen. Spaltenaufbau und Zeilennummern
+stimmen überein, Auswertung, Progression, Rekorde und Dashboard rechnen
+sofort weiter. Danach im Blatt `Reha-Modus` die aktuelle Woche nach OP
+eintragen und im `Reha-Log` das OP-Datum.
+
+> Die Reha-Blätter sind eine Gedächtnisstütze für den Alltag, keine ärztliche
+> Anweisung. Das schriftliche Nachbehandlungsschema des Operateurs und die
+> Ansagen der Physiotherapie haben in jedem Punkt Vorrang.
+
+## Der Eingriff
+
+Laut Operationsaufklärung: **Arthroskopie mit Sehnennaht und Bizepstenodese,
+rechte Schulter**, Diagnose Läsion am Oberrand des Subscapularis mit
+Bizepssehnen-Instabilität. Termin 30.09.2026, Ruhigstellung im Gilchrist.
+
+Das ist **nicht** der Eingriff, für den die erste Fassung des Reha-Fahrplans
+geschrieben war. Die galt für eine isolierte Bizepstenodese und enthielt
+selbst die Regel: *„Rotatorenmanschette oder Labrum mitversorgt — deren
+Protokoll gilt, es ist deutlich restriktiver. Diese Tabelle dann nicht
+verwenden."* Der Subscapularis ist Teil der Rotatorenmanschette, also greift
+genau dieser Satz.
+
+`reha_daten.py` ist deshalb vollständig neu geschrieben: Phasen, Grundregeln,
+Notfallzeichen und alle Freigabewochen. Die Freigaben liegen jetzt rund
+doppelt so spät:
+
+| Übung | vorher | jetzt |
+|---|---|---|
+| Beinstrecker, Adduktion, Beinbeuger | Woche 1 | Woche 2 |
+| Waden (sitzend) | Woche 2 | Woche 2 |
+| Beinpresse eng / breit | Woche 2 | Woche 6 |
+| Hip & Glute, Seitliche Kickbacks | Woche 2 | Woche 6 |
+| Hip Thrust (Langhantel) | Woche 4 | Woche 12 |
+| Split Squat | Woche 8 | Woche 12 |
+| Reverse V-Squat | Woche 8 | Woche 12 |
+| Rumänisches Kreuzheben | Woche 12 | Woche 16 |
+
+Alle Werte sind konservativ abgeleitet und **nicht ärztlich bestätigt**. Sie
+stehen im Blatt `Übungen` in der Spalte `Reha frei ab Woche` und werden dort
+überschrieben, sobald das Schema des Operateurs vorliegt.
+
+## Blätter der Vor-OP-Fassung
+
+Zusätzlich zu den gemeinsamen Blättern:
+
+| Blatt | Zweck | Druck |
+|---|---|---|
+| `OP-Countdown` | Tage und Wochen bis zum Termin; je Übung, wie lange sie danach ausfällt und welcher Ersatz einspringt | A4 quer, 2 S. |
+| `Vorbereitung` | Checkliste bis zum OP-Tag: Fragen an Operateur und Physiotherapie, Organisation, Gym-Logistik | A4 hoch |
+| `Baseline Schulter` | Ausgangswerte beider Schultern: Beweglichkeit, Schmerz, Curl-Testgewicht | A4 quer |
+
+Das `Trainingsblatt` sperrt vor der OP nichts, vermerkt aber hinter jeder
+Übung, wie lange sie nach der OP ausfällt. `Reha-Modus` und `Reha-Log`
+entfallen, der `Reha-Fahrplan` ist enthalten — er lohnt sich vorher zu lesen.
+
+### Warum die Baseline wichtig ist
+
+Der Reha-Fahrplan misst zwei Meilensteine am Vergleich zur Gegenseite: in
+Phase 4 etwa 70–80 %, in Phase 5 mindestens 90 % — und zwar für
+**Innenrotation und Ellenbogenbeugung**. Die Innenrotation ist neu dazugekommen,
+weil der Subscapularis genau dieser Muskel ist. Ohne einen vor der OP
+gemessenen Ausgangswert der gesunden Seite sind diese Prozentwerte später
+nicht überprüfbar — und nachholen lässt sich die Messung dann nicht mehr.
+Bei 9 Tagen bis zum Termin ist das der dringlichste offene Punkt.
+
+## Gemeinsame Blätter
+
+Die Reha-Fassung hat statt `OP-Countdown`, `Vorbereitung` und
+`Baseline Schulter` die Blätter `Reha-Modus` und `Reha-Log`.
+
+| Blatt | Zweck | Druck |
+|---|---|---|
+| `Start` | Anleitung, Legende, offene Punkte | A4 hoch, 2 S. |
+| `Dashboard` | 12 Kennzahlen-Kacheln und vier Diagramme | A4 hoch |
+| `Reha-Fahrplan` | Phasenplan nach der Schulter-OP: erlaubt, verboten, Meilensteine | A4 quer |
+| `Reha-Plan Beine` | Der Trainingsplan nach der OP: je Phase Übung, Sätze × Wdh und konkretes Startgewicht | A4 quer, 2 S. |
+| `Reha-Modus` | Wochen-Ampel je Übung: FREI / GESPERRT plus Ersatzübung | A4 quer, 2 S. |
+| `Reha-Log` | Täglich Schmerz und Beweglichkeit, mit Statusblock und Verlaufskurven | A4 quer, 2 S. |
+| `Einheiten` | Kopfdaten je Training, 60 Einheiten vorbereitet | A4 quer, 2 S. |
+| `Log` | Ein Satz pro Zeile, 1200 Zeilen vorbereitet | A4 quer, Kopf wiederholt |
+| `Auswertung` | Volumen / Top-Gewicht / e1RM je Übung und Einheit | A4 quer, je Tabelle eine Seite |
+| `Progression` | Erste gegen letzte Einheit, Abstand zum Bestwert, Trend | A4 quer |
+| `Rekorde` | Bestwerte je Übung inkl. Einheit, in der sie fielen | A4 quer |
+| `Trainingsblatt` | Vorlage zum Ausdrucken und Mitnehmen, **4 Blätter je Block** | A4 hoch, 12 S. |
+| `Übungen` | Stammdaten, Planvorgaben und Reha-Freigaben | A4 quer, 2 S. |
+
+## Was drucken?
+
+- **Trainingsblatt** — ein Ausdruck liefert zwölf Seiten: je vier Mal Beine
+  vorne, Beine hinten und Auswärts Bülach. Das deckt rund vier Trainingswochen ab, danach
+  einfach neu drucken. Jedes Blatt zeigt pro Übung das letzte Gewicht, den
+  Bestwert, den Zielvorschlag mit Aufwärm-Rampe und die Vorgabe
+  (Sätze × Wdh @ RPE). In der Reha-Sperrzeit steht dort stattdessen rot der
+  Sperrvermerk mit der Ersatzübung.
+- **Reha-Plan Beine** — das Blatt für die Reha-Zeit. Ersetzt von Woche 2 bis
+  Monat 4 das Trainingsblatt, weil dessen Zielwerte aus der Historie vor der
+  OP kommen und nach Wochen ohne Last zu schwer sind.
+- **Reha-Modus** — eine Seite an den Spiegel: was diese Woche freigegeben ist.
+- **Reha-Fahrplan** — einmal ausdrucken, ins Ablagefach.
+- **Dashboard** und **Progression** — zur Kontrolle, je eine Seite.
+
+Jedes Blatt hat einen festen Druckbereich, A4-Format, wiederholte
+Spaltenköpfe, Seitennummerierung und ist auf Seitenbreite skaliert.
+
+## Eingabe
+
+Gelb hinterlegte Zellen sind Eingabefelder, alles andere sind Formeln.
+
+1. Blatt `Einheiten`: Einheit anlegen (Nummer, Datum, Rahmendaten). Das Datum
+   wandert automatisch ins Log.
+2. Blatt `Log`: je Satz eine Zeile — Einheit, Übung (Dropdown), Satztyp
+   (W/A/R), Gewicht, Wiederholungen, optional RPE, Drop-Kette und Notiz.
+   Block, Volumen und e1RM rechnen sich selbst.
+3. Blatt `Reha-Modus`: aktuelle Woche nach OP oben eintragen.
+4. Blatt `Reha-Log`: einmal das OP-Datum, danach täglich eine Zeile.
+
+Satztypen: `W` Warmup · `A` Arbeitssatz (Basis aller Kennzahlen) ·
+`R` Reduktions-/Dropsatz.
+
+### Steuerfelder im Blatt `Übungen`
+
+| Feld | Wirkung |
+|---|---|
+| `Wdh von`, `Wdh bis` | Zielbereich der doppelten Progression |
+| `Ziel-Sätze`, `Ziel-RPE` | Vorgabe-Zeile auf dem Trainingsblatt; `Ziel-Sätze` bestimmt auch die Zahl der Satzzeilen |
+| `Schritt (kg)` | kleinste sinnvolle Laststufe an diesem Gerät; steuert, wie viel bei einer Gewichtssteigerung draufkommt |
+| `Start (kg)` | Einstiegsgewicht für Übungen ohne Historie; speist die Plan-Spalte, bis die erste Einheit erfasst ist |
+| `Max (kg)` | deckelt den Zielvorschlag, z. B. am Ende des Steckgewichts; das Trainingsblatt weist dann auf Tempo-Progression hin |
+| `Anpassung %` | drosselt den Zielvorschlag ohne die Rechnung zu verfälschen: `100` normal, `80` = 80 % des berechneten Ziels. Für den Wiedereinstieg nach Pause oder Verletzung; Warmups und Back-off-Sätze rechnen automatisch mit dem gedrosselten Wert. Das Trainingsblatt schreibt dann `Wiedereinstieg: 80 % des berechneten Ziels` statt des Progressionshinweises |
+| `Aktiv = ja` | Übung läuft normal im Plan |
+| `Aktiv = pause` | vorübergehend ausgesetzt: das Trainingsblatt zeigt statt der Gewichte einen roten Pausenvermerk, die Übung bleibt aber in allen Auswertungen sichtbar |
+| `Aktiv = nein` | Archiv: raus aus Trainingsblatt und Reha-Modus, Historie bleibt in Log, Auswertung, Progression und Rekorden — dort grau und kursiv |
+| `Reha frei ab Woche` | steuert die Ampel im `Reha-Modus` und den Sperrvermerk auf dem Trainingsblatt |
+| `Ersatz in der Sperrzeit` | erscheint automatisch, solange die Übung gesperrt ist |
+
+## Trainingsplan nach der OP
+
+Das Blatt `Reha-Plan Beine` rechnet je Phase ein Startgewicht als Prozentsatz
+des letzten Arbeitsgewichts vor der OP, abgerundet auf die Laststufe des
+Geräts. Es ist formelbasiert: kommt vor der OP noch eine Einheit dazu, ändern
+sich die Reha-Gewichte automatisch mit.
+
+| Phase | Woche | Was dazukommt | Anteil neu | Anteil laufend | Wdh |
+|---|---|---|---|---|---|
+| 1 | 2–6 | Beinstrecker, Beinbeuger, Adduktion, Waden (alle sitzend) | 60 % | — | 12–15 |
+| 2 | 6–12 | Beinpresse eng + breit, Hip & Glute, Seitl. Kickbacks | 55 % | 75 % | 10–12 |
+| 3 | 12–16 | Reverse V-Squat, Hip Thrust, Split Squat | 50 % | 85–95 % | 8–10 |
+| 4 | ab Monat 4 | Rumänisches Kreuzheben KH | 50 % | zurück auf 5–6 | 8–10 |
+
+Der hohe Wiederholungsbereich in Phase 1 bis 3 ist Absicht: weniger Last pro
+Wiederholung heisst weniger Pressatmung, und die erhöht Druck und Zug über den
+Schultergürtel. Ab Phase 4 gilt wieder der normale Zielbereich 5–6 und das
+`Trainingsblatt`.
+
+## Kapazität
+
+| | vorbereitet | reicht für |
+|---|---|---|
+| Log | 1200 Sätze | rund 60 Einheiten |
+| Einheiten | 60 | etwa 30 Wochen bei 2 Beineinheiten |
+| Reha-Log | 240 Tage | rund 8 Monate täglich |
+| Übungen | 20 Slots | 18 belegt |
+
+Die `Auswertung` zeigt 16 Einheiten nebeneinander. Mit der Zahl in Zelle `B3`
+verschiebt sich das Fenster (z. B. `17` zeigt Einheit 17 bis 32) — die
+Gesamtspalte rechts rechnet unabhängig davon immer über alle Einheiten. So
+bleibt das Blatt druckbar, egal wie lang die Historie wird.
+
+## Kennzahlen
+
+- **Volumen** = Gewicht × Wiederholungen je Satz, nur Arbeitssätze.
+- **e1RM (Epley)** = Gewicht × (1 + Wdh / 30). An Maschinen kein echtes 1RM,
+  aber ein sauberer Vergleich zwischen Einheiten mit unterschiedlichen
+  Wiederholungszahlen.
+### Doppelte Progression
+
+So entsteht der Vorschlag für die nächste Einheit — er rechnet sich nach
+jedem Log-Eintrag neu:
+
+**Zielbereich: 5 bis 6 Wiederholungen, für alle Übungen gleich.**
+**Immer genau drei Arbeitssätze, absteigend:** Satz 1 schwer (Top-Satz),
+Satz 2 mit 95 %, Satz 3 mit 90 % des Zielgewichts. Die leichteren Sätze
+dürfen eine bzw. zwei Wiederholungen mehr, nie über 6. Reduktionssätze
+entfallen.
+
+Die Progression hängt allein am **Top-Satz** — Satz 2 und 3 sind Volumen,
+kein Steuersignal.
+
+1. **Wiederholungen zuerst.** Solange der *schwächste* Arbeitssatz unter 6
+   liegt, bleibt das Gewicht stehen und es kommt eine Wiederholung dazu.
+2. **Dann Gewicht.** Schaffen alle Arbeitssätze 6, kommt 1 % drauf,
+   aufgerundet auf die Laststufe (`Schritt (kg)`), und die Wiederholungen
+   fangen bei 5 wieder an.
+3. **Unter 5 Wdh** bleibt das Gewicht stehen, bis die untere Grenze steht.
+4. **Ab 2 Wdh über der Obergrenze** greift die RM-Korrektur (unten) statt
+   des 1-%-Schritts.
+5. **Am Deckel** (`Max (kg)`) steigt die Last nicht weiter — der Hinweis
+   verweist auf Tempo und Pausen.
+
+Beispiel: Beinpresse, zuletzt 250 kg × 5/5/5 → *Wdh +1 auf 6*. Nach
+250 kg × 6/6/6 → *Gewicht +5 kg (2.0 %), Wdh zurück auf 5*.
+
+Das Blatt `Rekorde` zeigt je Übung `Nächstes Ziel (kg)`, `Ziel-Wdh nächste
+Einheit` und den Schritt im Klartext; das `Trainingsblatt` übernimmt beides.
+`Progression` zählt zusätzlich, wie viele Einheiten die aktuelle Last schon
+steht — ab vier wird die Zeile gelb.
+
+## Plan
+
+Sechzehn aktive Übungen in drei Blöcken, schwere Grundübung zuerst:
+
+- **Beine vorne:** Beinpresse enger Stand · Split Squat · Beinstrecker · Adduktion
+- **Beine hinten:** Reverse V-Squat · Rumänisches Kreuzheben KH · Beinpresse breiter Stand · Hip Thrust · Hip & Glute · Beinbeuger · Seitliche Kickbacks · Waden
+- **Auswärts Bülach:** Squat Maschine · Hip Thrust · Beinbeuger
+
+### Zweites Gym als eigener Block
+
+Die Maschinen in Bach-Bülach haben andere Hebel als die zu Hause — 200 kg am
+dortigen Hip Thrust sind nicht 200 kg am eigenen Gerät. Deshalb laufen sie als
+eigene Übungen in einem eigenen Block mit eigener Historie und eigener
+Progression. Würde man sie in dieselben Zeilen loggen, würde die erste
+Auswärts-Einheit den Zielwert zu Hause von 285 kg auf rund 205 kg
+zurückwerfen. `BLOCKS` in `build_gymlogbuch.py` erweitern, wenn ein weiteres
+Gym dazukommt — das Trainingsblatt erzeugt den Block dann automatisch.
+
+### Rumänisches Kreuzheben: Langhantel und Kurzhantel getrennt
+
+Ab Einheit 14 läuft die Übung mit Kurzhanteln. Die Langhantel-Variante steht
+auf `pause`, ihre Historie bis 135 kg bleibt in allen Auswertungen sichtbar.
+Bei der Kurzhantel-Variante wird das Gewicht **je Hantel** eingetragen, nicht
+die Summe.
+
+Der **Reverse V-Squat** kam mit Einheit 13 dazu. Alle Gewichte inklusive der
+50 kg Eigengewicht des Schlittens notieren, sonst rechnet die Progression
+falsch. Kleinste Steigerung sind 1.25 kg je Seite, also 5 kg gesamt.
+
+Lunges und Kickback sind archiviert; ihre Historie bleibt in allen
+Auswertungen sichtbar.
+
+Das Wochenraster steht im Blatt `Wochenplan`: Montag Beine vorne, Donnerstag
+Beine hinten, dazwischen mindestens 72 Stunden.
+
+### Wiedereinstieg nach der Trainingspause — abgeschlossen
+
+Nach der Zerrung der linken Adduktoren lief eine Woche Pause, danach liefen
+Einheit 11 bis 17 gedrosselt über `Anpassung %`. Die letzte gedrosselte Übung,
+die Adduktion, ist in Einheit 17 mit 165 × 6 schmerzfrei gelaufen — alle
+Übungen stehen damit wieder auf `100` und drei Sätzen.
+
+> **Falle bei `Anpassung %`:** die Drosselung muss weg, sobald die Übung einmal
+> auf dem reduzierten Gewicht gelaufen ist. Sonst rechnet der Plan die Prozente
+> auf ein bereits reduziertes Ergebnis, und das Zielgewicht sinkt Einheit für
+> Einheit weiter statt zu steigen. Bei der Adduktion hätte die nächste Vorgabe
+> sonst 150 statt 167,5 kg gelautet.
+
+### Zielbereich 5 bis 6
+
+Alle Übungen laufen im Bereich 5 bis 6 Wiederholungen, Schritt 1 % auf das
+letzte Top-Gewicht. Weil eine Laststufe an groben Maschinen mehr als 1 % ist,
+steht der tatsächliche Zuwachs in Prozent neben jedem Vorschlag.
+
+### RM-Korrektur
+
+Ein Prozent gilt nur, solange die Last stimmt. Lief der letzte Top-Satz zwei
+oder mehr Wiederholungen über der Obergrenze, war nicht der Schritt zu klein,
+sondern das Gewicht zu niedrig — und ein Prozent holt das nie auf. In diesem
+Fall rechnet der Plan aus genau diesem Satz den e1RM nach Epley, leitet daraus
+die Last für die Obergrenze ab und springt direkt dorthin, abgerundet auf die
+Laststufe des Geräts und begrenzt durch `Max (kg)`. Das Trainingsblatt schreibt
+dann `RM-Korrektur nach 8 Wdh: +10 kg (4.0%), Wdh zurück auf 5`.
+
+Die Schätzung stammt aus dem eigenen Satz und korrigiert sich über zwei bis
+drei Einheiten selbst ein. Sie ersetzt keinen echten Maximalversuch.
+
+## Datenstand
+
+Einheit 1 bis 17. Einheit 1 bis 4 aufbereitet aus
+`Loewin_Training_260727.pdf`, Einheit 5 bis 17 direkt erfasst.
+Einheit 11 ohne Beinbeuger und Seitliche Kickbacks, Einheit 10 und 12
+ohne Adduktion — nicht ausgeführt, im Log als Notiz vermerkt. Bekannte
+Unschärfen der Quelle (fehlende Wiederholungen bei Kickback-Warmups und
+Lunges, Hip-Thrust-Dropsätze ohne Absolutgewicht, Adduktion Einheit 4 mit
+152.2 statt 152.5 kg) sind im Blatt `Start` dokumentiert und im Log als Notiz
+vermerkt.
+
+## Neu erzeugen
+
+```bash
+cd gym
+python3 build_gymlogbuch.py reha                               # Reha-Fassung
+python3 build_gymlogbuch.py preop                              # Vor-OP-Fassung
+python3 ~/.claude/skills/xlsx/scripts/recalc.py GymLogbuch_Beine.xlsx 700
+soffice --headless --convert-to pdf GymLogbuch_Beine.xlsx      # PDF-Vorschau
+```
+
+Ohne Argument wird die Reha-Fassung gebaut. Das OP-Datum steht als Konstante
+`OP_DATUM` oben im Skript.
+
+- `daten.py` — Rohdaten der Einheiten 1 bis 4 aus der Quelle
+- `reha_daten.py` — Wortlaut der Reha-Inhalte, unverändert übernommen
+- `build_gymlogbuch.py` — Layout, Formeln, Diagramme, Druckeinrichtung
+
+Kapazität und Umfang stehen als Konstanten oben in `build_gymlogbuch.py`
+(`LOG_ROWS`, `SESSION_SLOTS`, `REHALOG_ROWS`, `BLATT_KOPIEN`, `SESSIONS`).
+`BLATT_KOPIEN` bestimmt, wie viele Trainingsblätter je Block gedruckt werden.
+
+Die Neuberechnung braucht `libreoffice-calc` (nicht nur `libreoffice-core`),
+sonst lässt sich die Datei nicht laden und `recalc.py` läuft in einen Timeout.
