@@ -9,7 +9,7 @@ Szenario je Projekt (alles Annahmen, in der Excel änderbar):
   p                 Wahrscheinlichkeit, dass MiT den Auftrag gewinnt
 """
 
-RZ, INF, NETZ, SPI, IND, EVT, KAN = ("Rechenzentrum", "Infrastruktur", "Netz / Unterwerk", "Spital",
+RZ, INF, NETZ, SPI, IND, EVT, KAN = ("Rechenzentrum", "Infrastruktur", "Netz / Energie", "Spital",
                                      "Industrie", "Event", "Kanal-Partner")
 
 # Marktrichtwerte (Annahmen-Blatt). Quelle je Wert, Umrechnung mit FX und cos phi im Excel.
@@ -429,4 +429,178 @@ GLOSSAR = [
     ("KWO / KSA / USZ / KSSG", "Kraftwerke Oberhasli; Spitäler Aarau, Zürich, St.Gallen"),
     ("WEF / FIS / ESAF", "World Economic Forum / Ski-Weltverband / Schwingfest"),
     ("CRM / FX", "Kundendatenbank / Wechselkurs"),
+]
+
+# ================================================================ Erweiterung 29.09.2026: Events und EVU 2027
+# Events: (name, kategorie, ort, region, datum, groesse, warum, gen_mva, gen_wo, bess_mw, bess_mo, anteil27, paket, quelle)
+PK_SOM, PK_ROM, PK_WIN, PK_VOLK, PK_SPORT, PK_MARKT = (
+    "Paket Sommer-Festivals 2027", "Paket Sommer-Festivals 2027",
+    "Paket Winter-Sport 2026/27", "Paket Schwing- und Volksfeste 2027",
+    "Paket Sport-Grossanlässe 2027", "Paket Märkte, Messen, Fasnacht, Zirkus")
+EVENTS = [
+    ("Greenfield Festival", "Musik", "Interlaken BE", "Mittelland/Bern", "10.-12.06.2027", "ca. 30'000/Tag, 3 Tage", "Flugplatz ohne Netz: Bühnen, Camping, Gastro", 3, 1.5, 0.5, 0.5, 1, PK_SOM, "https://www.interlaken.swiss/planen/events/top-events/greenfield-festival"),
+    ("Open Air Gampel", "Musik", "Gampel-Bratsch VS", "West (Romandie)", "18.-22.08.2027", "bis 25'000/Tag, 4 Tage", "Offenes Gelände, mehrere Bühnen, Camping", 2.5, 1.5, 0, 0, 1, PK_SOM, "https://www.openairgampel.ch/en/home"),
+    ("Heitere Open Air", "Musik", "Zofingen AG", "Nordwestschweiz", "06.-08.08.2027", "3 Tage", "Hügelplateau mit begrenzter Netzkapazität", 1.5, 1, 0, 0, 1, PK_SOM, "https://heitere.ch/"),
+    ("Seaside Festival", "Musik", "Spiez BE", "Mittelland/Bern", "27.-28.08.2027", "2 Tage", "Temporäres Seeufer-Gelände", 1, 1, 0, 0, 1, PK_SOM, "https://www.seasidefestival.ch/"),
+    ("SummerDays Festival", "Musik", "Arbon TG", "Ostschweiz", "27.-28.08.2027", "ca. 24'000 Besucher", "Seeufer-Gelände, Bühne, Foodcourt", 1, 1, 0, 0, 1, PK_SOM, "https://summerdays.ch/"),
+    ("Lakelive Festival", "Musik/Kultur", "Biel/Nidau BE", "Mittelland/Bern", "Ende Juli 2027 (?)", "ca. 10 Tage", "Lange Laufzeit auf Brachgelände: BESS/Hybrid", 0.5, 2, 0.3, 0.5, 1, PK_SOM, "https://www.nidau.ch/"),
+    ("Luzern Live", "Musik", "Luzern LU", "Zentralschweiz", "Juli 2027 (?)", "ca. 10 Tage, Seebühnen", "Innenstadt mit Lärmauflagen: BESS", 0.5, 2, 0.3, 0.5, 1, PK_SOM, "https://www.luzern-live.ch/"),
+    ("Openair Lumnezia", "Musik", "Degen GR", "Ostschweiz", "22.-24.07.2027", "ca. 18'000 Besucher", "Abgelegenes Berggelände, schwaches Netz", 1, 1, 0, 0, 1, PK_SOM, "https://openair-lumnezia.ch/"),
+    ("Zermatt Unplugged", "Musik", "Zermatt VS", "West (Romandie)", "06.-10.04.2027", "17 Bühnen, 5 Tage", "Bühnen am Berg, Zelte mit Heizbedarf", 1, 1.5, 0, 0, 1, PK_SOM, "https://zermatt-unplugged.ch/en/news/zermatt-unplugged-2027/"),
+    ("Caribana Festival", "Musik", "Crans-près-Céligny VD", "West (Romandie)", "Mitte Juni 2027 (?)", "ca. 30'000, 4 Tage", "Hafengelände ohne ausreichende Einspeisung", 1.5, 1, 0, 0, 1, PK_ROM, "https://fr.wikipedia.org/wiki/Caribana_Festival_de_Crans"),
+    ("Festi'neuch", "Musik", "Neuchâtel NE", "West (Romandie)", "10.-13.06.2027", "4 Tage", "Uferpark, mehrere Bühnen", 1, 1, 0, 0, 1, PK_ROM, "https://www.festivalabroad.com/festivals/festineuch"),
+    ("Sion sous les étoiles", "Musik", "Sion VS", "West (Romandie)", "14.-17.07.2027", "4 Tage", "Freifläche beim Stadion", 1, 1, 0, 0, 1, PK_ROM, "https://www.valais.ch/en/events/sion-sous-les-etoiles"),
+    ("JazzAscona", "Musik", "Ascona TI", "Tessin", "24.06.-03.07.2027", "10 Tage", "Mehrere Open-Air-Bühnen an der Promenade", 0.5, 2, 0, 0, 1, PK_ROM, "https://www.ticino.ch/en/events/details/jazzascona-2027/10042.html"),
+    ("Estival Jazz Lugano", "Musik", "Lugano TI", "Tessin", "ca. 08.-10.07.2027 (?)", "3 Abende", "Platzbühne in der Stadt", 0.3, 1, 0, 0, 1, PK_ROM, "https://www.carnifest.com/estival-festival-jazz-in-lugano-2027/"),
+    ("Polymanga", "Pop-Kultur", "Montreux VD", "West (Romandie)", "26.-29.03.2027", "über 50'000 Besucher", "Aussengelände Parc Vernex: Zelte, Heizung", 0.5, 1, 0, 0, 1, PK_ROM, "https://www.20min.ch/fr/story/lausanne-vd-succes-pour-polymanga-de-retour-en-2027-a-montreux-103542173"),
+    ("LAAX OPEN", "Snowboard-Weltcup", "Laax GR", "Ostschweiz", "13.-16.01.2027", "ca. 250 Athleten, Konzerte", "Pipe am Berg, Bühne, beheizte Zelte", 1.5, 1.5, 0, 0, 1, PK_WIN, "https://www.graubuenden.ch/en/events/laax-open-2027"),
+    ("Ski-Weltcup Frauen Lenzerheide", "Ski alpin", "Lenzerheide GR", "Ostschweiz", "19.-21.02.2027", "Weltcup-Comeback", "Zielarena, TV-Compound, Zelte", 1.5, 1.5, 0, 0, 1, PK_WIN, "https://www.weltcup-lenzerheide.ch/en"),
+    ("Davos Nordic", "Langlauf-Weltcup", "Davos GR", "Ostschweiz", "11.-13.12.2026", "3 Renntage", "Stadion, TV, Wachskabinen", 0.5, 1, 0, 0, 0, PK_WIN, "https://www.davosnordic.ch/en"),
+    ("Skisprung-Weltcup Engelberg", "Skispringen", "Engelberg OW", "Zentralschweiz", "18.-20.12.2026", "grösste Naturschanze", "Zielarena, TV, Zelte", 0.5, 1, 0, 0, 0, PK_WIN, "https://www.weltcup-engelberg.ch/en/"),
+    ("Engadin Skimarathon", "Breitensport", "Maloja-S-chanf GR", "Ostschweiz", "07.-14.03.2027", "grösster CH-Breitensportanlass", "Start/Ziel über 42 km, Heizzelte", 1, 1.5, 0, 0, 1, PK_WIN, "https://www.engadin.ch/en/events/engadin-marathon-week-2027"),
+    ("White Turf St. Moritz", "Pferdesport", "St. Moritz GR", "Ostschweiz", "07./14./21.02.2027", "3 Renntage, 120 Jahre", "Kein Netz auf dem See: alles mobil", 1, 4, 0, 0, 1, PK_WIN, "https://www.whiteturf.ch/en/"),
+    ("Snow Polo St. Moritz", "Polo", "St. Moritz GR", "Ostschweiz", "22.-24.01.2027", "3 Tage", "VIP-Zelte und Heizung auf dem See", 0.5, 1, 0, 0, 1, PK_WIN, "https://www.snowpolo-stmoritz.com/tournament-2027/"),
+    ("Eidg. Volksmusikfest", "Eidg. Fest", "Altstätten SG", "Ostschweiz", "09.-12.09.2027", "50'000-60'000 Besucher", "Festzelte und Bühnen in der Altstadt", 1.5, 1.5, 0, 0, 1, PK_VOLK, "https://www.swissinfo.ch/ger/eidg%C3%B6ssisches-volksmusikfest-2027-findet-in-altst%C3%A4tten-sg-statt/92042182"),
+    ("Westschweizer Jodlerfest", "Regionalfest", "Château-d'Oex VD", "West (Romandie)", "02.-04.07.2027", "3 Tage", "Festzelte im Bergdorf", 0.5, 1, 0, 0, 1, PK_VOLK, "https://www.alphornpuma.ch/n%C3%A4chstejodlerfeste"),
+    ("Bernisch-Kantonales Schwingfest", "Schwingen", "Thun BE", "Mittelland/Bern", "August 2027 (?)", "Teilverbandsfest", "Arena, Festzelte; Probelauf vor ESAF 2028", 1, 1, 0, 0, 1, PK_VOLK, "https://bksf2027.ch/"),
+    ("Nordwestschweizer Schwingfest", "Schwingen", "Sissach BL", "Nordwestschweiz", "03.-04.07.2027", "119. Ausgabe", "Arena, Festzelt", 0.5, 1, 0, 0, 1, PK_VOLK, "https://www.nws2027.ch/"),
+    ("Innerschweizer Schwingfest", "Schwingen", "Giswil OW", "Zentralschweiz", "04.07.2027", "Teilverbandsfest", "Arena auf offenem Feld", 0.5, 1, 0, 0, 1, PK_VOLK, "https://isaf2027.ch/"),
+    ("Knabenschiessen", "Volksfest", "Zürich ZH", "Zürich", "11.-13.09.2027", "grosse Chilbi", "Lunapark, Spitzenlast und Backup", 1, 1, 0, 0, 1, PK_VOLK, "https://calendarena.com/schweiz/knabenschiessen/"),
+    ("Sechseläuten (Gastkanton LU)", "Brauchtum", "Zürich ZH", "Zürich", "16.-19.04.2027", "4 Tage", "Gastkanton-Zelte auf dem Platz", 0.3, 1, 0, 0, 1, PK_VOLK, "https://www.limmattalerzeitung.ch/limmattal/zuerich/sechselaeuten-2027-luzern-ist-gastkanton-ld.4019514"),
+    ("Ruder-WM Luzern", "Sport-WM", "Luzern (Rotsee) LU", "Zentralschweiz", "23.-29.08.2027", "über 40'000 Zuschauer, 70 Nationen", "TV-Compound, Tribünen, Zielturm: Redundanz", 2, 2, 0.5, 1, 1, PK_SPORT, "https://lucerne2027.com/"),
+    ("Beachvolleyball-EM", "Sport-EM", "Gstaad BE", "Mittelland/Bern", "30.06.-04.07.2027", "5 Tage", "Temporäres Stadion, TV, Flutlicht", 1, 1.5, 0, 0, 1, PK_SPORT, "https://www.beachgstaad.ch/en/news-articles/em-2027"),
+    ("CSIO St.Gallen", "Pferdesport", "St. Gallen SG", "Ostschweiz", "03.-06.06.2027", "4 Tage", "Freigelände, Tribünen, Hospitality, TV", 1, 1.5, 0, 0, 1, PK_SPORT, "https://www.csio.ch/de/Programm/Programm.html"),
+    ("Swiss Open Gstaad", "Tennis", "Gstaad BE", "Mittelland/Bern", "10.-18.07.2027", "9 Tage", "Tribünen, Hospitality, TV", 0.5, 2, 0, 0, 1, PK_SPORT, "https://swissopengstaad.ch/?lang=en"),
+    ("IRONMAN Switzerland", "Ausdauersport", "Thun BE", "Mittelland/Bern", "04.07.2027", "Langdistanz", "Wechselzone, Zielarena, Zeitmessung", 0.5, 1, 0, 0, 1, PK_SPORT, "https://www.finishers.com/en/event/ironman-switzerland-thun"),
+    ("Tour de Suisse", "Radsport", "Etappenorte CH", "national", "16.-20.06.2027", "5 Tage", "Start/Ziel-Zonen mit TV, täglich neuer Ort", 1, 1.5, 0, 0, 1, PK_SPORT, "https://www.tourdesuisse.ch/en/"),
+    ("Tour de Romandie", "Radsport", "Romandie", "West (Romandie)", "27.04.-02.05.2027", "6 Tage", "Start/Ziel-Zonen mit TV", 0.5, 1.5, 0, 0, 1, PK_SPORT, "https://www.myswitzerland.com/fr-ch/decouvrir/manifestations/tour-de-romandie-etape-romont/"),
+    ("Weltklasse Zürich", "Leichtathletik", "Zürich ZH", "Zürich", "25.-26.08.2027", "Diamond League", "Stadtwettkampf, TV, Hospitality", 0.5, 1, 0, 0, 1, PK_SPORT, "https://www.trackathletes.ie/meeting/weltklasse-zurich-zurich-diamond-league_2027/"),
+    ("Athletissima", "Leichtathletik", "Lausanne VD", "West (Romandie)", "August 2027 (?)", "1-2 Tage", "Hospitality, TV, Backup", 0.3, 1, 0, 0, 1, PK_SPORT, "https://athletissima.ch/en/"),
+    ("OL-EM 2027", "Sport-EM", "Thun BE", "Mittelland/Bern", "28.09.-03.10.2027", "Stadt-Sprints", "Arena, Zeitmessung, TV", 0.3, 1, 0, 0, 1, PK_SPORT, "https://www.swiss-orienteering.ch/de/news/verband/3075-ol-europameisterschaften-2027-in-der-schweiz.html"),
+    ("Eiskunstlauf-EM", "Sport-EM", "Lausanne VD", "West (Romandie)", "27.-31.01.2027", "Halle", "Nur TV-Compound, Aussenzelte, Backup", 0.3, 1, 0, 0, 1, PK_SPORT, "https://vaudoisearena.ch/en/events/isu-figure-skating-european-championships-2027"),
+    ("CHI Genève", "Pferdesport", "Genève GE", "West (Romandie)", "09.-13.12.2026", "Rolex Grand Slam", "Stallzelte, Aussenbereiche, Backup", 0.5, 1.5, 0, 0, 0, PK_SPORT, "https://horserizon.com/chi-geneve-100-ans/"),
+    ("Grand-Prix von Bern / Frauenlauf", "Laufsport", "Bern BE", "Mittelland/Bern", "15.05. / 13.06.2027", "bis 15'000 Teilnehmende", "Start/Ziel-Arena, Zeitmessung", 0.3, 1, 0, 0, 1, PK_SPORT, "https://gpbern.ch/"),
+    ("Circus Knie Tournee", "Zirkus", "ganze Schweiz", "national", "ab März 2027 (?)", "neues Zelt 2027", "Einspeisung oder Backup je Gastspiel", 0.5, 20, 0, 0, 1, PK_MARKT, "https://www.knie.ch/circus/tournee-2027"),
+    ("BEA", "Messe", "Bern BE", "Mittelland/Bern", "30.04.-09.05.2027", "10 Tage", "Aussengelände, Zelte, Gastro", 0.5, 2, 0, 0, 1, PK_MARKT, "https://www.myswitzerland.com/de-ch/erlebnisse/veranstaltungen/bea-2027/"),
+    ("LUGA", "Messe", "Luzern LU", "Zentralschweiz", "30.04.-09.05.2027", "10 Tage", "Aussenzelte, Chilbi", 0.3, 2, 0, 0, 1, PK_MARKT, "https://www.luga.ch/de"),
+    ("OLMA", "Messe", "St. Gallen SG", "Ostschweiz", "Oktober 2027 (?)", "11 Tage", "Aussengelände, Arena, Zelte", 0.5, 2, 0, 0, 1, PK_MARKT, "https://www.olma-messen.ch/"),
+    ("Tier&Technik", "Agrarmesse", "St. Gallen SG", "Ostschweiz", "25.-28.02.2027", "4 Tage", "Tierzelte im Winter, Heizung", 0.3, 1, 0, 0, 1, PK_MARKT, "https://www.ufarevue.ch/agenda/tier-technik-2027"),
+    ("AGRAMA", "Landtechnik-Messe", "Bern BE", "Mittelland/Bern", "26.-30.11.2026", "5 Tage", "Zelte im November, Heizung", 0.3, 1, 0, 0, 0, PK_MARKT, "https://agrama.ch/"),
+    ("Montreux Noël", "Weihnachtsmarkt", "Montreux VD", "West (Romandie)", "20.11.-24.12.2026", "über 170 Chalets", "5 Wochen Chalets, Licht, Heizung", 0.5, 5, 0, 0, 0, PK_MARKT, "https://www.montreuxriviera.com/en/E1141/montreux-riviera-noel"),
+    ("Bellevue Noël (neu)", "Weihnachtsmarkt", "Zürich ZH", "Zürich", "19.11.-23.12.2026", "1. Ausgabe, neuer Betreiber", "Neues Stromkonzept: Einstiegschance", 0.5, 5, 0, 0, 0, PK_MARKT, "https://www.nume.ch/wienachtsdorf-zuerich-2026-heisst-neu-bellevue-noel-termine/"),
+    ("Basler Weihnachtsmarkt", "Weihnachtsmarkt", "Basel BS", "Nordwestschweiz", "26.11.-23.12.2026", "ca. 150 Chalets", "Zusatzlast und Backup", 0.3, 4, 0, 0, 0, PK_MARKT, "https://www.bs.ch/pd/marketing/messenundmaerkte/weihnachtsmarkt"),
+    ("Murten Licht-Festival", "Lichtfestival", "Murten FR", "West (Romandie)", "20.-31.01.2027", "12 Tage", "Leise BESS für Lichtinstallationen", 0.2, 2, 0.2, 0.5, 1, PK_MARKT, "https://www.murtenlichtfestival.ch/"),
+    ("Basler Fasnacht", "Brauchtum", "Basel BS", "Nordwestschweiz", "15.-18.02.2027", "72 Stunden", "Beizen, Bühnen, Laternen", 0.5, 1, 0, 0, 1, PK_MARKT, "https://www.bazonline.ch/morgestraich-2027-basler-fasnacht-startet-in-377-tagen-797546696425"),
+    ("Luzerner Fasnacht", "Brauchtum", "Luzern LU", "Zentralschweiz", "04.-09.02.2027", "6 Tage", "Bühnen, Barzelte, Beleuchtung", 0.5, 1, 0, 0, 1, PK_MARKT, "https://www.lfk.ch/informationen/fasnachtstermine-bis-2060"),
+    ("Rabadan Bellinzona", "Carnevale", "Bellinzona TI", "Tessin", "04.-09.02.2027", "6 Tage", "Festzelte mit Heizung", 0.5, 1, 0, 0, 1, PK_MARKT, "https://www.bellinzonaevalli.ch/en/events/details/rabadan-carnival-in-bellinzona/11276.html"),
+    ("Geneva AI Summit 2027", "Konferenz", "Genève GE", "West (Romandie)", "21.-22.06.2027", "über 100 Länder", "Hohe Sicherheitsstufe: Netzersatz und USV", 2, 2, 0.5, 1, 1, "einzeln", "https://www.bakom.admin.ch/en/geneva-ai-summit-2027-international-summit-on-artificial-intelligence-in-geneva"),
+]
+EV_P = 0.15   # Gewinnchance für Event-Pakete
+EV_PAKETE = [PK_WIN, PK_SOM, PK_VOLK, PK_SPORT, PK_MARKT]
+TOP_MIN = 50000   # Schwelle Top-Player
+
+# EVU / Energie: (name, betreiber, ort, region, zeitfenster, groesse, warum, gen_mva, gen_wo, lb_mw, lb_wo, bess_mw, bess_mo, anteil27, p, gruppe, quelle)
+# gruppe: "Top" = einzeln in Top-Player, PK_SOLAR = Paket, "" = nur EVU-Blatt
+PK_SOLAR = "Paket Alpine Solar-Baustellen 2027"
+EVU = [
+    ("UW Mörel (380-kV-GIS, neuer Trafo)", "Swissgrid", "Mörel VS", "West (Romandie)", "Umbau ab 2027", "380/220 kV", "Baustrom im Bergtal, Eigenbedarf, Lastbank für Trafo/GIS-Tests", 1, 26, 2, 2, 0, 0, 0.6, 0.15, "Top", "https://www.swissgrid.ch/en/home/projects/project-overview/moerel-ulrichen.html"),
+    ("Leitung Innertkirchen-Ulrichen (Grimseltunnel)", "Swissgrid", "Oberhasli BE / Goms VS", "Mittelland/Bern", "Bau frühestens 2027, fertig 2034", "220 auf 380 kV, 27 km", "Baustrom an Tunnel- und Leitungsbaustellen ohne Netz", 1, 20, 0, 0, 0, 0, 0.3, 0.10, "Top", "https://www.swissgrid.ch/en/home/projects/project-overview/innertkirchen-ulrichen.html"),
+    ("Poste Galmiz (Neubau, Verkabelung 125 kV)", "Groupe E / Swissgrid", "Galmiz FR", "West (Romandie)", "Bau ab H2 2025, IBN Ende 2028", "CHF 53 Mio., 220/125 kV", "Netzersatz und mobiler Trafo bei Umschaltungen, Baustrom", 2, 10, 0, 0, 0, 0, 1.0, 0.20, "Top", "https://www.groupe-e.ch/fr/decouvrir-groupe-e/medias/communiques-de-presse/renouvellement-poste-galmiz"),
+    ("UW Laax (Gesamterneuerung)", "Repower", "Laax GR", "Ostschweiz", "07/2025 bis Ende 2027", "CHF 8,4 Mio.", "Skigebiet hängt am UW: Netzersatz im Winter kritisch", 2, 8, 0, 0, 0, 0, 1.0, 0.20, "Top", "https://www.repower.com/ch/medienmitteilungen/uwlaax"),
+    ("Neues UW Aarau", "Eniwa", "Aarau AG", "Nordwestschweiz", "Bau ab 11/2025, Umschaltung Sommer 2029", "110/16 kV, ca. 40'000 Einwohner", "Etappenumschaltungen, mobiler Trafo, Baustrom", 2, 6, 0, 0, 0, 0, 0.5, 0.20, "Top", "https://netzbetreiberinfo.ch/unternehmen/projekte/eniwa-spatenstich-neues-unterwerk-aarau-bis-2029"),
+    ("Ersatzneubau UW Steinachstrasse", "St.Galler Stadtwerke", "St. Gallen SG", "Ostschweiz", "Baustart Anfang 2027, IBN Ende 2030", "Innenstadt-UW", "Provisorien und Netzersatz beim Rückbau, Baustrom", 1, 16, 0, 0, 0, 0, 0.5, 0.20, "Top", "https://www.stadt.sg.ch/news/stsg_medienmitteilungen/2025/06/ersatzneubau-unterwerk-steinachstrasse--wettbewerbssieger-gekuer.html"),
+    ("Kraftwerk Ritom (Neubau)", "SBB / AET", "Quinto TI", "Tessin", "IBN 2027", "2 × 60 MW Turbinen, CHF 250 Mio.", "Eigenbedarf und Tests bei der IBN, Baustrom", 1, 12, 0, 0, 0, 0, 1.0, 0.15, "Top", "https://company.sbb.ch/de/bahnentwicklung/projekte/tessin/ritom.html"),
+    ("Reservekraftwerk Sisslerfeld 1 und Stein (HVO)", "GETEC", "Eiken / Stein AG", "Nordwestschweiz", "IBN Eiken Anfang 2027, Stein 2028", "13 MW + 44 MW", "Lastbank für Abnahme- und Leistungstests, Baustrom", 0.5, 8, 13, 2, 0, 0, 0.8, 0.20, "Top", "https://www.getec.swiss/de/media/news/getec-schweiz-macht-die-energieversorgung-nachhaltig-sicher.php"),
+    ("KKW-Revisionen 2027 (Beznau, Leibstadt, Gösgen)", "Axpo / KKL / KKG", "Döttingen, Leibstadt AG; Däniken SO", "Nordwestschweiz", "Beznau März-Mai und ab Aug., Leibstadt Apr.-Mai, Gösgen Ende Mai-Juni (Muster, Termine 2027 offen)", "2 × 365 MW, 1'200 MW, 1'010 MW", "Baustrom für Revisionsdörfer, Ersatz für Hilfssysteme (strenge Auflagen)", 1, 27, 0, 0, 0, 0, 1.0, 0.10, "Top", "https://www.axpo.com/ch/de/newsroom/medienmitteilungen/2026/das-kernkraftwerk-beznau-hat-die-revision-von-block-1-fristgerecht-beendet.html"),
+    ("CoolCity: Energiezentrale UW Selnau, Microtunnel", "ewz", "Zürich ZH", "Zürich", "Microtunnel ab 2027, Hauptphase 2027-2032", "ca. CHF 300 Mio.", "Baustrom für Tunnelbohrmaschine, Umbau im Bestand", 1.5, 26, 0, 0, 0, 0, 0.5, 0.15, "Top", "https://www.ewz.ch/de/geschaeftskunden/immobilien/referenzen-projekte/seewasserverbunde-zuerichsee/coolcity.html"),
+    ("Madrisa Solar", "Repower / EKZ / Klosters", "Klosters GR", "Ostschweiz", "voll Ende 2027", "11 MWp", "Baustrom auf 2'000 m ohne Netz", 0.5, 20, 0, 0, 0, 0, 1.0, 0.15, PK_SOLAR, "https://www.repower.com/ch/ueber-uns/unsere-projekte/madrisa-solar-alpines-solarkraftwerk"),
+    ("Sedrun Solar", "Axpo u.a. (?)", "Tujetsch GR", "Ostschweiz", "80 % Ende 2027", "19,3 MW", "Baustrom über die Bausaison", 0.5, 20, 0, 0, 0, 0, 1.0, 0.15, PK_SOLAR, "https://sedrun-solar.ch/"),
+    ("NalpSolar", "Axpo", "Lai da Nalps GR", "Ostschweiz", "Bau bis 12/2028", "ca. 8 MW", "Baustrom", 0.3, 20, 0, 0, 0, 0, 1.0, 0.15, PK_SOLAR, "https://www.axpo.com/ch/de/energie/produktion-und-verteilung/solarenergie/nalpsolar.html"),
+    ("Solarkraftwerk Samedan", "Energia Solara Engiadinaisa", "Samedan GR", "Ostschweiz", "Baustart Frühling 2027", "18,8 GWh/a", "Baustrom, Neustart ideal für Akquise", 0.5, 20, 0, 0, 0, 0, 1.0, 0.15, PK_SOLAR, "https://www.ee-news.ch/de/article/57584/solarkraftwerk-samedan-baubewilligung-liegt-vor-flache-wiehalbiert"),
+    ("Grengiols Solar (mit UW Heiligkreuz)", "Grengiols Solar (EnBAG/FMV/IWB)", "Saflischtal VS", "West (Romandie)", "Etappen 2026-2027+ (?)", "redimensioniert (?)", "Baustrom, UW-IBN", 0.5, 20, 0, 0, 0, 0, 1.0, 0.15, PK_SOLAR, "https://www.grengiols-solar.ch/de/umsetzung"),
+    ("Belalp Solar", "Naters / EnBAG / FMV / Alpiq", "Naters VS", "West (Romandie)", "Bau 2026/27 (?)", "12 GWh/a", "Baustrom im Hochgebirge", 0.3, 16, 0, 0, 0, 0, 1.0, 0.15, PK_SOLAR, "https://www.baublatt.ch/bauprojekte/photovoltaikanlage-belalp-solar-erhaelt-zustimmung-36813"),
+    ("Leitung Obfelden-Samstagern", "Swissgrid", "Thalwil/Obfelden ZH", "Zürich", "Bau läuft, Spannungserhöhung ab 2027", "150 auf 220 kV", "Baustrom Mastbau, Netzersatz", 0.5, 20, 0, 0, 0, 0, 1.0, 0.15, "", "https://www.swissgrid.ch/en/home/projects/project-overview/obfelden-samstagern.html"),
+    ("UW Niederwil und Leitung Niederwil-Obfelden", "Swissgrid", "Niederwil AG", "Nordwestschweiz", "UW-Bau läuft (?), Leitung ab 2028", "CHF 97 Mio., 380 kV", "Eigenbedarf bei UW-Umschaltung", 0.5, 12, 0, 0, 0, 0, 1.0, 0.15, "", "https://www.swissgrid.ch/en/home/projects/project-overview/niederwil-obfelden.html"),
+    ("Bickigen-Chippis (Gemmileitung)", "Swissgrid", "BE/VS", "Mittelland/Bern", "Bauplan offen (?)", "106 km, 380 kV", "Baustrom an abgelegenen Masten", 0.5, 20, 0, 0, 0, 0, 0.5, 0.10, "", "https://www.swissgrid.ch/en/home/projects/project-overview/bickigen-chippis.html"),
+    ("Poste Puidoux (Totalumbau)", "Romande Energie", "Puidoux VD", "West (Romandie)", "2024-2027", "40 auf 80 MVA", "Mobiler Trafo oder Netzersatz beim Trafotausch", 1, 8, 0, 0, 0, 0, 1.0, 0.20, "", "https://www.romande-energie.ch/blog/moderniser-les-postes-electriques-haute-et-moyenne-tension-pour-relever-les-defis-energetiques"),
+    ("Sous-station Sion (Ronquoz 21)", "OIKEN", "Sion VS", "West (Romandie)", "Umschaltung ab Anfang 2027", "CHF 20 Mio.", "Netzersatz und Lastbank bei IBN", 1.5, 6, 1, 1, 0, 0, 1.0, 0.20, "", "https://oiken.ch/medias/nouvelle-sous-station-electrique-de-sion-debut-des-travaux-dans-le-nouveau-quartier-de-ronquoz-21/"),
+    ("Poste Collex-Bossy (Auflage 09/2026)", "SIG", "Collex-Bossy GE", "West (Romandie)", "Bau 2027/28 (?)", "unbekannt", "Baustrom, Umschaltung", 1, 6, 0, 0, 0, 0, 0.3, 0.15, "", "https://collex-bossy.ch/fr/actualites/enquete-publique-nouveau-poste-de-transformation-electrique-2684"),
+    ("UW Thun (Ersatzneubau)", "Energie Thun", "Thun BE", "Mittelland/Bern", "Bau 2027+ (?)", "unbekannt", "Provisorium beim Rückbau", 1, 8, 0, 0, 0, 0, 0.3, 0.15, "", "https://konkurado.ch/de/unterwerk-thun-planungsarbeiten-inkl-bim-ab-phase-32"),
+    ("110-kV-Kabel Freienbach-Altendorf", "Axpo Grid", "Freienbach SZ", "Zentralschweiz", "Bau ab 05/2026", "8,1 km", "Netzersatz bei Umschaltung", 1, 6, 0, 0, 0, 0, 1.0, 0.15, "", "https://www.axpo.com/ch/de/newsroom/medienmitteilungen/2026/start-of-construction-of-underground-cable-line-from-freienbach-.html"),
+    ("UW Beznau (50 auf 110 kV)", "Axpo Grid", "Döttingen AG", "Nordwestschweiz", "läuft (?)", "50 auf 110 kV", "Eigenbedarf, Netzersatz", 1, 6, 0, 0, 0, 0, 1.0, 0.15, "", "https://amreinbau.ch/referenzen/axpo-uw-beznau-doettingen/"),
+    ("UW Mettlen (2. 800-MVA-Trafo)", "Swissgrid", "Eschenbach LU", "Zentralschweiz", "Restarbeiten 2027 (?)", "2 × 800 MVA", "Lastbank oder Eigenbedarf bei Tests", 1, 2, 2, 1, 0, 0, 1.0, 0.15, "", "https://www.swissgrid.ch/en/home/newsroom/newsfeed/20221020-01.html"),
+    ("UW Bözingenfeld", "ESB", "Biel BE", "Mittelland/Bern", "IBN 2026 (Verzug?)", "Industriequartier", "Lastbank bei IBN", 1, 2, 1, 1, 0, 0, 0.5, 0.15, "", "https://www.esb.ch/de/esb/projekte/unterwerk-bozingenfeld/"),
+    ("BESS UW Fadenbrücke Buochs", "EWN", "Buochs NW", "Zentralschweiz", "IBN Spätsommer 2027", "12,5 MW / 25 MWh", "Tests bei IBN, Baustrom", 0.5, 8, 2, 1, 0, 0, 1.0, 0.15, "", "https://www.ewn.ch/baustart-grossbatteriespeicher"),
+    ("BESS UW Grosshöchstetten", "BKW", "Grosshöchstetten BE", "Mittelland/Bern", "IBN Q3 2027", "20 MW / 50 MWh", "Tests bei IBN, Baustrom", 0.5, 8, 2, 1, 0, 0, 1.0, 0.15, "", "https://www.bkw.ch/de/ueber-uns/aktuell/medien/medienmitteilungen/bkw-sichert-netzkapazitaet-von-400-mw-fuer-grossbatterieprojekt-in-muehleberg"),
+    ("BESS Bubikon", "EKZ (?)", "Bubikon ZH", "Zürich", "Betrieb 07/2027", "4,5 MW / ca. 10 MWh", "Tests bei IBN", 0.3, 6, 1, 1, 0, 0, 1.0, 0.15, "", "https://bess-bubikon.ch/dokumente/BESS-Bubikon_Faktenblatt.pdf"),
+    ("Grossbatterie Mühleberg", "BKW", "Mühleberg BE", "Mittelland/Bern", "Bau ca. 2028/29, IBN 2030", "400 MW / 800 MWh", "Baustrom, IBN-Tests (später)", 1, 26, 0, 0, 0, 0, 0.0, 0.10, "", "https://www.bkw.ch/de/ueber-uns/aktuell/medien/medienmitteilungen/bkw-sichert-netzkapazitaet-von-400-mw-fuer-grossbatterieprojekt-in-muehleberg"),
+    ("KW Reckingen (Maschinengruppen)", "Kraftwerk Reckingen AG", "Reckingen AG", "Nordwestschweiz", "1. Gruppe ab 04/2027", "Rheinkraftwerk", "Eigenbedarf bei Stillständen", 1, 8, 0, 0, 0, 0, 1.0, 0.15, "", "https://www.andritz.com/hydro-en/about-andritz-hydro/locations/switzerland/switzerland-de/local-news-switzerlande-de"),
+    ("Wasserkraftwerk Mühleberg (Erneuerung)", "BKW", "Mühleberg BE", "Mittelland/Bern", "Bau ab 2028", "CHF 120 Mio.", "Baustrom (später)", 1, 20, 0, 0, 0, 0, 0.0, 0.10, "", "https://www.schweiz.biz/2025/09/04/wasserkraftwerk-muehleberg-mehr-leistung-bessere-umweltvertraeglichkeit/"),
+    ("Reserve-Prüfstand GT26 Birr", "Ansaldo Energia / Bund", "Birr AG", "Nordwestschweiz", "bereit ab 02/2027", "250 MW", "Hilfsaggregate, Tests (?)", 1, 4, 0, 0, 0, 0, 1.0, 0.10, "", "https://www.bfe.admin.ch/de/newnsb/Nk4rqyiPm12q3-ya39iPf"),
+    ("Reservekraftwerk Sisslerfeld 2 (HVO)", "Sidewinder", "Eiken AG", "Nordwestschweiz", "IBN 2027-2030 (?)", "180 MW", "Lastbank für Abnahme (unsicher)", 0.5, 8, 20, 2, 0, 0, 0.2, 0.10, "", "https://www.news.admin.ch/de/newnsb/yNgfnQ6o9l7doYlqLOqF5"),
+    ("Reservekraftwerk Auhafen (HVO)", "Axpo", "Muttenz BL", "Nordwestschweiz", "Bau 2028-2030", "291 MW", "Baustrom, Lastbank (später)", 1, 26, 0, 0, 0, 0, 0.0, 0.10, "", "https://www.cash.ch/news/axpo-unterzeichnet-vertrag-fur-reservekraftwerk-in-muttenz-944930"),
+    ("GuD Forsthaus als Reserve", "ewb", "Bern BE", "Mittelland/Bern", "Reserve ab Winter 2026/27", "50 MW el.", "Tests (?)", 0.5, 2, 0, 0, 0, 0, 1.0, 0.10, "", "https://www.bfe.admin.ch/de/newnsb/iDoyQnC8QMyfYoJMgJG61"),
+    ("Fernwärmezentrale Zollikon", "Werke am Zürichsee / Energie 360°", "Zollikon ZH", "Zürich", "IBN Frühling 2027", "Seewasser-Wärmepumpe", "Baustrom, Überbrückung; Cross-Sell mobile Heizung", 0.5, 8, 0, 0, 0, 0, 1.0, 0.15, "", "https://www.zollikon.ch/aktuellesinformationen/2815189"),
+    ("Fernwärme Kleinbasel / Heizzentrale Dellen", "IWB", "Basel BS", "Nordwestschweiz", "bis Ende 2027", "60 km Ausbau bis 2037", "Baustrom; Cross-Sell mobile Heizzentralen (MiT-Kern)", 0.5, 8, 0, 0, 0, 0, 1.0, 0.15, "", "https://www.iwb.ch/servicecenter/bau-anlagenprojekte/fernwaermeausbau-wettstein"),
+    ("GeniLac Rive / Eaux-Vives", "SIG", "Genève GE", "West (Romandie)", "2025 bis Frühling 2028", "Seewassernetz", "Baustrom in der Innenstadt", 0.5, 12, 0, 0, 0, 0, 1.0, 0.15, "", "https://www.swissinfo.ch/fre/les-sig-d%C3%A9marrent-une-nouvelle-%C3%A9tape-du-chantier-genilac-%C3%A0-rive/90897660"),
+    ("Elektrolyse Stahl Gerlafingen", "Alpiq / Stahl Gerlafingen", "Gerlafingen SO", "Mittelland/Bern", "frühestens 2027, Entscheid offen (?)", "bis 30 MW", "Tests bei IBN (unsicher)", 0.5, 6, 2, 1, 0, 0, 0.3, 0.10, "", "https://www.energate-messenger.ch/news/240452/alpiq-und-stahl-gerlafingen-mit-gemeinsamem-wasserstoffprojekt"),
+]
+
+
+def _pot(gm, gw, lm, lw, bm, bmo):
+    return gm * gw * rate_gen() + lm * lw * rate_lb() + bm * bmo * rate_bess()
+
+
+def _paket_row(name, members, seg, reg, bed, cs, step, hint, src, p):
+    """Paket als Top-Player-Zeile: 1 MVA × Summe MVA-Wochen, 1 MW × Summe BESS-Monate, gewichteter Anteil 2027."""
+    mvaw = sum(m["gm"] * m["gw"] for m in members)
+    lbw = sum(m["lm"] * m["lw"] for m in members)
+    bmo = sum(m["bm"] * m["bmo"] for m in members)
+    pots = [(_pot(m["gm"], m["gw"], m["lm"], m["lw"], m["bm"], m["bmo"]), m["a27"]) for m in members]
+    tot = sum(x for x, _ in pots)
+    a27 = round(sum(x * a for x, a in pots) / tot, 3) if tot else 0
+    anl = f"{len(members)} Anlässe/Baustellen: " + ", ".join(m["name"] for m in members)
+    return (seg, name, "mehrere, siehe Detailblatt", "diverse", "div.", reg, "DE/FR/IT", anl, bed,
+            1, round(mvaw, 2), 1 if lbw else 0, round(lbw, 2), 1 if bmo else 0, round(bmo, 2), a27, p, cs, step, src, hint)
+
+
+_ev = [dict(name=e[0], gm=e[7], gw=e[8], lm=0, lw=0, bm=e[9], bmo=e[10], a27=e[11], pk=e[12]) for e in EVENTS]
+_pk_info = {
+    PK_WIN: ("Ostschweiz", "Generatoren und Heizung am Berg, Zelte, TV", "Zeltheizung, Heizzentralen", "Weisse Arena (Laax), OK Lenzerheide, White Turf jetzt kontaktieren: Aufbau Dez./Jan."),
+    PK_SOM: ("national", "Generatoren und BESS-Hybrid für Bühnen, Camping, Gastro", "Kühlung Gastro", "Veranstalter im Winter ansprechen, Offerten bis März; Romandie/Tessin auf FR/IT"),
+    PK_VOLK: ("national", "Festzelte, Arenen, Chilbi: Generatoren und Backup", "Zeltheizung im September", "OKs Altstätten, Thun, Sissach, Giswil ab Q1 2027"),
+    PK_SPORT: ("national", "TV-Compounds mit Redundanz, Tribünen, Hospitality", "Klima Hospitality", "Ruder-WM Luzern zuerst (TV-Redundanz), dann Gstaad, CSIO"),
+    PK_MARKT: ("national", "Chalets, Zelte, Chilbi, Zirkus: Backup und Zusatzlast", "Zeltheizung, Heizung Chalets", "Bellevue Noël (neuer Betreiber) sofort, Knie für Saison 2027"),
+}
+PAKET_TOP = {}
+for _pk in EV_PAKETE:
+    _m = [x for x in _ev if x["pk"] == _pk]
+    reg, bed, cs, step = _pk_info[_pk]
+    _row = (_paket_row(_pk, _m, EVT, reg, bed, cs, step, "Paket-Szenario = Summe der Einzel-Events im Blatt «Events 2027».",
+                        "https://lucerne2027.com/" if _pk == PK_SPORT else EVENTS[[e[0] for e in EVENTS].index(_m[0]["name"])][13], EV_P))
+    _pt = _pot(1, _row[10], _row[11], _row[12], _row[13], _row[14])
+    PAKET_TOP[_pk] = _pt >= TOP_MIN
+    if PAKET_TOP[_pk]:
+        P.append(_row)
+
+for e in EVU:
+    if e[15] == "Top":
+        P.append((NETZ, e[0], e[1], e[2], "", e[3], "DE/FR/IT", f"{e[4]}. {e[5]}", e[6],
+                  e[7], e[8], e[9], e[10], e[11], e[12], e[13], e[14], "", "Projektleitung kontaktieren, Umschalt- bzw. Bauplan 2027 klären", e[16], ""))
+_sol = [dict(name=e[0], gm=e[7], gw=e[8], lm=e[9], lw=e[10], bm=e[11], bmo=e[12], a27=e[13]) for e in EVU if e[15] == PK_SOLAR]
+P.append(_paket_row(PK_SOLAR, _sol, NETZ, "Ostschweiz", "Baustrom auf 2'000 bis 2'700 m ohne Netz, ganze Bausaison",
+                    "Bauheizung, Trocknung", "Bauherren und GU der Solar-Express-Anlagen ab Q1 2027 ansprechen",
+                    "Paket-Szenario = Summe der Solar-Baustellen im Blatt «EVU & Energie 2027».",
+                    "https://www.repower.com/ch/ueber-uns/unsere-projekte/madrisa-solar-alpines-solarkraftwerk", 0.15))
+PAKET_TOP[PK_SOLAR] = True
+PAKETE = [k for k in EV_PAKETE + [PK_SOLAR] if PAKET_TOP[k]]
+
+PLAN += [
+    ("Oktober", "09.10.2026", "Neuer Betreiber, Stromkonzept und Backup anbieten (Start 19.11.)", "Paket Märkte, Messen, Fasnacht, Zirkus"),
+    ("Oktober", "16.10.2026", "Netzersatz für Winter 2026/27 anbieten (Skigebiet hängt am UW)", "UW Laax (Gesamterneuerung)"),
+    ("Oktober", "23.10.2026", "Laax Open, Lenzerheide, White Turf kontaktieren: Aufbau Dez./Jan. (Paket knapp unter CHF 50'000)", "alle"),
+    ("November", "06.11.2026", "Groupe E Netzbau: Umschaltplan 2027 und Trafo-/Netzersatzbedarf", "Poste Galmiz (Neubau, Verkabelung 125 kV)"),
+    ("November", "13.11.2026", "Lastbank für Abnahmetests Anfang 2027 offerieren", "Reservekraftwerk Sisslerfeld 1 und Stein (HVO)"),
+    ("November", "27.11.2026", "OK kontaktieren: TV-Compound, Redundanz, Hospitality", "Paket Sport-Grossanlässe 2027"),
+    ("Januar", "29.01.2027", "Festival-Veranstalter für Saison 2027 ansprechen", "Paket Sommer-Festivals 2027"),
 ]

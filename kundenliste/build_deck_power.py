@@ -18,7 +18,7 @@ ASSETS = os.environ.get("MIT_ASSETS") or (glob.glob(
 sys.path.insert(0, ASSETS)
 from mit_deck import Deck, RED, DARK, DARKER, LIGHT, WHITE, BLACK, SOFT, F_BODY, F_TITLE, L, R, cols  # noqa: E402
 
-from daten_power import P, COMP, RATES, GLOSSAR, PRODUKTE, MATRIX, rate_gen, rate_lb, rate_bess, RZ, INF, NETZ, SPI, IND, EVT, KAN  # noqa: E402
+from daten_power import P, COMP, EVENTS, EVU, PAKETE, RATES, GLOSSAR, PRODUKTE, MATRIX, rate_gen, rate_lb, rate_bess, RZ, INF, NETZ, SPI, IND, EVT, KAN  # noqa: E402
 
 MID = RGBColor(0xBD, 0xBD, 0xBD)
 PALE = RGBColor(0xE6, 0xE6, 0xE6)
@@ -199,7 +199,7 @@ caption(s, L, 6.5, 11.9, "Illustrationen: eigene Grafik im MiT-Design. Fotos Tra
 # ================================================================ 4 Pipeline
 s = d.content("04 · Pipeline", "Wo das Geld liegt: Potenzial und Erwartung")
 cd = CategoryChartData()
-cats = ["Rechenzentren", "Infrastruktur", "Netz / UW", "Spitäler", "Industrie", "Events", "Kanal-Partner"]
+cats = ["Rechenzentren", "Infrastruktur", "Netz / Energie", "Spitäler", "Industrie", "Events", "Kanal-Partner"]
 cd.categories = cats
 cd.add_series("Potenzial brutto", [seg_pot[x] for x in SEGS])
 cd.add_series("Erwartung 2027", [seg_exp[x] for x in SEGS])
@@ -292,7 +292,7 @@ d.notes(s, "Die Reihenfolge ergibt sich aus der Erwartung 2027. Ändern sich Wah
 # ================================================================ 7 Produkt-Matrix
 s = d.content("07 · Produktbedarf", "Was die Top-Player an Power brauchen")
 prods = PRODUKTE
-seg_label = {RZ: "Rechenzentren", INF: "Infrastruktur", NETZ: "Netz / Unterwerk", SPI: "Spitäler",
+seg_label = {RZ: "Rechenzentren", INF: "Infrastruktur", NETZ: "Netz / Energie", SPI: "Spitäler",
              IND: "Industrie", EVT: "Events", KAN: "Kanal-Partner"}
 mat = {seg_label[k_]: v for k_, v in MATRIX.items()}
 cx0, cy0, cw, chh, lw = L + 2.35, 2.35, 1.55, 0.52, 2.3
@@ -363,41 +363,60 @@ d.notes(s, "Wir gehen mit Power rein und nehmen Wärme und Kälte mit. Beim RZ-I
            "auf Winterbaustellen braucht es Bauheizung, und WEF und Ski-WM brauchen Zeltheizung. Dieselpreis TCS 18.09.2026: 2,41 CHF/l.")
 
 # ================================================================ 10 Infra / Netz / Spital / Industrie
-s = d.content("10 · Infrastruktur, Netz, Spital, Industrie", "Das sichere Volumen: lange Laufzeiten")
-non = [x for x in rows if x["seg"] in (INF, NETZ, SPI, IND)][:10]
+s = d.content("10 · Infrastruktur, Spital, Industrie", "Das sichere Volumen: lange Laufzeiten")
+non = [x for x in rows if x["seg"] in (INF, SPI, IND)][:10]
 tbl = [["Projekt", "Einstieg über", "Potenzial CHF", "Erwartung 2027"]]
 for x in non:
     tbl.append([x["name"], x["ein"].split(";")[-1].strip(), f"{x['pot']:,.0f}".replace(",", "'"), f"{x['exp']:,.0f}".replace(",", "'")])
 d.table(s, tbl, colw=[3.3, 2.5, 1.35, 1.35], w=8.3, y=2.05, h=0.42 + 10 * 0.4, fs=10.5, head_fs=10.5)
 pic(s, "tunnel.png", 9.0, 2.05, 3.4, 2.1, fy=0.6)
 pic(s, "spital.png", 9.0, 4.35, 3.4, 2.1, fx=0.6, fy=0.55)
-d.notes(s, "Tunnel, Grimsel und Bachem bringen ganzjährige Mieten. Bei KSA, Axpo Niederurnen und CKW sind die Termine 2027 fix. "
-           "Öffentliche Beschaffung bei ASTRA, SBB, ewz, USZ beachten.")
+
+# ================================================================ 10b EVU und Energie
+netz = [x for x in rows if x["seg"] == NETZ]
+s = d.content("11 · EVU und Energie 2027", f"{len(netz)} Netz- und Energieprojekte über CHF 50'000")
+tbl = [["Projekt", "Betreiber", "Potenzial CHF", "Erwartung 2027"]]
+for x in netz[:11]:
+    tbl.append([x["name"], x["ein"].split(";")[0].strip(), f"{x['pot']:,.0f}".replace(",", "'"), f"{x['exp']:,.0f}".replace(",", "'")])
+d.table(s, tbl, colw=[4.0, 2.2, 1.3, 1.3], w=8.6, y=2.05, h=0.42 + 11 * 0.36, fs=10, head_fs=10.5)
+pic(s, "foto_trafo.jpg", 9.3, 2.05, 3.1, 2.05, fy=0.45)
+d.rect(s, 9.3, 4.25, 3.1, 2.3, RED)
+n_evu_more = len([e for e in EVU if e[15] == ""])
+text(s, 9.5, 4.42, 2.75, 0.4, f"{mio(sum(x['pot'] for x in netz))} CHF", 18, WHITE, True, F_TITLE)
+text(s, 9.5, 4.95, 2.75, 1.5, ["Potenzial brutto im Segment.", f"Dazu {n_evu_more} kleinere EVU-Projekte im Excel-Blatt «EVU & Energie 2027»."], 11, WHITE)
 
 # ================================================================ 11 Events
-s = d.content("11 · Events", "Winter 2027 zuerst, ESAF 2028 jetzt offerieren")
+s = d.content("12 · Events", "Einzeln zu klein, als Saisonpaket stark")
 evs = [x for x in rows if x["seg"] == EVT]
 ev_txt = {
     "WEF Annual Meeting 2027": ["18. bis 22.01.2027, Davos", "Pavillons und Sicherheit bei knappem Ortsnetz", "Aufbau ab Dezember"],
     "FIS Ski-WM Crans-Montana 2027": ["01. bis 14.02.2027", "Broadcast, Fan-Zonen, Hospitality", "Offerte auf Französisch"],
     "ESAF 2028 Thun": ["25. bis 27.08.2028, Thuner Allmend", "Arena, Festgelände, Camping", "Konzept 2027, Umsatz 2028"],
 }
-pic(s, "event.png", L, 2.05, 3.9, 3.45, fx=0.4)
-ev_order = sorted(evs, key=lambda x: ("Ski-WM" not in x["name"], "WEF" not in x["name"]))
+pic(s, "event.png", L, 2.05, 3.6, 4.55, fx=0.35)
+ev_order = sorted(evs, key=lambda x: -x["pot"])
+n_ev = len(EVENTS)
 for i, x in enumerate(ev_order):
-    y = 2.05 + i * 1.18
+    y = 2.05 + i * 0.77
     f = RED if "Ski-WM" in x["name"] else DARK
-    d.rect(s, 4.6, y, 7.8, 1.08, f)
-    text(s, 4.85, y + 0.14, 4.3, 0.4, x["name"].replace(" Annual Meeting", ""), 14, WHITE, True)
-    text(s, 4.85, y + 0.52, 4.6, 0.5, " · ".join(ev_txt.get(x["name"], [])[:2]), 11, WHITE if f == RED else SOFT)
-    text(s, 9.6, y + 0.14, 2.6, 0.4, chf(x["pot"]), 16, WHITE, True, F_TITLE, PP_ALIGN.RIGHT)
-    text(s, 9.6, y + 0.58, 2.6, 0.4, ev_txt.get(x["name"], ["", "", ""])[2], 10.5, WHITE if f == RED else SOFT, align=PP_ALIGN.RIGHT)
-d.band(s, 5.75, "Sommer-Openairs (St.Gallen, Frauenfeld, Gurten, Paléo, Montreux) liegen einzeln unter CHF 50'000: als Saisonpaket anbieten.",
-       fill=LIGHT, h=0.85, fs=12.5)
-d.notes(s, "Szenario-Grössen bei Events sind Annahmen. Die Ski-WM ist rot markiert, weil sie 2027 stattfindet und die Beschaffung jetzt läuft.")
+    d.rect(s, 4.3, y, 8.1, 0.69, f)
+    nm = x["name"].replace(" Annual Meeting", "")
+    if x["name"] in ev_txt:
+        sub = " · ".join(ev_txt[x["name"]][:2])
+    else:
+        mem = [e[0] for e in EVENTS if e[12] == x["name"]]
+        sub = f"{len(mem)} Anlässe, u.a. " + ", ".join(mem[:3])
+    text(s, 4.5, y + 0.07, 5.6, 0.3, nm, 12.5, WHITE, True)
+    text(s, 4.5, y + 0.37, 5.8, 0.3, sub, 9.5, WHITE if f == RED else SOFT)
+    text(s, 10.2, y + 0.07, 2.0, 0.3, chf(x["pot"]), 13, WHITE, True, F_TITLE, PP_ALIGN.RIGHT)
+    text(s, 10.2, y + 0.38, 2.0, 0.3, f"Erw. {chf(x['exp'])}", 9.5, WHITE if f == RED else SOFT, align=PP_ALIGN.RIGHT)
+from daten_power import PAKET_TOP  # noqa: E402
+_small = [k.replace("Paket ", "") for k, v in PAKET_TOP.items() if not v]
+caption(s, L, 6.66, 11.9, f"{n_ev} Anlässe 2026/27 im Excel-Blatt «Events 2027». Unter CHF 50'000 und daher nur dort: " + ", ".join(_small) + ".")
+d.notes(s, "x")
 
 # ================================================================ 12 Wettbewerb
-s = d.content("12 · Wettbewerb", "Wer sonst mobile Power anbietet")
+s = d.content("13 · Wettbewerb", "Wer sonst mobile Power anbietet")
 tbl = [["Anbieter", "Angebot laut eigener Website"]] + [[a, b] for a, b, _ in COMP]
 d.table(s, tbl, colw=[3.2, 8.7], y=2.05, h=0.42 + len(COMP) * 0.38, fs=11, head_fs=11)
 d.band(s, 5.35, "Lastbänke bis 6,25 MW mit Commissioning Level 1 bis 5, BESS, Kühlung und Heizung aus einer Hand, "
@@ -406,10 +425,10 @@ d.notes(s, "Quelle Aggreko-Portfolio: aggreko.com (Data Centre Commissioning, Lo
            "Generator-Vermieter bis 2 MVA; kaum jemand bietet das komplette Commissioning-Paket.")
 
 # ================================================================ 13 90 Tage
-s = d.content("13 · Die nächsten 90 Tage", "Vom Modell zum Auftrag bis Januar 2027")
+s = d.content("14 · Die nächsten 90 Tage", "Vom Modell zum Auftrag bis Januar 2027")
 d.steps(s, [
-    ("01", "Oktober", ["Hot Leads: STACK, Green Lupfig, KSA, Ski-WM.", "Commissioning- und Umzugstermine klären."]),
-    ("02", "November", ["Rahmengespräche Burkhalter, VINCI, Equans.", "WEF-Offerte abgeben."]),
+    ("01", "Oktober", ["Hot Leads: STACK, Green Lupfig, KSA, Ski-WM.", "UW Laax, Bellevue Noël, Winter-Weltcups."]),
+    ("02", "November", ["Rahmen Burkhalter, VINCI, Equans.", "WEF-Offerte, Galmiz, GETEC-Lastbank."]),
     ("03", "Dezember", ["MiT-Sätze ins Modell, CRM-Status eintragen.", "Pipeline neu rechnen."]),
     ("04", "Januar", ["Review mit Mauro, Jörg, Roberto.", "RZ 2028 und Tunnel-Rahmen aufgleisen."]),
 ], y=2.3)
@@ -430,6 +449,7 @@ d.closing("Der eine Hebel", ["Rechenzentren früh", "im Bau besetzen,", "nicht e
 from notizen import build_notes  # noqa: E402
 NOTES = build_notes(dict(n=len(rows), pot=mio(TOT_POT), exp=chf(TOT_EXP), na=N_A, rz_pot=mio(seg_pot[RZ]),
                          inf_exp=chf(seg_exp[INF]), fuel=f"{RATES['diesel_lh'] * RATES['diesel_chf']:.0f}",
+                         n_netz=len([x for x in rows if x["seg"] == NETZ]), n_ev=len(EVENTS),
                          top10=f"{sum(x['exp'] for x in rows[:10]) / TOT_EXP:.0%}".replace("%", " %")))
 for sl, n in zip(d.prs.slides, NOTES):
     d.notes(sl, n)

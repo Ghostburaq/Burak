@@ -81,18 +81,29 @@ def build_notes(n):
             f"Und der Diesel: 1 MVA bei 75 % Last kostet rund {n['fuel']} CHF pro Stunde. Der BESS-Hybrid spart Laufzeit.»",
             [("Woher kommt der Dieselwert?", "Cummins C1000 D5: 139 l/h Prime, 154 l/h Standby bei 75 %. Dieselpreis TCS 18.09.2026: 2,41 CHF/l (Tankstelle).")],
             "HVO = Hydrotreated Vegetable Oil (erneuerbarer Diesel). IST = Integrated Systems Test. BESS = Batteriespeicher."),
-        # 11 Infra/Netz/Spital/Industrie
+        # 11 Infra/Spital/Industrie
         blk("Das sichere Volumen: lange Laufzeiten und fixe Termine.",
-            "«Gotthard, Sisikon und Grimsel laufen das ganze Jahr. Bei KSA, Axpo Niederurnen und CKW sind die Termine 2027 fix. "
-            "Bei ASTRA, SBB, ewz und USZ läuft es über öffentliche Ausschreibungen, also früh auf simap schauen.»",
+            "«Gotthard, Sisikon und Grimsel laufen das ganze Jahr. Bei KSA und Lonza sind die Termine 2027 fix. "
+            "Bei ASTRA, SBB und USZ läuft es über öffentliche Ausschreibungen, also früh auf simap schauen.»",
             [("Wie kommen wir an ASTRA-Aufträge?", "Selten direkt. Meist über die Bau-ARGE, die den Zuschlag hat (z.B. Marti, Implenia/Frutiger).")],
             "ASTRA = Bundesamt für Strassen. ARGE = Arbeitsgemeinschaft. TU = Totalunternehmer. KWO = Kraftwerke Oberhasli. "
-            "UW = Unterwerk. GIS = gasisolierte Schaltanlage. IVöB = öffentliches Beschaffungsrecht. simap = Ausschreibungsplattform."),
-        # 12 Events
-        blk("Winter 2027 zuerst: Ski-WM und WEF. ESAF 2028 jetzt offerieren.",
-            "«Die Ski-WM in Crans-Montana ist die dringendste Chance, Beschaffung läuft jetzt, Unterlagen auf Französisch. "
-            "WEF startet den Aufbau im Dezember. Die Sommer-Openairs bündeln wir als Saisonpaket.»",
-            [("Sind die Event-Grössen belegt?", "Termine ja, die Leistungsgrössen sind Annahmen. Vor Offerte Bedarf beim OK abfragen.")],
+            "IVöB = öffentliches Beschaffungsrecht. simap = Ausschreibungsplattform."),
+        # 12 EVU und Energie
+        blk("Netzumbau, Reservekraftwerke und alpine Solaranlagen: 2027 ist Bauzeit bei den EVU.",
+            f"«{n['n_netz']} Netz- und Energieprojekte liegen über CHF 50'000. Am konkretesten: Poste Galmiz von Groupe E, "
+            "UW Laax von Repower mit Skigebiet am Netz, die GETEC-Reservekraftwerke mit Lastbank-Abnahme Anfang 2027 "
+            "und sechs alpine Solar-Baustellen ohne Netzanschluss.»",
+            [("Warum KKW-Revisionen?", "Jede Revision braucht Baustrom für Revisionsdörfer und Ersatz für Hilfssysteme. Termine 2027 noch nicht publiziert, Muster: Beznau März bis Mai und ab August, Leibstadt April/Mai, Gösgen Ende Mai. Nuklearbereich mit strengen Auflagen."),
+             ("Wer bestellt bei Swissgrid?", "Meist der Generalunternehmer des Unterwerks oder der Leitungsbauer, selten Swissgrid direkt.")],
+            "UW = Unterwerk. GIS = gasisolierte Schaltanlage. HVO = erneuerbarer Diesel. KKW = Kernkraftwerk. "
+            "IBN = Inbetriebnahme. Solar-Express = Förderprogramm des Bundes für alpine Solaranlagen."),
+        # 13 Events
+        blk("Einzelne Events sind zu klein, als Saisonpaket werden sie interessant.",
+            f"«Wir haben {n['n_ev']} Anlässe für 2026/27 gesammelt. Einzeln liegen fast alle unter CHF 50'000, weil sie nur Tage dauern. "
+            "Gebündelt als Sommer-Festivals, Sport-Grossanlässe oder Märkte mit Zirkus Knie lohnt es sich. "
+            "Dringend: Ski-WM, WEF und der neue Weihnachtsmarkt Bellevue Noël in Zürich.»",
+            [("Sind die Event-Grössen belegt?", "Termine ja, die Leistungsgrössen sind Annahmen. Vor Offerte Bedarf beim OK abfragen."),
+             ("Was ist mit der Ruder-WM Luzern?", "23. bis 29.08.2027, über 40'000 Zuschauer, TV-Compound mit Redundanz: das grösste Einzelevent im Paket Sport.")],
             "WEF = World Economic Forum. FIS = Internationaler Skiverband. ESAF = Eidg. Schwing- und Älplerfest. "
             "OK = Organisationskomitee. BESS = Batteriespeicher."),
         # 13 Wettbewerb

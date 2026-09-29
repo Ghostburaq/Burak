@@ -9,7 +9,7 @@ from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.datavalidation import DataValidation
 from openpyxl.worksheet.table import Table, TableStyleInfo
 
-from daten_power import P, W, COMP, RATES, ZIELROLLE, PRODUKTE, MATRIX, PORTFOLIO, RZ_DETAIL, PLAN, GLOSSAR, rate_gen, rate_lb, rate_bess, RZ, INF, NETZ, SPI, IND, EVT, KAN
+from daten_power import P, W, COMP, RATES, EVENTS, EVU, PAKETE, PK_SOLAR, PAKET_TOP, TOP_MIN, ZIELROLLE, PRODUKTE, MATRIX, PORTFOLIO, RZ_DETAIL, PLAN, GLOSSAR, rate_gen, rate_lb, rate_bess, RZ, INF, NETZ, SPI, IND, EVT, KAN
 
 OUT = "Top_Player_Power_Schweiz_2027.xlsx"
 STAND = "27.09.2026"
@@ -63,6 +63,8 @@ st = wb.active
 st.title = "Start"
 tp = wb.create_sheet("Top-Player")
 pl = wb.create_sheet("90-Tage-Plan")
+evs_ws = wb.create_sheet("Events 2027")
+evu_ws = wb.create_sheet("EVU & Energie 2027")
 rzs = wb.create_sheet("Rechenzentren")
 pb = wb.create_sheet("Produktbedarf")
 pf = wb.create_sheet("Portfolio")
@@ -172,6 +174,13 @@ for n, r in enumerate(rows):
         "Ansprechperson (Name)": None, "Kontakt (Tel. / E-Mail)": None, "Letzter Kontakt": None, "Nächster Termin": None,
         "Quelle": "Link", "Hinweis / Annahme": hint or None,
     }
+    if proj in PAKETE:
+        ds = "EVU & Energie 2027" if proj == PK_SOLAR else "Events 2027"
+        sif = lambda col: f"SUMIF('{ds}'!$W$5:$W$200,\"{proj}\",'{ds}'!${col}$5:${col}$200)"
+        v["Generator MVA"], v["Generator Wochen"] = 1, "=" + sif("O")
+        v["Lastbank MW"], v["Lastbank Wochen"] = 1, "=" + sif("P")
+        v["BESS MW"], v["BESS Monate"] = 1, "=" + sif("Q")
+        v["Anteil 2027"] = f"=IFERROR({sif('V')}/{sif('R')},0)"
     for i, (c, _) in enumerate(COLS):
         cell = tp.cell(x, i + 1, v[c])
         cell.font = font(size=9, color="0000FF" if c in INPUT else "000000", bold=c in ("Projekt / Kunde", "Erwartung 2027 CHF"))
@@ -315,7 +324,9 @@ ch2.x_axis.scaling.orientation = "maxMin"
 ch2.height, ch2.width = 9, 15
 st.add_chart(ch2, "H31")
 st.cell(39, 1, "Blätter in dieser Datei").font = font(size=12, bold=True, color=RED)
-nav = [("Top-Player", "Die 38 Projekte mit Potenzial, Szenario, Kontakt und nächstem Schritt"),
+nav = [("Top-Player", f"Die {len(rows)} Projekte und Pakete über CHF 50'000 mit Szenario, Kontakt, nächstem Schritt"),
+       ("Events 2027", f"{len(EVENTS)} Anlässe 2026/27 einzeln, gebündelt in Saisonpakete"),
+       ("EVU & Energie 2027", "Weitere Netz-, Kraftwerks-, Solar- und Fernwärmeprojekte"),
        ("90-Tage-Plan", "Aufgaben Okt. 2026 bis Jan. 2027 mit Status zum Abhaken"),
        ("Rechenzentren", "Alle RZ-Projekte 2026-2028 mit MW, Zeitplan, GU, Netzanschluss"),
        ("Produktbedarf", "Welches Segment welches Power-Produkt braucht"),
@@ -443,6 +454,70 @@ for i, (k_, v_) in enumerate(GLOSSAR):
         c.border = BORDER
 gl.column_dimensions["A"].width, gl.column_dimensions["B"].width = 26, 70
 
+
+# ================================================================ Events 2027 / EVU & Energie 2027
+DH = ["Nr.", "Name", "Kategorie", "Ort", "Region", "Datum / Zeitfenster", "Grösse", "Warum Strombedarf",
+      "Generator MVA", "Generator Wochen", "Lastbank MW", "Lastbank Wochen", "BESS MW", "BESS Monate",
+      "MVA-Wochen", "Lastbank MW-Wochen", "BESS MW-Monate", "Potenzial CHF", "Anteil 2027", "Wahrschein-lichkeit",
+      "Erwartung 2027 CHF", "Potenzial × Anteil", "Paket / Zuordnung", "Quelle"]
+DW = (5, 30, 16, 20, 15, 20, 22, 38, 9, 9, 9, 9, 8, 8, 9, 9, 9, 12, 9, 10, 12, 11, 34, 9)
+
+
+def detail_sheet(ws, ttl, sub, items, pakete, note):
+    title(ws, ttl, sub)
+    header(ws, 4, DH)
+    for c_, w_ in enumerate(DW):
+        ws.column_dimensions[get_column_letter(c_ + 1)].width = w_
+    for i, it in enumerate(items):
+        r = 5 + i
+        vals = [i + 1] + list(it["txt"]) + [it["gm"], it["gw"], it["lm"], it["lw"], it["bm"], it["bmo"],
+                f"=I{r}*J{r}", f"=K{r}*L{r}", f"=M{r}*N{r}",
+                f"=ROUND(O{r}*{A['gen']}+P{r}*{A['lb']}+Q{r}*{A['bess']},-2)", it["a27"], it["p"],
+                f"=ROUND(R{r}*S{r}*T{r},-2)", f"=R{r}*S{r}", it["pk"], "Link"]
+        for j, v_ in enumerate(vals):
+            c = ws.cell(r, j + 1, v_)
+            c.font = font(size=9, bold=(j == 1), color="0000FF" if 8 <= j <= 13 or j in (18, 19) else "000000")
+            c.alignment = Alignment(wrap_text=j in (1, 3, 6, 7, 22), vertical="top")
+            c.border = BORDER
+        for col in "RUV":
+            ws[f"{col}{r}"].number_format = CHF
+        for col in "ST":
+            ws[f"{col}{r}"].number_format = "0%"
+        ws[f"X{r}"].hyperlink = it["src"]
+        ws[f"X{r}"].font = font(size=9, color="0563C1", underline="single")
+        ws.row_dimensions[r].height = 36
+    last = 4 + len(items)
+    ws.freeze_panes = "C5"
+    ws.conditional_formatting.add(f"R5:R{last}", CellIsRule(operator="greaterThanOrEqual", formula=[A["thr"]], fill=fill("F4A6B8")))
+    r0 = last + 2
+    ws.cell(r0, 2, "Pakete").font = font(size=12, bold=True, color=RED)
+    header(ws, r0 + 1, ["", "Paket", "Anzahl", "Potenzial CHF", "Erwartung 2027 CHF", "In Top-Player"], col0=1)
+    for i, pk in enumerate(pakete):
+        r = r0 + 2 + i
+        ws.cell(r, 2, pk).font = font(bold=True)
+        ws.cell(r, 3, f'=COUNTIF($W$5:$W${last},B{r})')
+        ws.cell(r, 4, f'=SUMIF($W$5:$W${last},B{r},$R$5:$R${last})').number_format = CHF
+        ws.cell(r, 5, f'=SUMIF($W$5:$W${last},B{r},$U$5:$U${last})').number_format = CHF
+        ws.cell(r, 6, f'=IF(D{r}>={A["thr"]},"Ja","Nein, unter Schwelle")')
+        for c_ in range(2, 7):
+            ws.cell(r, c_).border = BORDER
+    ws.cell(r0 + 3 + len(pakete), 2, note).font = font(italic=True, size=9)
+
+
+ev_items = [dict(txt=(e[0], e[1], e[2], e[3], e[4], e[5], e[6]), gm=e[7], gw=e[8], lm=0, lw=0, bm=e[9], bmo=e[10],
+                 a27=e[11], p=0.15, pk=e[12], src=e[13]) for e in EVENTS]
+ev_pk = list(dict.fromkeys(e[12] for e in EVENTS))
+detail_sheet(evs_ws, "Events 2026/27", f"{len(EVENTS)} Anlässe mit Strombedarf. Szenario je Anlass (blau) ist Annahme. "
+             "Pakete ab CHF 50'000 erscheinen im Blatt «Top-Player» und rechnen per Formel aus diesem Blatt.",
+             ev_items, ev_pk, "Einzelne Events dauern Tage, darum meist unter CHF 50'000. Bündeln lohnt sich: ein Ansprechpartner pro Saison, "
+             "gleiche Logistik. Termine mit (?) vor der Akquise beim Veranstalter prüfen.")
+evu_items = [dict(txt=(e[0], e[1], e[2], e[3], e[4], e[5], e[6]), gm=e[7], gw=e[8], lm=e[9], lw=e[10], bm=e[11], bmo=e[12],
+                  a27=e[13], p=e[14], pk=(e[15] or "nur hier"), src=e[16]) for e in EVU if e[15] != "Top"]
+tops = [e[0] for e in EVU if e[15] == "Top"]
+detail_sheet(evu_ws, "EVU & Energie 2026-2028", "Netz, Kraftwerke, Batteriespeicher, alpine Solar, Fernwärme. Szenario (blau) ist Annahme.",
+             evu_items, [PK_SOLAR, "nur hier"],
+             f"Einzeln im Blatt «Top-Player» (Segment Netz / Energie), nicht hier: " + "; ".join(tops) + ".")
+
 # ================================================================ Beobachten
 title(bo, "Beobachten", "Unter CHF 50'000, zu früh oder zu unsicher. Quartalsweise prüfen, bei neuem Anlass in «Top-Player» übernehmen.")
 header(bo, 4, ["Segment", "Projekt / Kunde", "Ort", "Warum (noch) nicht Top", "Quelle"])
@@ -482,6 +557,9 @@ txt = [
     ("Sätze", "Öffentliche Listenpreise ab 100 kVA gibt es in CH/DE/AT nicht (nur auf Anfrage). Genutzt werden US-Richtwerte, umgerechnet 0,828 CHF/USD (24.09.2026)."),
     ("", "Diese Werte sind Grössenordnung, keine Offertenbasis. MiT-Sätze in «Annahmen» Spalte E eintragen."),
     ("Anteil 2027", "Welcher Teil des Volumens ins Kalenderjahr 2027 fällt (Bau- bzw. Eventtermine aus den Quellen)."),
+    ("Pakete", "Events und alpine Solar-Baustellen sind einzeln meist unter CHF 50'000. Sie sind zu Paketen gebündelt; ein Paket steht in «Top-Player», "),
+    ("", "wenn es über CHF 50'000 liegt. Paketwerte rechnen per Formel aus den Blättern «Events 2027» und «EVU & Energie 2027»."),
+    ("Erweiterung", "29.09.2026: 56 Events und 47 EVU-/Energieprojekte ergänzt (Websuche, Quellen je Zeile)."),
     ("Wahrscheinlichkeit", "Chance, dass MiT den Auftrag gewinnt: 10 % (EMEA-Beschaffung, unsicherer Zeitplan) bis 30 % (konkreter Anlass, Region nah)."),
     ("Commissioning", "Integrated Systems Test (Level 5): Last ≈ Design-IT-Last, Stufen 25/50/75/100 %, IST-Fenster 4-6 Wochen (anvilfield.com, sunbeltsolomon.com)."),
     ("Netzengpass", "EKZ: über 100 Anschlussanfragen von RZ, 6 von 9 neuen Unterwerken entstehen für RZ, Engpass im Vornetz Axpo/Swissgrid (ekz.ch, 2025)."),
