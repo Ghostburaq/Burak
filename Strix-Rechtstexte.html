@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Strix · Rechtstexte (Vorlagen)</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'><rect x='2' y='2' width='36' height='36' rx='11' fill='%230071e3'/><path d='M13 28 V12 L27 28 V12' fill='none' stroke='white' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#fbfbfd;--panel:#fff;--grey:#f5f5f7;--line:rgba(0,0,0,0.08);--line2:rgba(0,0,0,0.14);
+    --ink:#1d1d1f;--mute:#6e6e73;--dim:#86868b;--blue:#0071e3;--warn:#bf6a02;--danger:#e0314b;
+    --font:-apple-system,BlinkMacSystemFont,'SF Pro Text','Inter','Helvetica Neue',Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);line-height:1.65;
+    letter-spacing:-0.01em;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:820px;margin:0 auto;padding:0 22px 100px}
+
+  header.hero{text-align:center;padding:54px 22px 24px}
+  .logo{display:inline-flex;align-items:center;gap:13px;margin-bottom:18px}
+  .logo svg{border-radius:13px;box-shadow:0 8px 24px rgba(0,113,227,0.30)}
+  .logo .name{font-size:27px;font-weight:700;letter-spacing:-0.03em}
+  h1{font-size:34px;font-weight:700;letter-spacing:-0.035em;margin:0 0 10px}
+  .lead{font-size:17px;color:var(--mute);max-width:600px;margin:0 auto}
+
+  /* sticky tab nav */
+  .navbar{position:sticky;top:0;z-index:20;background:rgba(255,255,255,0.8);
+    -webkit-backdrop-filter:saturate(180%) blur(18px);backdrop-filter:saturate(180%) blur(18px);
+    border-bottom:1px solid var(--line);margin-bottom:30px}
+  .navinner{max-width:820px;margin:0 auto;display:flex;gap:4px;padding:10px 22px;overflow-x:auto}
+  .navinner a{flex:0 0 auto;padding:8px 16px;border-radius:980px;text-decoration:none;color:var(--mute);
+    font-weight:600;font-size:14px;transition:all .15s}
+  .navinner a:hover{background:var(--grey);color:var(--ink)}
+
+  .disclaimer{background:rgba(191,106,2,0.09);border:1px solid rgba(191,106,2,0.28);border-radius:14px;
+    padding:16px 20px;margin:0 0 28px;font-size:14px;line-height:1.55;display:flex;gap:12px}
+  .disclaimer .i{font-size:20px;flex-shrink:0}
+
+  section.doc{background:var(--panel);border:1px solid var(--line);border-radius:20px;
+    padding:36px 38px;margin-bottom:26px;box-shadow:0 1px 2px rgba(0,0,0,0.04),0 8px 30px rgba(0,0,0,0.05);
+    scroll-margin-top:80px}
+  section.doc h2{font-size:26px;font-weight:700;letter-spacing:-0.03em;margin:0 0 4px}
+  .doc-meta{color:var(--dim);font-size:13px;margin-bottom:22px}
+  section.doc h3{font-size:17px;font-weight:700;margin:26px 0 8px;letter-spacing:-0.02em}
+  section.doc p,section.doc li{font-size:15px;color:#2c2c30}
+  section.doc ul,section.doc ol{padding-left:22px;margin:8px 0}
+  section.doc li{margin:5px 0}
+  .ph{background:#fff3cd;border:1px solid #ffe08a;border-radius:5px;padding:1px 7px;font-weight:600;
+    color:#7a5b00;white-space:nowrap}
+  table.kv{width:100%;border-collapse:collapse;margin:10px 0;font-size:14.5px}
+  table.kv td{border:1px solid var(--line);padding:9px 12px;vertical-align:top}
+  table.kv td:first-child{background:var(--grey);font-weight:600;width:38%}
+  hr{border:none;border-top:1px solid var(--line);margin:30px 0}
+  footer{text-align:center;color:var(--dim);font-size:13px;margin-top:30px}
+  @media(max-width:560px){section.doc{padding:24px 20px}h1{font-size:27px}}
+  @media print{.navbar,.disclaimer{display:none}section.doc{box-shadow:none;border:none;page-break-after:always}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="logo">
+    <svg viewBox="0 0 40 40" width="44" height="44"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0a84ff"/><stop offset="1" stop-color="#0060df"/></linearGradient></defs><rect x="2" y="2" width="36" height="36" rx="11" fill="url(#g)"/><path d="M13 28 V12 L27 28 V12" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <span class="name">Strix</span>
+  </div>
+  <h1>Rechtstexte für Nexa</h1>
+  <p class="lead">Vorlagen für Impressum, Datenschutz, AGB und Auftragsverarbeitung. Gelb markierte <span class="ph">[Platzhalter]</span> ausfüllen.</p>
+</header>
+
+<nav class="navbar"><div class="navinner">
+  <a href="#impressum">① Impressum</a>
+  <a href="#datenschutz">② Datenschutz</a>
+  <a href="#agb">③ AGB</a>
+  <a href="#avv">④ AVV / DPA</a>
+</div></nav>
+
+<div class="wrap">
+
+  <div class="disclaimer">
+    <span class="i">⚠️</span>
+    <div><b>Wichtiger Hinweis:</b> Dies sind sorgfältig erstellte <b>Vorlagen</b>, keine Rechtsberatung. Bitte fülle alle <span class="ph">[Platzhalter]</span> aus und lass die Texte — besonders AGB und AVV — vor dem Verkauf einmal anwaltlich prüfen. Stand der Vorlage: Schweizer revDSG + EU-DSGVO, B2B-SaaS.</div>
+  </div>
+
+  <!-- ══════════ IMPRESSUM ══════════ -->
+  <section class="doc" id="impressum">
+    <h2>Impressum</h2>
+    <div class="doc-meta">Anbieterkennzeichnung gemäss Art. 3 Abs. 1 lit. s UWG (CH) / § 5 DDG (DE)</div>
+
+    <h3>Anbieter</h3>
+    <table class="kv">
+      <tr><td>Firma</td><td><span class="ph">[Strix GmbH / Strix — Rechtsform]</span></td></tr>
+      <tr><td>Inhaber / vertretungsberechtigt</td><td><span class="ph">[Vor- und Nachname]</span></td></tr>
+      <tr><td>Adresse</td><td><span class="ph">[Strasse Nr.]</span>, <span class="ph">[PLZ Ort]</span>, <span class="ph">[Land]</span></td></tr>
+      <tr><td>E-Mail</td><td><span class="ph">[kontakt@strix.ch]</span></td></tr>
+      <tr><td>Telefon</td><td><span class="ph">[+41 …]</span></td></tr>
+      <tr><td>Website</td><td><span class="ph">[www.strix.ch]</span></td></tr>
+      <tr><td>UID / Handelsregister</td><td><span class="ph">[CHE-123.456.789]</span> (falls eingetragen)</td></tr>
+      <tr><td>MWST-Nummer</td><td><span class="ph">[CHE-123.456.789 MWST]</span> (falls MWST-pflichtig)</td></tr>
+    </table>
+
+    <h3>Haftungsausschluss</h3>
+    <p>Die Inhalte dieser Website und der Software „Nexa" wurden mit grösstmöglicher Sorgfalt erstellt. Für die Richtigkeit, Vollständigkeit und Aktualität der Inhalte wird keine Gewähr übernommen. Für externe Links wird keine Haftung übernommen; für deren Inhalte sind ausschliesslich die jeweiligen Betreiber verantwortlich.</p>
+
+    <h3>Urheberrecht</h3>
+    <p>„Nexa" und „Strix" sowie alle Inhalte, Texte, Grafiken und die Software sind urheberrechtlich geschützt und Eigentum von <span class="ph">[Strix GmbH]</span>. Jede Verwendung ausserhalb der vertraglich eingeräumten Nutzungsrechte bedarf der schriftlichen Zustimmung.</p>
+  </section>
+
+  <!-- ══════════ DATENSCHUTZ ══════════ -->
+  <section class="doc" id="datenschutz">
+    <h2>Datenschutzerklärung</h2>
+    <div class="doc-meta">Gemäss revidiertem Schweizer Datenschutzgesetz (revDSG) und EU-DSGVO · Stand <span class="ph">[Datum]</span></div>
+
+    <h3>1. Verantwortliche Stelle</h3>
+    <p><span class="ph">[Strix GmbH]</span>, <span class="ph">[Adresse]</span>, E-Mail <span class="ph">[datenschutz@strix.ch]</span>. Bei Fragen zum Datenschutz wende dich an die vorstehende Adresse.</p>
+
+    <h3>2. Welche Daten wir bearbeiten</h3>
+    <ul>
+      <li><b>Konto-/Login-Daten:</b> E-Mail-Adresse, verschlüsseltes Passwort (Authentifizierung über Supabase).</li>
+      <li><b>CRM-Inhaltsdaten:</b> die von dir bzw. deinen Mitarbeitenden erfassten Kontakt-, Aktivitäts- und Pipeline-Daten.</li>
+      <li><b>Technische Daten:</b> Zeitstempel, technisch notwendige Speicherung im Browser (localStorage), Server-/Zugriffsprotokolle der eingesetzten Dienstleister.</li>
+    </ul>
+
+    <h3>3. Zwecke und Rechtsgrundlagen</h3>
+    <p>Wir bearbeiten die Daten zur Bereitstellung und zum Betrieb der Software (Vertragserfüllung), zur Sicherstellung der Sicherheit sowie zur Erfüllung gesetzlicher Pflichten. Rechtsgrundlagen sind die Vertragserfüllung, dein Einverständnis sowie unsere berechtigten Interessen (Art. 6 DSGVO; revDSG).</p>
+
+    <h3>4. Auftragsbearbeiter / Hosting</h3>
+    <p>Zur Erbringung der Leistung setzen wir sorgfältig ausgewählte Dienstleister ein:</p>
+    <table class="kv">
+      <tr><td>Datenbank &amp; Authentifizierung</td><td>Supabase — Speicherort <b>EU (Frankfurt)</b></td></tr>
+      <tr><td>Hosting der Anwendung</td><td>Netlify <span class="ph">[ggf. weiterer Anbieter]</span></td></tr>
+      <tr><td>KI-Funktionen (optional)</td><td><span class="ph">[Anthropic / OpenAI — falls genutzt]</span></td></tr>
+    </table>
+    <p>Mit diesen Anbietern bestehen Auftragsverarbeitungsverträge. Eine Bekanntgabe ins Ausland erfolgt nur an Länder mit angemessenem Datenschutz bzw. auf Basis geeigneter Garantien (z. B. Standardvertragsklauseln).</p>
+
+    <h3>5. Aufbewahrung</h3>
+    <p>Wir bewahren Personendaten nur so lange auf, wie es für die genannten Zwecke erforderlich ist oder gesetzliche Aufbewahrungsfristen es verlangen. Danach werden die Daten gelöscht oder anonymisiert.</p>
+
+    <h3>6. Deine Rechte</h3>
+    <p>Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Bearbeitung, Datenübertragbarkeit und Widerspruch. Wende dich dazu an <span class="ph">[datenschutz@strix.ch]</span>. Zudem steht dir ein Beschwerderecht bei der zuständigen Aufsichtsbehörde zu (CH: EDÖB; EU: jeweilige Datenschutzbehörde).</p>
+
+    <h3>7. Cookies / lokale Speicherung</h3>
+    <p>Nexa verwendet ausschliesslich technisch notwendige lokale Speicherung (localStorage) zur Funktion der Anwendung — kein Tracking, keine Werbe-Cookies. Es ist daher kein Cookie-Banner erforderlich, solange keine Analyse- oder Marketing-Dienste eingebunden werden.</p>
+
+    <h3>8. Datensicherheit</h3>
+    <p>Die Übertragung erfolgt verschlüsselt (TLS/HTTPS). Der Zugriff auf Daten ist durch Login und Zugriffsregeln (Row-Level-Security) geschützt. Wir treffen angemessene technische und organisatorische Massnahmen zum Schutz vor unbefugtem Zugriff, Verlust und Missbrauch.</p>
+  </section>
+
+  <!-- ══════════ AGB ══════════ -->
+  <section class="doc" id="agb">
+    <h2>Allgemeine Geschäftsbedingungen (AGB)</h2>
+    <div class="doc-meta">für die Nutzung der Software „Nexa" von <span class="ph">[Strix GmbH]</span> · Stand <span class="ph">[Datum]</span></div>
+
+    <h3>1. Geltungsbereich</h3>
+    <p>Diese AGB regeln die Nutzung der Software-as-a-Service-Lösung „Nexa" (nachfolgend „Software"), die von <span class="ph">[Strix GmbH]</span> („Anbieter") bereitgestellt wird, durch den Kunden. Abweichende Bedingungen des Kunden gelten nur bei ausdrücklicher schriftlicher Zustimmung.</p>
+
+    <h3>2. Leistungsgegenstand</h3>
+    <p>Der Anbieter stellt dem Kunden die Software zur Nutzung über das Internet zur Verfügung. Funktionsumfang und Preise ergeben sich aus dem jeweiligen Angebot / der gewählten Lizenz. Der Anbieter ist berechtigt, die Software weiterzuentwickeln und zu verbessern.</p>
+
+    <h3>3. Vertragsschluss &amp; Konten</h3>
+    <p>Der Vertrag kommt mit Registrierung bzw. Bestellbestätigung zustande. Der Kunde ist für die Vertraulichkeit seiner Zugangsdaten sowie die Handlungen seiner Nutzer verantwortlich.</p>
+
+    <h3>4. Preise und Zahlung</h3>
+    <p>Es gelten die im Angebot genannten Preise <span class="ph">[zzgl. MWST]</span>. Die Abrechnung erfolgt <span class="ph">[monatlich / jährlich]</span> im Voraus. Bei Zahlungsverzug kann der Zugang nach Mahnung gesperrt werden.</p>
+
+    <h3>5. Verfügbarkeit</h3>
+    <p>Der Anbieter bemüht sich um eine hohe Verfügbarkeit, schuldet jedoch keine ununterbrochene Verfügbarkeit. Wartungsfenster und Störungen bei Drittanbietern (Hosting, Datenbank) sind ausgenommen. <span class="ph">[Optional: konkrete SLA / Verfügbarkeit %]</span></p>
+
+    <h3>6. Pflichten des Kunden</h3>
+    <ul>
+      <li>rechtmässige Nutzung der Software, keine missbräuchliche oder gesetzeswidrige Verwendung;</li>
+      <li>Verantwortung für die Rechtmässigkeit der eingegebenen Daten, insb. von Personendaten Dritter;</li>
+      <li>Erstellung eigener Datensicherungen im Rahmen der Exportfunktionen.</li>
+    </ul>
+
+    <h3>7. Datenschutz &amp; Auftragsbearbeitung</h3>
+    <p>Soweit der Anbieter im Auftrag des Kunden Personendaten bearbeitet, gilt ergänzend der Auftragsverarbeitungsvertrag (Abschnitt ④). Im Übrigen gilt die Datenschutzerklärung.</p>
+
+    <h3>8. Haftung</h3>
+    <p>Der Anbieter haftet unbeschränkt nur für Vorsatz und grobe Fahrlässigkeit. Bei leichter Fahrlässigkeit haftet er nur für die Verletzung wesentlicher Vertragspflichten und begrenzt auf den vertragstypischen, vorhersehbaren Schaden. Die Haftung für Datenverlust ist auf den Aufwand beschränkt, der bei ordnungsgemässer Datensicherung entstanden wäre. <span class="ph">[Optional: Haftungshöchstbetrag, z. B. Jahresentgelt]</span></p>
+
+    <h3>9. Laufzeit und Kündigung</h3>
+    <p>Der Vertrag läuft <span class="ph">[unbefristet / Laufzeit]</span> und kann mit einer Frist von <span class="ph">[z. B. 30 Tagen zum Monatsende]</span> gekündigt werden. Nach Vertragsende werden die Kundendaten gemäss AVV gelöscht; ein Export ist vorab möglich.</p>
+
+    <h3>10. Schlussbestimmungen</h3>
+    <p>Es gilt <span class="ph">[Schweizer Recht]</span> unter Ausschluss des UN-Kaufrechts. Gerichtsstand ist <span class="ph">[Ort]</span>. Sollten einzelne Bestimmungen unwirksam sein, bleibt der übrige Vertrag wirksam.</p>
+  </section>
+
+  <!-- ══════════ AVV ══════════ -->
+  <section class="doc" id="avv">
+    <h2>Auftragsverarbeitungsvertrag (AVV / DPA)</h2>
+    <div class="doc-meta">zwischen Kunde („Verantwortlicher") und <span class="ph">[Strix GmbH]</span> („Auftragsbearbeiter") · Art. 9 revDSG / Art. 28 DSGVO</div>
+
+    <h3>1. Gegenstand</h3>
+    <p>Der Auftragsbearbeiter bearbeitet Personendaten ausschliesslich im Auftrag und nach Weisung des Verantwortlichen im Rahmen der Nutzung der Software „Nexa".</p>
+
+    <h3>2. Art, Zweck, Dauer und betroffene Personen</h3>
+    <table class="kv">
+      <tr><td>Art der Bearbeitung</td><td>Speichern, Ordnen, Abfragen, Auswerten, Löschen im CRM</td></tr>
+      <tr><td>Zweck</td><td>Bereitstellung der CRM-/Vertriebsfunktionen</td></tr>
+      <tr><td>Datenkategorien</td><td>Kontakt-, Kommunikations-, Vertriebs-/Pipeline-Daten</td></tr>
+      <tr><td>Betroffene Personen</td><td>Kunden, Interessenten und Ansprechpartner des Verantwortlichen</td></tr>
+      <tr><td>Dauer</td><td>für die Vertragslaufzeit</td></tr>
+    </table>
+
+    <h3>3. Pflichten des Auftragsbearbeiters</h3>
+    <ul>
+      <li>Bearbeitung nur gemäss dokumentierter Weisung des Verantwortlichen;</li>
+      <li>Verpflichtung der mit der Bearbeitung betrauten Personen zur Vertraulichkeit;</li>
+      <li>Umsetzung angemessener technischer und organisatorischer Massnahmen (Abschnitt 4);</li>
+      <li>Unterstützung des Verantwortlichen bei Betroffenenanfragen und Meldepflichten;</li>
+      <li>unverzügliche Meldung von Datenschutzverletzungen.</li>
+    </ul>
+
+    <h3>4. Technische und organisatorische Massnahmen (TOM)</h3>
+    <ul>
+      <li>Verschlüsselung der Übertragung (TLS/HTTPS);</li>
+      <li>Zugriffsschutz durch Authentifizierung und Row-Level-Security;</li>
+      <li>Datenhaltung in der EU (Frankfurt);</li>
+      <li>regelmässige Backups durch den Datenbank-Dienstleister;</li>
+      <li>Zugriff nur für berechtigte Personen.</li>
+    </ul>
+
+    <h3>5. Unterauftragsbearbeiter</h3>
+    <p>Der Verantwortliche genehmigt den Einsatz folgender Unterauftragsbearbeiter:</p>
+    <table class="kv">
+      <tr><td>Supabase</td><td>Datenbank &amp; Authentifizierung (EU/Frankfurt)</td></tr>
+      <tr><td>Netlify</td><td>Hosting der Anwendung</td></tr>
+      <tr><td><span class="ph">[ggf. KI-Anbieter]</span></td><td><span class="ph">[falls KI-Funktionen genutzt werden]</span></td></tr>
+    </table>
+    <p>Der Auftragsbearbeiter informiert über beabsichtigte Änderungen; der Verantwortliche kann begründet widersprechen.</p>
+
+    <h3>6. Betroffenenrechte, Löschung &amp; Rückgabe</h3>
+    <p>Der Auftragsbearbeiter unterstützt den Verantwortlichen bei der Wahrnehmung der Betroffenenrechte. Nach Vertragsende werden die Daten nach Wahl des Verantwortlichen zurückgegeben oder gelöscht, soweit keine gesetzliche Aufbewahrungspflicht entgegensteht.</p>
+
+    <h3>7. Nachweise &amp; Audit</h3>
+    <p>Der Auftragsbearbeiter stellt dem Verantwortlichen die zur Einhaltung erforderlichen Informationen zur Verfügung und ermöglicht angemessene Überprüfungen.</p>
+
+    <hr>
+    <p style="font-size:14px;color:var(--mute)">Ort / Datum: <span class="ph">[__________]</span> &nbsp;·&nbsp; Verantwortlicher: <span class="ph">[__________]</span> &nbsp;·&nbsp; Auftragsbearbeiter: <span class="ph">[Strix GmbH]</span></p>
+  </section>
+
+  <footer>Strix · Rechtstext-Vorlagen für Nexa — bitte vor Verwendung ausfüllen und anwaltlich prüfen lassen.</footer>
+</div>
+</body>
+</html>
