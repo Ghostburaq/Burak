@@ -1958,7 +1958,11 @@ if not PREOP:
 
     wsm.cell(4, 1, "Woche nach OP").font = F_BOLD
     wsm.cell(4, 1).alignment = L
-    c = wsm.cell(4, 2, 1)
+    # Rechnet sich aus dem OP-Datum, bleibt aber überschreibbar: wer eine
+    # Phase länger fährt, trägt die Woche einfach von Hand ein.
+    c = wsm.cell(4, 2,
+                 "=MAX(1,ROUNDDOWN((TODAY()-DATE(%d,%d,%d))/7,0)+1)"
+                 % (OP_DATUM.year, OP_DATUM.month, OP_DATUM.day))
     c.font = Font(name=FONT, size=14, bold=True, color=NAVY)
     c.fill, c.alignment, c.border = FILL_INPUT, C, B_ALL
     c.number_format = NF_INT
@@ -1973,7 +1977,7 @@ if not PREOP:
     wsm.merge_cells(start_row=4, start_column=4, end_row=4, end_column=7)
     c = wsm.cell(4, 4,
                  ("=IF({w}=\"\",\"\",IF({w}<=2,\"Alles im Sitzen, Arm in der "
-                  "Schlinge. Frühestens ab Tag 7 bis 10 und erst nach Freigabe "
+                  "Schlinge. Frühestens ab Tag 10 bis 14 und erst nach Freigabe "
                   "der Wunde.\",IF({w}<=6,\"Kein Zug und kein Stützen über den "
                   "Arm. Hebelast maximal 1 kg.\",IF({w}<=12,\"Griffbelastung "
                   "vorsichtig aufbauen, kein schweres Hängen am Arm.\","
@@ -2057,7 +2061,7 @@ if not PREOP:
 
     wsrl.cell(4, 1, "OP-Datum").font = F_BOLD
     wsrl.cell(4, 1).alignment = L
-    c = wsrl.cell(4, 2)
+    c = wsrl.cell(4, 2, OP_DATUM)
     c.fill, c.border, c.alignment = FILL_INPUT, B_ALL, C
     c.number_format, c.font = NF_DATE, F_BOLD
     OP = "$B$4"
@@ -2470,6 +2474,26 @@ for nr, (bi, block, kopie) in enumerate(blaetter):
         wst.cell(row, col).fill = FILL_TITLE
     wst.row_dimensions[row].height = 28
     row += 1
+
+    if not PREOP:
+        # Die Zielwerte hier stammen aus der Zeit vor der OP. Bis Phase 4
+        # gilt das Blatt 'Reha-Plan Beine' - der Hinweis steht auf jeder
+        # Seite, weil jede Seite einzeln ausgedruckt und mitgenommen wird.
+        wst.merge_cells(start_row=row, start_column=1, end_row=row,
+                        end_column=9)
+        c = wst.cell(row, 1,
+                     "=IF('Reha-Modus'!$B$4>16,\"\","
+                     "\"ACHTUNG - Woche \"&'Reha-Modus'!$B$4&\" nach OP: \"&"
+                     "\"die Gewichte unten stammen von VOR der Operation und \"&"
+                     "\"sind jetzt zu schwer. Bis Phase 4 gilt das Blatt \"&"
+                     "\"'Reha-Plan Beine'.\")")
+        c.font = Font(name=FONT, size=9, bold=True, color=RED)
+        c.alignment = L_IND
+        for col in range(1, 10):
+            wst.cell(row, col).fill = PatternFill("solid", fgColor="FDECEC")
+            wst.cell(row, col).border = B_ALL
+        wst.row_dimensions[row].height = 15
+        row += 1
 
     # Kopffelder zum Ausfüllen: Label darüber, Linie darunter
     felder = [("Datum", 1, 2), ("Einheit Nr.", 3, 1), ("Körpergewicht", 4, 1),
@@ -2903,6 +2927,65 @@ for col in range(1, 7):
     wsp.cell(r, col).border = B_ALL
 wsp.row_dimensions[r].height = 28
 r += 2
+
+# Statuszeile: rechnet aus dem OP-Datum, welche Phase heute gilt und was
+# konkret ansteht. So beantwortet das Blatt beim Aufschlagen die Frage
+# "was mache ich heute", ohne dass jemand Wochen zählen muss.
+OPD_R = "DATE(%d,%d,%d)" % (OP_DATUM.year, OP_DATUM.month, OP_DATUM.day)
+TAGE = "(TODAY()-%s)" % OPD_R
+WO = "MAX(1,ROUNDDOWN(%s/7,0)+1)" % TAGE
+abschnitt(wsp, r, 1, 6, "Wo wir heute stehen")
+r += 1
+for lab, formel, nf in (
+        ("OP-Datum", "=%s" % OPD_R, NF_DATE),
+        ("Tage nach OP", "=%s" % TAGE, NF_INT),
+        ("Woche nach OP", "=%s" % WO, NF_INT)):
+    wsp.cell(r, 1, lab).font = F_BOLD
+    wsp.cell(r, 1).alignment = L
+    c = wsp.cell(r, 2, formel)
+    c.font = Font(name=FONT, size=12, bold=True, color=NAVY)
+    c.fill, c.alignment, c.number_format, c.border = FILL_CALC, C, nf, B_ALL
+    wsp.cell(r, 1).border = B_ALL
+    wsp.merge_cells(start_row=r, start_column=3, end_row=r, end_column=6)
+    for col in range(3, 7):
+        wsp.cell(r, col).border = B_ALL
+    r += 1
+
+wsp.cell(r - 3, 3,
+         "=\"Aktive Phase: \"&IF(%s<=6,\"1 - Schutz\",IF(%s<=12,"
+         "\"2 - Beweglichkeit\",IF(%s<=16,\"3 - erste Last\","
+         "\"4 - zurück zum normalen Plan\")))" % (WO, WO, WO))
+wsp.cell(r - 3, 3).font = Font(name=FONT, size=12, bold=True, color="FFFFFF")
+wsp.cell(r - 3, 3).fill = FILL_SUB
+wsp.cell(r - 3, 3).alignment = L_IND
+for col in range(3, 7):
+    wsp.cell(r - 3, col).fill = FILL_SUB
+
+wsp.cell(r - 2, 3,
+         "=IF(%s<8,\"Noch kein Beintraining. Gehen ab Tag 1, Gilchrist "
+         "durchgehend, Wunde heilen lassen.\",IF(%s<10,\"Erste Einheit "
+         "steht an, sobald die Wunde freigegeben ist - dann Phase 1.\","
+         "IF(%s<=6,\"Phase 1 läuft: zwei Einheiten je Woche, die vier "
+         "sitzenden Maschinen unten.\",IF(%s<=12,\"Phase 2: Beinpresse und "
+         "Hip & Glute sind dazugekommen.\",IF(%s<=16,\"Phase 3: freie "
+         "Gewichte sind zurück.\",\"Phase 4: ab jetzt wieder mit dem Blatt "
+         "'Trainingsblatt' arbeiten.\")))))" % (TAGE, TAGE, WO, WO, WO))
+wsp.cell(r - 2, 3).font = F_BODY
+wsp.cell(r - 2, 3).alignment = LW
+
+wsp.cell(r - 1, 3,
+         "=\"Nächster Schritt: \"&IF(%s<=6,\"ab Woche 7 kommen Beinpresse "
+         "eng und breit, Hip & Glute und seitliche Kickbacks dazu - erst "
+         "nach ärztlicher Freigabe zum Ablegen der Schlinge.\",IF(%s<=12,"
+         "\"ab Woche 13 kommen Reverse V-Squat, Hip Thrust und Split Squat "
+         "zurück.\",IF(%s<=16,\"ab Monat 4 kommt das Rumänische Kreuzheben "
+         "zurück, danach wieder Zielbereich 5-6.\",\"keiner mehr - der "
+         "Reha-Teil ist durch.\")))" % (WO, WO, WO))
+wsp.cell(r - 1, 3).font = F_BODY
+wsp.cell(r - 1, 3).alignment = LW
+wsp.row_dimensions[r - 2].height = 26
+wsp.row_dimensions[r - 1].height = 26
+r += 1
 
 for titel, sub, zeilen in REHA_PHASEN:
     abschnitt(wsp, r, 1, 6, titel)

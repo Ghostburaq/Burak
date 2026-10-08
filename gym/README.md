@@ -13,13 +13,19 @@ Beide entstehen aus demselben Generator und sind in `Log`, `Einheiten`,
 `Auswertung`, `Progression`, `Rekorde`, `Trainingsblatt` und `Übungen`
 identisch aufgebaut.
 
-## Übergabe am OP-Tag
+## Nach der OP
 
-Zeilen aus `Log` und `Einheiten` aus der Vor-OP-Fassung kopieren und in der
-Reha-Fassung an derselben Stelle einfügen. Spaltenaufbau und Zeilennummern
-stimmen überein, Auswertung, Progression, Rekorde und Dashboard rechnen
-sofort weiter. Danach im Blatt `Reha-Modus` die aktuelle Woche nach OP
-eintragen und im `Reha-Log` das OP-Datum.
+Die Operation war am **30.09.2026**. Ab jetzt gilt `GymLogbuch_Beine.xlsx`,
+die Vor-OP-Fassung ist Archiv.
+
+Nichts zu kopieren: beide Mappen entstehen aus demselben `daten.py`, die
+Reha-Fassung enthält die vollständige Historie bis Einheit 17 bereits. Auch
+das OP-Datum und die Woche sind gesetzt — `Reha-Modus!B4` rechnet die Woche
+aus dem OP-Datum und bleibt überschreibbar, falls eine Phase länger läuft.
+
+Arbeitsblatt in der Reha-Zeit ist `Reha-Plan Beine`, nicht `Trainingsblatt`.
+Das Trainingsblatt trägt bis Woche 16 einen roten Hinweis auf jeder Seite,
+weil seine Zielwerte aus der Zeit vor der OP stammen.
 
 > Die Reha-Blätter sind eine Gedächtnisstütze für den Alltag, keine ärztliche
 > Anweisung. Das schriftliche Nachbehandlungsschema des Operateurs und die
