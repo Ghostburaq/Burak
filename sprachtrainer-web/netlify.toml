@@ -1,0 +1,8 @@
+# Für Deploy über GitHub: in Netlify als Base directory "sprachtrainer-web" setzen.
+# Für Drag-and-drop braucht es diese Datei nicht, dort reicht sprachtrainer-netlify.zip.
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"

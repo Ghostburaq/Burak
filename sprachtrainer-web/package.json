@@ -1,0 +1,15 @@
+{
+  "name": "sprachtrainer-web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "zip": "node build.mjs && cd dist && rm -f ../sprachtrainer-netlify.zip && zip -qr ../sprachtrainer-netlify.zip ."
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "0.133.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.10"
+  }
+}

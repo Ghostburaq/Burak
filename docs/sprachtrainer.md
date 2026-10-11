@@ -1,4 +1,4 @@
-# Sprachtrainer für Claude Code (EN / FR / ES)
+# Sprachtrainer für Claude Code (EN / FR / ES / ZH)
 
 ## Installation
 
@@ -13,7 +13,9 @@ Fortschritt liegt unter `sprachen/` im Repo und wird nach jeder Session committe
 /fr plan
 ```
 
-Gleiches für `/en` und `/es`.
+Gleiches für `/en`, `/es` und `/zh` (Chinesisch, Mandarin mit Kurzzeichen und Pinyin).
+
+Web-Version für Netlify mit Vorlesen und Diktat: siehe `sprachtrainer-web/README.md`.
 
 ## Täglich
 
@@ -23,6 +25,7 @@ Gleiches für `/en` und `/es`.
 /fr gespraech preis-einwand
 /en wortschatz lastbanktest im rechenzentrum
 /es grammatik ser estar
+/zh wortschatz werksbesuch
 /fr immersion kundentermin lausanne
 /en schreiben follow-up nach messe
 /fr shadowing
