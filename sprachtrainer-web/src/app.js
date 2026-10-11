@@ -11,6 +11,9 @@ let state = load();
 let lang = state.lastLang in LANGS ? state.lastLang : "fr";
 let busy = false;
 let recognizer = null;
+let currentStream = null;
+let installEvt = null;
+const isAbort = (e) => e?.name === "APIUserAbortError" || (Anthropic.APIUserAbortError && e instanceof Anthropic.APIUserAbortError);
 
 function persist() {
   if (!save(state)) toast("Speichern im Browser fehlgeschlagen. Sicherung exportieren!");
@@ -54,6 +57,7 @@ function baseParams() {
 async function streamCall(params, onText) {
   const run = async () => {
     const stream = client().beta.messages.stream({ ...baseParams(), ...params });
+    currentStream = stream;
     if (onText) stream.on("text", (_delta, snapshot) => onText(snapshot));
     return stream.finalMessage();
   };
@@ -103,13 +107,14 @@ async function sendTurn() {
   renderChat();
   const live = addBubble("assistant", "");
   live.classList.add("pending");
+  let partial = "";
   try {
     const msg = await streamCall(
       {
         system: [{ type: "text", text: s.system, cache_control: { type: "ephemeral" } }],
         messages: s.messages,
       },
-      (snap) => { live.querySelector(".body").innerHTML = md(snap); scrollChat(); },
+      (snap) => { partial = snap; live.querySelector(".body").innerHTML = md(snap); scrollChat(); },
     );
     s.messages.push({ role: "assistant", content: msg.content });
     let text = textOf(msg.content);
@@ -119,18 +124,25 @@ async function sendTurn() {
     persist();
     if (state.settings.autoRead) speak(plain(text), s.lang, state.settings.rate);
   } catch (e) {
-    // Fehlgeschlagene User-Nachricht zurücknehmen, damit die Rollen sauber abwechseln.
-    if (s.messages.at(-1)?.role === "user" && s.messages.length > 1) {
-      const lost = s.messages.pop();
-      s.view.pop();
-      $("#input").value = typeof lost.content === "string" ? lost.content : "";
-    } else if (s.messages.length === 1) {
-      state.session = null;
+    if (isAbort(e) && partial.trim()) {
+      // Abgebrochene Antwort behalten, damit das Gespräch nahtlos weitergeht.
+      s.messages.push({ role: "assistant", content: [{ type: "text", text: partial }] });
+      s.view.push({ role: "assistant", text: `${partial}\n\n_(gestoppt)_` });
+    } else {
+      // Fehlgeschlagene User-Nachricht zurücknehmen, damit die Rollen sauber abwechseln.
+      if (s.messages.at(-1)?.role === "user" && s.messages.length > 1) {
+        const lost = s.messages.pop();
+        s.view.pop();
+        $("#input").value = typeof lost.content === "string" ? lost.content : "";
+      } else if (s.messages.length === 1) {
+        state.session = null;
+      }
+      toast(isAbort(e) ? "Abgebrochen." : errorText(e));
     }
     persist();
-    toast(errorText(e));
   } finally {
     busy = false;
+    currentStream = null;
     render();
   }
 }
@@ -237,9 +249,31 @@ function renderHome() {
   $("#modes").innerHTML = modes
     .map(([m, label, hint]) => `<button class="mode${m === main ? " primary" : ""}" data-mode="${m}"><b>${label}</b><span>${hint}</span></button>`)
     .join("");
+  renderBanner();
   $("#topic-row").hidden = !p;
   if (p && !L.plan) $("#hint").innerHTML = `Noch kein Plan. Tipp: zuerst <b>90-Tage-Plan</b>.`;
   else $("#hint").textContent = "";
+}
+
+function daysSince(dateStr) {
+  const d = parseDate(dateStr);
+  return d ? Math.floor((Date.now() - d.getTime()) / 864e5) : null;
+}
+
+function renderBanner() {
+  const b = $("#banner");
+  const hasData = Object.values(state.langs).some((L) => L.profil || L.wortschatz.length);
+  const days = daysSince(state.lastBackup);
+  if (!hasData || (days !== null && days < 7)) { b.hidden = true; return; }
+  b.hidden = false;
+  b.innerHTML = `<span>${days === null ? "Noch keine Sicherung." : `Letzte Sicherung vor ${days} Tagen.`} Der Fortschritt liegt nur in diesem Browser.</span><button id="banner-backup">Jetzt sichern</button>`;
+}
+
+function doBackup() {
+  download(`sprachtrainer_sicherung_${today()}.json`, exportBackup(state), "application/json");
+  state.lastBackup = today();
+  persist();
+  if (!state.session) renderBanner();
 }
 
 function bubbleHtml(role, text) {
@@ -264,7 +298,8 @@ function renderChat() {
   $("#chat-title").textContent = `${L.name} · ${modeLabel}${s.topic ? " · " + s.topic : ""}`;
   $("#log").innerHTML = "";
   for (const v of s.view) addBubble(v.role, v.text);
-  $("#send").disabled = busy;
+  $("#send").hidden = busy;
+  $("#stop").hidden = !busy;
   $("#end").disabled = busy;
   $("#mic").hidden = !canListen;
   $("#status-line").textContent = busy ? "Trainer schreibt …" : "";
@@ -308,6 +343,8 @@ function openSettings() {
   $("#set-effort").value = s.effort;
   $("#set-rate").value = s.rate;
   $("#set-auto").checked = s.autoRead;
+  updateInstallUi();
+  updatePersistUi();
   $("#settings").showModal();
 }
 
@@ -316,7 +353,8 @@ function openSettings() {
 document.addEventListener("click", (e) => {
   const t = e.target.closest("button");
   if (!t) return;
-  if (t.classList.contains("lang-tab")) { lang = t.dataset.lang; state.lastLang = lang; persist(); render(); }
+  if (t.id === "banner-backup") doBackup();
+  else if (t.classList.contains("lang-tab")) { lang = t.dataset.lang; state.lastLang = lang; persist(); render(); }
   else if (t.dataset.mode) startSession(t.dataset.mode, $("#topic").value.trim());
   else if (t.classList.contains("say")) speak(plain(t.closest(".msg").dataset.text), state.session?.lang || lang, state.settings.rate);
   else if (t.dataset.anki) {
@@ -351,7 +389,15 @@ $("#settings-form").addEventListener("submit", () => {
   persist();
   toast("Einstellungen gespeichert.");
 });
-$("#backup-export").addEventListener("click", () => download(`sprachtrainer_sicherung_${today()}.json`, exportBackup(state), "application/json"));
+$("#backup-export").addEventListener("click", doBackup);
+$("#stop").addEventListener("click", () => currentStream?.abort());
+$("#install").addEventListener("click", async () => {
+  if (!installEvt) return;
+  installEvt.prompt();
+  await installEvt.userChoice.catch(() => {});
+  installEvt = null;
+  updateInstallUi();
+});
 $("#backup-import").addEventListener("change", async (e) => {
   const f = e.target.files[0];
   if (!f) return;
@@ -368,6 +414,43 @@ $("#backup-import").addEventListener("change", async (e) => {
   }
 });
 window.addEventListener("pagehide", stopSpeaking);
+
+// ---------- App-Installation, Speicherschutz, Offline ----------
+
+const standalone = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
+window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); installEvt = e; updateInstallUi(); });
+window.addEventListener("appinstalled", () => { installEvt = null; updateInstallUi(); toast("App installiert."); });
+
+function updateInstallUi() {
+  const btn = $("#install");
+  const txt = $("#install-text");
+  btn.hidden = !installEvt;
+  if (standalone()) txt.textContent = "Du nutzt gerade die installierte App.";
+  else if (installEvt) txt.textContent = "Die App läuft dann in einem eigenen Fenster, hat ein Icon und startet auch offline (Profil, Status, Sicherung).";
+  else if (isIos) txt.textContent = "iPhone und iPad: in Safari auf Teilen tippen, dann «Zum Home-Bildschirm».";
+  else txt.textContent = "Installieren: in Chrome oder Edge das Installations-Symbol in der Adresszeile nutzen, auf Android im Menü «App installieren».";
+}
+
+async function updatePersistUi() {
+  const el = $("#persist-text");
+  try {
+    let ok = await navigator.storage?.persisted?.();
+    if (!ok) ok = await navigator.storage?.persist?.();
+    el.textContent = ok ? "Speicher ist vom Browser als dauerhaft markiert." : "Der Browser kann den Speicher bei Platzmangel löschen. Sicherung exportieren.";
+  } catch {
+    el.textContent = "";
+  }
+}
+
+if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+}
+
+// Deep-Link aus den App-Verknüpfungen: ?lang=zh
+const qLang = new URLSearchParams(location.search).get("lang");
+if (qLang && qLang in LANGS) { lang = qLang; state.lastLang = lang; }
 
 $("#tabs").innerHTML = Object.entries(LANGS).map(([k, l]) => `<button class="lang-tab" role="tab" data-lang="${k}" title="${l.name}">${l.short}</button>`).join("");
 render();

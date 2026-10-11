@@ -5,9 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="robots" content="noindex, nofollow">
   <meta name="theme-color" content="#1f4e5f">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Sprachtrainer">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <title>Sprachtrainer</title>
+  <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <link rel="stylesheet" href="style.css">
   <script type="module" src="app.js"></script>
 </head>
@@ -23,13 +28,18 @@
 
   <main>
     <section id="home">
-      <div id="profile" class="card"></div>
-      <div id="topic-row" class="topic">
-        <label for="topic">Thema oder Szenario (optional)</label>
-        <input id="topic" type="text" placeholder="z.B. preis-einwand, lastbanktest, ser estar" autocomplete="off">
+      <div id="banner" class="banner" hidden></div>
+      <div class="home-grid">
+        <aside class="home-side">
+          <div id="profile" class="card"></div>
+          <div id="topic-row" class="topic">
+            <label for="topic">Thema oder Szenario (optional)</label>
+            <input id="topic" type="text" placeholder="z.B. preis-einwand, lastbanktest, ser estar" autocomplete="off">
+          </div>
+          <p id="hint" class="muted"></p>
+        </aside>
+        <div id="modes" class="modes"></div>
       </div>
-      <p id="hint" class="muted"></p>
-      <div id="modes" class="modes"></div>
     </section>
 
     <section id="chat" hidden>
@@ -45,6 +55,7 @@
       <div class="composer">
         <button id="mic" class="icon mic" title="Diktieren" aria-label="Diktieren">🎤</button>
         <textarea id="input" rows="2" placeholder="Antwort … (Enter sendet, Shift+Enter neue Zeile, «stopp» beendet)"></textarea>
+        <button id="stop" class="ghost" hidden>Stopp</button>
         <button id="send" class="primary-btn">Senden</button>
       </div>
       <p class="muted keys">Steuerwörter: <code>hilfe</code> <code>deutsch</code> <code>langsamer</code> <code>stopp</code></p>
@@ -77,8 +88,15 @@
         <input id="set-rate" type="range" min="0.6" max="1.2" step="0.05">
       </label>
       <label class="check"><input id="set-auto" type="checkbox"> Antworten automatisch vorlesen</label>
+      <p class="muted small">Diktat: Chrome und Edge schicken die Aufnahme zur Texterkennung an Server des Browserherstellers. Für vertrauliche Inhalte nicht diktieren.</p>
+
+      <h3>App installieren</h3>
+      <p id="install-text" class="muted small"></p>
+      <div class="row-btns"><button type="button" id="install" hidden>Als App installieren</button></div>
+
       <h3>Sicherung</h3>
-      <p class="muted small">Der Fortschritt liegt im Browser. Regelmässig sichern, und zum Wechsel auf ein anderes Gerät die Sicherung dort einlesen.</p>
+      <p class="muted small">Der Fortschritt liegt in diesem Browser. Regelmässig sichern, und zum Wechsel auf ein anderes Gerät die Sicherung dort einlesen.</p>
+      <p id="persist-text" class="muted small"></p>
       <div class="row-btns">
         <button type="button" id="backup-export">Sicherung exportieren</button>
         <label class="file-btn">Sicherung einlesen<input id="backup-import" type="file" accept="application/json,.json" hidden></label>

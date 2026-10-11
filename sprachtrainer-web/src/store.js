@@ -21,6 +21,7 @@ function emptyState() {
     settings: { apiKey: "", model: "claude-opus-5-5", effort: "medium", rate: 0.95, autoRead: false, fallbacks: true },
     langs: { en: emptyLang(), fr: emptyLang(), es: emptyLang(), zh: emptyLang() },
     lastLang: "fr",
+    lastBackup: "",
     session: null,
   };
 }
