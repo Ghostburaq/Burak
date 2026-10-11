@@ -166,7 +166,7 @@ sich die Reha-Gewichte automatisch mit.
 
 | Phase | Woche | Was dazukommt | Anteil neu | Anteil laufend | Wdh |
 |---|---|---|---|---|---|
-| 1 | 2–6 | Beinstrecker, Beinbeuger, Adduktion, Waden (alle sitzend) | 60 % | — | 12–15 |
+| 1 | 2–6 | Beinpresse sitzend, Beinstrecker, Beinbeuger, Adduktion, Abduktion, Waden (alle sitzend) | 60 % | — | 12–15 |
 | 2 | 6–12 | Beinpresse eng + breit, Hip & Glute, Seitl. Kickbacks | 55 % | 75 % | 10–12 |
 | 3 | 12–16 | Reverse V-Squat, Hip Thrust, Split Squat | 50 % | 85–95 % | 8–10 |
 | 4 | ab Monat 4 | Rumänisches Kreuzheben KH | 50 % | zurück auf 5–6 | 8–10 |
@@ -183,7 +183,7 @@ Schultergürtel. Ab Phase 4 gilt wieder der normale Zielbereich 5–6 und das
 | Log | 1200 Sätze | rund 60 Einheiten |
 | Einheiten | 60 | etwa 30 Wochen bei 2 Beineinheiten |
 | Reha-Log | 240 Tage | rund 8 Monate täglich |
-| Übungen | 20 Slots | 18 belegt |
+| Übungen | 24 Slots | 20 belegt |
 
 Die `Auswertung` zeigt 16 Einheiten nebeneinander. Mit der Zahl in Zelle `B3`
 verschiebt sich das Fenster (z. B. `17` zeigt Einheit 17 bis 32) — die
@@ -231,11 +231,29 @@ steht — ab vier wird die Zeile gelb.
 
 ## Plan
 
-Sechzehn aktive Übungen in drei Blöcken, schwere Grundübung zuerst:
+Achtzehn aktive Übungen in drei Blöcken, schwere Grundübung zuerst:
 
-- **Beine vorne:** Beinpresse enger Stand · Split Squat · Beinstrecker · Adduktion
-- **Beine hinten:** Reverse V-Squat · Rumänisches Kreuzheben KH · Beinpresse breiter Stand · Hip Thrust · Hip & Glute · Beinbeuger · Seitliche Kickbacks · Waden
+- **Beine vorne:** Beinpresse enger Stand · Beinpresse sitzend · Split Squat · Beinstrecker · Adduktion
+- **Beine hinten:** Reverse V-Squat · Rumänisches Kreuzheben KH · Beinpresse breiter Stand · Hip Thrust · Hip & Glute · Beinbeuger · Abduktion · Seitliche Kickbacks · Waden
 - **Auswärts Bülach:** Squat Maschine · Hip Thrust · Beinbeuger
+
+### Zwei Maschinen, die in Phase 1 schon gehen
+
+Die **sitzende Beinpresse** (horizontal, Rücken angelehnt, Füsse nach vorne
+drücken) ist nicht dieselbe Übung wie die 45-Grad-Schlittenpresse: Ein- und
+Ausstieg auf Stuhlhöhe, Rücken liegt an, der Arm macht nichts. Damit gehört
+sie in dieselbe Kategorie wie Beinstrecker und Beinbeuger und ist ab Woche 2
+frei, während die Schlittenpresse bis Woche 6 gesperrt bleibt. Eigene Zeile,
+eigene Progression — die Gewichte der beiden sind nicht vergleichbar.
+
+Die **Abduktion** stand bisher nur als Ersatzübung im Reha-Fahrplan. Sie ist
+jetzt eine eigene Übung: sitzend wie die Adduktion, trifft den Gluteus medius
+und ersetzt damit in der Sperrzeit die seitlichen Kickbacks am Kabel, bei
+denen man sich abstützen müsste.
+
+Beide haben keine Historie. Die Startgewichte 100 bzw. 80 kg sind Schätzungen
+— die erste Einheit ist eine Eichung, danach rechnet die Progression aus
+echten Werten.
 
 ### Zweites Gym als eigener Block
 

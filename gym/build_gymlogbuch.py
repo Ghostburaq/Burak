@@ -45,7 +45,7 @@ QUELLE = "Löwin_Training_260727.pdf"
 STAND = "31.07.2026"
 
 SESSIONS = 16          # gleichzeitig angezeigte Einheiten (rollendes Fenster)
-EX_SLOTS = 20          # Übungs-Slots im Stammblatt (18 belegt)
+EX_SLOTS = 24          # Übungs-Slots im Stammblatt (20 belegt)
 SESSION_SLOTS = 60     # vorbereitete Zeilen im Blatt 'Einheiten'
 LOG_ROWS = 1200        # vorbereitete Satzzeilen im Log
 BLATT_KOPIEN = 4       # Trainingsblätter je Block auf Vorrat
@@ -76,6 +76,17 @@ UEBUNGEN = [
          notiz="Ersetzt Hackenschmidt-Kniebeuge und Lunges. Schwere "
                "Grundübung zuerst. Hände seitlich ablegen statt an den "
                "Griffen ziehen - dann bleibt die Schulter aussen vor."),
+    dict(name="Beinpresse sitzend", block="Beine vorne",
+         geraet="Beinpresse horizontal, Rücken angelehnt", von=5, bis=6,
+         saetze=3, rpe="8-9", start=100, maxlast=None, schritt=5,
+         letzter="A", anpassung=100, aktiv="ja",
+         notiz="Neu ab Woche 2 nach der OP. Nicht mit der 45-Grad-Presse "
+               "verwechseln: hier wird im Sitzen nach vorne gedrückt, der "
+               "Rücken liegt an, der Arm macht nichts. Deshalb schon in "
+               "Phase 1 frei, während die Schlittenpresse bis Woche 6 "
+               "gesperrt bleibt. Startgewicht 100 kg ist eine Schätzung - "
+               "die erste Einheit ist eine Eichung, danach rechnet die "
+               "Progression aus echten Werten."),
     dict(name="Split Squat", block="Beine vorne",
          geraet="Multipresse / Hantel", von=5, bis=6, saetze=3, rpe="8",
          start=None, maxlast=None, schritt=2.5, letzter="A", anpassung=100, aktiv="ja",
@@ -160,6 +171,16 @@ UEBUNGEN = [
          notiz="Sitzend statt liegend: Hüfte gebeugt, Ischiokrurale "
                "vorgedehnt, mehr Reiz pro Satz. Dritter Satz als "
                "Reduktionssatz."),
+    dict(name="Abduktion", block="Beine hinten", geraet="Maschine, sitzend",
+         von=5, bis=6, saetze=3, rpe="9", start=80, maxlast=None,
+         schritt=5, letzter="A", anpassung=100, aktiv="ja",
+         notiz="Neu ab Woche 2 nach der OP. Gegenstück zur Adduktion am "
+               "selben oder baugleichen Gerät, trifft den Gluteus medius - "
+               "also dieselbe Muskelgruppe wie die seitlichen Kickbacks, "
+               "aber im Sitzen und ohne Abstützen. Stand bisher nur als "
+               "Ersatzübung im Reha-Fahrplan, jetzt eine eigene Zeile mit "
+               "eigener Progression. Startgewicht 80 kg ist eine Schätzung, "
+               "erste Einheit ist eine Eichung."),
     dict(name="Seitliche Kickbacks", block="Beine hinten", geraet="Kabel",
          von=5, bis=6, saetze=3, rpe="9", start=None, maxlast=None,
          schritt=2, letzter="A", anpassung=100, aktiv="ja",
@@ -2846,13 +2867,19 @@ REHA_PHASEN = [
      "Einheiten je Woche. Ziel ist Erhalt, nicht Aufbau - die Last ist "
      "bewusst niedrig, weil der Kreislauf und der Schlaf in diesen Wochen "
      "nicht mitspielen. Ein- und Aussteigen immer über die linke Seite.",
-     [("Beinstrecker", "Maschine sitzend, Hände im Schoss",
+     [("Beinpresse sitzend", "horizontal, Rücken an, Hände im Schoss",
+       "2 × 12-15", 60, "Nicht die 45-Grad-Schlittenpresse. Erste Einheit "
+       "nach Gefühl bei RPE 7, Gewicht notieren - danach rechnet der Plan."),
+      ("Beinstrecker", "Maschine sitzend, Hände im Schoss",
        "2 × 12-15", 60, "Erste Einheit bewusst eine Stufe darunter."),
       ("Beinbeuger", "Maschine sitzend, Griffe loslassen",
        "2 × 12-15", 60, "Das Polster hält das Bein, nicht die Hand."),
       ("Adduktion", "Maschine, Arm in der Schlinge",
        "2 × 12-15", 60, "Links war im September die Zerrung - hier "
        "besonders langsam einsteigen."),
+      ("Abduktion", "Maschine sitzend, Arm in der Schlinge",
+       "2 × 12-15", 60, "Ersetzt die seitlichen Kickbacks am Kabel, bei "
+       "denen man sich abstützen müsste. Auch Eichung."),
       ("Waden", "Maschine sitzend", "2 × 15", 60,
        "Nur die sitzende Variante, kein Schulterpolster.")]),
     ("Phase 2  ·  Woche 6 bis 12  ·  Schlinge weg, Beinpresse zurück",
@@ -2869,9 +2896,12 @@ REHA_PHASEN = [
        "der Stange."),
       ("Seitliche Kickbacks", "Kabel, nur links abstützen",
        "2 × 12-15", 55, "Neu in dieser Phase."),
+      ("Beinpresse sitzend", "wie Phase 1", "3 × 10-12", 75,
+       "läuft weiter"),
       ("Beinstrecker", "wie Phase 1", "3 × 10-12", 75, "läuft weiter"),
       ("Beinbeuger", "wie Phase 1", "3 × 10-12", 75, "läuft weiter"),
       ("Adduktion", "wie Phase 1", "3 × 10-12", 75, "läuft weiter"),
+      ("Abduktion", "wie Phase 1", "3 × 10-12", 75, "läuft weiter"),
       ("Waden", "jetzt auch stehend ohne Schulterpolster", "3 × 12-15", 75,
        "läuft weiter")]),
     ("Phase 3  ·  Woche 12 bis 16  ·  freie Gewichte kommen zurück",
@@ -2890,9 +2920,12 @@ REHA_PHASEN = [
       ("Hip & Glute", "wie Phase 2", "3 × 8-10", 85, "läuft weiter"),
       ("Seitliche Kickbacks", "wie Phase 2", "3 × 10-12", 85,
        "läuft weiter"),
+      ("Beinpresse sitzend", "wie Phase 1", "3 × 8-10", 95,
+       "läuft weiter"),
       ("Beinstrecker", "wie Phase 1", "3 × 8-10", 95, "läuft weiter"),
       ("Beinbeuger", "wie Phase 1", "3 × 8-10", 95, "läuft weiter"),
       ("Adduktion", "wie Phase 1", "3 × 8-10", 95, "läuft weiter"),
+      ("Abduktion", "wie Phase 1", "3 × 8-10", 95, "läuft weiter"),
       ("Waden", "sitzend oder stehend", "3 × 10-12", 95, "läuft weiter")]),
     ("Phase 4  ·  ab Monat 4  ·  zurück zum normalen Plan",
      "Die letzte Übung kommt zurück, und der Zielbereich geht wieder auf "
@@ -2965,7 +2998,7 @@ wsp.cell(r - 2, 3,
          "=IF(%s<8,\"Noch kein Beintraining. Gehen ab Tag 1, Gilchrist "
          "durchgehend, Wunde heilen lassen.\",IF(%s<10,\"Erste Einheit "
          "steht an, sobald die Wunde freigegeben ist - dann Phase 1.\","
-         "IF(%s<=6,\"Phase 1 läuft: zwei Einheiten je Woche, die vier "
+         "IF(%s<=6,\"Phase 1 läuft: zwei Einheiten je Woche, die sechs "
          "sitzenden Maschinen unten.\",IF(%s<=12,\"Phase 2: Beinpresse und "
          "Hip & Glute sind dazugekommen.\",IF(%s<=16,\"Phase 3: freie "
          "Gewichte sind zurück.\",\"Phase 4: ab jetzt wieder mit dem Blatt "

@@ -264,6 +264,19 @@ REHA_UEBUNGEN = {
         'Sitzend ab Woche 2. Stehende Variante ohne Schulterpolster ab '
         'Woche 6, mit Schulterpolster oder in der Multipresse erst ab '
         'Woche 12.'),
+    'Beinpresse sitzend': (
+        2, 'keiner, ab Freigabe der Wunde nutzbar',
+        'Horizontale Presse im Sitzen: Rücken liegt an, Ein- und Ausstieg '
+        'auf Stuhlhöhe, der Arm macht nichts. Damit dieselbe Kategorie wie '
+        'Beinstrecker und Beinbeuger und schon in Phase 1 nutzbar - im '
+        'Gegensatz zur 45-Grad-Schlittenpresse, die bis Woche 6 gesperrt '
+        'bleibt. Hände im Schoss, nicht an den Griffen ziehen, und bei '
+        'RPE 8 stoppen statt zu pressen.'),
+    'Abduktion': (
+        2, 'keiner, ab Freigabe der Wunde nutzbar',
+        'Sitzend wie die Adduktion, Arm bleibt in der Schlinge. Ersetzt in '
+        'der Sperrzeit die seitlichen Kickbacks am Kabel, bei denen man '
+        'sich abstützen müsste.'),
     'Beinpresse eng': (
         6, 'Beinstrecker und Beinbeuger sitzend, beide ab Woche 2 frei',
         'Erst nach Ablegen der Schlinge. Ein- und Aussteigen über die linke '
@@ -280,7 +293,7 @@ REHA_UEBUNGEN = {
         'wäre die Ein- und Ausstiegsbewegung das Problem, nicht die Übung '
         'selbst.'),
     'Seitliche Kickbacks': (
-        6, 'Abduktion an der Maschine im Sitzen',
+        6, 'Abduktion an der Maschine, ab Woche 2 frei',
         'Nur mit der linken Seite abstützen. Kein Zug über den rechten '
         'Arm, auch nicht zum Ausbalancieren.'),
     'Hip Thrust': (
