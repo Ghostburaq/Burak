@@ -16,7 +16,9 @@ self.addEventListener("activate", (e) => {
 
 self.addEventListener("fetch", (e) => {
   const r = e.request;
-  if (r.method !== "GET" || new URL(r.url).origin !== location.origin) return;
+  const url = new URL(r.url);
+  if (r.method !== "GET" || url.origin !== location.origin) return;
+  if (url.pathname.endsWith("/keyblob.json")) return; // immer frisch vom Server
   e.respondWith(
     caches.open(VERSION).then(async (c) => {
       const hit = await c.match(r, { ignoreSearch: true });

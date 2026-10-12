@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="robots" content="noindex, nofollow">
+  <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#1f4e5f">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -17,110 +18,170 @@
   <script type="module" src="app.js"></script>
 </head>
 <body>
-  <header>
-    <h1>Sprachtrainer</h1>
-    <nav id="tabs" role="tablist" aria-label="Sprache"></nav>
-    <div class="head-btns">
-      <button id="open-status" class="icon" title="Status" aria-label="Status">▤</button>
-      <button id="open-settings" class="icon" title="Einstellungen" aria-label="Einstellungen">⚙</button>
-    </div>
-  </header>
+  <div id="app">
+    <header class="topbar">
+      <div class="brand"><img src="icon.svg" alt="" width="28" height="28"><span>Sprachtrainer</span></div>
+      <nav id="tabs" class="seg" role="tablist" aria-label="Sprache"></nav>
+      <div class="actions">
+        <button id="open-status" class="icon-btn" title="Status" aria-label="Status">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+        <button id="open-settings" class="icon-btn" title="Einstellungen" aria-label="Einstellungen">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="16" cy="7" r="2.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="8" cy="17" r="2.2" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+        </button>
+      </div>
+    </header>
 
-  <main>
-    <section id="home">
-      <div id="banner" class="banner" hidden></div>
-      <div class="home-grid">
-        <aside class="home-side">
-          <div id="profile" class="card"></div>
-          <div id="topic-row" class="topic">
-            <label for="topic">Thema oder Szenario (optional)</label>
-            <input id="topic" type="text" placeholder="z.B. preis-einwand, lastbanktest, ser estar" autocomplete="off">
+    <main>
+      <section id="home" class="page">
+        <div class="wrap">
+          <div id="banner" class="banner" hidden></div>
+          <div class="home-grid">
+            <aside class="home-side">
+              <div id="profile" class="card"></div>
+              <div id="topic-row" class="field" hidden>
+                <label for="topic">Thema oder Szenario (optional)</label>
+                <input id="topic" type="text" placeholder="z.B. preis-einwand, lastbanktest" autocomplete="off" enterkeyhint="done">
+              </div>
+              <p id="hint" class="hint" hidden></p>
+            </aside>
+            <div id="modes" class="modes"></div>
           </div>
-          <p id="hint" class="muted"></p>
-        </aside>
-        <div id="modes" class="modes"></div>
-      </div>
-    </section>
-
-    <section id="chat" hidden>
-      <div class="chat-head">
-        <b id="chat-title"></b>
-        <div>
-          <button id="discard" class="ghost">Verwerfen</button>
-          <button id="end" class="primary-btn">Beenden</button>
         </div>
+      </section>
+
+      <section id="chat" class="page chat" hidden>
+        <div class="chat-head">
+          <div id="chat-title" class="chat-title"></div>
+          <button id="discard" class="btn ghost">Verwerfen</button>
+          <button id="end" class="btn primary">Beenden</button>
+        </div>
+        <div id="log" class="log" aria-live="polite"></div>
+        <div class="composer-wrap">
+          <p id="status-line" class="status-line" aria-live="polite"></p>
+          <div id="chips" class="chips" aria-label="Schnellbefehle">
+            <button type="button" class="chip" data-cmd="hilfe">hilfe</button>
+            <button type="button" class="chip" data-cmd="deutsch">deutsch</button>
+            <button type="button" class="chip" data-cmd="langsamer">langsamer</button>
+            <button type="button" class="chip" data-cmd="stopp">stopp</button>
+          </div>
+          <div class="composer">
+            <button id="mic" type="button" class="icon-btn mic" title="Diktieren" aria-label="Diktieren" hidden>
+              <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            </button>
+            <textarea id="input" rows="1" placeholder="Deine Antwort …" enterkeyhint="send" autocapitalize="sentences"></textarea>
+            <button id="stop" type="button" class="btn ghost" hidden>Stopp</button>
+            <button id="send" type="button" class="btn primary">Senden</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="unlock">
+    <form id="unlock-form" class="sheet" method="dialog">
+      <div class="sheet-head"><h2>Entsperren</h2></div>
+      <div class="sheet-body">
+        <p class="note">Der API-Key ist in dieser App verschlüsselt eingebaut. Gib einmal pro Gerät das Passwort ein, danach läuft alles automatisch.</p>
+        <div class="field">
+          <label for="unlock-pass">Passwort</label>
+          <input id="unlock-pass" type="password" autocomplete="current-password" autocapitalize="characters" spellcheck="false" placeholder="Passwort eingeben">
+        </div>
+        <p id="unlock-err" class="error" role="alert"></p>
       </div>
-      <div id="log" class="log" aria-live="polite"></div>
-      <p id="status-line" class="muted status-line"></p>
-      <div class="composer">
-        <button id="mic" class="icon mic" title="Diktieren" aria-label="Diktieren">🎤</button>
-        <textarea id="input" rows="2" placeholder="Antwort … (Enter sendet, Shift+Enter neue Zeile, «stopp» beendet)"></textarea>
-        <button id="stop" class="ghost" hidden>Stopp</button>
-        <button id="send" class="primary-btn">Senden</button>
+      <div class="sheet-foot">
+        <button type="button" id="unlock-manual" class="btn ghost">Eigenen Key eintragen</button>
+        <button id="unlock-go" class="btn primary">Entsperren</button>
       </div>
-      <p class="muted keys">Steuerwörter: <code>hilfe</code> <code>deutsch</code> <code>langsamer</code> <code>stopp</code></p>
-    </section>
-  </main>
+    </form>
+  </dialog>
 
   <dialog id="settings">
-    <form id="settings-form" method="dialog">
-      <h2>Einstellungen</h2>
-      <label>Anthropic API-Key
-        <input id="set-key" type="password" autocomplete="off" placeholder="sk-ant-…">
-      </label>
-      <p class="muted small">Der Key bleibt nur in diesem Browser gespeichert und geht direkt an api.anthropic.com. Er landet nie in der Sicherungsdatei. Für diese App einen eigenen Key mit Ausgabenlimit anlegen.</p>
-      <label>Modell
-        <input id="set-model" type="text" list="models">
-        <datalist id="models">
-          <option value="claude-opus-5-5">
-          <option value="claude-sonnet-5-5">
-          <option value="claude-haiku-5-5">
-        </datalist>
-      </label>
-      <label>Denktiefe (Effort)
-        <select id="set-effort">
-          <option value="low">low: schnell, günstig</option>
-          <option value="medium">medium: Standard</option>
-          <option value="high">high: gründlich</option>
-        </select>
-      </label>
-      <label>Vorlesetempo
-        <input id="set-rate" type="range" min="0.6" max="1.2" step="0.05">
-      </label>
-      <label class="check"><input id="set-auto" type="checkbox"> Antworten automatisch vorlesen</label>
-      <p class="muted small">Diktat: Chrome und Edge schicken die Aufnahme zur Texterkennung an Server des Browserherstellers. Für vertrauliche Inhalte nicht diktieren.</p>
+    <form id="settings-form" class="sheet" method="dialog">
+      <div class="sheet-head"><h2>Einstellungen</h2></div>
+      <div class="sheet-body">
+        <section>
+          <h3>Zugang</h3>
+          <p id="key-state" class="note"></p>
+          <div class="field">
+            <label for="set-key">Eigenen Anthropic-API-Key eintragen (optional)</label>
+            <input id="set-key" type="password" autocomplete="off" spellcheck="false" placeholder="leer lassen = unverändert">
+          </div>
+          <div class="row"><button type="button" id="key-remove" class="btn ghost">Key von diesem Gerät entfernen</button></div>
+          <p class="note">Der Key bleibt nur in diesem Browser und geht ausschliesslich an api.anthropic.com. Er steht nie in der Sicherungsdatei.</p>
+        </section>
 
-      <h3>App installieren</h3>
-      <p id="install-text" class="muted small"></p>
-      <div class="row-btns"><button type="button" id="install" hidden>Als App installieren</button></div>
+        <section>
+          <h3>Trainer</h3>
+          <div class="field">
+            <label for="set-model">Modell</label>
+            <input id="set-model" type="text" list="models" autocomplete="off" spellcheck="false">
+            <datalist id="models">
+              <option value="claude-opus-5-5">
+              <option value="claude-sonnet-5-5">
+              <option value="claude-haiku-5-5">
+            </datalist>
+          </div>
+          <div class="field">
+            <label for="set-effort">Denktiefe</label>
+            <select id="set-effort">
+              <option value="low">low: schnell und günstig</option>
+              <option value="medium">medium: Standard</option>
+              <option value="high">high: gründlich</option>
+            </select>
+          </div>
+        </section>
 
-      <h3>Sicherung</h3>
-      <p class="muted small">Der Fortschritt liegt in diesem Browser. Regelmässig sichern, und zum Wechsel auf ein anderes Gerät die Sicherung dort einlesen.</p>
-      <p id="persist-text" class="muted small"></p>
-      <div class="row-btns">
-        <button type="button" id="backup-export">Sicherung exportieren</button>
-        <label class="file-btn">Sicherung einlesen<input id="backup-import" type="file" accept="application/json,.json" hidden></label>
+        <section>
+          <h3>Sprache und Ton</h3>
+          <div class="field">
+            <label for="set-rate">Vorlesetempo</label>
+            <input id="set-rate" type="range" min="0.6" max="1.2" step="0.05">
+          </div>
+          <label class="check"><input id="set-auto" type="checkbox"><span>Antworten automatisch vorlesen</span></label>
+          <p class="note">Diktat: Chrome und Edge schicken die Aufnahme zur Texterkennung an Server des Browserherstellers. Für vertrauliche Inhalte nicht diktieren.</p>
+        </section>
+
+        <section>
+          <h3>App installieren</h3>
+          <p id="install-text" class="note"></p>
+          <div class="row"><button type="button" id="install" class="btn" hidden>Als App installieren</button></div>
+        </section>
+
+        <section>
+          <h3>Sicherung</h3>
+          <p class="note">Der Fortschritt liegt in diesem Browser. Regelmässig sichern, und zum Wechsel auf ein anderes Gerät die Sicherung dort einlesen.</p>
+          <p id="persist-text" class="note"></p>
+          <div class="row">
+            <button type="button" id="backup-export" class="btn">Sicherung exportieren</button>
+            <label class="btn file-btn" for="backup-import">Sicherung einlesen</label>
+            <input id="backup-import" type="file" accept="application/json,.json" hidden>
+          </div>
+        </section>
       </div>
-      <div class="dialog-actions"><button value="ok" class="primary-btn">Speichern</button></div>
+      <div class="sheet-foot">
+        <button type="button" class="btn ghost" data-close="settings">Abbrechen</button>
+        <button class="btn primary">Speichern</button>
+      </div>
     </form>
   </dialog>
 
   <dialog id="status">
-    <form method="dialog">
-      <h2>Status</h2>
-      <div id="status-body"></div>
-      <div class="dialog-actions"><button class="primary-btn">Schliessen</button></div>
+    <form class="sheet" method="dialog">
+      <div class="sheet-head"><h2 id="status-title">Status</h2></div>
+      <div id="status-body" class="sheet-body"></div>
+      <div class="sheet-foot"><button class="btn primary">Schliessen</button></div>
     </form>
   </dialog>
 
   <dialog id="summary">
-    <form method="dialog">
-      <h2>Session gespeichert</h2>
-      <div id="summary-body"></div>
-      <div class="dialog-actions"><button class="primary-btn">OK</button></div>
+    <form class="sheet" method="dialog">
+      <div class="sheet-head"><h2>Session gespeichert</h2></div>
+      <div id="summary-body" class="sheet-body"></div>
+      <div class="sheet-foot"><button class="btn primary">OK</button></div>
     </form>
   </dialog>
 
-  <div id="toast" role="status" hidden></div>
+  <div id="toast" popover="manual" role="status" hidden></div>
 </body>
 </html>

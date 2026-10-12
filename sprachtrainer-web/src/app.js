@@ -3,6 +3,7 @@ import { LANGS, MODES, buildSystem, kickoff, wrapupPrompt, WRAPUP_SCHEMA } from 
 import { load, save, today, parseDate, applyWrapup, ankiExport, exportBackup, importBackup } from "./store.js";
 import { md, plain } from "./markdown.js";
 import { speak, stopSpeaking, listen, canSpeak, canListen } from "./speech.js";
+import { fetchBlob, decryptKey } from "./crypto.js";
 
 const $ = (sel) => document.querySelector(sel);
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
@@ -10,28 +11,38 @@ const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<
 let state = load();
 let lang = state.lastLang in LANGS ? state.lastLang : "fr";
 let busy = false;
+let busyKind = null; // "reply" | "wrapup"
 let recognizer = null;
 let currentStream = null;
 let installEvt = null;
+let keyBlob = null;
+
 const isAbort = (e) => e?.name === "APIUserAbortError" || (Anthropic.APIUserAbortError && e instanceof Anthropic.APIUserAbortError);
+const finePointer = matchMedia("(pointer: fine)").matches;
 
 function persist() {
   if (!save(state)) toast("Speichern im Browser fehlgeschlagen. Sicherung exportieren!");
 }
 
-function toast(text) {
+function toast(text, ms = 4500) {
   const t = $("#toast");
   t.textContent = text;
   t.hidden = false;
+  try { t.showPopover?.(); } catch { /* schon offen */ }
   clearTimeout(toast.t);
-  toast.t = setTimeout(() => (t.hidden = true), 4000);
+  toast.t = setTimeout(() => {
+    try { t.hidePopover?.(); } catch { /* ignorieren */ }
+    t.hidden = true;
+  }, ms);
 }
 
 function download(name, text, type = "text/plain") {
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([text], { type }));
   a.download = name;
+  document.body.appendChild(a);
   a.click();
+  a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 
@@ -76,19 +87,61 @@ async function streamCall(params, onText) {
 
 function errorText(e) {
   if (!state.settings.apiKey) return "Kein API-Key hinterlegt. Unter Einstellungen eintragen.";
-  if (e?.status === 401) return "API-Key ungültig (401). Unter Einstellungen prüfen.";
+  if (e?.status === 401) return "API-Key ungültig (401). Unter Einstellungen den Key entfernen und neu entsperren.";
+  if (e?.status === 403) return "Zugriff verweigert (403). Key oder Modell in der Anthropic-Console prüfen.";
   if (e?.status === 429) return "Rate-Limit erreicht (429). Kurz warten und nochmals senden.";
   if (e?.status === 529 || e?.status >= 500) return `Claude ist gerade überlastet (${e.status}). Nochmals senden.`;
+  if (e instanceof TypeError || /network|fetch/i.test(e?.message || "")) return "Keine Verbindung zu Claude. Internet prüfen.";
   return `Fehler: ${e?.message || e}`;
 }
 
 const textOf = (content) => content.filter((b) => b.type === "text").map((b) => b.text).join("\n");
 
+// ---------- Zugang (verschlüsselter Key) ----------
+
+async function ensureAccess() {
+  if (state.settings.apiKey) return true;
+  keyBlob ||= await fetchBlob();
+  if (keyBlob) openUnlock();
+  else openSettings();
+  return false;
+}
+
+function openUnlock() {
+  $("#unlock-err").textContent = "";
+  $("#unlock-pass").value = "";
+  if (!$("#unlock").open) $("#unlock").showModal();
+  setTimeout(() => $("#unlock-pass").focus(), 50);
+}
+
+async function submitUnlock(e) {
+  e.preventDefault();
+  const btn = $("#unlock-go");
+  const err = $("#unlock-err");
+  const pass = $("#unlock-pass").value;
+  if (!pass.trim()) { err.textContent = "Bitte Passwort eingeben."; return; }
+  btn.disabled = true;
+  btn.textContent = "Prüfe …";
+  err.textContent = "";
+  try {
+    state.settings.apiKey = await decryptKey(keyBlob, pass);
+    persist();
+    $("#unlock").close();
+    $("#unlock-pass").value = "";
+    toast("Entsperrt. Los geht's.");
+  } catch {
+    err.textContent = "Passwort stimmt nicht.";
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Entsperren";
+  }
+}
+
 // ---------- Session ----------
 
-function startSession(mode, topic) {
+async function startSession(mode, topic) {
+  if (!(await ensureAccess())) return;
   const L = state.langs[lang];
-  if (!state.settings.apiKey) { openSettings(); toast("Zuerst den API-Key eintragen."); return; }
   if (!L.profil && mode !== "start") mode = "start";
   state.session = {
     lang, mode, topic,
@@ -101,12 +154,19 @@ function startSession(mode, topic) {
   sendTurn();
 }
 
+function finishBubble(el, text) {
+  el.classList.remove("pending");
+  el.dataset.text = text;
+  el.innerHTML = bubbleHtml("assistant", text);
+  scrollChat();
+}
+
 async function sendTurn() {
   const s = state.session;
   busy = true;
-  renderChat();
-  const live = addBubble("assistant", "");
-  live.classList.add("pending");
+  busyKind = "reply";
+  updateChat();
+  const live = addBubble("assistant", "", true);
   let partial = "";
   try {
     const msg = await streamCall(
@@ -121,19 +181,25 @@ async function sendTurn() {
     if (msg.stop_reason === "refusal") text = (text ? text + "\n\n" : "") + "_Claude hat diese Antwort abgelehnt. Formuliere die letzte Nachricht anders._";
     if (msg.stop_reason === "max_tokens") text += "\n\n_(Antwort abgeschnitten, schreib \"weiter\".)_";
     s.view.push({ role: "assistant", text });
+    finishBubble(live, text);
     persist();
     if (state.settings.autoRead) speak(plain(text), s.lang, state.settings.rate);
   } catch (e) {
     if (isAbort(e) && partial.trim()) {
       // Abgebrochene Antwort behalten, damit das Gespräch nahtlos weitergeht.
       s.messages.push({ role: "assistant", content: [{ type: "text", text: partial }] });
-      s.view.push({ role: "assistant", text: `${partial}\n\n_(gestoppt)_` });
+      const text = `${partial}\n\n_(gestoppt)_`;
+      s.view.push({ role: "assistant", text });
+      finishBubble(live, text);
     } else {
+      live.remove();
       // Fehlgeschlagene User-Nachricht zurücknehmen, damit die Rollen sauber abwechseln.
       if (s.messages.at(-1)?.role === "user" && s.messages.length > 1) {
         const lost = s.messages.pop();
         s.view.pop();
+        [...document.querySelectorAll("#log .msg.user")].at(-1)?.remove();
         $("#input").value = typeof lost.content === "string" ? lost.content : "";
+        autosize();
       } else if (s.messages.length === 1) {
         state.session = null;
       }
@@ -142,8 +208,10 @@ async function sendTurn() {
     persist();
   } finally {
     busy = false;
+    busyKind = null;
     currentStream = null;
-    render();
+    if (state.session) updateChat();
+    else render();
   }
 }
 
@@ -152,10 +220,12 @@ function sendUser() {
   const text = input.value.trim();
   if (!text || busy || !state.session) return;
   stopDictation();
-  if (/^stopp[.!]?$/i.test(text)) { input.value = ""; endSession(); return; }
+  if (/^stopp[.!]?$/i.test(text)) { input.value = ""; autosize(); endSession(); return; }
   input.value = "";
+  autosize();
   state.session.messages.push({ role: "user", content: text });
   state.session.view.push({ role: "user", text });
+  addBubble("user", text);
   persist();
   sendTurn();
 }
@@ -171,8 +241,8 @@ async function endSession() {
   if (!s || busy) return;
   if (s.messages.length < 3) { state.session = null; persist(); render(); toast("Session ohne Inhalt verworfen."); return; }
   busy = true;
-  render();
-  $("#status-line").textContent = "Nachbereitung läuft: Fehlerjournal, Wortschatz, Profil …";
+  busyKind = "wrapup";
+  updateChat("Nachbereitung läuft: Fehlerjournal, Wortschatz, Profil …");
   try {
     const L = state.langs[s.lang];
     const msg = await streamCall({
@@ -185,12 +255,16 @@ async function endSession() {
     state.session = null;
     persist();
     busy = false;
+    busyKind = null;
     render();
     showSummary(s.lang, w);
   } catch (e) {
     busy = false;
-    render();
-    toast(`Nachbereitung fehlgeschlagen, Session bleibt offen. ${errorText(e)}`);
+    busyKind = null;
+    updateChat();
+    toast(`Nachbereitung fehlgeschlagen, die Session bleibt offen. ${errorText(e)}`);
+  } finally {
+    currentStream = null;
   }
 }
 
@@ -201,28 +275,53 @@ function discardSession() {
   render();
 }
 
+// Nach Neuladen mitten in einer Antwort: sauber weitermachen statt hängen bleiben.
+function recoverSession() {
+  const s = state.session;
+  if (!s) return;
+  if (s.messages.at(-1)?.role !== "user") return;
+  if (s.messages.length === 1) { sendTurn(); return; }
+  const lost = s.messages.pop();
+  s.view.pop();
+  persist();
+  render();
+  $("#input").value = typeof lost.content === "string" ? lost.content : "";
+  autosize();
+  toast("Die letzte Antwort wurde unterbrochen. Deine Nachricht steht wieder im Eingabefeld.");
+}
+
 // ---------- Diktat ----------
 
 function toggleDictation() {
   if (recognizer) { stopDictation(); return; }
   const input = $("#input");
   const before = input.value ? input.value.trim() + " " : "";
-  recognizer = listen(state.session?.lang || lang, (t) => { input.value = before + t; }, () => { recognizer = null; $("#mic")?.classList.remove("on"); });
+  recognizer = listen(
+    state.session?.lang || lang,
+    (t) => { input.value = before + t; autosize(); },
+    () => { recognizer = null; $("#mic").classList.remove("on"); },
+  );
   if (recognizer) $("#mic").classList.add("on");
 }
 
 function stopDictation() {
-  if (recognizer) { recognizer.stop(); recognizer = null; $("#mic")?.classList.remove("on"); }
+  if (recognizer) { recognizer.stop(); recognizer = null; $("#mic").classList.remove("on"); }
+}
+
+function autosize() {
+  const t = $("#input");
+  t.style.height = "auto";
+  t.style.height = `${Math.min(t.scrollHeight, 160)}px`;
 }
 
 // ---------- Rendering ----------
 
 function render() {
-  document.querySelectorAll(".lang-tab").forEach((b) => {
-    b.setAttribute("aria-selected", b.dataset.lang === (state.session?.lang || lang));
-    b.disabled = !!state.session;
-  });
   const inSession = !!state.session;
+  document.querySelectorAll(".seg button").forEach((b) => {
+    b.setAttribute("aria-selected", String(b.dataset.lang === (state.session?.lang || lang)));
+    b.disabled = inSession;
+  });
   $("#home").hidden = inSession;
   $("#chat").hidden = !inSession;
   if (inSession) renderChat();
@@ -233,26 +332,29 @@ function renderHome() {
   const L = state.langs[lang];
   const p = L.profil;
   const name = LANGS[lang].name;
-  const offen = L.fehler.length;
   $("#profile").innerHTML = p
-    ? `<div class="stats">
-        <div><span>Niveau</span><b>${esc(p.niveau || "offen")}</b></div>
-        <div><span>Plan-Tag</span><b>${L.plan ? esc(p.planTag) + " / 90" : "kein Plan"}</b></div>
-        <div><span>Wortschatz</span><b>${L.wortschatz.length}</b></div>
-        <div><span>Offene Fehler</span><b>${offen}</b></div>
-      </div>
-      <p class="muted">Ziel: ${esc(p.ziel || "noch offen")} · Letzte Session: ${esc(p.letzteSession || "keine")}</p>`
-    : `<div class="empty"><p><b>${name}</b> ist noch nicht eingestuft.</p><p class="muted">Die Einstufung dauert rund 10 Minuten: Ziel, Zeitbudget, ein paar Aufgaben. Danach gibt es einen 90-Tage-Plan.</p></div>`;
+    ? `<div class="card-title"><b>${esc(name)}</b><span>${esc(p.varietaet || "")}</span></div>
+       <div class="stats">
+         <div class="stat"><span>Niveau</span><b>${esc(p.niveau || "offen")}</b></div>
+         <div class="stat"><span>Plan-Tag</span><b>${L.plan ? `${esc(p.planTag)} / 90` : "kein Plan"}</b></div>
+         <div class="stat"><span>Wortschatz</span><b>${L.wortschatz.length}</b></div>
+         <div class="stat"><span>Offene Fehler</span><b>${L.fehler.length}</b></div>
+       </div>
+       <p class="note">Ziel: ${esc(p.ziel || "noch offen")}<br>Letzte Session: ${esc(p.letzteSession || "keine")}</p>`
+    : `<div class="card-title"><b>${esc(name)}</b></div>
+       <p>Noch nicht eingestuft.</p>
+       <p class="note">Die Einstufung dauert rund 10 Minuten: Ziel, Zeitbudget, ein paar Aufgaben. Danach gibt es einen 90-Tage-Plan.</p>`;
 
   const modes = p ? MODES : MODES.filter(([m]) => m === "start");
   const main = !p ? "start" : L.plan ? "heute" : "plan";
   $("#modes").innerHTML = modes
-    .map(([m, label, hint]) => `<button class="mode${m === main ? " primary" : ""}" data-mode="${m}"><b>${label}</b><span>${hint}</span></button>`)
+    .map(([m, label, hint]) => `<button type="button" class="mode${m === main ? " primary" : ""}" data-mode="${m}"><b>${esc(label)}</b><span>${esc(hint)}</span></button>`)
     .join("");
-  renderBanner();
   $("#topic-row").hidden = !p;
-  if (p && !L.plan) $("#hint").innerHTML = `Noch kein Plan. Tipp: zuerst <b>90-Tage-Plan</b>.`;
-  else $("#hint").textContent = "";
+  const hint = $("#hint");
+  hint.hidden = !(p && !L.plan);
+  hint.innerHTML = hint.hidden ? "" : "Noch kein Plan. Tipp: zuerst <b>90-Tage-Plan</b>.";
+  renderBanner();
 }
 
 function daysSince(dateStr) {
@@ -264,9 +366,9 @@ function renderBanner() {
   const b = $("#banner");
   const hasData = Object.values(state.langs).some((L) => L.profil || L.wortschatz.length);
   const days = daysSince(state.lastBackup);
-  if (!hasData || (days !== null && days < 7)) { b.hidden = true; return; }
+  if (!hasData || (days !== null && days < 7)) { b.hidden = true; b.innerHTML = ""; return; }
   b.hidden = false;
-  b.innerHTML = `<span>${days === null ? "Noch keine Sicherung." : `Letzte Sicherung vor ${days} Tagen.`} Der Fortschritt liegt nur in diesem Browser.</span><button id="banner-backup">Jetzt sichern</button>`;
+  b.innerHTML = `<span>${days === null ? "Noch keine Sicherung." : `Letzte Sicherung vor ${days} Tagen.`} Der Fortschritt liegt nur in diesem Browser.</span><button type="button" class="btn" id="banner-backup">Jetzt sichern</button>`;
 }
 
 function doBackup() {
@@ -277,13 +379,13 @@ function doBackup() {
 }
 
 function bubbleHtml(role, text) {
-  const tools = role === "assistant" && canSpeak ? `<button class="say" title="Vorlesen" aria-label="Vorlesen">▶</button>` : "";
-  return `<div class="body">${role === "assistant" ? md(text) : esc(text).replace(/\n/g, "<br>")}</div>${tools}`;
+  const actions = role === "assistant" && canSpeak && text ? `<div class="msg-actions"><button type="button" class="say" aria-label="Vorlesen">▶ Vorlesen</button></div>` : "";
+  return `<div class="body">${role === "assistant" ? md(text) : esc(text).replace(/\n/g, "<br>")}</div>${actions}`;
 }
 
-function addBubble(role, text) {
+function addBubble(role, text, pending = false) {
   const el = document.createElement("div");
-  el.className = `msg ${role}`;
+  el.className = `msg ${role}${pending ? " pending" : ""}`;
   el.innerHTML = bubbleHtml(role, text);
   el.dataset.text = text;
   $("#log").appendChild(el);
@@ -293,16 +395,21 @@ function addBubble(role, text) {
 
 function renderChat() {
   const s = state.session;
-  const L = LANGS[s.lang];
   const modeLabel = (MODES.find(([m]) => m === s.mode) || [, s.mode])[1];
-  $("#chat-title").textContent = `${L.name} · ${modeLabel}${s.topic ? " · " + s.topic : ""}`;
+  $("#chat-title").textContent = `${LANGS[s.lang].name} · ${modeLabel}${s.topic ? " · " + s.topic : ""}`;
   $("#log").innerHTML = "";
   for (const v of s.view) addBubble(v.role, v.text);
+  updateChat();
+}
+
+function updateChat(statusText) {
   $("#send").hidden = busy;
-  $("#stop").hidden = !busy;
+  $("#stop").hidden = busyKind !== "reply";
   $("#end").disabled = busy;
+  $("#discard").disabled = busy;
+  document.querySelectorAll(".chip").forEach((c) => (c.disabled = busy));
   $("#mic").hidden = !canListen;
-  $("#status-line").textContent = busy ? "Trainer schreibt …" : "";
+  $("#status-line").textContent = statusText || (busy ? "Trainer schreibt …" : "");
 }
 
 function scrollChat() {
@@ -312,49 +419,63 @@ function scrollChat() {
 
 function showSummary(l, w) {
   const neuF = w.fehler_neu.length, neuW = w.wortschatz_neu.length;
-  $("#summary-body").innerHTML = `${md(w.rueckmeldung)}<p class="muted">${LANGS[l].name}: ${neuF} neue Fehler im Journal, ${neuW} neue Einheiten im Wortschatz${w.test.resultat_prozent >= 0 ? `, Test ${w.test.resultat_prozent}%` : ""}.</p>`;
+  $("#summary-body").innerHTML = `<div class="msg-plain">${md(w.rueckmeldung)}</div><p class="note">${esc(LANGS[l].name)}: ${neuF} neue Fehler im Journal, ${neuW} neue Einheiten im Wortschatz${w.test.resultat_prozent >= 0 ? `, Test ${esc(w.test.resultat_prozent)}%` : ""}.</p>`;
   $("#summary").showModal();
 }
 
 function renderStatus() {
-  const rows = Object.entries(LANGS).map(([k, l]) => {
+  $("#status-title").textContent = "Status";
+  const cutoff = Date.now() - 14 * 864e5;
+  const cards = Object.entries(LANGS).map(([k, l]) => {
     const L = state.langs[k];
-    const cutoff = Date.now() - 14 * 864e5;
     const sessions = L.log.filter((x) => (parseDate(x.datum)?.getTime() || 0) >= cutoff).length;
     const t = L.tests.at(-1);
-    return `<tr><td>${l.name}</td><td>${esc(L.profil?.niveau || "–")}</td><td>${L.plan ? esc(L.profil?.planTag) : "–"}</td><td>${sessions}</td><td>${L.wortschatz.length}</td><td>${t ? `${t.resultat}% (${esc(t.datum)})` : "–"}</td></tr>`;
-  });
+    return `<div class="lang-card"><h4><span>${esc(l.name)}</span><span>${esc(L.profil?.niveau || "–")}</span></h4>
+      <dl><dt>Plan-Tag</dt><dd>${L.plan ? `${esc(L.profil?.planTag)} / 90` : "–"}</dd>
+      <dt>Sessions (14 Tage)</dt><dd>${sessions}</dd>
+      <dt>Wortschatz</dt><dd>${L.wortschatz.length}</dd>
+      <dt>Letzter Test</dt><dd>${t ? `${esc(t.resultat)}%` : "–"}</dd></dl></div>`;
+  }).join("");
   const top = Object.entries(LANGS)
     .filter(([k]) => state.langs[k].fehler.length)
     .map(([k, l]) => {
       const f = [...state.langs[k].fehler].sort((a, b) => b.zaehler - a.zaehler).slice(0, 5);
-      return `<h4>${l.name}: Top-Fehler</h4><ul>${f.map((x) => `<li>${esc(x.zaehler)}× <del>${esc(x.falsch)}</del> → <b>${esc(x.richtig)}</b> <span class="muted">${esc(x.regel)}</span></li>`).join("")}</ul>`;
+      return `<h4>${esc(l.name)}: häufigste Fehler</h4><ul>${f.map((x) => `<li>${esc(x.zaehler)}× <del>${esc(x.falsch)}</del> → <b>${esc(x.richtig)}</b><br><span class="note">${esc(x.regel)}</span></li>`).join("")}</ul>`;
     })
     .join("");
-  $("#status-body").innerHTML = `<div class="tbl"><table><thead><tr><th>Sprache</th><th>Niveau</th><th>Plan-Tag</th><th>Sessions 14 T.</th><th>Wortschatz</th><th>Letzter Test</th></tr></thead><tbody>${rows.join("")}</tbody></table></div>${top || '<p class="muted">Noch keine Fehler im Journal.</p>'}
-  <div class="row-btns">${Object.entries(LANGS).filter(([k]) => state.langs[k].wortschatz.length).map(([k, l]) => `<button data-anki="${k}">Anki-Export ${l.short}</button>`).join("")}
-    <button data-plan="${lang}">Plan ${LANGS[lang].short} anzeigen</button></div>`;
+  const exports = Object.entries(LANGS).filter(([k]) => state.langs[k].wortschatz.length).map(([k, l]) => `<button type="button" class="btn" data-anki="${k}">Anki-Export ${esc(l.short)}</button>`).join("");
+  const plans = Object.entries(LANGS).filter(([k]) => state.langs[k].plan).map(([k, l]) => `<button type="button" class="btn" data-plan="${k}">Plan ${esc(l.short)}</button>`).join("");
+  $("#status-body").innerHTML = `<div class="status-grid">${cards}</div>
+    <div class="errors">${top || '<p class="note">Noch keine Fehler im Journal.</p>'}</div>
+    ${exports || plans ? `<div class="row">${exports}${plans}</div>` : ""}`;
+}
+
+function showPlan(k) {
+  $("#status-title").textContent = `90-Tage-Plan ${LANGS[k].name}`;
+  $("#status-body").innerHTML = `<div class="plan">${md(state.langs[k].plan)}</div><div class="row"><button type="button" class="btn" id="plan-back">Zurück zum Status</button></div>`;
 }
 
 function openSettings() {
   const s = state.settings;
-  $("#set-key").value = s.apiKey;
+  $("#set-key").value = "";
   $("#set-model").value = s.model;
   $("#set-effort").value = s.effort;
   $("#set-rate").value = s.rate;
   $("#set-auto").checked = s.autoRead;
+  $("#key-state").textContent = s.apiKey ? `Key auf diesem Gerät gespeichert (…${s.apiKey.slice(-4)}).` : "Auf diesem Gerät ist noch kein Key gespeichert.";
+  $("#key-remove").hidden = !s.apiKey;
   updateInstallUi();
   updatePersistUi();
-  $("#settings").showModal();
+  if (!$("#settings").open) $("#settings").showModal();
 }
 
-// ---------- Events ----------
+// ---------- Ereignisse ----------
 
 document.addEventListener("click", (e) => {
   const t = e.target.closest("button");
   if (!t) return;
   if (t.id === "banner-backup") doBackup();
-  else if (t.classList.contains("lang-tab")) { lang = t.dataset.lang; state.lastLang = lang; persist(); render(); }
+  else if (t.dataset.lang) { lang = t.dataset.lang; state.lastLang = lang; persist(); render(); }
   else if (t.dataset.mode) startSession(t.dataset.mode, $("#topic").value.trim());
   else if (t.classList.contains("say")) speak(plain(t.closest(".msg").dataset.text), state.session?.lang || lang, state.settings.rate);
   else if (t.dataset.anki) {
@@ -363,24 +484,42 @@ document.addEventListener("click", (e) => {
     persist();
     download(`anki_${t.dataset.anki}_${today()}.txt`, res.text);
     toast(`${res.count} Karten exportiert. In Anki: Datei > Importieren.`);
-  } else if (t.dataset.plan) {
-    const L = state.langs[t.dataset.plan];
-    $("#status-body").innerHTML = L.plan ? md(L.plan) : "<p>Noch kein Plan.</p>";
-  }
+  } else if (t.dataset.plan) showPlan(t.dataset.plan);
+  else if (t.id === "plan-back") renderStatus();
+  else if (t.dataset.close) $(`#${t.dataset.close}`).close();
 });
 
 $("#send").addEventListener("click", sendUser);
+$("#input").addEventListener("input", autosize);
 $("#input").addEventListener("keydown", (e) => {
-  if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); sendUser(); }
+  // Am Handy ist Enter ein Zeilenumbruch, gesendet wird mit dem Knopf.
+  if (e.key === "Enter" && !e.shiftKey && !e.isComposing && finePointer) { e.preventDefault(); sendUser(); }
+});
+$("#chips").addEventListener("click", (e) => {
+  const b = e.target.closest("button[data-cmd]");
+  if (!b || busy) return;
+  $("#input").value = b.dataset.cmd;
+  sendUser();
 });
 $("#mic").addEventListener("click", toggleDictation);
 $("#end").addEventListener("click", endSession);
 $("#discard").addEventListener("click", discardSession);
+$("#stop").addEventListener("click", () => currentStream?.abort());
 $("#open-settings").addEventListener("click", openSettings);
 $("#open-status").addEventListener("click", () => { renderStatus(); $("#status").showModal(); });
+$("#unlock-form").addEventListener("submit", submitUnlock);
+$("#unlock-manual").addEventListener("click", () => { $("#unlock").close(); openSettings(); });
+$("#unlock").addEventListener("cancel", (e) => { if (!state.settings.apiKey) e.preventDefault(); });
+$("#key-remove").addEventListener("click", () => {
+  state.settings.apiKey = "";
+  persist();
+  $("#settings").close();
+  toast("Key von diesem Gerät entfernt.");
+});
 $("#settings-form").addEventListener("submit", () => {
   const s = state.settings;
-  s.apiKey = $("#set-key").value.trim();
+  const key = $("#set-key").value.trim();
+  if (key) s.apiKey = key;
   s.model = $("#set-model").value.trim() || "claude-opus-5-5";
   s.effort = $("#set-effort").value;
   s.rate = Number($("#set-rate").value) || 1;
@@ -389,8 +528,6 @@ $("#settings-form").addEventListener("submit", () => {
   persist();
   toast("Einstellungen gespeichert.");
 });
-$("#backup-export").addEventListener("click", doBackup);
-$("#stop").addEventListener("click", () => currentStream?.abort());
 $("#install").addEventListener("click", async () => {
   if (!installEvt) return;
   installEvt.prompt();
@@ -398,6 +535,7 @@ $("#install").addEventListener("click", async () => {
   installEvt = null;
   updateInstallUi();
 });
+$("#backup-export").addEventListener("click", doBackup);
 $("#backup-import").addEventListener("change", async (e) => {
   const f = e.target.files[0];
   if (!f) return;
@@ -424,13 +562,12 @@ window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); inst
 window.addEventListener("appinstalled", () => { installEvt = null; updateInstallUi(); toast("App installiert."); });
 
 function updateInstallUi() {
-  const btn = $("#install");
   const txt = $("#install-text");
-  btn.hidden = !installEvt;
+  $("#install").hidden = !installEvt;
   if (standalone()) txt.textContent = "Du nutzt gerade die installierte App.";
   else if (installEvt) txt.textContent = "Die App läuft dann in einem eigenen Fenster, hat ein Icon und startet auch offline (Profil, Status, Sicherung).";
   else if (isIos) txt.textContent = "iPhone und iPad: in Safari auf Teilen tippen, dann «Zum Home-Bildschirm».";
-  else txt.textContent = "Installieren: in Chrome oder Edge das Installations-Symbol in der Adresszeile nutzen, auf Android im Menü «App installieren».";
+  else txt.textContent = "Chrome und Edge: Installations-Symbol in der Adresszeile. Android: Menü, dann «App installieren».";
 }
 
 async function updatePersistUi() {
@@ -448,10 +585,15 @@ if ("serviceWorker" in navigator && (location.protocol === "https:" || location.
   navigator.serviceWorker.register("sw.js").catch(() => {});
 }
 
-// Deep-Link aus den App-Verknüpfungen: ?lang=zh
+// ---------- Start ----------
+
+// Verknüpfung aus dem App-Symbol: ?lang=zh
 const qLang = new URLSearchParams(location.search).get("lang");
 if (qLang && qLang in LANGS) { lang = qLang; state.lastLang = lang; }
 
-$("#tabs").innerHTML = Object.entries(LANGS).map(([k, l]) => `<button class="lang-tab" role="tab" data-lang="${k}" title="${l.name}">${l.short}</button>`).join("");
+$("#tabs").innerHTML = Object.entries(LANGS)
+  .map(([k, l]) => `<button type="button" role="tab" data-lang="${k}" title="${esc(l.name)}">${esc(l.short)}</button>`)
+  .join("");
 render();
-if (!state.settings.apiKey) openSettings();
+autosize();
+ensureAccess().then((ok) => ok && recoverSession());
