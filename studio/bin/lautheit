@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Lautheit normalisieren (Standard -14 LUFS, True Peak -1 dBTP). Video bleibt unangetastet.
+# Nutzung: lautheit input.(mp4|wav|mp3) [output] [LUFS]
+set -euo pipefail
+in="$1"; ext="${in##*.}"; out="${2:-${in%.*}_norm.$ext}"; lufs="${3:--14}"
+if [[ "$ext" =~ ^(mp4|mov|mkv)$ ]]; then cv=(-c:v copy -c:a aac -b:a 192k); else cv=(); fi
+ffmpeg -v error -stats -y -i "$in" -af "loudnorm=I=$lufs:TP=-1:LRA=11" "${cv[@]}" "$out"
+echo "Fertig: $out"

@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Prüft, ob alle Werkzeuge da sind
+for t in ffmpeg ffprobe sox convert jq auto-editor yt-dlp ruff uv pnpm tsc tsx node python3 manim gh git docker; do
+  if command -v "$t" >/dev/null; then printf "OK     %s\n" "$t"; else printf "FEHLT  %s\n" "$t"; fi
+done
+python3 -c "import moviepy, pydub, faster_whisper, pptx, docx, openpyxl, anthropic" 2>/dev/null && echo "OK     Python-Libs" || echo "FEHLT  Python-Libs"
+[ -d "$(dirname "$0")/../remotion/node_modules" ] && echo "OK     Remotion" || echo "FEHLT  Remotion (cd studio/remotion && npm install)"

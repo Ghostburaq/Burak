@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Mehrere Clips hintereinanderhängen (z.B. Hook + Hauptvideo). Gleiches Format vorausgesetzt.
+# Nutzung: zusammenfuegen output.mp4 clip1.mp4 clip2.mp4 ...
+set -euo pipefail
+out="$1"; shift
+inputs=(); filt=""; i=0
+for c in "$@"; do
+  inputs+=(-i "$c")
+  filt+="[$i:v]scale=1080:1920,setsar=1,fps=30[v$i];"
+  # Clips ohne Ton bekommen Stille
+  if ffprobe -v error -select_streams a -show_entries stream=index -of csv=p=0 "$c" | grep -q .; then
+    filt+="[$i:a]aresample=48000[a$i];"
+  else
+    d=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$c")
+    filt+="anullsrc=r=48000:cl=stereo,atrim=0:$d[a$i];"
+  fi
+  i=$((i+1))
+done
+for ((j=0;j<i;j++)); do filt+="[v$j][a$j]"; done
+filt+="concat=n=$i:v=1:a=1[v][a]"
+ffmpeg -v error -stats -y "${inputs[@]}" -filter_complex "$filt" -map "[v]" -map "[a]" -c:v libx264 -crf 20 -c:a aac -b:a 192k -movflags +faststart "$out"
+echo "Fertig: $out"

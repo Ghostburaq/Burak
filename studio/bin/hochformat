@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# 16:9 nach 9:16 (1080x1920) mit unscharfem Hintergrund, nichts abgeschnitten
+# Nutzung: hochformat input.mp4 [output.mp4] [crop]   (crop = mittig zuschneiden statt Blur)
+set -euo pipefail
+in="$1"; out="${2:-${in%.*}_9x16.mp4}"; mode="${3:-blur}"
+if [ "$mode" = "crop" ]; then
+  vf="scale=-2:1920,crop=1080:1920"
+else
+  vf="split[a][b];[a]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=30:3[bg];[b]scale=1080:-2[fg];[bg][fg]overlay=(W-w)/2:(H-h)/2"
+fi
+ffmpeg -v error -stats -y -i "$in" -filter_complex "$vf" -c:v libx264 -preset medium -crf 20 -c:a aac -b:a 192k -movflags +faststart "$out"
+echo "Fertig: $out"

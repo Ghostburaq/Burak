@@ -2,3 +2,12 @@ __pycache__/
 *.pyc
 .DS_Store
 /tmp/
+node_modules/
+studio/remotion/out/
+# Mediendateien gehören nicht ins Git (zu gross). Nur Ordnerstruktur und Kalender.
+content/**/*.mp4
+content/**/*.mov
+content/**/*.wav
+content/**/*.mp3
+content/**/*.m4a
+content/**/*.srt

@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Hintergrundrauschen und Brummen aus der Stimme filtern
+# Nutzung: entrauschen input [output]
+set -euo pipefail
+in="$1"; ext="${in##*.}"; out="${2:-${in%.*}_clean.$ext}"
+if [[ "$ext" =~ ^(mp4|mov|mkv)$ ]]; then cv=(-c:v copy -c:a aac -b:a 192k); else cv=(); fi
+ffmpeg -v error -stats -y -i "$in" -af "highpass=f=80,afftdn=nf=-25,lowpass=f=12000" "${cv[@]}" "$out"
+echo "Fertig: $out"

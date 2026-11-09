@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Musik unter ein Video legen, Musik wird automatisch leiser, wenn gesprochen wird (Ducking)
+# Nutzung: musik-drunter video.mp4 musik.mp3 [output.mp4] [musik-lautstaerke 0.0-1.0]
+set -euo pipefail
+v="$1"; m="$2"; out="${3:-${v%.*}_musik.mp4}"; vol="${4:-0.25}"
+ffmpeg -v error -stats -y -i "$v" -stream_loop -1 -i "$m" -filter_complex \
+ "[1:a]volume=$vol[mus];[0:a]asplit[voice][sc];[mus][sc]sidechaincompress=threshold=0.03:ratio=8:attack=20:release=400[duck];[voice][duck]amix=inputs=2:duration=first:dropout_transition=0[a]" \
+ -map 0:v -map "[a]" -c:v copy -c:a aac -b:a 192k -shortest "$out"
+echo "Fertig: $out"

@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Animierten Text-Hook (1080x1920, 3 s) mit Remotion rendern
+# Nutzung: hook-clip "Hook-Zeile" "Auflösung" [output.mp4]
+set -euo pipefail
+dir="$(cd "$(dirname "$0")/../remotion" && pwd)"
+out="$(realpath -m "${3:-hook.mp4}")"
+props=$(jq -nc --arg h "$1" --arg s "$2" '{hook:$h,sub:$s,bg:"#0b0f14",accent:"#f5c400"}')
+(cd "$dir" && npx remotion render NexaHook "$out" --props="$props")
+echo "Fertig: $out"

@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Pausen und Stille automatisch rausschneiden (Jump-Cut)
+# Nutzung: schnitt input.mp4 [output.mp4] [marge]
+set -euo pipefail
+in="$1"; out="${2:-${in%.*}_cut.mp4}"; marge="${3:-0.2sec}"
+auto-editor "$in" --margin "$marge" --no-open -o "$out"
+echo "Fertig: $out"
