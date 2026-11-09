@@ -53,7 +53,7 @@ schnitt -> hochformat -> entrauschen -> lautheit -> untertitel -> musik-drunter 
 
 | Funktion | Status | Was fehlt |
 |---|---|---|
-| Untertitel (Whisper) | Skript fertig, Modell-Download blockiert | Netzwerk-Freigabe für huggingface.co |
+| Untertitel (Whisper) | Läuft, getestet mit deutscher Sprache | Nichts. Modelle: `small` (Standard), `medium` genauer aber langsamer auf CPU |
 | Publizieren LinkedIn, TikTok, YouTube | Noch nicht verbunden | Postiz-Konto oder je Plattform API-Zugang |
 | KI-Video, KI-Musik, KI-Stimme | Nur über API möglich (keine GPU) | API-Key je Dienst (z.B. ElevenLabs, Runway, Suno) |
 
