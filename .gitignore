@@ -11,3 +11,7 @@ content/**/*.wav
 content/**/*.mp3
 content/**/*.m4a
 content/**/*.srt
+# Persönliche Bilder und Audio für Remotion nicht ins Git
+studio/remotion/public/*.png
+studio/remotion/public/*.jpg
+studio/remotion/public/*.wav
