@@ -253,6 +253,6 @@ export const ErinnerungWarmComp = () => (
     fps={FPS}
     width={1080}
     height={1920}
-    defaultProps={{ zeile1: "In jedem Herbst.\nIn jedem Sonnenstrahl.", zeile2: "Für immer bei uns." }}
+    defaultProps={{ zeile1: "In jedem Herbst.\nIn jedem Sonnenstrahl.", zeile2: "Für immer bei uns,\nMia." }}
   />
 );
