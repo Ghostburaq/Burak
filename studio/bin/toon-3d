@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# 3D-Modell (glb/obj/fbx) im Comic-Look rendern, freigestellt. Ohne Modell: Demo.
+# Nutzung: toon-3d ausgabe.png [modell.glb]
+set -euo pipefail
+out="$(realpath -m "${1:-toon.png}")"; m="${2:-}"; [ -n "$m" ] && m="$(realpath "$m")"
+blender -b -P "$(dirname "$0")/../3d/toon.py" -- "$out" $m 2>&1 | grep -E "Fertig|Error"

@@ -15,3 +15,5 @@ content/**/*.srt
 studio/remotion/public/*.png
 studio/remotion/public/*.jpg
 studio/remotion/public/*.wav
+studio/web-vorlage/node_modules/
+studio/web-vorlage/dist/

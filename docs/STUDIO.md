@@ -65,3 +65,42 @@ schnitt -> hochformat -> entrauschen -> lautheit -> untertitel -> musik-drunter 
 - **`/`-Befehle**: `/code-review`, `/simplify`, `/loop` (wiederkehrende Aufgaben), `/init`.
 - **Geplante Aufgaben**: Ich kann Aufgaben zeitgesteuert starten, z.B. jeden Montag 07:30 den Redaktionsplan der Woche vorbereiten.
 - **Setup-Script**: Diese Installation ist in der Cloud-Umgebung gespeichert, jede neue Session startet fertig eingerichtet.
+
+## Bild, Comic, Manga, 3D, Web (Erweiterung)
+
+| Befehl | Was er macht | Beispiel |
+|---|---|---|
+| `bild` | KI-Bild aus Text (SD-Turbo, CPU, 512x512, ca. 40 s inkl. Laden) | `studio/bin/bild "manga style, black and white ink, a cat samurai" katze.png 7` |
+| `comic` | Comic- oder Manga-Seite aus Bildern + Sprechblasen | `studio/bin/comic seite.json seite.png` (Aufbau siehe `studio/bild/comic.py`) |
+| `toon-3d` | 3D-Modell (glb, obj, fbx) im Comic-Look, Konturlinien, freigestellt | `studio/bin/toon-3d figur.png modell.glb` |
+| `freistellen` | Hintergrund aus Foto entfernen | `studio/bin/freistellen foto.jpg` |
+| `vektor` | Bild in SVG umwandeln (Logos, Zeichnungen) | `studio/bin/vektor logo.png` |
+
+Prompt-Stile für `bild`: `manga style, black and white ink, screentone` · `comic book style, bold outlines, flat colors` · `3d render, pixar style, soft lighting` · `anime style, cel shading`
+
+### Programme
+
+| Werkzeug | Wofür |
+|---|---|
+| Blender 4.0 | 3D-Modelle, Szenen, Animationen, Toon-Rendering (per Python-Skript, ohne Oberfläche) |
+| Inkscape, potrace | Vektorgrafik, Logos, SVG-Export |
+| ImageMagick, cwebp, optipng, gifsicle | Bilder umwandeln, verkleinern, GIFs |
+| gltf-transform | 3D-Modelle für Webseiten optimieren |
+| PyTorch (CPU), diffusers | KI-Bildmodelle |
+| rembg (Modell u2net) | Freistellen |
+
+### Webseite (`studio/web-vorlage/`)
+
+Vite + TypeScript + Tailwind + GSAP (Animation) + Three.js (3D) + Lottie.
+
+- Entwickeln: `cd studio/web-vorlage && npm run dev`
+- Bauen: `npm run build` (Ergebnis in `dist/`, das lädst du bei Netlify, Vercel oder deinem Hoster hoch)
+- Neues Projekt nach Vorlage: einfach sagen "Mach mir eine Homepage für NEXA"
+- Andere Frameworks ohne Installation: `npx create-astro`, `npx create-next-app`
+
+### Grenzen (ehrlich)
+
+- KI-Bilder: Entwurfs-Qualität, 512 px. Für Profi-Niveau Midjourney, Ideogram oder ähnliche Dienste extern nutzen.
+- Lizenz SD-Turbo: Stability AI Community License. Kommerziell vorher Bedingungen prüfen.
+- Kein KI-Video, keine KI-Musik mit Gesang lokal (keine GPU).
+- Blender rendert mit Cycles auf CPU. EEVEE geht nicht (braucht Grafikkarte).

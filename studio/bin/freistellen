@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Hintergrund entfernen (rembg). Nutzung: freistellen foto.jpg [ausgabe.png]
+set -euo pipefail
+in="$1"; out="${2:-${in%.*}_frei.png}"
+python3 -c "import sys; from rembg import remove, new_session; from PIL import Image; remove(Image.open(sys.argv[1]), session=new_session(\"u2net\")).save(sys.argv[2])" "$in" "$out"
+echo "Fertig: $out"

@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Bild in Vektorgrafik (SVG) umwandeln, z.B. Logo oder Zeichnung. Nutzung: vektor bild.png [ausgabe.svg]
+set -euo pipefail
+in="$1"; out="${2:-${in%.*}.svg}"
+convert "$in" -colorspace gray -threshold 50% bmp:- | potrace -s -o "$out"
+echo "Fertig: $out"

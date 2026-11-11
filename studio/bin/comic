@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Comic-/Manga-Seite aus Bildern + Sprechblasen. Nutzung: comic seite.json [ausgabe.png]
+set -euo pipefail
+python3 "$(dirname "$0")/../bild/comic.py" "$1" "${2:-comic.png}"

@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# KI-Bild aus Text (SD-Turbo, CPU). Nutzung: bild "prompt" [ausgabe.png] [seed]
+set -euo pipefail
+python3 "$(dirname "$0")/../bild/bild.py" "$1" "${2:-bild.png}" 2 "${3:-0}" 2>&1 | grep -E "Fertig|Error"
