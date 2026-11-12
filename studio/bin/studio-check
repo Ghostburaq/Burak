@@ -4,6 +4,7 @@ for t in ffmpeg ffprobe sox convert jq auto-editor yt-dlp ruff uv pnpm tsc tsx n
   if command -v "$t" >/dev/null; then printf "OK     %s\n" "$t"; else printf "FEHLT  %s\n" "$t"; fi
 done
 python3 -c "import moviepy, pydub, faster_whisper, pptx, docx, openpyxl, anthropic" 2>/dev/null && echo "OK     Python-Libs" || echo "FEHLT  Python-Libs"
-python3 -c "import torch, diffusers, rembg, trimesh, cv2, mido" 2>/dev/null && echo "OK     Bild-KI und 3D-Libs" || echo "FEHLT  Bild-KI und 3D-Libs"
+python3 -c "import torch, diffusers, rembg, trimesh, cv2, mido, piper, spandrel" 2>/dev/null && echo "OK     Bild-KI und 3D-Libs" || echo "FEHLT  Bild-KI und 3D-Libs"
+for m in de_DE-thorsten-high.onnx RealESRGAN_x4plus.pth RealESRGAN_x4plus_anime_6B.pth; do [ -f "/root/.local/share/modelle/$m" ] && echo "OK     Modell $m" || echo "FEHLT  Modell $m"; done
 [ -d "$(dirname "$0")/../web-vorlage/node_modules" ] && echo "OK     Web-Vorlage" || echo "FEHLT  Web-Vorlage (cd studio/web-vorlage && npm install)"
 [ -d "$(dirname "$0")/../remotion/node_modules" ] && echo "OK     Remotion" || echo "FEHLT  Remotion (cd studio/remotion && npm install)"

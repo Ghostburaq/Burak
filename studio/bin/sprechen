@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Deutsche Sprachausgabe (Piper, Stimme "Thorsten", lokal, CC0).
+# Nutzung: sprechen "Text" [ausgabe.wav] [tempo: 1.0 = normal, 1.15 = langsamer]
+#          sprechen datei.txt [ausgabe.wav]
+set -euo pipefail
+M="${MODELLE:-/root/.local/share/modelle}"
+txt="$1"; [ -f "$txt" ] && txt="$(cat "$txt")"
+out="${2:-sprache.wav}"; tempo="${3:-1.05}"
+printf '%s' "$txt" | python3 -m piper -m "$M/de_DE-thorsten-high.onnx" --length-scale "$tempo" --sentence-silence 0.35 -f "$out" 2>/dev/null
+echo "Fertig: $out"

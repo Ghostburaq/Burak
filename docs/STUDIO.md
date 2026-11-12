@@ -104,3 +104,12 @@ Vite + TypeScript + Tailwind + GSAP (Animation) + Three.js (3D) + Lottie.
 - Lizenz SD-Turbo: Stability AI Community License. Kommerziell vorher Bedingungen prüfen.
 - Kein KI-Video, keine KI-Musik mit Gesang lokal (keine GPU).
 - Blender rendert mit Cycles auf CPU. EEVEE geht nicht (braucht Grafikkarte).
+
+## Stimme und Hochskalieren
+
+| Befehl | Was er macht | Beispiel |
+|---|---|---|
+| `sprechen` | Deutsche Sprachausgabe, Stimme "Thorsten" (Piper, lokal, Lizenz CC0) | `studio/bin/sprechen "Text" voice.wav` oder `studio/bin/sprechen skript.txt voice.wav` |
+| `hochskalieren` | Bild 4-fach grösser und schärfer (Real-ESRGAN, ca. 20 s für 512 px) | `studio/bin/hochskalieren bild.png gross.png anime` (`foto` für Fotos) |
+
+Tipps Stimme: Zahlen und Normen ausschreiben, wenn die Aussprache stimmen muss ("EN fünfzigtausendeinhundertsechzig"). Tempo als dritter Wert: 1.0 schnell, 1.15 ruhig.

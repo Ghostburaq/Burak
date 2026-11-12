@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Bild 4-fach schärfer und grösser (Real-ESRGAN). Nutzung: hochskalieren bild.png [ausgabe.png] [foto|anime]
+set -euo pipefail
+in="$1"; out="${2:-${in%.*}_x4.png}"
+python3 "$(dirname "$0")/../bild/hochskalieren.py" "$in" "$out" "${3:-foto}"
