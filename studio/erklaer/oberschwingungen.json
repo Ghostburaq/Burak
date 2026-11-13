@@ -1,0 +1,12 @@
+{
+  "titel": "Oberschwingungen",
+  "saetze": [
+    {"szene": "sauber", "text": "Dein Strom sieht sauber aus. Ist er aber oft nicht.", "sprich": "Dein Strom sieht sauber aus. Ist er aber oft nicht."},
+    {"szene": "lasten", "text": "Frequenzumrichter, Netzteile und LED-Treiber ziehen den Strom nicht sinusförmig.", "sprich": "Frequenz-Umrichter, Netzteile und LED-Treiber ziehen den Strom nicht sinusförmig."},
+    {"szene": "harmonische", "text": "Das erzeugt Oberschwingungen, vor allem die 5. und 7.: 250 und 350 Hz.", "sprich": "Das erzeugt Oberschwingungen. Vor allem die fünfte und die siebte, also zweihundertfünfzig und dreihundertfünfzig Hertz."},
+    {"szene": "folgen", "text": "Die Folgen: zusätzliche Erwärmung, Fehlauslösungen, Resonanzen mit Kompensationsanlagen.", "sprich": "Die Folgen: zusätzliche Erwärmung von Kabeln und Transformatoren, Fehlauslösungen, und Resonanzen mit Kompensationsanlagen."},
+    {"szene": "norm", "text": "EN 50160: Gesamtverzerrung der Spannung höchstens 8 %.", "sprich": "Die Norm Ee-Enn fünfzigtausendeinhundertsechzig erlaubt am Übergabepunkt eine Gesamtverzerrung der Spannung von höchstens acht Prozent."},
+    {"szene": "messen", "text": "Ob du drüber liegst, zeigt nur eine Messung nach IEC 61000-4-30 Klasse A.", "sprich": "Ob du drüber liegst, zeigt nur eine Messung nach I E C einundsechzigtausend, Teil vier, Strich dreissig, Klasse A."},
+    {"szene": "ende", "text": "Messen statt raten.", "sprich": "Messen statt raten."}
+  ]
+}

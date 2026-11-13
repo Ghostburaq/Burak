@@ -2,6 +2,7 @@ import { MyComposition } from "./Composition";
 import { ErinnerungComp } from "./Erinnerung";
 import { ErinnerungWarmComp } from "./ErinnerungWarm";
 import { ShowcaseComp } from "./Showcase";
+import { ErklaerComp } from "./Erklaer";
 
 export const RemotionRoot: React.FC = () => {
   return (
@@ -10,6 +11,7 @@ export const RemotionRoot: React.FC = () => {
       <ErinnerungComp />
       <ErinnerungWarmComp />
       <ShowcaseComp />
+      <ErklaerComp />
     </>
   );
 };
