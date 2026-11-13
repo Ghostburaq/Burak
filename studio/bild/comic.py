@@ -43,8 +43,9 @@ def blase(d, box, text, unten=False):
     f = font(44)
     zeilen = textwrap.wrap(text, 22)
     lh = 54
-    bw = max(d.textlength(z, font=f) for z in zeilen) + 70
-    bh = lh * len(zeilen) + 50
+    tw_max = max(d.textlength(z, font=f) for z in zeilen)
+    bw = tw_max / 0.74  # Text muss ins Innere der Ellipse passen
+    bh = (lh * len(zeilen)) / 0.68
     bx = x0 + 30
     by = y1 - bh - 70 if unten else y0 + 30
     # Schwanz der Sprechblase
@@ -56,7 +57,12 @@ def blase(d, box, text, unten=False):
     d.line([(sx + 4, sy), (sx + 46, sy)], fill="white", width=8)
     for i, z in enumerate(zeilen):
         tw = d.textlength(z, font=f)
-        d.text((bx + (bw - tw) / 2, by + 25 + i * lh), z, font=f, fill="black")
+        d.text(
+            (bx + (bw - tw) / 2, by + (bh - lh * len(zeilen)) / 2 + i * lh),
+            z,
+            font=f,
+            fill="black",
+        )
 
 
 def main():
