@@ -9,6 +9,7 @@
   },
   "private": true,
   "dependencies": {
+    "@fontsource/bangers": "^5.3.0",
     "@fontsource/cormorant-garamond": "^5.3.0",
     "@remotion/cli": "4.0.541",
     "react": "19.3.1",

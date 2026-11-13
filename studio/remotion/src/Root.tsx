@@ -3,6 +3,7 @@ import { ErinnerungComp } from "./Erinnerung";
 import { ErinnerungWarmComp } from "./ErinnerungWarm";
 import { ShowcaseComp } from "./Showcase";
 import { ErklaerComp } from "./Erklaer";
+import { PTPromoComp } from "./PTPromo";
 
 export const RemotionRoot: React.FC = () => {
   return (
@@ -12,6 +13,7 @@ export const RemotionRoot: React.FC = () => {
       <ErinnerungWarmComp />
       <ShowcaseComp />
       <ErklaerComp />
+      <PTPromoComp />
     </>
   );
 };
