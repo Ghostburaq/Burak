@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Deine Sprachaufnahme als Referenz vorbereiten: mono, 24 kHz, Stille weg, Rauschen weg, max. 30 s.
+# Nutzung: stimme-vorbereiten aufnahme.(m4a|mp3|wav|mp4)   -> content/stimme/referenz.wav
+set -euo pipefail
+ziel="$(dirname "$0")/../../content/stimme/referenz.wav"
+ffmpeg -v error -y -i "$1" -ac 1 -ar 24000 -af "highpass=f=70,afftdn=nf=-25,silenceremove=start_periods=1:start_threshold=-45dB:stop_periods=-1:stop_duration=0.6:stop_threshold=-45dB,loudnorm=I=-18:TP=-2" -t 30 "$ziel"
+echo "Fertig: $ziel ($(ffprobe -v error -show_entries format=duration -of csv=p=0 "$ziel") s)"

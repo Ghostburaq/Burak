@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Text mit DEINER Stimme sprechen (Stimmklon). Vorher einmal: stimme-vorbereiten aufnahme.m4a
+# Nutzung: meine-stimme "Text" [ausgabe.wav] [ausdruck 0.3 ruhig .. 0.8 lebhaft]
+#          meine-stimme skript.txt [ausgabe.wav]
+set -euo pipefail
+dir="$(cd "$(dirname "$0")" && pwd)"
+ref="${REFERENZ:-$dir/../../content/stimme/referenz.wav}"
+[ -f "$ref" ] || { echo "Keine Referenz. Zuerst: stimme-vorbereiten deine_aufnahme.m4a"; exit 1; }
+/opt/stimmklon/bin/python "$dir/../stimme/klon.py" "$ref" "$1" "${2:-meine_stimme.wav}" de "${3:-0.5}" 2>&1 | grep -E "^\[|Fertig|Error"

@@ -113,3 +113,22 @@ Vite + TypeScript + Tailwind + GSAP (Animation) + Three.js (3D) + Lottie.
 | `hochskalieren` | Bild 4-fach grösser und schärfer (Real-ESRGAN, ca. 20 s für 512 px) | `studio/bin/hochskalieren bild.png gross.png anime` (`foto` für Fotos) |
 
 Tipps Stimme: Zahlen und Normen ausschreiben, wenn die Aussprache stimmen muss ("EN fünfzigtausendeinhundertsechzig"). Tempo als dritter Wert: 1.0 schnell, 1.15 ruhig.
+
+## Meine Stimme (Stimmklon)
+
+| Befehl | Was er macht |
+|---|---|
+| `stimme-vorbereiten aufnahme.m4a` | Deine Aufnahme (15-30 s, ruhig gesprochen) als Referenz einrichten, landet in `content/stimme/referenz.wav` |
+| `meine-stimme "Text" out.wav` | Text mit deiner Stimme sprechen (Chatterbox, lokal, ca. 1 min pro 10 s Sprache) |
+
+Ausdruck als dritter Wert: 0.3 ruhig, 0.8 lebhaft. Ausgaben tragen ein unhörbares Wasserzeichen (Perth).
+
+## Eigene Skills (`.claude/skills/`)
+
+| Skill | Auslöser |
+|---|---|
+| `nexa-clip` | "Mach daraus einen TikTok-Clip" |
+| `nexa-erklaervideo` | "Erklärvideo über Oberschwingungen" |
+| `erinnerungsvideo` | "Mach aus diesem Bild was Schönes mit Lied" |
+| `meine-stimme` | "Sprich das mit meiner Stimme ein" |
+| `mit-praesentation` | "Deck im MiT-Design" |
