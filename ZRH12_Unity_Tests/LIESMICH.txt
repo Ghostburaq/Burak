@@ -1,0 +1,64 @@
+ZRH12 - ERKENNUNGSTEST FUER SIGMA UNITY
+=======================================
+
+URSACHE DER FEHLERMELDUNG
+
+In der Datei auf dem Rechner steht beim Leistungsfaktor nicht das Zeichen
+O-strich, sondern vier einzelne Zeichen: Backslash, Hochkomma, d, 8.
+
+   falsch:   Load  0kw 1cos\'d8 00:00:00 No
+   richtig:  Load  0kw 1cosO    00:00:00 No        (O hier = O-strich)
+
+\'d8 ist eine RTF-Fluchtsequenz. Sie entsteht, wenn Text aus einem Word-
+oder RTF-Dokument herauskopiert wird. Der Compiler liest 1cos\'d8 als
+Zahl plus Einheit und findet keine gueltige Einheit. Daher Error 7.
+
+WAS DAS FOTO AUSSERDEM BEWEIST
+
+Auf den Zeilen 1, 2, 3, 5, 7, 9, 10 und 11 steht KEIN Fehler. Damit ist
+belegt, dass Sigma Unity folgendes akzeptiert:
+   Capture  On          Section  Heatrun      Instrumentation  Full
+   Delay  00:00:30      Reject                Capture  Off
+Beanstandet werden ausschliesslich die Load-Zeilen, 4 und 6.
+
+OFFEN BLEIBT DER VIERTE PARAMETER
+
+Die Meldung nennt zwei Fehler je Zeile: expected number und expected units.
+"expected units" ist der Leistungsfaktor. "expected number" koennte der
+vierte Parameter sein, der in unseren Dateien 00:00:00 lautet. In der
+Offenbach-Datei, die kompiliert hat, stand dort eine blanke 0.
+Das klaert die Testreihe.
+
+
+SO GEHST DU VOR
+
+Ordner A_Erkennungstest. Die Dateien der Reihe nach in Unity laden,
+bis eine ohne Fehler durchgeht. Jede hat hoechstens 375 kW und laeuft
+rund eine Minute, also ungefaehrlich.
+
+   T1  nur das Zeichen repariert, sonst unveraendert
+   T2  zusaetzlich vierter Parameter 0 statt 00:00:00     <- wahrscheinlich
+   T3  zusaetzlich 1.0 statt 1 beim Leistungsfaktor
+   T4  1.0 und wieder 00:00:00
+   T5  Inhalt wie T2, Datei als UTF-8                     nur falls T1-T4 scheitern
+   T6  Inhalt wie T2, UTF-8 mit BOM
+
+Welche durchgeht, mir melden. Dann baue ich alle sechs Programme in
+genau dieser Form.
+
+Ordner B_P02_Varianten enthaelt das vollstaendige P02 in den beiden
+wahrscheinlichsten Formen. Geht T1 durch, nimm P02_Form_T1_Zeit.
+Geht T2 durch, nimm P02_Form_T2_Null.
+
+
+DATEI SELBST PRUEFEN, IMMER VOR DEM LADEN
+
+Datei in Notepad oeffnen. Beim Leistungsfaktor muss stehen:
+   1cosO     mit dem Zeichen O-strich, EIN Zeichen
+nicht:
+   1cos\'d8  vier Zeichen, RTF-Rest
+   1cosphi   griechisches phi, falsches Zeichen
+
+NIE den Umweg ueber Word, Outlook-Textkoerper oder WhatsApp nehmen.
+Immer als Datei oder als ZIP weitergeben. Jeder Umweg ueber eine
+Textdarstellung kann dieses eine Zeichen zerstoeren.
