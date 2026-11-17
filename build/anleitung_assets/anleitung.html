@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="de"><head><meta charset="utf-8">
+<title>SIGMA Unity Feldanleitung</title>
+<style>
+@page { size: A4; margin: 16mm 15mm 14mm 15mm; }
+:root{ --red:#E00036; --ink:#141619; --grey:#5F6670; --line:#DCDFE4;
+       --bg:#F5F6F8; --green:#2E8B48; --amber:#B8730A; }
+*{ box-sizing:border-box; }
+html,body{ margin:0; padding:0; }
+body{ font-family:'Inter','Helvetica Neue',Arial,sans-serif; color:var(--ink);
+      font-size:9.3pt; line-height:1.48; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+.page{ page-break-after:always; position:relative; }
+.page:last-child{ page-break-after:auto; }
+
+h1{ font-size:27pt; line-height:1.1; margin:0; font-weight:800; letter-spacing:-.4pt; }
+h2{ font-size:15pt; margin:0 0 3mm 0; font-weight:800; color:var(--red);
+    border-bottom:1.6pt solid var(--red); padding-bottom:1.6mm; letter-spacing:-.2pt; }
+h3{ font-size:10.5pt; margin:5mm 0 1.6mm 0; font-weight:700; color:var(--ink); }
+h4{ font-size:8.4pt; margin:0 0 1mm 0; font-weight:700; color:var(--grey);
+    text-transform:uppercase; letter-spacing:.7pt; }
+p{ margin:0 0 2.2mm 0; }
+ul,ol{ margin:0 0 2.2mm 0; padding-left:4.6mm; }
+li{ margin-bottom:1.1mm; }
+b,strong{ font-weight:700; }
+.small{ font-size:8.1pt; color:var(--grey); }
+.mono{ font-family:'DejaVu Sans Mono',monospace; font-size:8pt; }
+
+table{ width:100%; border-collapse:collapse; margin:0 0 3mm 0; }
+th{ background:var(--red); color:#fff; font-size:7.9pt; font-weight:700; text-align:left;
+    padding:1.7mm 2mm; letter-spacing:.2pt; }
+td{ padding:1.7mm 2mm; border-bottom:.6pt solid var(--line); vertical-align:top; font-size:8.6pt; }
+tr:nth-child(even) td{ background:#FAFBFC; }
+td.k{ font-weight:700; width:30%; }
+td.c{ text-align:center; }
+
+.box{ border-left:3pt solid var(--red); background:var(--bg); padding:2.8mm 3.4mm;
+      margin:0 0 3.4mm 0; }
+.box.warn{ border-left-color:#C00028; background:#FDF0F3; }
+.box.ok{ border-left-color:var(--green); background:#F1F8F3; }
+.box h4{ color:var(--red); }
+.box.warn h4{ color:#C00028; }
+.box.ok h4{ color:var(--green); }
+
+.badge{ display:inline-block; font-size:6.9pt; font-weight:700; padding:.7mm 1.6mm;
+        border-radius:1mm; letter-spacing:.3pt; vertical-align:1pt; }
+.b-ok{ background:#DCEFE2; color:#1D6B34; }
+.b-tbd{ background:#FBEBD2; color:#8A5600; }
+
+.fig{ margin:0 0 2mm 0; }
+.fig img{ width:100%; display:block; border:.6pt solid var(--line); }
+.fig.tall img{ width:auto; max-height:112mm; margin:0 auto; }
+.cap{ font-size:7.6pt; color:var(--grey); margin:1.2mm 0 3mm 0; }
+
+.legend{ display:grid; grid-template-columns:1fr 1fr; gap:0 6mm; }
+.li{ display:flex; gap:2mm; padding:1.3mm 0; border-bottom:.5pt solid var(--line); font-size:8.3pt; }
+.n{ flex:0 0 4.6mm; height:4.6mm; border-radius:50%; background:var(--red); color:#fff;
+    font-size:7pt; font-weight:700; display:flex; align-items:center; justify-content:center; }
+
+.step{ display:flex; gap:3mm; margin-bottom:2.6mm; break-inside:avoid; }
+.sn{ flex:0 0 7mm; height:7mm; border-radius:50%; background:var(--red); color:#fff;
+     font-size:9.5pt; font-weight:800; display:flex; align-items:center; justify-content:center; }
+.st{ flex:1; }
+.st b{ display:block; font-size:9.6pt; margin-bottom:.6mm; }
+
+.cols{ display:grid; grid-template-columns:1fr 1fr; gap:0 6mm; }
+.chk{ display:flex; gap:2.2mm; padding:1.5mm 0; border-bottom:.5pt solid var(--line); font-size:8.5pt; }
+.sq{ flex:0 0 3.6mm; height:3.6mm; border:1pt solid var(--grey); margin-top:.4mm; }
+.rule{ border:none; border-top:.6pt solid var(--line); margin:3mm 0; }
+.fill{ border-bottom:.8pt solid var(--grey); display:inline-block; min-width:38mm; }
+
+/* Titelseite */
+.cover-block{ background:var(--red); color:#fff; padding:11mm 10mm 12mm 10mm; margin:4mm 0 0 0; }
+.cover-block .kick{ font-size:8.6pt; letter-spacing:2.2pt; text-transform:uppercase; opacity:.9; margin-bottom:4mm; }
+.cover-block .sub{ font-size:12.5pt; margin-top:5mm; font-weight:500; line-height:1.4; }
+.meta{ display:grid; grid-template-columns:1fr 1fr; gap:0 8mm; margin-top:7mm; }
+.meta div{ border-top:.8pt solid var(--line); padding:1.8mm 0; font-size:8.4pt; }
+.meta span{ color:var(--grey); display:block; font-size:7.3pt; text-transform:uppercase; letter-spacing:.6pt; }
+
+.foot{ position:fixed; bottom:0; left:0; right:0; font-size:7pt; color:var(--grey);
+       border-top:.6pt solid var(--line); padding-top:1.4mm; display:flex; justify-content:space-between; }
+</style></head><body>
+
+<!-- ============================ 1 TITEL ============================ -->
+<div class="page">
+  <div style="font-size:8pt;letter-spacing:2pt;text-transform:uppercase;color:var(--grey);font-weight:700;">
+    Mobil in Time AG &nbsp;·&nbsp; An Aggreko Company</div>
+  <div class="cover-block">
+    <div class="kick">Feldanleitung für den Techniker</div>
+    <h1>SIGMA Unity<br>Lasttest laden und fahren</h1>
+    <div class="sub">Wo finde ich was, wie starte ich ein Testprogramm,<br>
+      was muss ich während des Laufs ablesen.</div>
+  </div>
+
+  <div class="meta">
+    <div><span>Projekt</span>ZRH12 Winterthur, Eneria CAT 3516</div>
+    <div><span>Leistung</span>3,5 MVA / rund 2800 kW bei cos φ 0,8</div>
+    <div><span>Aggreko Aufträge</span>A766406 (54 × 200 kW), A766407 (6 MVA)</div>
+    <div><span>Software</span>SIGMA Unity, Stand V1.04.89</div>
+    <div><span>Dokument</span>ANL-MIT-ZRH12-001, Rev. 1</div>
+    <div><span>Erstellt von</span>Burak Ücöz, Project Manager Switzerland</div>
+    <div><span>Ausgabedatum</span>17.11.2026</div>
+    <div><span>Gilt für</span>MiT Personal und beigezogene Techniker</div>
+  </div>
+
+  <div class="box warn" style="margin-top:9mm;">
+    <h4>Vor dem Lesen: was in dieser Anleitung belegt ist und was nicht</h4>
+    <p>Die Bildschirmansichten und die Bedienelemente auf den Seiten 3 und 4 stammen aus
+    Unterlagen des Herstellers Avtron. Sie sind belegt und tragen die Marke
+    <span class="badge b-ok">belegt</span>.</p>
+    <p>Für das Öffnen einer Testdatei und für die Berichtsausgabe gibt es keine
+    öffentliche Bedienungsanleitung. Diese Schritte tragen die Marke
+    <span class="badge b-tbd">vor Ort bestätigen</span>. Sie sind nach dem erwarteten Ablauf
+    beschrieben, nicht nach einem Handbuch. Beim ersten Einsatz prüfen, im Feld eintragen
+    und fotografieren. Daraus wird Rev. 2.</p>
+    <p style="margin-bottom:0;"><b>Nichts in dieser Anleitung ist geraten und als Tatsache
+    ausgegeben.</b> Wo eine Angabe fehlt, steht das ausdrücklich dort.</p>
+  </div>
+</div>
+
+<!-- ============================ 2 VOR DER ABREISE ============================ -->
+<div class="page">
+  <h2>1 &nbsp;Vor der Abreise klären</h2>
+
+  <div class="box warn">
+    <h4>Die eine Frage, die den Testtag entscheidet</h4>
+    <p><b>Liest SIGMA Unity die vorhandenen .tst-Dateien aus SIGMA PC?</b></p>
+    <p>Die sechs Testprogramme P01 bis P06 für ZRH12 sind im .tst-Format von SIGMA PC
+    geschrieben. SIGMA PC ist abgekündigt, Unity ist der Nachfolger und fasst PC Basic,
+    Network Pro und PC System zusammen. Ob Unity die alten Dateien übernimmt, steht in
+    keiner öffentlichen Unterlage.</p>
+    <p style="margin-bottom:0;"><b>Vor der Abreise bei Avtron abklären.</b>
+    customercare@avtronpower.com, +44 1780 480033. Falls Unity die Dateien nicht liest,
+    müssen die Programme in Unity neu angelegt werden. Das ist Arbeit für einen halben Tag,
+    nicht für eine Stunde auf der Baustelle.</p>
+  </div>
+
+  <h3>Was mitgehört</h3>
+  <table>
+    <tr><th style="width:34%">Gegenstand</th><th>Anmerkung</th></tr>
+    <tr><td class="k">Laptop mit SIGMA Unity</td><td>Version notieren. Stand dieser Anleitung ist V1.04.89.</td></tr>
+    <tr><td class="k">Schnittstelle</td><td>SIGMA 2 Lastbänke brauchen ein RS485-USB-Interface.
+      SIGMA LT brauchen ein SIGMA Gateway oder Wireless Gateway. <span class="badge b-ok">belegt</span></td></tr>
+    <tr><td class="k">Kabel</td><td>SIGMA Mehraderkabel zum Lastbank, USB-Kabel zum Laptop.</td></tr>
+    <tr><td class="k">Testprogramme</td><td>P01 bis P06, auf USB-Stick und zusätzlich im Mail-Postfach.</td></tr>
+    <tr><td class="k">Netzanalysator</td><td>Fluke mit Energy Analyze Plus, für die unabhängige Zweitmessung.</td></tr>
+    <tr><td class="k">Prüfblatt</td><td>Seite 8 dieser Anleitung, ausgedruckt.</td></tr>
+  </table>
+
+  <h3>Verbindung und Reichweite <span class="badge b-ok">belegt</span></h3>
+  <table>
+    <tr><th>Punkt</th><th>Wert</th></tr>
+    <tr><td class="k">Protokolle</td><td>USB, WLAN oder Ethernet</td></tr>
+    <tr><td class="k">Maximale Steuerdistanz</td><td>1000 m. Mehr über Lichtwellenleiter, SIGMA Gateway oder TCP/IP.</td></tr>
+    <tr><td class="k">Anzahl Lastbänke</td><td>über 100, abhängig von der Verbindungsart</td></tr>
+    <tr><td class="k">Arbeitsgrössen</td><td>kW, kVA, kVAr und Prozent Last</td></tr>
+    <tr><td class="k">Berichtsausgabe</td><td>PDF oder .txt</td></tr>
+  </table>
+
+  <div class="box">
+    <h4>Aus SIGMA PC übernommen, in Unity zu bestätigen</h4>
+    <p style="margin-bottom:0;">Bei SIGMA PC musste die COM-Port-Nummer kleiner als 10 sein,
+    sonst fand die Software den Lastbank nicht. Das stand ausdrücklich im Kurzanleitung des
+    Herstellers. Ob das für Unity noch gilt, ist nicht belegt. Wenn Unity beim Start keine
+    Lastbänke findet: im Gerätemanager unter Anschlüsse die Nummer des USB Serial Port prüfen
+    und bei Bedarf auf eine Nummer unter 10 ändern. <span class="badge b-tbd">vor Ort bestätigen</span></p>
+  </div>
+</div>
+
+<!-- ============================ 3 OBERFLÄCHE ============================ -->
+<div class="page">
+  <h2>2 &nbsp;Die Oberfläche <span style="font-size:8pt;font-weight:600;color:var(--grey);">
+    Seite Load, Graphansicht</span></h2>
+  <div class="fig tall"><img src="screen_a.png" alt="SIGMA Unity, Seite Load"></div>
+  <div class="cap">Bildquelle: Avtron SIGMA Unity Broschüre, Publikation 5196. Marken ergänzt.
+    <span class="badge b-ok">belegt</span></div>
+
+  <div class="legend">
+    <div class="li"><div class="n">1</div><div><b>Menüleiste.</b> Setup, Load, Status,
+      Reports, Settings. Der aktive Punkt ist blau unterlegt.</div></div>
+    <div class="li"><div class="n">2</div><div><b>Aufzeichnung, Laufzeit, Prüfling.</b>
+      Der Punkt links startet die Datenaufzeichnung, daneben läuft die Uhr. Darunter stehen
+      die Daten des Supply on Test, hier 1000 kW, 1000 kVA, cos φ 1,00.</div></div>
+    <div class="li"><div class="n">3</div><div><b>Last abwerfen.</b> Grosses rotes O oben
+      rechts. Nimmt die Last sofort vom Prüfling. Das ist der Knopf für den Notfall.</div></div>
+    <div class="li"><div class="n">4</div><div><b>Ansichtsumschalter.</b> Instrumente,
+      Kurve, Einzelansicht, Liste, Kachel. Für die Rampenmessung die Kurve wählen.</div></div>
+    <div class="li"><div class="n">5</div><div><b>Messwerte der Lastbänke.</b> Wirkleistung,
+      Scheinleistung, Blindleistung, Leistungsfaktor, Spannung, Frequenz. In Klammern steht
+      die Anzahl verbundener Bänke.</div></div>
+    <div class="li"><div class="n">6</div><div><b>Spannung und Strom je Phase.</b> L1, L2, L3
+      mit Aussenleiter- und Sternspannung sowie Strom.</div></div>
+    <div class="li"><div class="n">7</div><div><b>Steuermodus.</b> Senkrechte Leiste am
+      rechten Rand: Handbetrieb, A für den automatischen Testlauf, darunter ein Symbol für
+      Skript und M für den Motoranlauf-Lastsprung.</div></div>
+    <div class="li"><div class="n">8</div><div><b>Bedienleiste.</b> Siehe nächste Seite.</div></div>
+    <div class="li"><div class="n">9</div><div><b>Last anlegen und abwerfen.</b> Grünes I legt
+      die eingestellte Last auf, rotes O wirft sie ab.</div></div>
+  </div>
+
+  <div class="box ok" style="margin-top:4mm;">
+    <h4>Zwei Knöpfe, die man im Schlaf treffen muss</h4>
+    <p style="margin-bottom:0;">Das <b>rote O oben rechts</b> (3) und das <b>rote O unten rechts</b> (9)
+    nehmen beide die Last weg. Vor dem ersten Lastaufschalten zeigen und dem zweiten Mann sagen,
+    wo sie liegen. Wer sie erst sucht, wenn der Generator in die Knie geht, sucht zu lange.</p>
+  </div>
+</div>
+
+<!-- ============================ 4 BEDIENLEISTE ============================ -->
+<div class="page">
+  <h2>3 &nbsp;Bedienleiste und Menüs</h2>
+  <div class="fig"><img src="bottom_a.png" alt="Bedienleiste"></div>
+  <div class="cap">Bedienleiste am unteren Rand der Seite Load. <span class="badge b-ok">belegt</span></div>
+
+  <div class="legend">
+    <div class="li"><div class="n">1</div><div><b>Lastart.</b> Linkes Symbol Wirklast,
+      rechtes Symbol Blindlast. Bei rein resistiven Bänken bleibt nur die Wirklast aktiv.</div></div>
+    <div class="li"><div class="n">2</div><div><b>Arbeitsgrössen.</b> Auswahlfeld, hier
+      kW | cos φ. Alternativ kVA, kVAr oder Prozent. <b>Für alle ZRH12-Programme kW und cos φ.</b></div></div>
+    <div class="li"><div class="n">3</div><div><b>Lastvorgaben in Prozent.</b>
+      0, 25, 50, 75, 100 und 110 Prozent des Supply on Test.</div></div>
+    <div class="li"><div class="n">4</div><div><b>Leistungsfaktor-Vorgaben.</b>
+      0,70 bis 1,00. Für ZRH12 immer 1,00.</div></div>
+    <div class="li"><div class="n">5</div><div><b>Zahleneingabe.</b> Oben die Leistung mit
+      Minus und Plus, unten der Leistungsfaktor. Für krumme Sollwerte wie 2298 kW.</div></div>
+    <div class="li"><div class="n">6</div><div><b>Anlegen und abwerfen.</b> Grünes I legt auf,
+      rotes O wirft ab.</div></div>
+  </div>
+
+  <h3>Die fünf Menüpunkte</h3>
+  <div class="fig"><img src="nav.png" alt="Menüleiste"></div>
+  <table style="margin-top:2mm;">
+    <tr><th style="width:20%">Menü</th><th>Wofür</th><th style="width:22%">Beleglage</th></tr>
+    <tr><td class="k">Setup</td><td>Daten des Prüflings eintragen, Lastbänke suchen, benennen
+      und gruppieren. Die Zahl im Kreis zeigt die erkannten Bänke.</td>
+      <td><span class="badge b-tbd">vor Ort bestätigen</span></td></tr>
+    <tr><td class="k">Load</td><td>Der Arbeitsplatz während des Tests. Last stellen, anlegen,
+      abwerfen, Messwerte und Kurve lesen.</td>
+      <td><span class="badge b-ok">belegt</span></td></tr>
+    <tr><td class="k">Status</td><td>Zustand und Störungen der verbundenen Lastbänke.</td>
+      <td><span class="badge b-tbd">vor Ort bestätigen</span></td></tr>
+    <tr><td class="k">Reports</td><td>Berichte. Hersteller nennt Basic, Summary, Transient
+      und Heat Run. Ausgabe als PDF oder .txt.</td>
+      <td><span class="badge b-tbd">vor Ort bestätigen</span></td></tr>
+    <tr><td class="k">Settings</td><td>Grundeinstellungen der Software.</td>
+      <td><span class="badge b-tbd">vor Ort bestätigen</span></td></tr>
+  </table>
+
+  <div class="box">
+    <h4>Wo das automatische Programm liegt</h4>
+    <p style="margin-bottom:0;">Der Hersteller nennt in den Unity-Tutorials die Themen
+    <b>Automatic Load Control</b> und <b>Scripting Basics</b> und führt als Merkmale
+    <i>in-built load test templates</i>, <i>automatic load testing with data capture</i> und
+    <i>create custom scripts and save for repeatable load testing</i>. Der automatische Lauf
+    wird daher über den Steuermodus <b>A</b> in der senkrechten Leiste rechts erwartet
+    (Seite 3, Marke 7). <span class="badge b-tbd">vor Ort bestätigen</span></p>
+  </div>
+</div>
+
+<!-- ============================ 5 ABLAUF ============================ -->
+<div class="page">
+  <h2>4 &nbsp;Ablauf Schritt für Schritt</h2>
+
+  <div class="step"><div class="sn">1</div><div class="st">
+    <b>Verbinden <span class="badge b-ok">belegt</span></b>
+    SIGMA Mehraderkabel vom Lastbank an das Interface, Interface per USB an den Laptop.
+    Erst dann Unity starten. Bei SIGMA LT stattdessen das Gateway.</div></div>
+
+  <div class="step"><div class="sn">2</div><div class="st">
+    <b>Lastbänke erkennen lassen <span class="badge b-tbd">vor Ort bestätigen</span></b>
+    Unity sucht die verbundenen Bänke selbst. Die Zahl im Kreis neben <b>Setup</b> muss der
+    Anzahl angeschlossener Bänke entsprechen. Stimmt sie nicht, erst hier aufräumen,
+    nicht später. Findet Unity nichts, COM-Port prüfen (Seite 2).</div></div>
+
+  <div class="step"><div class="sn">3</div><div class="st">
+    <b>Supply on Test eintragen <span class="badge b-tbd">vor Ort bestätigen</span></b>
+    Unter <b>Setup</b> die Daten des Generators eintragen. Für ZRH12:
+    <span class="mono">3,5 MVA · 2800 kW · cos φ 0,8 · 400 V · 50 Hz</span>.
+    Davon hängen alle Prozentvorgaben ab. Falsch eingetragen heisst, dass 100 Prozent
+    nicht 100 Prozent sind.</div></div>
+
+  <div class="step"><div class="sn">4</div><div class="st">
+    <b>Testprogramm laden <span class="badge b-tbd">vor Ort bestätigen</span></b>
+    In den Steuermodus <b>A</b> wechseln und das Programm öffnen. Erwarteter Weg: Modus A,
+    dann Skript oder Testprogramm öffnen und die Datei wählen.
+    <b>Sobald der Weg bekannt ist, hier eintragen:</b><br>
+    <span class="fill" style="min-width:150mm;"></span></div></div>
+
+  <div class="step"><div class="sn">5</div><div class="st">
+    <b>Programm prüfen, bevor etwas schaltet</b>
+    Ersten und letzten Sollwert gegen das Prüfblatt vergleichen, erwartete Gesamtlaufzeit
+    gegen den Kopf der Programmdatei. Bei P02 muss der Rampenabschnitt 16 Schritte haben,
+    nicht 30. Weicht etwas ab, nicht starten.</div></div>
+
+  <div class="step"><div class="sn">6</div><div class="st">
+    <b>Aufzeichnung starten <span class="badge b-ok">belegt</span></b>
+    Den Aufzeichnungsknopf oben (Seite 3, Marke 2) drücken, <b>bevor</b> der Testlauf startet.
+    Die Uhr daneben muss laufen. Ohne Aufzeichnung kein Bericht und keine Nachweiskurve.
+    Parallel den Fluke starten.</div></div>
+
+  <div class="step"><div class="sn">7</div><div class="st">
+    <b>Lauf starten und begleiten</b>
+    Den Lauf starten und die Kurvenansicht offen lassen. Beide Hände frei, der zweite Mann
+    bleibt am Generator. Bei jeder Stufe Leistung und Frequenz mitlesen.
+    Abbruch jederzeit mit dem roten O.</div></div>
+
+  <div class="step"><div class="sn">8</div><div class="st">
+    <b>Bericht ausgeben und sichern <span class="badge b-tbd">vor Ort bestätigen</span></b>
+    Unter <b>Reports</b> den passenden Bericht wählen, als PDF ausgeben und zusätzlich als
+    .txt sichern. Datei auf den Stick und noch auf der Baustelle per Mail wegschicken.
+    Ein Bericht, der nur auf dem Laptop liegt, existiert nicht.</div></div>
+
+  <div class="box warn">
+    <h4>Reihenfolge, die nicht verhandelbar ist</h4>
+    <p style="margin-bottom:0;">Aufzeichnung vor Laststart. Supply on Test vor Programmstart.
+    Programm prüfen vor dem ersten Schaltbefehl. Kühllauf am Ende abwarten, bevor die
+    Lüfter stehen.</p>
+  </div>
+</div>
+
+<!-- ============================ 6 PROGRAMME ============================ -->
+<div class="page">
+  <h2>5 &nbsp;Die sechs Testprogramme für ZRH12</h2>
+  <p>Reihenfolge einhalten. <b>P01 zuerst</b>, das Ergebnis entscheidet über die Einstellung
+  von P02.</p>
+  <table>
+    <tr><th style="width:9%">Nr.</th><th style="width:27%">Programm</th><th style="width:11%">Dauer</th>
+        <th>Zweck und was abzulesen ist</th></tr>
+    <tr><td class="k">P01</td><td>Step Timing Diagnostic</td><td>5 min 08 s</td>
+      <td>Misst die tatsächliche Schrittzeit des Lastbanks. Drei Blöcke über die gleiche
+      Spanne 187 bis 1500 kW. <b>Ablesen:</b> Zeit je Block, daraus der Overhead je Schritt.
+      Diese Zahl steuert P02.</td></tr>
+    <tr><td class="k">P02</td><td>Cold Start Ramp Acceptance</td><td>4 min 25 s</td>
+      <td>Die vertraglich geforderte Rampe 187 auf 2298 kW in 30 s. Allein gefahren, damit
+      die Zeit zwischen zwei stabilen Plateaus ablesbar ist. <b>Ablesen:</b> Rampenzeit.</td></tr>
+    <tr><td class="k">P03</td><td>Ramp and L3 Transients</td><td>16 min 59 s</td>
+      <td>Der volle Lauf: Rampe, Hauptplateau 2721 kW über 180 s, L3-Lastsprünge,
+      thermischer Referenzschritt. <b>Ablesen:</b> Leistung bei 0 s und bei 180 s des
+      Plateaus, Spannungs- und Frequenzeinbrüche bei jedem Sprung.</td></tr>
+    <tr><td class="k">P04</td><td>Overshoot and Thermal</td><td>30 min 30 s</td>
+      <td>Drei Haltephasen à 300 s bei 2750 kW. Trennt Kabelverlust von Elementtemperatur.
+      <b>Ablesen:</b> Leistung bei 0 s, 60 s und 300 s jeder Haltephase.</td></tr>
+    <tr><td class="k">P05</td><td>Step Load ISO 8528-5</td><td>35 min 42 s</td>
+      <td>Lastaufschaltung und Lastabwurf nach Norm, in Blöcken von 25 Prozent.
+      <b>Ablesen:</b> Spannungs- und Frequenzeinbruch, Erholzeit, Überschwingen beim Abwurf.
+      Leistungsklasse vorher im Projekt klären.</td></tr>
+    <tr><td class="k">P06</td><td>Full Load Heat Run</td><td>157 min 10 s</td>
+      <td>Dauerlauf 25 / 50 / 75 Prozent je 30 min, dann 100 Prozent über 60 min.
+      <b>Ablesen:</b> je Block am Anfang, in der Mitte und am Ende kW, kVA, cos φ, Spannung
+      und Strom je Phase, Frequenz, Kühlwasser- und Abgastemperatur, Öldruck, Tankstand.</td></tr>
+  </table>
+
+  <div class="box warn">
+    <h4>Thermik: der erste Messwert ist immer der höchste</h4>
+    <p style="margin-bottom:0;">Widerstandselemente haben einen positiven Temperaturkoeffizienten.
+    Ein kalter Lastbank zieht beim gleichen Sollwert mehr Leistung. Am 9. November wurden auf
+    GEN-1A im selben Lauf 2926 kW auf dem ersten kalten Plateau gegen 2804 kW auf einem späteren
+    warmen Plateau gemessen, eine Differenz von 122 kW oder 4,2 Prozent.
+    <b>Blockwert immer am Ende des Blocks nehmen, nie am Anfang.</b> Zustand des Lastbanks,
+    kalt oder warm, im Prüfblatt vermerken.</p>
+  </div>
+</div>
+
+<!-- ============================ 7 MESSREGELN ============================ -->
+<div class="page">
+  <h2>6 &nbsp;Messregeln, die über Bestehen entscheiden</h2>
+
+  <div class="box warn">
+    <h4>Die 17-Sekunden-Falle</h4>
+    <p>P02 und P03 halten vor der Rampe 17 Sekunden auf 187 kW. Das ist Einschwingzeit und
+    <b>gehört nicht in die Rampenmessung</b>.</p>
+    <p style="margin-bottom:0;">Cursor 1 auf das <b>letzte</b> Sample des 187-kW-Plateaus,
+    also unmittelbar vor dem ersten Rampenschritt. Cursor 2 auf das <b>erste</b> Sample des
+    2298-kW-Plateaus. Wer Cursor 1 an den Anfang des Plateaus setzt, misst 17 Sekunden zu viel
+    und die Rampe fällt scheinbar durch, obwohl sie hält. Genau diese Verwechslung steht hinter
+    der Beanstandung von 47 Sekunden.</p>
+  </div>
+
+  <h3>Margenkontrolle vor dem Abnahmelauf</h3>
+  <p>P02 ist auf 29,9 s gegen eine Forderung von 30 s eingestellt. Das sind 0,1 s Reserve.
+  Die Rampenzeit folgt aus</p>
+  <p class="mono" style="background:var(--bg);padding:2.2mm 3mm;">
+    Rampenzeit = 16 × Overhead + 15 s + n &nbsp;&nbsp;(n = Anzahl der Delays mit 2 s)</p>
+  <p>Zuerst P01 fahren, den Overhead ablesen, dann n nach dieser Tabelle setzen:</p>
+  <table>
+    <tr><th>Gemessener Overhead je Schritt</th><th class="c">n</th><th>Erwartete Rampenzeit</th></tr>
+    <tr><td>bis 0,62 s</td><td class="c"><b>5</b> (wie ausgeliefert)</td><td>29,0 bis 29,9 s</td></tr>
+    <tr><td>0,63 bis 0,68 s</td><td class="c"><b>4</b></td><td>29,1 bis 29,9 s</td></tr>
+    <tr><td>0,69 bis 0,74 s</td><td class="c"><b>3</b></td><td>29,0 bis 29,8 s</td></tr>
+    <tr><td>0,75 bis 0,80 s</td><td class="c"><b>2</b></td><td>29,0 bis 29,8 s</td></tr>
+  </table>
+  <p class="small">Die 2-s-Delays von hinten herausnehmen: zuerst Schritt 14, dann 11, dann 8.
+  So bleibt der Anfang der Rampe unverändert.</p>
+
+  <h3>Abbruchkriterien</h3>
+  <ul>
+    <li>Lastbank meldet eine Störung unter <b>Status</b>. Lauf anhalten, Ursache klären.</li>
+    <li>Generator verlässt den vereinbarten Toleranzband bei Spannung oder Frequenz.</li>
+    <li>Gemessene Leistung weicht dauerhaft mehr als 5 Prozent vom Sollwert ab und lässt sich
+      nicht durch die Elementtemperatur erklären.</li>
+    <li>Rauch, Geruch oder ungewohntes Geräusch am Lastbank oder an den Kabeln.</li>
+    <li>Unbefugte Person im abgesperrten Bereich.</li>
+  </ul>
+  <p><b>Abbruch:</b> rotes O drücken, Last ist weg. Lüfter weiterlaufen lassen, bis die
+  Elemente abgekühlt sind. Erst dann abstellen.</p>
+
+  <div class="box ok">
+    <h4>Zweitmessung ist Pflicht, nicht Kür</h4>
+    <p style="margin-bottom:0;">Den Fluke parallel mitlaufen lassen. Die Kurve des
+    Netzanalysators ist die Messung, die der Kunde anerkennt. Die Anzeige des Lastbanks ist
+    der Sollwert, nicht der Nachweis. Bei der Beanstandung vom 16. November war genau diese
+    Trennung der Punkt.</p>
+  </div>
+</div>
+
+<!-- ============================ 8 PRÜFBLATT ============================ -->
+<div class="page">
+  <h2>7 &nbsp;Prüfblatt und offene Punkte</h2>
+
+  <h3>Vor dem Start abhaken</h3>
+  <div class="cols">
+    <div>
+      <div class="chk"><div class="sq"></div><div>Kabel und Erdung geprüft, Türen zu</div></div>
+      <div class="chk"><div class="sq"></div><div>Bereich abgesperrt, Beschilderung steht</div></div>
+      <div class="chk"><div class="sq"></div><div>4 m Abstand zwischen Lastbänken eingehalten</div></div>
+      <div class="chk"><div class="sq"></div><div>Interface verbunden, Unity gestartet</div></div>
+      <div class="chk"><div class="sq"></div><div>Anzahl erkannter Lastbänke stimmt</div></div>
+    </div>
+    <div>
+      <div class="chk"><div class="sq"></div><div>Supply on Test eingetragen und kontrolliert</div></div>
+      <div class="chk"><div class="sq"></div><div>Arbeitsgrössen auf kW und cos φ gestellt</div></div>
+      <div class="chk"><div class="sq"></div><div>Testprogramm geladen und gegen Prüfblatt geprüft</div></div>
+      <div class="chk"><div class="sq"></div><div>Aufzeichnung läuft, Uhr zählt</div></div>
+      <div class="chk"><div class="sq"></div><div>Fluke läuft, Zeit mit Unity abgeglichen</div></div>
+    </div>
+  </div>
+
+  <h3>Laufdaten eintragen</h3>
+  <table>
+    <tr><th style="width:26%">Feld</th><th>Eintrag</th></tr>
+    <tr><td class="k">Datum und Uhrzeit</td><td>&nbsp;</td></tr>
+    <tr><td class="k">Generator</td><td>&nbsp;</td></tr>
+    <tr><td class="k">Gefahrenes Programm</td><td>&nbsp;</td></tr>
+    <tr><td class="k">Unity-Version</td><td>&nbsp;</td></tr>
+    <tr><td class="k">Zustand Lastbank</td><td>kalt &nbsp;/&nbsp; warm &nbsp;/&nbsp; durchgewärmt</td></tr>
+    <tr><td class="k">Overhead aus P01</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; s je Schritt&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; daraus n =</td></tr>
+    <tr><td class="k">Gemessene Rampenzeit</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; s&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; gegen 30 s gefordert</td></tr>
+    <tr><td class="k">Techniker</td><td>&nbsp;</td></tr>
+  </table>
+
+  <h3>Offene Punkte für Rev. 2</h3>
+  <table>
+    <tr><th style="width:52%">Punkt</th><th>Was dafür gebraucht wird</th></tr>
+    <tr><td>Liest Unity die .tst-Dateien aus SIGMA PC?</td>
+      <td>Antwort von Avtron, schriftlich</td></tr>
+    <tr><td>Klickweg zum Öffnen eines Testprogramms</td>
+      <td>Bildschirmfoto des Steuermodus A und des geöffneten Programms</td></tr>
+    <tr><td>Seite Setup, Eingabe Supply on Test</td><td>Bildschirmfoto</td></tr>
+    <tr><td>Seite Reports, Ausgabe als PDF</td><td>Bildschirmfoto</td></tr>
+    <tr><td>Gilt die COM-Port-Grenze unter 10 noch?</td><td>Prüfen beim ersten Verbinden</td></tr>
+  </table>
+
+  <div class="box">
+    <h4>So wird aus dieser Anleitung die vollständige Fassung</h4>
+    <p style="margin-bottom:0;">Beim ersten Einsatz von jedem Schritt mit der Marke
+    <span class="badge b-tbd">vor Ort bestätigen</span> ein Bildschirmfoto machen und den
+    tatsächlichen Klickweg notieren. Damit wird Rev. 2 erstellt, und danach steht in dieser
+    Anleitung nichts mehr, was erst noch zu bestätigen wäre.</p>
+  </div>
+
+  <hr class="rule">
+  <p class="small" style="margin-bottom:0;">
+    <b>Quellen.</b> Bildschirmansichten und Leistungsmerkmale: Avtron SIGMA Unity Broschüre,
+    Publikation 5196, und Produktseite SIGMA Unity, abgerufen am 17.11.2026.
+    Verbindungsarten, Reichweite und Anzahl Lastbänke: Fragen und Antworten derselben Seite.
+    COM-Port-Hinweis: Avtron SIGMA PC Software Quick Start Guide, Publikation 5164.
+    Thermische Werte und Beanstandung: eigene Messungen vom 9., 10. und 16. November 2026.
+    Testprogramme P01 bis P06: Mobil in Time AG.
+    Support Avtron: customercare@avtronpower.com, +44 1780 480033.</p>
+</div>
+
+</body></html>
