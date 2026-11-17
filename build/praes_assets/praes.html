@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="de"><head><meta charset="utf-8"><title>Sigma Unity Kurzanleitung</title>
+<style>
+@page{ size:A4 landscape; margin:0; }
+:root{ --red:#E00036; --ink:#141619; --grey:#6B7280; --line:#E3E6EA;
+       --bg:#F6F7F9; --green:#2E8B48; --amber:#B8730A; }
+*{box-sizing:border-box} html,body{margin:0;padding:0}
+body{font-family:'Inter',Arial,sans-serif;color:var(--ink);
+     -webkit-print-color-adjust:exact;print-color-adjust:exact}
+.s{ width:297mm; height:210mm; page-break-after:always; position:relative;
+    padding:13mm 15mm 12mm 15mm; overflow:hidden; }
+.s:last-child{page-break-after:auto}
+.kick{font-size:9pt;letter-spacing:2.6pt;text-transform:uppercase;color:var(--red);
+      font-weight:800;margin-bottom:3mm}
+h1{font-size:42pt;line-height:1.05;margin:0;font-weight:800;letter-spacing:-1pt}
+h2{font-size:26pt;line-height:1.1;margin:0 0 5mm 0;font-weight:800;letter-spacing:-.6pt}
+h2 em{font-style:normal;color:var(--red)}
+.num{position:absolute;right:15mm;bottom:9mm;font-size:9pt;color:var(--grey);font-weight:700}
+.foot{position:absolute;left:15mm;bottom:9mm;font-size:8pt;color:var(--grey)}
+img{display:block;max-width:100%}
+
+/* Titelseite */
+.cov{display:grid;grid-template-columns:1.25fr 1fr;gap:12mm;height:100%}
+.covL{display:flex;flex-direction:column;justify-content:center}
+.covR{display:flex;flex-direction:column;justify-content:center;gap:5mm}
+.card{background:var(--bg);border-left:4pt solid var(--red);padding:5mm 6mm}
+.card b{display:block;font-size:14pt;margin-bottom:1.5mm}
+.card span{font-size:10.5pt;color:var(--grey);line-height:1.45}
+.lead{font-size:14pt;color:var(--grey);margin-top:6mm;line-height:1.45}
+
+/* zweispaltig */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10mm;align-items:start}
+.two.w{grid-template-columns:1.35fr 1fr}
+.two.n{grid-template-columns:1fr 1.75fr}
+
+/* Schritte */
+.st{display:flex;gap:4mm;margin-bottom:4mm;align-items:flex-start}
+.sn{flex:0 0 11mm;height:11mm;border-radius:50%;background:var(--red);color:#fff;
+    font-size:16pt;font-weight:800;display:flex;align-items:center;justify-content:center}
+.sx b{display:block;font-size:14pt;margin-bottom:1mm;line-height:1.2}
+.sx span{font-size:10.5pt;color:var(--grey);line-height:1.45}
+
+/* Legende zum Bild */
+.lg{display:flex;gap:3mm;margin-bottom:3.5mm;align-items:flex-start}
+.lgn{flex:0 0 7.5mm;height:7.5mm;border-radius:50%;background:var(--red);color:#fff;
+     font-size:11pt;font-weight:800;display:flex;align-items:center;justify-content:center}
+.lg b{font-size:12pt;display:block;margin-bottom:.6mm}
+.lg span{font-size:10pt;color:var(--grey);line-height:1.4}
+
+/* Tabelle Testdateien */
+table{width:100%;border-collapse:collapse}
+th{background:var(--red);color:#fff;font-size:10pt;font-weight:800;text-align:left;padding:2.6mm 3mm}
+td{padding:2.8mm 3mm;border-bottom:.8pt solid var(--line);font-size:11.5pt;vertical-align:middle}
+td.f{font-family:'DejaVu Sans Mono',monospace;font-size:10.5pt;font-weight:700}
+td.g{color:var(--grey);font-size:10.5pt}
+tr.hit td{background:#F1F8F3}
+.tag{display:inline-block;font-size:8.5pt;font-weight:800;padding:1mm 2.2mm;border-radius:1.2mm;
+     background:#DCEFE2;color:#1D6B34;letter-spacing:.3pt}
+
+.big{background:var(--bg);padding:6mm 7mm;border-left:4pt solid var(--red)}
+.big > b{font-size:16pt;display:block;margin-bottom:2mm}
+.big span b{font-weight:800}
+.big span{font-size:11.5pt;color:var(--grey);line-height:1.5}
+.ok{border-left-color:var(--green);background:#F1F8F3}
+.mono{font-family:'DejaVu Sans Mono',monospace}
+.chk{display:flex;gap:3mm;align-items:center;padding:2.6mm 0;border-bottom:.8pt solid var(--line);font-size:12pt}
+.sq{flex:0 0 5.5mm;height:5.5mm;border:1.4pt solid var(--grey)}
+</style></head><body>
+
+<!-- 1 -->
+<div class="s">
+  <div class="cov">
+    <div class="covL">
+      <div class="kick">ZRH12 Winterthur &nbsp;&#183;&nbsp; Kurzanleitung</div>
+      <h1>Sigma Unity<br>Testprogramm<br>zum Laufen bringen</h1>
+      <div class="lead">Ein Zeichen war kaputt. Hier steht, was los war,<br>
+        welche Datei du nimmst und was du meldest.</div>
+    </div>
+    <div class="covR">
+      <div class="card"><b>Das Problem</b><span>Der Leistungsfaktor enth&#228;lt
+        vier Zeichen aus einem Word-Dokument statt dem Zeichen &#216;.</span></div>
+      <div class="card"><b>Die L&#246;sung</b><span>ZIP entpacken, sechs kleine Testdateien
+        der Reihe nach laden, die erste ohne Fehler melden.</span></div>
+      <div class="card"><b>Der Aufwand</b><span>Zehn Minuten. Jede Testdatei f&#228;hrt
+        h&#246;chstens 375 kW und dauert eine Minute.</span></div>
+    </div>
+  </div>
+  <div class="foot">Mobil in Time AG &#183; An Aggreko Company &#183; B. &#220;c&#246;z &#183; 17.11.2026</div>
+</div>
+
+<!-- 2 -->
+<div class="s">
+  <div class="kick">Was los war</div>
+  <h2>Ein Zeichen, <em>vier Zeichen daraus geworden</em></h2>
+  <img src="vergleich.png" style="width:100%;margin-bottom:6mm">
+  <div class="two w">
+    <img src="unity_fehler.png" style="width:100%">
+    <div style="font-size:11.5pt;color:var(--grey);line-height:1.5">
+      Der Compiler liest <span class="mono">1cos\'d8</span>, findet keine g&#252;ltige Einheit
+      und bricht ab. <b style="color:var(--ink)">expected units</b> ist genau das.<br><br>
+      <span class="mono">\'d8</span> ist die Schreibweise von Word f&#252;r &#216;.
+      Beim Kopieren aus einem Word-Dokument ist sie mitgewandert.
+    </div>
+  </div>
+  <div class="num">2</div>
+</div>
+
+<!-- 3 -->
+<div class="s">
+  <div class="kick">Die Regel</div>
+  <h2>Dateien <em>nur als ZIP</em> weitergeben</h2>
+  <img src="transport.png" style="width:100%;margin-bottom:7mm">
+  <div class="big ok">
+    <b>Vor jedem Laden: Datei in Notepad &#246;ffnen</b>
+    <span>Beim Leistungsfaktor muss <span class="mono" style="color:var(--ink);font-weight:700">1cos&#216;</span>
+    stehen. Ein Zeichen. Steht dort <span class="mono">1cos\'d8</span> oder
+    <span class="mono">1cos&#966;</span>, ist die Datei kaputt. Dann die Datei nochmal
+    frisch aus dem ZIP holen.</span>
+  </div>
+  <div class="num">3</div>
+</div>
+
+<!-- 4 -->
+<div class="s">
+  <div class="kick">Wo du es machst</div>
+  <h2>Setup &#8594; <em>Create/Edit Test Script</em></h2>
+  <div class="two n">
+    <div>
+      <div class="lg"><div class="lgn">1</div><div><b>Create/Edit Test Script</b>
+        <span>Hier liegt der Skript-Editor. Men&#252; Setup.</span></div></div>
+      <div class="lg"><div class="lgn">2</div><div><b>Skript suchen und laden</b>
+        <span>Lupe im Feld Script. Datei aus dem entpackten Ordner w&#228;hlen.</span></div></div>
+      <div class="lg"><div class="lgn">3</div><div><b>Speichern</b>
+        <span>Diskettensymbol rechts daneben.</span></div></div>
+      <div class="lg"><div class="lgn">4</div><div><b>Fehlerzeile</b>
+        <span>Rot unten. Leer heisst: Skript ist in Ordnung und l&#228;uft.</span></div></div>
+      <div class="big" style="margin-top:4mm;padding:4mm 5mm">
+        <b style="font-size:13pt">Gute Nachricht</b>
+        <span style="font-size:10.5pt">Auf den Zeilen mit <span class="mono">Capture On</span>,
+        <span class="mono">Section Heatrun</span>, <span class="mono">Instrumentation Full</span>,
+        <span class="mono">Delay 00:00:30</span>, <span class="mono">Reject</span> steht
+        kein Fehler. Diese Befehle versteht Unity. Nur die Load-Zeile klemmt.</span>
+      </div>
+    </div>
+    <img src="editor_a.png" style="width:100%;max-height:158mm;margin:0 auto">
+  </div>
+  <div class="num">4</div>
+</div>
+
+<!-- 5 -->
+<div class="s">
+  <div class="kick">Ordner A_Erkennungstest</div>
+  <h2>Sechs Dateien, <em>von oben nach unten</em></h2>
+  <table>
+    <tr><th style="width:11%">Datei</th><th style="width:37%">Load-Zeile darin</th>
+        <th>Was sie testet</th></tr>
+    <tr><td class="f">T1</td><td class="f">1cos&#216; &nbsp;00:00:00</td>
+        <td class="g">Nur das Zeichen repariert, sonst alles wie bisher</td></tr>
+    <tr class="hit"><td class="f">T2</td><td class="f">1cos&#216; &nbsp;0</td>
+        <td class="g">Zus&#228;tzlich vierter Wert als Zahl &nbsp;<span class="tag">wahrscheinlichster Treffer</span></td></tr>
+    <tr><td class="f">T3</td><td class="f">1.0cos&#216; &nbsp;0</td>
+        <td class="g">Zus&#228;tzlich 1.0 statt 1</td></tr>
+    <tr><td class="f">T4</td><td class="f">1.0cos&#216; &nbsp;00:00:00</td>
+        <td class="g">1.0 und wieder die Zeitschreibweise</td></tr>
+    <tr><td class="f">T5</td><td class="f">wie T2</td>
+        <td class="g">Datei als UTF-8. Nur wenn T1 bis T4 scheitern</td></tr>
+    <tr><td class="f">T6</td><td class="f">wie T2</td>
+        <td class="g">Datei als UTF-8 mit BOM</td></tr>
+  </table>
+  <div class="big ok" style="margin-top:7mm">
+    <b>Sobald eine ohne roten Text durchgeht: aufh&#246;ren und melden</b>
+    <span>Die restlichen musst du nicht mehr probieren. Jede Datei f&#228;hrt
+    0 &#8594; 187 &#8594; 375 &#8594; 0 kW mit zehn Sekunden Haltezeit. Ungef&#228;hrlich.</span>
+  </div>
+  <div class="num">5</div>
+</div>
+
+<!-- 6 -->
+<div class="s">
+  <div class="kick">Danach</div>
+  <h2>Drei Schritte, <em>dann l&#228;uft P02</em></h2>
+  <div class="st"><div class="sn">1</div><div class="sx">
+    <b>Passende P02-Datei nehmen</b>
+    <span>Ordner <span class="mono">B_P02_Varianten</span>.
+    Ging T1 durch, nimm <span class="mono">P02_Form_T1_Zeit.tst</span>.
+    Ging T2 durch, nimm <span class="mono">P02_Form_T2_Null.tst</span>.
+    Bei T3 bis T6 melde dich, dann baue ich sie.</span></div></div>
+  <div class="st"><div class="sn">2</div><div class="sx">
+    <b>Supply on Test pr&#252;fen, bevor du startest</b>
+    <span>3,5 MVA &#183; 2800 kW &#183; cos &#966; 0,8 &#183; 400 V &#183; 50 Hz.
+    Stimmt das nicht, stimmen alle Prozentwerte nicht.</span></div></div>
+  <div class="st"><div class="sn">3</div><div class="sx">
+    <b>Aufzeichnung starten, dann erst den Lauf</b>
+    <span>Aufnahmeknopf oben, Uhr muss laufen. Fluke parallel mitlaufen lassen.
+    Ohne Aufzeichnung kein Nachweis.</span></div></div>
+  <div class="big" style="margin-top:3mm">
+    <b>Beim Messen der Rampe</b>
+    <span>Cursor 1 auf das <b style="color:var(--ink)">letzte</b> Sample des 187-kW-Plateaus,
+    Cursor 2 auf das <b style="color:var(--ink)">erste</b> Sample des 2298-kW-Plateaus.
+    Die 17 Sekunden Haltezeit davor geh&#246;ren nicht zur Rampe. Falsch gesetzt misst du
+    47 statt 30 Sekunden, und genau darum geht der Streit.</span>
+  </div>
+  <div class="num">6</div>
+</div>
+
+<!-- 7 -->
+<div class="s">
+  <div class="kick">Zur&#252;ckmelden</div>
+  <h2>Was ich brauche, <em>dann baue ich alle sechs</em></h2>
+  <div class="two">
+    <div>
+      <div class="chk"><div class="sq"></div><div>Welche Testdatei ging durch? &nbsp;
+        <span class="mono" style="color:var(--grey)">T__</span></div></div>
+      <div class="chk"><div class="sq"></div><div>Falls keine: Foto der roten Fehlerzeile</div></div>
+      <div class="chk"><div class="sq"></div><div>Unity-Version aus dem Men&#252; Settings</div></div>
+      <div class="chk"><div class="sq"></div><div>Falls du selbst ein Skript in Unity
+        gespeichert hast: diese Datei schicken</div></div>
+      <div style="margin-top:7mm;font-size:11pt;color:var(--grey);line-height:1.5">
+        Mit der Antwort baue ich P01, P03, P04, P05 und P06 in genau der Form,
+        die funktioniert. Dauert bei mir Minuten, nicht Stunden.
+      </div>
+    </div>
+    <div>
+      <div class="big ok" style="margin-bottom:5mm">
+        <b>Reihenfolge am Testtag</b>
+        <span><b style="color:var(--ink)">P01 zuerst.</b> Das misst die Schrittzeit des
+        Lastbanks. Aus dem Ergebnis folgt, wie viele Zwei-Sekunden-Pausen in P02 geh&#246;ren.
+        Erst danach die Abnahmerampe fahren.</span>
+      </div>
+      <div class="big">
+        <b>Wenn gar nichts geht</b>
+        <span>Avtron Support, Software-Version angeben:<br>
+        <span class="mono" style="color:var(--ink)">customercare@avtronpower.com</span><br>
+        <span class="mono" style="color:var(--ink)">+44 1780 480033</span></span>
+      </div>
+    </div>
+  </div>
+  <div class="num">7</div>
+  <div class="foot">ZRH12 &#183; Sigma Unity Kurzanleitung &#183; Rev. 1 &#183; 17.11.2026</div>
+</div>
+
+</body></html>
