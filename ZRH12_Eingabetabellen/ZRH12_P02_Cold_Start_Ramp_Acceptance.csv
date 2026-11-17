@@ -1,0 +1,24 @@
+﻿Schritt;Abschnitt;Last kW;Last % von 2750 kW;cos phi;Haltezeit hh:mm:ss
+1;0 defined start state;0;0;1.00;00:00:30
+2;1 base step;187;6.8;1.00;00:00:17
+3;2 specified ramp 187 to 2298 kW;319;11.6;1.00;00:00:01
+4;2 specified ramp 187 to 2298 kW;451;16.4;1.00;00:00:02
+5;2 specified ramp 187 to 2298 kW;583;21.2;1.00;00:00:01
+6;2 specified ramp 187 to 2298 kW;715;26;1.00;00:00:01
+7;2 specified ramp 187 to 2298 kW;847;30.8;1.00;00:00:02
+8;2 specified ramp 187 to 2298 kW;979;35.6;1.00;00:00:01
+9;2 specified ramp 187 to 2298 kW;1111;40.4;1.00;00:00:01
+10;2 specified ramp 187 to 2298 kW;1242;45.2;1.00;00:00:02
+11;2 specified ramp 187 to 2298 kW;1374;50;1.00;00:00:01
+12;2 specified ramp 187 to 2298 kW;1506;54.8;1.00;00:00:01
+13;2 specified ramp 187 to 2298 kW;1638;59.6;1.00;00:00:02
+14;2 specified ramp 187 to 2298 kW;1770;64.4;1.00;00:00:01
+15;2 specified ramp 187 to 2298 kW;1902;69.2;1.00;00:00:01
+16;2 specified ramp 187 to 2298 kW;2034;74;1.00;00:00:02
+17;2 specified ramp 187 to 2298 kW;2166;78.8;1.00;00:00:01
+18;2 specified ramp 187 to 2298 kW;2298;83.6;1.00;00:01:00
+19;3 controlled return to zero;1800;65.5;1.00;00:00:01
+20;3 controlled return to zero;1200;43.6;1.00;00:00:01
+21;3 controlled return to zero;700;25.5;1.00;00:00:01
+22;3 controlled return to zero;200;7.3;1.00;00:00:01
+23;4 cool-down;0;0;1.00;00:02:00

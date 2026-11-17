@@ -1,0 +1,20 @@
+﻿Schritt;Abschnitt;Last kW;Last % von 2750 kW;cos phi;Haltezeit hh:mm:ss
+1;0 defined start state;0;0;1.00;00:01:00
+2;1 progressive load acceptance, 4 blocks;687.5;25;1.00;00:02:00
+3;1 progressive load acceptance, 4 blocks;1375;50;1.00;00:02:00
+4;1 progressive load acceptance, 4 blocks;2062.5;75;1.00;00:02:00
+5;1 progressive load acceptance, 4 blocks;2750;100;1.00;00:02:00
+6;2 full load rejection, 100 to 0 percent in one step;0;0;1.00;00:03:00
+7;3 single block acceptance from no load;687.5;25;1.00;00:01:30
+8;3 single block acceptance from no load;0;0;1.00;00:02:00
+9;3 single block acceptance from no load;1375;50;1.00;00:01:30
+10;3 single block acceptance from no load;0;0;1.00;00:02:00
+11;3 single block acceptance from no load;2062.5;75;1.00;00:01:30
+12;3 single block acceptance from no load;0;0;1.00;00:02:00
+13;3 single block acceptance from no load;2750;100;1.00;00:01:30
+14;3 single block acceptance from no load;0;0;1.00;00:02:00
+15;4 stepped rejection, 100 to 75 to 50 to 25 to 0 percent;2750;100;1.00;00:02:00
+16;4 stepped rejection, 100 to 75 to 50 to 25 to 0 percent;2062.5;75;1.00;00:01:30
+17;4 stepped rejection, 100 to 75 to 50 to 25 to 0 percent;1375;50;1.00;00:01:30
+18;4 stepped rejection, 100 to 75 to 50 to 25 to 0 percent;687.5;25;1.00;00:01:30
+19;5 cool-down;0;0;1.00;00:03:00

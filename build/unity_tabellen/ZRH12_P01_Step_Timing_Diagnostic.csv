@@ -1,0 +1,56 @@
+﻿Schritt;Abschnitt;Last kW;Last % von 2750 kW;cos phi;Haltezeit hh:mm:ss
+1;0 defined start state;0;0;1.00;00:00:30
+2;1 BLOCK A - 12 steps, below the 16 step figure, 1 s delay;187;6.8;1.00;00:00:10
+3;1 BLOCK A - 12 steps, below the 16 step figure, 1 s delay;296;10.8;1.00;00:00:01
+4;1 BLOCK A - 12 steps, below the 16 step figure, 1 s delay;406;14.8;1.00;00:00:01
+5;1 BLOCK A - 12 steps, below the 16 step figure, 1 s delay;515;18.7;1.00;00:00:01
+6;1 BLOCK A - 12 steps, below the 16 step figure, 1 s delay;625;22.7;1.00;00:00:01
+7;1 BLOCK A - 12 steps, below the 16 step figure, 1 s delay;734;26.7;1.00;00:00:01
+8;1 BLOCK A - 12 steps, below the 16 step figure, 1 s delay;844;30.7;1.00;00:00:01
+9;1 BLOCK A - 12 steps, below the 16 step figure, 1 s delay;953;34.7;1.00;00:00:01
+10;1 BLOCK A - 12 steps, below the 16 step figure, 1 s delay;1062;38.6;1.00;00:00:01
+11;1 BLOCK A - 12 steps, below the 16 step figure, 1 s delay;1172;42.6;1.00;00:00:01
+12;1 BLOCK A - 12 steps, below the 16 step figure, 1 s delay;1281;46.6;1.00;00:00:01
+13;1 BLOCK A - 12 steps, below the 16 step figure, 1 s delay;1391;50.6;1.00;00:00:01
+14;1 BLOCK A - 12 steps, below the 16 step figure, 1 s delay;1500;54.5;1.00;00:00:20
+15;1 BLOCK A - 12 steps, below the 16 step figure, 1 s delay;0;0;1.00;00:00:30
+16;2 BLOCK B - 24 steps, above the 16 step figure, 1 s delay;187;6.8;1.00;00:00:10
+17;2 BLOCK B - 24 steps, above the 16 step figure, 1 s delay;242;8.8;1.00;00:00:01
+18;2 BLOCK B - 24 steps, above the 16 step figure, 1 s delay;296;10.8;1.00;00:00:01
+19;2 BLOCK B - 24 steps, above the 16 step figure, 1 s delay;351;12.8;1.00;00:00:01
+20;2 BLOCK B - 24 steps, above the 16 step figure, 1 s delay;406;14.8;1.00;00:00:01
+21;2 BLOCK B - 24 steps, above the 16 step figure, 1 s delay;461;16.8;1.00;00:00:01
+22;2 BLOCK B - 24 steps, above the 16 step figure, 1 s delay;515;18.7;1.00;00:00:01
+23;2 BLOCK B - 24 steps, above the 16 step figure, 1 s delay;570;20.7;1.00;00:00:01
+24;2 BLOCK B - 24 steps, above the 16 step figure, 1 s delay;625;22.7;1.00;00:00:01
+25;2 BLOCK B - 24 steps, above the 16 step figure, 1 s delay;679;24.7;1.00;00:00:01
+26;2 BLOCK B - 24 steps, above the 16 step figure, 1 s delay;734;26.7;1.00;00:00:01
+27;2 BLOCK B - 24 steps, above the 16 step figure, 1 s delay;789;28.7;1.00;00:00:01
+28;2 BLOCK B - 24 steps, above the 16 step figure, 1 s delay;844;30.7;1.00;00:00:01
+29;2 BLOCK B - 24 steps, above the 16 step figure, 1 s delay;898;32.7;1.00;00:00:01
+30;2 BLOCK B - 24 steps, above the 16 step figure, 1 s delay;953;34.7;1.00;00:00:01
+31;2 BLOCK B - 24 steps, above the 16 step figure, 1 s delay;1008;36.7;1.00;00:00:01
+32;2 BLOCK B - 24 steps, above the 16 step figure, 1 s delay;1062;38.6;1.00;00:00:01
+33;2 BLOCK B - 24 steps, above the 16 step figure, 1 s delay;1117;40.6;1.00;00:00:01
+34;2 BLOCK B - 24 steps, above the 16 step figure, 1 s delay;1172;42.6;1.00;00:00:01
+35;2 BLOCK B - 24 steps, above the 16 step figure, 1 s delay;1226;44.6;1.00;00:00:01
+36;2 BLOCK B - 24 steps, above the 16 step figure, 1 s delay;1281;46.6;1.00;00:00:01
+37;2 BLOCK B - 24 steps, above the 16 step figure, 1 s delay;1336;48.6;1.00;00:00:01
+38;2 BLOCK B - 24 steps, above the 16 step figure, 1 s delay;1391;50.6;1.00;00:00:01
+39;2 BLOCK B - 24 steps, above the 16 step figure, 1 s delay;1445;52.5;1.00;00:00:01
+40;2 BLOCK B - 24 steps, above the 16 step figure, 1 s delay;1500;54.5;1.00;00:00:20
+41;2 BLOCK B - 24 steps, above the 16 step figure, 1 s delay;0;0;1.00;00:00:30
+42;3 BLOCK C - 12 steps, zero delay, floor measurement;187;6.8;1.00;00:00:10
+43;3 BLOCK C - 12 steps, zero delay, floor measurement;296;10.8;1.00;00:00:00
+44;3 BLOCK C - 12 steps, zero delay, floor measurement;406;14.8;1.00;00:00:00
+45;3 BLOCK C - 12 steps, zero delay, floor measurement;515;18.7;1.00;00:00:00
+46;3 BLOCK C - 12 steps, zero delay, floor measurement;625;22.7;1.00;00:00:00
+47;3 BLOCK C - 12 steps, zero delay, floor measurement;734;26.7;1.00;00:00:00
+48;3 BLOCK C - 12 steps, zero delay, floor measurement;844;30.7;1.00;00:00:00
+49;3 BLOCK C - 12 steps, zero delay, floor measurement;953;34.7;1.00;00:00:00
+50;3 BLOCK C - 12 steps, zero delay, floor measurement;1062;38.6;1.00;00:00:00
+51;3 BLOCK C - 12 steps, zero delay, floor measurement;1172;42.6;1.00;00:00:00
+52;3 BLOCK C - 12 steps, zero delay, floor measurement;1281;46.6;1.00;00:00:00
+53;3 BLOCK C - 12 steps, zero delay, floor measurement;1391;50.6;1.00;00:00:00
+54;3 BLOCK C - 12 steps, zero delay, floor measurement;1500;54.5;1.00;00:00:20
+55;4 cool-down;0;0;1.00;00:01:00

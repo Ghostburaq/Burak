@@ -1,0 +1,40 @@
+﻿Schritt;Abschnitt;Last kW;Last % von 2750 kW;cos phi;Haltezeit hh:mm:ss
+1;0 defined start state;0;0;1.00;00:01:00
+2;1 25 percent block, 687.5 kW, 30 min;187;6.8;1.00;00:00:10
+3;1 25 percent block, 687.5 kW, 30 min;250;9.1;1.00;00:00:01
+4;1 25 percent block, 687.5 kW, 30 min;312;11.3;1.00;00:00:01
+5;1 25 percent block, 687.5 kW, 30 min;375;13.6;1.00;00:00:01
+6;1 25 percent block, 687.5 kW, 30 min;437;15.9;1.00;00:00:01
+7;1 25 percent block, 687.5 kW, 30 min;500;18.2;1.00;00:00:01
+8;1 25 percent block, 687.5 kW, 30 min;562;20.4;1.00;00:00:01
+9;1 25 percent block, 687.5 kW, 30 min;625;22.7;1.00;00:00:01
+10;1 25 percent block, 687.5 kW, 30 min;687.5;25;1.00;00:30:00
+11;2 50 percent block, 1375 kW, 30 min;773;28.1;1.00;00:00:01
+12;2 50 percent block, 1375 kW, 30 min;859;31.2;1.00;00:00:01
+13;2 50 percent block, 1375 kW, 30 min;945;34.4;1.00;00:00:01
+14;2 50 percent block, 1375 kW, 30 min;1031;37.5;1.00;00:00:01
+15;2 50 percent block, 1375 kW, 30 min;1117;40.6;1.00;00:00:01
+16;2 50 percent block, 1375 kW, 30 min;1203;43.7;1.00;00:00:01
+17;2 50 percent block, 1375 kW, 30 min;1289;46.9;1.00;00:00:01
+18;2 50 percent block, 1375 kW, 30 min;1375;50;1.00;00:30:00
+19;3 75 percent block, 2062.5 kW, 30 min;1461;53.1;1.00;00:00:01
+20;3 75 percent block, 2062.5 kW, 30 min;1547;56.3;1.00;00:00:01
+21;3 75 percent block, 2062.5 kW, 30 min;1633;59.4;1.00;00:00:01
+22;3 75 percent block, 2062.5 kW, 30 min;1719;62.5;1.00;00:00:01
+23;3 75 percent block, 2062.5 kW, 30 min;1805;65.6;1.00;00:00:01
+24;3 75 percent block, 2062.5 kW, 30 min;1891;68.8;1.00;00:00:01
+25;3 75 percent block, 2062.5 kW, 30 min;1977;71.9;1.00;00:00:01
+26;3 75 percent block, 2062.5 kW, 30 min;2062.5;75;1.00;00:30:00
+27;4 100 percent block, 2750 kW, 60 min;2148;78.1;1.00;00:00:01
+28;4 100 percent block, 2750 kW, 60 min;2234;81.2;1.00;00:00:01
+29;4 100 percent block, 2750 kW, 60 min;2320;84.4;1.00;00:00:01
+30;4 100 percent block, 2750 kW, 60 min;2406;87.5;1.00;00:00:01
+31;4 100 percent block, 2750 kW, 60 min;2492;90.6;1.00;00:00:01
+32;4 100 percent block, 2750 kW, 60 min;2578;93.7;1.00;00:00:01
+33;4 100 percent block, 2750 kW, 60 min;2664;96.9;1.00;00:00:01
+34;4 100 percent block, 2750 kW, 60 min;2750;100;1.00;01:00:00
+35;5 controlled return to zero;2000;72.7;1.00;00:00:02
+36;5 controlled return to zero;1400;50.9;1.00;00:00:02
+37;5 controlled return to zero;800;29.1;1.00;00:00:02
+38;5 controlled return to zero;300;10.9;1.00;00:00:02
+39;6 cool-down;0;0;1.00;00:05:00
