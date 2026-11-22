@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Sprachansage mit Musik: Text -> Stimme -> Musik geduckt drunter -> MP3 (-14 LUFS).
+# Stimme: deine (meine-stimme), wenn content/stimme/referenz.wav existiert, sonst Thorsten (sprechen).
+# Nutzung: ansage skript.txt [ausgabe.mp3] [musik.wav] [musik-lautstaerke 0.0-1.0]
+set -euo pipefail
+dir="$(cd "$(dirname "$0")" && pwd)"
+txt="$1"; out="${2:-${txt%.*}.mp3}"; musik="${3:-}"; vol="${4:-0.18}"
+tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
+if [ -f "$dir/../../content/stimme/referenz.wav" ]; then
+  echo "Stimme: deine (Stimmklon)"; "$dir/meine-stimme" "$txt" "$tmp/v.wav" 0.6 >/dev/null
+else
+  echo "Stimme: Thorsten (Platzhalter, keine Referenzaufnahme gefunden)"; "$dir/sprechen" "$txt" "$tmp/v.wav" 1.12 >/dev/null
+fi
+# 1 s Vorlauf und 2 s Nachlauf für die Musik
+ffmpeg -v error -y -i "$tmp/v.wav" -af "adelay=1200:all=1,apad=pad_dur=2.5,aformat=channel_layouts=stereo" -ar 48000 "$tmp/vp.wav"
+D=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$tmp/vp.wav")
+if [ -n "$musik" ]; then
+  ffmpeg -v error -y -i "$tmp/vp.wav" -stream_loop -1 -i "$musik" -filter_complex \
+   "[1:a]atrim=0:$D,volume=$vol,afade=t=in:d=0.8,afade=t=out:st=$(echo "$D-2"|bc):d=2[m];[0:a]asplit[v][sc];[m][sc]sidechaincompress=threshold=0.02:ratio=8:attack=15:release=400[d];[v][d]amix=inputs=2:normalize=0,loudnorm=I=-14:TP=-1[a]" \
+   -map "[a]" -b:a 256k "$out"
+else
+  ffmpeg -v error -y -i "$tmp/vp.wav" -af "loudnorm=I=-14:TP=-1" -b:a 256k "$out"
+fi
+echo "Fertig: $out ($(printf '%.1f' "$D") s)"
