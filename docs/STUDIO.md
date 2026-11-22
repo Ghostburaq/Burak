@@ -132,3 +132,12 @@ Ausdruck als dritter Wert: 0.3 ruhig, 0.8 lebhaft. Ausgaben tragen ein unhörbar
 | `erinnerungsvideo` | "Mach aus diesem Bild was Schönes mit Lied" |
 | `meine-stimme` | "Sprich das mit meiner Stimme ein" |
 | `mit-praesentation` | "Deck im MiT-Design" |
+
+## VoiceStudio (installiert 22.11.2026, nur in dieser Cloud-Session)
+
+Quelle: github.com/debpalash/VoiceStudio, Version 0.5.9-beta.7, AGPL-3.0. Liegt in `/opt/voicestudio` (nicht im Setup-Script, wird bei neuer Session nicht automatisch installiert).
+
+- Starten: `cd /opt/voicestudio && bun run dev:api` (API auf Port 3900), Oberfläche: `bun run dev:frontend` (Port 3901)
+- Check: `curl -s localhost:3900/health`
+- **Lizenz-Falle:** Das Standard-Stimmmodell OmniVoice ist laut VoiceStudio-Lizenzliste nur nicht-kommerziell. Für NEXA und MiT weiter `meine-stimme` (Chatterbox, MIT) nutzen.
+- Für eigenen PC/Mac: Installer von der Release-Seite, dann mit Mikrofon direkt in der App.
