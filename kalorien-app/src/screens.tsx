@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import {
-  addDays, formatDate, isoWeek, MEALS, sum, toDateKey, weekdayShort, weekStats,
+  addDays, formatDate, isoWeek, MEALS, sum, sumMicros, toDateKey, weekdayShort, weekStats,
   type Entry, type Goals, type Meal,
 } from './logic';
 import { c } from './theme';
@@ -32,6 +32,7 @@ export function DayScreen({
   const yesterday = addDays(date, -1);
   const dayEntries = entries.filter((e) => e.date === date);
   const t = sum(dayEntries);
+  const micro = sumMicros(dayEntries);
   const rest = goals.kcal - t.kcal;
 
   return (
@@ -77,6 +78,18 @@ export function DayScreen({
         <MacroLine label="Protein" value={t.protein} goal={goals.protein} unit="g" color={c.protein} min />
         <MacroLine label="Kohlenhydrate" value={t.carbs} goal={goals.carbs} unit="g" color={c.carbs} />
         <MacroLine label="Fett" value={t.fat} goal={goals.fat} unit="g" color={c.fat} />
+        {dayEntries.length > 0 && (
+          <View style={[s.row, { marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: c.border }]}>
+            <MicroStat label="Ballaststoffe" v={micro.fiber} ref_="≥ 30" good={micro.fiber >= 30} />
+            <MicroStat label="Zucker" v={micro.sugar} />
+            <MicroStat label="Salz" v={micro.salt} ref_="≤ 5" bad={micro.salt > 5} />
+          </View>
+        )}
+        {micro.missing > 0 && dayEntries.length > 0 && (
+          <Text style={[s.label, { fontSize: 11, marginTop: 4 }]}>
+            {micro.missing} {micro.missing === 1 ? 'Eintrag' : 'Einträge'} ohne Angaben zu Ballaststoffen, Zucker, Salz
+          </Text>
+        )}
       </View>
 
       {MEALS.map((m) => {
@@ -98,7 +111,7 @@ export function DayScreen({
                   <Text style={s.text}>{Math.round(e.kcal)}</Text>
                 </View>
                 <Text style={s.label}>
-                  P {Math.round(e.protein)} · KH {Math.round(e.carbs)} · F {Math.round(e.fat)} g
+                  {e.grams ? `${e.grams} g · ` : ''}P {Math.round(e.protein)} · KH {Math.round(e.carbs)} · F {Math.round(e.fat)} g
                 </Text>
               </Pressable>
             ))}
@@ -212,5 +225,16 @@ export function WeekScreen({
         )}
       </View>
     </ScrollView>
+  );
+}
+
+function MicroStat({ label, v, ref_, good, bad }: { label: string; v: number; ref_?: string; good?: boolean; bad?: boolean }) {
+  return (
+    <View style={{ alignItems: 'center', flex: 1 }}>
+      <Text style={[s.text, { fontWeight: '600', color: bad ? c.over : good ? c.accent : c.text }]}>
+        {String(Math.round(v * 10) / 10).replace('.', ',')} g
+      </Text>
+      <Text style={[s.label, { fontSize: 11 }]}>{label}{ref_ ? ` (${ref_})` : ''}</Text>
+    </View>
   );
 }

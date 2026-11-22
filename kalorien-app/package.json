@@ -5,6 +5,7 @@
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",
     "expo": "~58.0.26",
+    "expo-camera": "~58.0.14",
     "expo-status-bar": "~58.0.5",
     "react": "19.3.0",
     "react-dom": "19.3.0",
@@ -22,7 +23,7 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "test": "tsx --test src/logic.test.ts src/nutrition.test.ts",
+    "test": "tsx --test src/logic.test.ts src/nutrition.test.ts src/foods.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "private": true

@@ -1,4 +1,5 @@
 // Reine Rechenlogik ohne React, damit sie direkt mit Node testbar ist.
+import type { Food } from './foods';
 
 export type Meal = 'fruehstueck' | 'mittag' | 'abend' | 'snack';
 
@@ -22,6 +23,33 @@ export interface Entry extends Macros {
   meal: Meal;
   name: string;
   createdAt: number;
+  // Optional, wenn aus der Datenbank erfasst
+  grams?: number;
+  food?: Food; // Schnappschuss pro 100 g, damit spätere Änderungen alte Einträge nicht verändern
+  sugar?: number | null;
+  fiber?: number | null;
+  salt?: number | null;
+}
+
+export type EntryDraft = Omit<Entry, 'id' | 'date' | 'createdAt'>;
+
+export interface Micros {
+  sugar: number;
+  fiber: number;
+  salt: number;
+  /** Anzahl Einträge ohne Angabe, damit die Summe als unvollständig erkennbar ist */
+  missing: number;
+}
+
+export function sumMicros(items: Entry[]): Micros {
+  const m: Micros = { sugar: 0, fiber: 0, salt: 0, missing: 0 };
+  for (const e of items) {
+    if (e.fiber == null && e.sugar == null && e.salt == null) { m.missing++; continue; }
+    m.sugar += e.sugar ?? 0;
+    m.fiber += e.fiber ?? 0;
+    m.salt += e.salt ?? 0;
+  }
+  return m;
 }
 
 export interface Template extends Macros {

@@ -19,10 +19,29 @@ Kalorien- und Makro-Tracker mit Expo (React Native) für iOS, Android und Browse
 - **Protein als Mindestziel:** Über dem Ziel wird es nicht rot. Bei kcal, Kohlenhydraten und Fett wird es rot ab 5 % über dem Ziel.
 - **Wochenbilanz:** Summe der Abweichung vom Ziel über die erfassten Tage. Trainingstage werden mit ihrem eigenen Ziel verglichen.
 
+**Lebensmittel-Datenbank**
+- **Offline:** 1246 Lebensmittel aus der Schweizer Nährwertdatenbank V 7.1 des BLV (`src/data/blv.json`, erzeugt aus dem offiziellen Excel-Download). Pro 100 g: kcal, Protein, Kohlenhydrate, Fett, Zucker, Ballaststoffe, Salz, gesättigte Fettsäuren. Werte mit Spuren oder unter der Nachweisgrenze zählen als 0, fehlende Angaben bleiben leer.
+- **Online:** Markenprodukte über Open Food Facts, per Textsuche oder Barcode. Ein gewähltes Produkt wird lokal gespeichert und ist danach offline und per Barcode sofort wieder da. Die Textsuche funktioniert nur in der App, im Browser blockiert sie der Server (CORS). Die Barcode-Abfrage geht auch im Browser.
+- **Barcode-Scanner:** Kamera mit EAN-13, EAN-8, UPC-A und UPC-E (expo-camera). Im Browser die Nummer eintippen. Unbekanntes Produkt: direkt als eigenes Lebensmittel anlegen, der Barcode ist schon vorausgefüllt.
+- **Eigene Lebensmittel:** Werte pro 100 g von der Verpackung, optional mit Portionsgrösse und Barcode.
+- **Rezepte:** Zutaten aus der Datenbank, Anzahl Portionen. Die App rechnet die Werte pro 100 g und pro Portion.
+- **Menge:** in Gramm, mit Portion, ½ und 2 Portionen sowie 50 bis 250 g als Schnellwahl.
+- **Favoriten** (☆) und *Zuletzt verwendet* auf dem Startbildschirm der Suche.
+- **Suche:** Umlaute egal, alle Suchwörter müssen vorkommen, eigene Lebensmittel zuerst.
+
 **Erfassen**
-- Mahlzeiten Frühstück, Mittag, Abend, Snacks. Die kcal sind optional und werden sonst aus den Makros berechnet (4/4/9). Mengenfaktor, Warnung bei mehr als 15 % Abweichung zwischen kcal und Makros.
-- Vorlagen, *Zuletzt gegessen* (die 12 neuesten) und *Wie gestern* pro Mahlzeit.
+- Mahlzeiten Frühstück, Mittag, Abend, Snacks. Tippen auf einen Eintrag öffnet ihn zum Bearbeiten: bei Datenbank-Einträgen die Grammzahl, sonst die Werte.
+- *Schnell:* Freie Eingabe ohne Datenbank. Die kcal sind optional und werden sonst aus den Makros berechnet (4/4/9). Mit Mengenfaktor, Vorlagen und Warnung bei mehr als 15 % Abweichung zwischen kcal und Makros.
+- *Wie gestern* pro Mahlzeit.
+- Tagesansicht mit Ballaststoffen (Richtwert ≥ 30 g), Zucker und Salz (Richtwert ≤ 5 g). Einträge ohne diese Angaben werden ausgewiesen.
 - Wasser mit Ziel. Ohne eigenen Wert gilt die Faustregel 35 ml pro kg.
+
+**Wo die Daten liegen**
+- Alles bleibt lokal auf dem Gerät (AsyncStorage bzw. Browser-Speicher). GitHub enthält nur den Code. Handy und Web-Version teilen keine Daten. Gegen Datenverlust hilft der Export unter Profil → Backup.
+
+**Quellen**
+- Schweizer Nährwertdatenbank V 7.1, Bundesamt für Lebensmittelsicherheit und Veterinärwesen (BLV), naehrwertdaten.ch. Laut BLV frei nutzbar mit Quellenangabe, ausdrücklich auch in Ernährungstagebuch-Apps.
+- Open Food Facts, openfoodfacts.org, Lizenz ODbL.
 
 **Backup**
 - Export als JSON: im Browser als Download, auf dem Handy über das Teilen-Menü. Import per Einfügen, ersetzt alle Daten nach einer Bestätigung.
@@ -41,7 +60,7 @@ npx expo start --web  # im Browser
 ## Prüfen
 
 ```bash
-npm test           # Rechenlogik: Bedarf, Makros, Warnungen, Trend, adaptiver Verbrauch, KW, Wochenschnitt
+npm test           # Rechenlogik, Datenbank (Plausibilität aller Einträge, Suche, Mengen, Rezepte, Open-Food-Facts-Mapping)
 npm run typecheck
 ```
 
@@ -56,5 +75,8 @@ npm run typecheck
 | `src/screens.tsx` | Tag, Woche |
 | `src/WeightScreen.tsx` | Gewicht, Trend, echter Verbrauch |
 | `src/ProfileScreen.tsx` | Profil, Ziele, Backup |
-| `src/EntryModal.tsx` | Eintrag erfassen/bearbeiten, Vorlagen, Zuletzt gegessen |
+| `src/foods.ts` | Datenbank: BLV laden, Suche, Mengen, Rezepte, Open Food Facts |
+| `src/data/blv.json` | Schweizer Nährwertdatenbank, kompakt |
+| `src/add/AddModal.tsx` | Erfassungsdialog: Suchen, Scannen, Schnell, Rezepte |
+| `src/add/*.tsx` | Suche, Mengenwahl, Scanner, eigenes Lebensmittel, Rezepteditor, Schnelleingabe |
 | `src/ui.tsx`, `src/theme.ts` | Bausteine und Farben |

@@ -2,8 +2,9 @@ import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import { EntryModal, type EntryDraft } from './src/EntryModal';
-import { toDateKey, type Entry, type Meal, type Template } from './src/logic';
+import { AddModal } from './src/add/AddModal';
+import type { Food } from './src/foods';
+import { toDateKey, type Entry, type EntryDraft, type Meal, type Template } from './src/logic';
 import { calculate, currentTrend, DEFAULT_PROFILE } from './src/nutrition';
 import { ProfileScreen } from './src/ProfileScreen';
 import { DayScreen, WeekScreen } from './src/screens';
@@ -28,7 +29,10 @@ function mealByTime(): Meal {
   return 'snack';
 }
 
-const EMPTY: AppData = { entries: [], templates: [], profile: DEFAULT_PROFILE, weights: {}, water: {}, training: [] };
+const EMPTY: AppData = {
+  entries: [], templates: [], profile: DEFAULT_PROFILE, weights: {}, water: {}, training: [],
+  myFoods: [], favorites: [], recipes: [],
+};
 
 export default function App() {
   const [ready, setReady] = useState(false);
@@ -61,6 +65,7 @@ export default function App() {
     const seen = new Set<string>();
     const out: Template[] = [];
     for (const e of [...data.entries].sort((a, b) => b.createdAt - a.createdAt)) {
+      if (e.food) continue; // Datenbank-Einträge erscheinen unter "Zuletzt verwendet" in der Suche
       const k = e.name.toLowerCase();
       if (seen.has(k)) continue;
       seen.add(k);
@@ -75,7 +80,7 @@ export default function App() {
   const handleSave = (draft: EntryDraft, template: Omit<Template, 'id'> | null) => {
     const editing = modal.editing;
     if (editing) {
-      update('entries', (prev) => prev.map((e) => (e.id === editing.id ? { ...e, ...draft } : e)));
+      update('entries', (prev) => prev.map((e) => (e.id === editing.id ? { ...e, ...draft, date: e.date } : e)));
     } else {
       update('entries', (prev) => [...prev, { ...draft, id: newId(), date, createdAt: Date.now() }]);
     }
@@ -185,16 +190,34 @@ export default function App() {
           </View>
         </SafeAreaView>
 
-        <EntryModal
+        <AddModal
           visible={modal.open}
           editing={modal.editing}
           defaultMeal={modal.meal}
+          entries={data.entries}
           templates={data.templates}
-          recent={recent}
+          recentManual={recent}
+          myFoods={data.myFoods}
+          favorites={data.favorites}
+          recipes={data.recipes}
           onClose={closeModal}
-          onSave={handleSave}
-          onDelete={(id) => { update('entries', (prev) => prev.filter((e) => e.id !== id)); closeModal(); }}
+          onSaveEntry={handleSave}
+          onDeleteEntry={(id) => { update('entries', (prev) => prev.filter((e) => e.id !== id)); closeModal(); }}
           onDeleteTemplate={(id) => update('templates', (prev) => prev.filter((t) => t.id !== id))}
+          onUpsertFood={(f: Food) => {
+            update('myFoods', (prev) => [f, ...prev.filter((x) => x.id !== f.id)]);
+            // Favorit aktuell halten, falls das Lebensmittel geändert wurde
+            update('favorites', (prev) => prev.map((x) => (x.id === f.id ? f : x)));
+          }}
+          onDeleteFood={(id) => {
+            update('myFoods', (prev) => prev.filter((x) => x.id !== id));
+            update('favorites', (prev) => prev.filter((x) => x.id !== id));
+          }}
+          onToggleFavorite={(f: Food) =>
+            update('favorites', (prev) => (prev.some((x) => x.id === f.id) ? prev.filter((x) => x.id !== f.id) : [f, ...prev]))
+          }
+          onSaveRecipe={(r) => update('recipes', (prev) => [r, ...prev.filter((x) => x.id !== r.id)])}
+          onDeleteRecipe={(id) => update('recipes', (prev) => prev.filter((x) => x.id !== id))}
         />
       </SafeAreaView>
     </SafeAreaProvider>

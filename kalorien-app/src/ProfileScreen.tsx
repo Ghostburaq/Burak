@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Platform, ScrollView, Share, Text, View } from 'react-native';
+import { BLV_SOURCE } from './foods';
 import { parseNum } from './logic';
 import { calculate, PAL_LEVELS, type GoalType, type Profile, type Sex } from './nutrition';
 import { c } from './theme';
@@ -251,7 +252,7 @@ export function ProfileScreen({
       </View>
 
       <Text style={[s.label, { marginTop: 8 }]}>
-        Rechenbasis: Mifflin-St Jeor (1990), 7700 kcal pro kg als Näherung, 4/4/9 kcal pro g Protein/KH/Fett.
+        Rechenbasis: Mifflin-St Jeor (1990), 7700 kcal pro kg als Näherung, 4/4/9 kcal pro g Protein/KH/Fett.{'\n\n'}Lebensmitteldaten: {BLV_SOURCE}. Markenprodukte: Open Food Facts (openfoodfacts.org), Lizenz ODbL.
       </Text>
     </ScrollView>
   );

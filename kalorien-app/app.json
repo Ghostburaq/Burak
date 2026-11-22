@@ -21,6 +21,16 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "backgroundColor": "#0f1115"
+    "backgroundColor": "#0f1115",
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Die Kamera wird zum Scannen von Barcodes auf Lebensmitteln verwendet.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false
+        }
+      ]
+    ]
   }
 }

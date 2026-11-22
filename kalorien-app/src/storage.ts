@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Entry, Goals, Template } from './logic';
+import type { Food, Recipe } from './foods';
 import { DEFAULT_PROFILE, type Profile, type Weights } from './nutrition';
 
 const KEYS = {
@@ -10,6 +11,9 @@ const KEYS = {
   weights: 'kal.weights.v1',
   water: 'kal.water.v1',
   training: 'kal.training.v1',
+  myFoods: 'kal.myfoods.v1',
+  favorites: 'kal.favorites.v1',
+  recipes: 'kal.recipes.v1',
 };
 
 export interface AppData {
@@ -19,6 +23,9 @@ export interface AppData {
   weights: Weights;
   water: Record<string, number>; // Datum -> ml
   training: string[]; // Daten mit Training
+  myFoods: Food[]; // eigene Lebensmittel und genutzte Online-Produkte (Offline-Cache)
+  favorites: Food[];
+  recipes: Recipe[];
 }
 
 async function load<T>(key: string, fallback: T): Promise<T> {
@@ -52,6 +59,9 @@ export async function loadAll(): Promise<AppData> {
     weights: await load<Weights>(KEYS.weights, {}),
     water: await load<Record<string, number>>(KEYS.water, {}),
     training: await load<string[]>(KEYS.training, []),
+    myFoods: await load<Food[]>(KEYS.myFoods, []),
+    favorites: await load<Food[]>(KEYS.favorites, []),
+    recipes: await load<Recipe[]>(KEYS.recipes, []),
   };
 }
 
@@ -62,12 +72,16 @@ export const persist = {
   weights: (v: Weights) => save(KEYS.weights, v),
   water: (v: Record<string, number>) => save(KEYS.water, v),
   training: (v: string[]) => save(KEYS.training, v),
+  myFoods: (v: Food[]) => save(KEYS.myFoods, v),
+  favorites: (v: Food[]) => save(KEYS.favorites, v),
+  recipes: (v: Recipe[]) => save(KEYS.recipes, v),
 };
 
 export async function saveAll(d: AppData): Promise<void> {
   await Promise.all([
     persist.entries(d.entries), persist.templates(d.templates), persist.profile(d.profile),
     persist.weights(d.weights), persist.water(d.water), persist.training(d.training),
+    persist.myFoods(d.myFoods), persist.favorites(d.favorites), persist.recipes(d.recipes),
   ]);
 }
 
@@ -87,6 +101,9 @@ export function parseBackup(text: string): AppData | string {
       weights: o.weights ?? {},
       water: o.water ?? {},
       training: Array.isArray(o.training) ? o.training : [],
+      myFoods: Array.isArray(o.myFoods) ? o.myFoods : [],
+      favorites: Array.isArray(o.favorites) ? o.favorites : [],
+      recipes: Array.isArray(o.recipes) ? o.recipes : [],
     };
   } catch {
     return 'Text ist kein gültiges JSON.';
