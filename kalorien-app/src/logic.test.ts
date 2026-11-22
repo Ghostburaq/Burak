@@ -9,7 +9,7 @@ import {
   weekDays,
   weekStats,
   type Entry,
-} from './logic.ts';
+} from './logic';
 
 test('kcal aus Makros nach Atwater', () => {
   assert.equal(kcalFromMacros(30, 50, 10), 30 * 4 + 50 * 4 + 10 * 9);

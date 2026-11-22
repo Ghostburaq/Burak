@@ -1,25 +1,35 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import {
-  addDays, formatDate, isoWeek, MEALS, parseNum, sum, toDateKey, weekdayShort, weekStats,
+  addDays, formatDate, isoWeek, MEALS, sum, toDateKey, weekdayShort, weekStats,
   type Entry, type Goals, type Meal,
 } from './logic';
 import { c } from './theme';
-import { Btn, MacroLine, NumField, s } from './ui';
+import { Bar, Btn, Chip, MacroLine, s } from './ui';
 
-// ---------- Heute / Tag ----------
+// ---------- Tag ----------
 
 export function DayScreen({
-  date, setDate, entries, goals, onAdd, onEdit,
+  date, setDate, entries, goals, isTraining, onToggleTraining, water, waterGoal, onWater,
+  configured, onSetup, onAdd, onEdit, onCopyMeal,
 }: {
   date: string;
   setDate: (d: string) => void;
   entries: Entry[];
   goals: Goals;
+  isTraining: boolean;
+  onToggleTraining: () => void;
+  water: number;
+  waterGoal: number;
+  onWater: (delta: number) => void;
+  configured: boolean;
+  onSetup: () => void;
   onAdd: (meal: Meal) => void;
   onEdit: (e: Entry) => void;
+  onCopyMeal: (meal: Meal, from: string) => void;
 }) {
   const today = toDateKey(new Date());
+  const yesterday = addDays(date, -1);
   const dayEntries = entries.filter((e) => e.date === date);
   const t = sum(dayEntries);
   const rest = goals.kcal - t.kcal;
@@ -39,19 +49,32 @@ export function DayScreen({
         </Pressable>
       </View>
 
+      {!configured && (
+        <View style={[s.card, { borderColor: c.accent }]}>
+          <Text style={s.h2}>Profil einrichten</Text>
+          <Text style={[s.label, { marginTop: 4, marginBottom: 12 }]}>
+            Mit Grösse, Gewicht, Alter, Aktivität und Ziel berechnet die App deinen Bedarf und deine Makros.
+          </Text>
+          <View style={{ flexDirection: 'row' }}>
+            <Btn title="Jetzt einrichten" onPress={onSetup} />
+          </View>
+        </View>
+      )}
+
       <View style={s.card}>
         <View style={s.row}>
           <View>
             <Text style={s.label}>Gegessen</Text>
             <Text style={[s.h1, { fontSize: 30 }]}>{Math.round(t.kcal)}</Text>
           </View>
+          <Chip title={isTraining ? 'Trainingstag ✓' : 'Trainingstag?'} active={isTraining} onPress={onToggleTraining} />
           <View style={{ alignItems: 'flex-end' }}>
             <Text style={s.label}>{rest >= 0 ? 'Übrig' : 'Über Ziel'}</Text>
             <Text style={[s.h1, { fontSize: 30, color: rest >= 0 ? c.accent : c.over }]}>{Math.abs(Math.round(rest))}</Text>
           </View>
         </View>
         <MacroLine label="Energie" value={t.kcal} goal={goals.kcal} unit="kcal" color={c.accent} />
-        <MacroLine label="Protein" value={t.protein} goal={goals.protein} unit="g" color={c.protein} />
+        <MacroLine label="Protein" value={t.protein} goal={goals.protein} unit="g" color={c.protein} min />
         <MacroLine label="Kohlenhydrate" value={t.carbs} goal={goals.carbs} unit="g" color={c.carbs} />
         <MacroLine label="Fett" value={t.fat} goal={goals.fat} unit="g" color={c.fat} />
       </View>
@@ -59,11 +82,14 @@ export function DayScreen({
       {MEALS.map((m) => {
         const list = dayEntries.filter((e) => e.meal === m.key).sort((a, b) => a.createdAt - b.createdAt);
         const mt = sum(list);
+        const canCopy = list.length === 0 && entries.some((e) => e.date === yesterday && e.meal === m.key);
         return (
           <View key={m.key} style={s.card}>
             <View style={s.row}>
               <Text style={s.h2}>{m.label}</Text>
-              <Text style={s.label}>{Math.round(mt.kcal)} kcal</Text>
+              <Text style={s.label}>
+                {Math.round(mt.kcal)} kcal{mt.protein > 0 ? ` · P ${Math.round(mt.protein)} g` : ''}
+              </Text>
             </View>
             {list.map((e) => (
               <Pressable key={e.id} onPress={() => onEdit(e)} style={{ paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: c.border }}>
@@ -76,12 +102,34 @@ export function DayScreen({
                 </Text>
               </Pressable>
             ))}
-            <Pressable onPress={() => onAdd(m.key)} style={{ paddingTop: 12 }}>
-              <Text style={{ color: c.accent, fontWeight: '600' }}>+ Hinzufügen</Text>
-            </Pressable>
+            <View style={[s.row, { paddingTop: 12 }]}>
+              <Pressable onPress={() => onAdd(m.key)}>
+                <Text style={{ color: c.accent, fontWeight: '600' }}>+ Hinzufügen</Text>
+              </Pressable>
+              {canCopy && (
+                <Pressable onPress={() => onCopyMeal(m.key, yesterday)}>
+                  <Text style={{ color: c.muted, fontWeight: '600' }}>↻ Wie gestern</Text>
+                </Pressable>
+              )}
+            </View>
           </View>
         );
       })}
+
+      <View style={s.card}>
+        <View style={s.row}>
+          <Text style={s.h2}>Wasser</Text>
+          <Text style={s.label}>
+            <Text style={{ color: c.text }}>{(water / 1000).toFixed(2).replace('.', ',')}</Text> / {(waterGoal / 1000).toFixed(1).replace('.', ',')} l
+          </Text>
+        </View>
+        <Bar value={water} goal={waterGoal} color={c.water} />
+        <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
+          <Btn title="− 250" kind="ghost" onPress={() => onWater(-250)} disabled={water <= 0} />
+          <Btn title="+ 250 ml" kind="ghost" onPress={() => onWater(250)} />
+          <Btn title="+ 500 ml" kind="ghost" onPress={() => onWater(500)} />
+        </View>
+      </View>
     </ScrollView>
   );
 }
@@ -89,13 +137,18 @@ export function DayScreen({
 // ---------- Woche ----------
 
 export function WeekScreen({
-  entries, goals, onOpenDay,
-}: { entries: Entry[]; goals: Goals; onOpenDay: (d: string) => void }) {
+  entries, goalsFor, onOpenDay,
+}: { entries: Entry[]; goalsFor: (date: string) => Goals; onOpenDay: (d: string) => void }) {
   const today = toDateKey(new Date());
   const [ref, setRef] = useState(today);
   const w = weekStats(entries, ref);
-  const max = Math.max(goals.kcal * 1.25, ...w.days.map((d) => d.totals.kcal), 1);
-  const goalPos = goals.kcal / max;
+  const dayGoals = w.days.map((d) => goalsFor(d.date));
+  const logged = w.days.map((d, i) => ({ ...d, goal: dayGoals[i] })).filter((d) => d.totals.kcal > 0);
+  // Ziel-Schnitt über dieselben Tage wie der Ist-Schnitt, sonst verzerren Trainingstage den Vergleich
+  const goalBase = logged.length ? logged.map((d) => d.goal) : dayGoals;
+  const avgGoal = (k: keyof Goals) => Math.round(goalBase.reduce((a, g) => a + g[k], 0) / goalBase.length);
+  const balance = logged.reduce((a, d) => a + d.totals.kcal - d.goal.kcal, 0);
+  const max = Math.max(...dayGoals.map((g) => g.kcal * 1.25), ...w.days.map((d) => d.totals.kcal), 1);
   const BAR_H = 160;
 
   return (
@@ -114,15 +167,16 @@ export function WeekScreen({
       </View>
 
       <View style={s.card}>
-        <Text style={s.label}>Energie pro Tag, Linie = Ziel {goals.kcal} kcal</Text>
+        <Text style={s.label}>Energie pro Tag, Strich = Tagesziel. Tippen öffnet den Tag.</Text>
         <View style={{ height: BAR_H, flexDirection: 'row', alignItems: 'flex-end', marginTop: 14 }}>
-          <View style={{ position: 'absolute', left: 0, right: 0, bottom: goalPos * BAR_H, height: 1, backgroundColor: c.muted, opacity: 0.6 }} />
-          {w.days.map((d) => {
+          {w.days.map((d, i) => {
             const h = (d.totals.kcal / max) * BAR_H;
-            const over = d.totals.kcal > goals.kcal;
+            const g = dayGoals[i].kcal;
+            const over = d.totals.kcal > g;
             return (
               <Pressable key={d.date} onPress={() => onOpenDay(d.date)} style={{ flex: 1, alignItems: 'center', justifyContent: 'flex-end', height: '100%' }}>
-                <View style={{ width: '60%', height: Math.max(h, d.totals.kcal > 0 ? 3 : 0), backgroundColor: over ? c.over : c.accent, borderRadius: 4 }} />
+                <View style={{ position: 'absolute', bottom: (g / max) * BAR_H, width: '80%', height: 2, backgroundColor: c.muted }} />
+                <View style={{ width: '56%', height: Math.max(h, d.totals.kcal > 0 ? 3 : 0), backgroundColor: over ? c.over : c.accent, borderRadius: 4 }} />
               </Pressable>
             );
           })}
@@ -131,7 +185,7 @@ export function WeekScreen({
           {w.days.map((d) => (
             <View key={d.date} style={{ flex: 1, alignItems: 'center' }}>
               <Text style={[s.label, d.date === today && { color: c.text, fontWeight: '700' }]}>{weekdayShort(d.date)}</Text>
-              <Text style={[s.label, { fontSize: 11 }]}>{d.totals.kcal ? Math.round(d.totals.kcal) : '–'}</Text>
+              <Text style={[s.label, { fontSize: 11 }]}>{d.totals.kcal ? Math.round(d.totals.kcal) : '·'}</Text>
             </View>
           ))}
         </View>
@@ -142,62 +196,21 @@ export function WeekScreen({
         <Text style={s.label}>{w.loggedDays} von 7 Tagen erfasst</Text>
         {w.loggedDays > 0 ? (
           <>
-            <MacroLine label="Energie" value={w.avg.kcal} goal={goals.kcal} unit="kcal" color={c.accent} />
-            <MacroLine label="Protein" value={w.avg.protein} goal={goals.protein} unit="g" color={c.protein} />
-            <MacroLine label="Kohlenhydrate" value={w.avg.carbs} goal={goals.carbs} unit="g" color={c.carbs} />
-            <MacroLine label="Fett" value={w.avg.fat} goal={goals.fat} unit="g" color={c.fat} />
+            <MacroLine label="Energie" value={w.avg.kcal} goal={avgGoal('kcal')} unit="kcal" color={c.accent} />
+            <MacroLine label="Protein" value={w.avg.protein} goal={avgGoal('protein')} unit="g" color={c.protein} min />
+            <MacroLine label="Kohlenhydrate" value={w.avg.carbs} goal={avgGoal('carbs')} unit="g" color={c.carbs} />
+            <MacroLine label="Fett" value={w.avg.fat} goal={avgGoal('fat')} unit="g" color={c.fat} />
+            <View style={[s.row, { marginTop: 14 }]}>
+              <Text style={s.label}>Bilanz zum Ziel (erfasste Tage)</Text>
+              <Text style={[s.text, { fontWeight: '700', color: balance > 0 ? c.over : c.accent }]}>
+                {balance > 0 ? '+' : ''}{Math.round(balance)} kcal
+              </Text>
+            </View>
           </>
         ) : (
           <Text style={[s.text, { marginTop: 10, color: c.muted }]}>Noch keine Einträge in dieser Woche.</Text>
         )}
       </View>
-    </ScrollView>
-  );
-}
-
-// ---------- Ziele ----------
-
-export function GoalsScreen({ goals, onSave }: { goals: Goals; onSave: (g: Goals) => void }) {
-  const [kcal, setKcal] = useState(String(goals.kcal));
-  const [protein, setProtein] = useState(String(goals.protein));
-  const [carbs, setCarbs] = useState(String(goals.carbs));
-  const [fat, setFat] = useState(String(goals.fat));
-  const [saved, setSaved] = useState(false);
-
-  useEffect(() => {
-    setKcal(String(goals.kcal)); setProtein(String(goals.protein)); setCarbs(String(goals.carbs)); setFat(String(goals.fat));
-  }, [goals]);
-
-  const vals = [kcal, protein, carbs, fat].map(parseNum);
-  const valid = vals.every((v) => v !== null) && (vals[0] ?? 0) > 0;
-  const macroKcal = Math.round((vals[1] ?? 0) * 4 + (vals[2] ?? 0) * 4 + (vals[3] ?? 0) * 9);
-
-  return (
-    <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
-      <Text style={[s.h1, { marginBottom: 14 }]}>Tagesziele</Text>
-      <View style={s.card}>
-        <NumField label="Energie" value={kcal} onChange={(v) => { setKcal(v); setSaved(false); }} suffix="kcal" />
-        <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
-          <NumField label="Protein" value={protein} onChange={(v) => { setProtein(v); setSaved(false); }} suffix="g" />
-          <NumField label="Kohlenhydrate" value={carbs} onChange={(v) => { setCarbs(v); setSaved(false); }} suffix="g" />
-          <NumField label="Fett" value={fat} onChange={(v) => { setFat(v); setSaved(false); }} suffix="g" />
-        </View>
-        <Text style={[s.label, { marginTop: 12 }]}>
-          Makroziele ergeben {macroKcal} kcal
-          {valid && Math.abs(macroKcal - (vals[0] ?? 0)) > 50 ? ` (Abweichung ${macroKcal - (vals[0] ?? 0)} kcal zum Energieziel)` : ''}
-        </Text>
-      </View>
-      <View style={{ flexDirection: 'row' }}>
-        <Btn
-          title={saved ? 'Gespeichert' : 'Ziele speichern'}
-          disabled={!valid}
-          onPress={() => {
-            onSave({ kcal: vals[0]!, protein: vals[1]!, carbs: vals[2]!, fat: vals[3]! });
-            setSaved(true);
-          }}
-        />
-      </View>
-      <Text style={[s.label, { marginTop: 16 }]}>Alle Daten bleiben lokal auf diesem Gerät.</Text>
     </ScrollView>
   );
 }

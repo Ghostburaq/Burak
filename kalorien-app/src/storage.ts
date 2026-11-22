@@ -1,14 +1,25 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Entry, Goals, Template } from './logic';
+import { DEFAULT_PROFILE, type Profile, type Weights } from './nutrition';
 
 const KEYS = {
   entries: 'kal.entries.v1',
   templates: 'kal.templates.v1',
-  goals: 'kal.goals.v1',
+  goalsLegacy: 'kal.goals.v1',
+  profile: 'kal.profile.v1',
+  weights: 'kal.weights.v1',
+  water: 'kal.water.v1',
+  training: 'kal.training.v1',
 };
 
-// Startwerte, sofort in den Zielen anpassbar. Keine Empfehlung.
-export const DEFAULT_GOALS: Goals = { kcal: 2000, protein: 150, carbs: 200, fat: 70 };
+export interface AppData {
+  entries: Entry[];
+  templates: Template[];
+  profile: Profile;
+  weights: Weights;
+  water: Record<string, number>; // Datum -> ml
+  training: string[]; // Daten mit Training
+}
 
 async function load<T>(key: string, fallback: T): Promise<T> {
   try {
@@ -20,19 +31,67 @@ async function load<T>(key: string, fallback: T): Promise<T> {
 }
 
 async function save(key: string, value: unknown): Promise<void> {
-  await AsyncStorage.setItem(key, JSON.stringify(value));
+  try {
+    await AsyncStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // Speicher voll oder gesperrt (z.B. privater Browsermodus): Daten bleiben bis zum Schliessen im Speicher
+  }
 }
 
-export const store = {
-  loadAll: async () => ({
+export async function loadAll(): Promise<AppData> {
+  let profile = await load<Profile | null>(KEYS.profile, null);
+  if (!profile) {
+    // Migration: alte feste Ziele werden zum manuellen Modus
+    const legacy = await load<Goals | null>(KEYS.goalsLegacy, null);
+    profile = legacy ? { ...DEFAULT_PROFILE, configured: true, mode: 'manual', manual: legacy } : DEFAULT_PROFILE;
+  }
+  return {
     entries: await load<Entry[]>(KEYS.entries, []),
     templates: await load<Template[]>(KEYS.templates, []),
-    goals: await load<Goals>(KEYS.goals, DEFAULT_GOALS),
-  }),
-  saveEntries: (v: Entry[]) => save(KEYS.entries, v),
-  saveTemplates: (v: Template[]) => save(KEYS.templates, v),
-  saveGoals: (v: Goals) => save(KEYS.goals, v),
+    profile: { ...DEFAULT_PROFILE, ...profile },
+    weights: await load<Weights>(KEYS.weights, {}),
+    water: await load<Record<string, number>>(KEYS.water, {}),
+    training: await load<string[]>(KEYS.training, []),
+  };
+}
+
+export const persist = {
+  entries: (v: Entry[]) => save(KEYS.entries, v),
+  templates: (v: Template[]) => save(KEYS.templates, v),
+  profile: (v: Profile) => save(KEYS.profile, v),
+  weights: (v: Weights) => save(KEYS.weights, v),
+  water: (v: Record<string, number>) => save(KEYS.water, v),
+  training: (v: string[]) => save(KEYS.training, v),
 };
+
+export async function saveAll(d: AppData): Promise<void> {
+  await Promise.all([
+    persist.entries(d.entries), persist.templates(d.templates), persist.profile(d.profile),
+    persist.weights(d.weights), persist.water(d.water), persist.training(d.training),
+  ]);
+}
+
+export function exportJson(d: AppData): string {
+  return JSON.stringify({ app: 'kalorien', version: 1, exportedAt: new Date().toISOString(), ...d });
+}
+
+/** Prüft ein Backup grob und gibt die Daten zurück, sonst eine Fehlermeldung. */
+export function parseBackup(text: string): AppData | string {
+  try {
+    const o = JSON.parse(text);
+    if (o?.app !== 'kalorien' || !Array.isArray(o.entries)) return 'Kein gültiges Kalorien-Backup.';
+    return {
+      entries: o.entries,
+      templates: Array.isArray(o.templates) ? o.templates : [],
+      profile: { ...DEFAULT_PROFILE, ...(o.profile ?? {}) },
+      weights: o.weights ?? {},
+      water: o.water ?? {},
+      training: Array.isArray(o.training) ? o.training : [],
+    };
+  } catch {
+    return 'Text ist kein gültiges JSON.';
+  }
+}
 
 export function newId(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);

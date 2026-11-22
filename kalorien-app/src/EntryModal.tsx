@@ -19,6 +19,7 @@ interface Props {
   editing: Entry | null;
   defaultMeal: Meal;
   templates: Template[];
+  recent: Template[];
   onClose: () => void;
   onSave: (draft: EntryDraft, template: Omit<Template, 'id'> | null) => void;
   onDelete: (id: string) => void;
@@ -27,7 +28,7 @@ interface Props {
 
 const str = (n: number) => (n ? String(round1(n)) : '');
 
-export function EntryModal({ visible, editing, defaultMeal, templates, onClose, onSave, onDelete, onDeleteTemplate }: Props) {
+export function EntryModal({ visible, editing, defaultMeal, templates, recent, onClose, onSave, onDelete, onDeleteTemplate }: Props) {
   const [name, setName] = useState('');
   const [meal, setMeal] = useState<Meal>(defaultMeal);
   const [kcal, setKcal] = useState('');
@@ -114,6 +115,17 @@ export function EntryModal({ visible, editing, defaultMeal, templates, onClose, 
                     title={manageTemplates ? `✕ ${t.name}` : `${t.name} · ${Math.round(t.kcal)}`}
                     onPress={() => (manageTemplates ? onDeleteTemplate(t.id) : applyTemplate(t))}
                   />
+                ))}
+              </View>
+            </View>
+          )}
+
+          {!editing && recent.length > 0 && (
+            <View style={s.card}>
+              <Text style={s.h2}>Zuletzt gegessen</Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: 10 }}>
+                {recent.map((t) => (
+                  <Chip key={t.id} title={`${t.name} · ${Math.round(t.kcal)}`} onPress={() => applyTemplate(t)} />
                 ))}
               </View>
             </View>

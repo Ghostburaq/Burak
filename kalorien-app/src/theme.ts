@@ -10,6 +10,8 @@ export const c = {
   protein: '#60a5fa',
   carbs: '#fbbf24',
   fat: '#f472b6',
+  water: '#38bdf8',
+  warn: '#fbbf24',
 };
 
 export const radius = 14;

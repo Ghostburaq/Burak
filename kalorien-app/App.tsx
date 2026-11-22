@@ -1,21 +1,25 @@
 import { StatusBar } from 'expo-status-bar';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { EntryModal, type EntryDraft } from './src/EntryModal';
-import { toDateKey, type Entry, type Goals, type Meal, type Template } from './src/logic';
-import { DayScreen, GoalsScreen, WeekScreen } from './src/screens';
-import { DEFAULT_GOALS, newId, store } from './src/storage';
+import { toDateKey, type Entry, type Meal, type Template } from './src/logic';
+import { calculate, currentTrend, DEFAULT_PROFILE } from './src/nutrition';
+import { ProfileScreen } from './src/ProfileScreen';
+import { DayScreen, WeekScreen } from './src/screens';
+import { exportJson, loadAll, newId, parseBackup, persist, saveAll, type AppData } from './src/storage';
 import { c } from './src/theme';
+import { WeightScreen } from './src/WeightScreen';
 
-type Tab = 'tag' | 'woche' | 'ziele';
+type Tab = 'tag' | 'woche' | 'gewicht' | 'profil';
 const TABS: { key: Tab; label: string }[] = [
   { key: 'tag', label: 'Tag' },
   { key: 'woche', label: 'Woche' },
-  { key: 'ziele', label: 'Ziele' },
+  { key: 'gewicht', label: 'Gewicht' },
+  { key: 'profil', label: 'Profil' },
 ];
 
-/** Vorschlag der Mahlzeit nach Uhrzeit, wenn über den allgemeinen Plus-Button erfasst wird. */
+/** Vorschlag der Mahlzeit nach Uhrzeit für den allgemeinen Plus-Button. */
 function mealByTime(): Meal {
   const h = new Date().getHours();
   if (h < 10) return 'fruehstueck';
@@ -24,59 +28,72 @@ function mealByTime(): Meal {
   return 'snack';
 }
 
+const EMPTY: AppData = { entries: [], templates: [], profile: DEFAULT_PROFILE, weights: {}, water: {}, training: [] };
+
 export default function App() {
   const [ready, setReady] = useState(false);
   const [tab, setTab] = useState<Tab>('tag');
   const [date, setDate] = useState(toDateKey(new Date()));
-  const [entries, setEntries] = useState<Entry[]>([]);
-  const [templates, setTemplates] = useState<Template[]>([]);
-  const [goals, setGoals] = useState<Goals>(DEFAULT_GOALS);
+  const [data, setData] = useState<AppData>(EMPTY);
   const [modal, setModal] = useState<{ open: boolean; meal: Meal; editing: Entry | null }>({
     open: false, meal: 'mittag', editing: null,
   });
 
   useEffect(() => {
-    store.loadAll().then((d) => {
-      setEntries(d.entries);
-      setTemplates(d.templates);
-      setGoals(d.goals);
-      setReady(true);
-    });
+    loadAll().then((d) => { setData(d); setReady(true); });
   }, []);
 
-  const updateEntries = useCallback((fn: (prev: Entry[]) => Entry[]) => {
-    setEntries((prev) => {
-      const next = fn(prev);
-      store.saveEntries(next);
+  /** Ändert einen Teil der Daten und speichert genau diesen Teil. */
+  const update = useCallback(<K extends keyof AppData>(key: K, fn: (prev: AppData[K]) => AppData[K]) => {
+    setData((prev) => {
+      const next = { ...prev, [key]: fn(prev[key]) };
+      (persist[key] as (v: AppData[K]) => void)(next[key]);
       return next;
     });
   }, []);
 
-  const updateTemplates = useCallback((fn: (prev: Template[]) => Template[]) => {
-    setTemplates((prev) => {
-      const next = fn(prev);
-      store.saveTemplates(next);
-      return next;
-    });
-  }, []);
+  const trend = useMemo(() => currentTrend(data.weights), [data.weights]);
+  const calc = useMemo(() => calculate(data.profile, trend), [data.profile, trend]);
+  const goalsFor = useCallback((d: string) => (data.training.includes(d) ? calc.training : calc.base), [data.training, calc]);
+
+  // Zuletzt gegessen: eindeutige Namen, neueste zuerst
+  const recent = useMemo<Template[]>(() => {
+    const seen = new Set<string>();
+    const out: Template[] = [];
+    for (const e of [...data.entries].sort((a, b) => b.createdAt - a.createdAt)) {
+      const k = e.name.toLowerCase();
+      if (seen.has(k)) continue;
+      seen.add(k);
+      out.push({ id: 'r' + e.id, name: e.name, kcal: e.kcal, protein: e.protein, carbs: e.carbs, fat: e.fat });
+      if (out.length >= 12) break;
+    }
+    return out;
+  }, [data.entries]);
 
   const closeModal = () => setModal((m) => ({ ...m, open: false, editing: null }));
 
   const handleSave = (draft: EntryDraft, template: Omit<Template, 'id'> | null) => {
     const editing = modal.editing;
     if (editing) {
-      updateEntries((prev) => prev.map((e) => (e.id === editing.id ? { ...e, ...draft } : e)));
+      update('entries', (prev) => prev.map((e) => (e.id === editing.id ? { ...e, ...draft } : e)));
     } else {
-      updateEntries((prev) => [...prev, { ...draft, id: newId(), date, createdAt: Date.now() }]);
+      update('entries', (prev) => [...prev, { ...draft, id: newId(), date, createdAt: Date.now() }]);
     }
     if (template) {
-      // Gleichnamige Vorlage wird ersetzt statt doppelt angelegt
-      updateTemplates((prev) => [
+      update('templates', (prev) => [
         { ...template, id: newId() },
         ...prev.filter((t) => t.name.toLowerCase() !== template.name.toLowerCase()),
       ]);
     }
     closeModal();
+  };
+
+  const copyMeal = (meal: Meal, from: string) => {
+    const now = Date.now();
+    update('entries', (prev) => [
+      ...prev,
+      ...prev.filter((e) => e.date === from && e.meal === meal).map((e, i) => ({ ...e, id: newId(), date, createdAt: now + i })),
+    ]);
   };
 
   if (!ready) {
@@ -96,17 +113,50 @@ export default function App() {
             <DayScreen
               date={date}
               setDate={setDate}
-              entries={entries}
-              goals={goals}
+              entries={data.entries}
+              goals={goalsFor(date)}
+              isTraining={data.training.includes(date)}
+              onToggleTraining={() =>
+                update('training', (prev) => (prev.includes(date) ? prev.filter((d) => d !== date) : [...prev, date]))
+              }
+              water={data.water[date] ?? 0}
+              waterGoal={calc.waterMl}
+              onWater={(delta) => update('water', (prev) => ({ ...prev, [date]: Math.max(0, (prev[date] ?? 0) + delta) }))}
+              configured={data.profile.configured}
+              onSetup={() => setTab('profil')}
               onAdd={(meal) => setModal({ open: true, meal, editing: null })}
               onEdit={(e) => setModal({ open: true, meal: e.meal, editing: e })}
+              onCopyMeal={copyMeal}
             />
           )}
           {tab === 'woche' && (
-            <WeekScreen entries={entries} goals={goals} onOpenDay={(d) => { setDate(d); setTab('tag'); }} />
+            <WeekScreen entries={data.entries} goalsFor={goalsFor} onOpenDay={(d) => { setDate(d); setTab('tag'); }} />
           )}
-          {tab === 'ziele' && (
-            <GoalsScreen goals={goals} onSave={(g) => { setGoals(g); store.saveGoals(g); }} />
+          {tab === 'gewicht' && (
+            <WeightScreen
+              weights={data.weights}
+              entries={data.entries}
+              profile={data.profile}
+              formulaTdee={calc.tdeeFormula}
+              onSetWeight={(d, kg) => update('weights', (prev) => ({ ...prev, [d]: kg }))}
+              onDeleteWeight={(d) => update('weights', (prev) => { const n = { ...prev }; delete n[d]; return n; })}
+              onApplyTdee={(t) => update('profile', (p) => ({ ...p, tdeeOverride: t }))}
+            />
+          )}
+          {tab === 'profil' && (
+            <ProfileScreen
+              profile={data.profile}
+              trendWeight={trend}
+              onSave={(p) => update('profile', () => p)}
+              exportText={() => exportJson(data)}
+              onImport={(text) => {
+                const r = parseBackup(text);
+                if (typeof r === 'string') return r;
+                setData(r);
+                saveAll(r);
+                return null;
+              }}
+            />
           )}
         </View>
 
@@ -139,11 +189,12 @@ export default function App() {
           visible={modal.open}
           editing={modal.editing}
           defaultMeal={modal.meal}
-          templates={templates}
+          templates={data.templates}
+          recent={recent}
           onClose={closeModal}
           onSave={handleSave}
-          onDelete={(id) => { updateEntries((prev) => prev.filter((e) => e.id !== id)); closeModal(); }}
-          onDeleteTemplate={(id) => updateTemplates((prev) => prev.filter((t) => t.id !== id))}
+          onDelete={(id) => { update('entries', (prev) => prev.filter((e) => e.id !== id)); closeModal(); }}
+          onDeleteTemplate={(id) => update('templates', (prev) => prev.filter((t) => t.id !== id))}
         />
       </SafeAreaView>
     </SafeAreaProvider>
