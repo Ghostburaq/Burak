@@ -1,0 +1,44 @@
+ZRH12 - TESTPROGRAMME IM FORMAT VON SIGMA UNITY
+===============================================
+
+WAS GEAENDERT WURDE
+
+Nur das Zahlenformat in der Load-Zeile. Lastwerte, Reihenfolge und
+Haltezeiten sind unveraendert.
+
+   vorher:   Load  187kw 1cosO 00:00:00 No        -> Fehler
+   jetzt:    Load  187.0kW 1.00cosO 00:00:00 No   -> laeuft
+
+   1. Lastwert mit einer Dezimalstelle      187   wird zu   187.0
+   2. Einheit mit grossem W                  kw   wird zu   kW
+   3. Leistungsfaktor mit zwei Dezimalen      1   wird zu   1.00
+
+BELEG
+
+Auf den Fotos vom 23.11. stehen im selben Skript beide Formen.
+Die Zeilen  Load 2000.0kW 1.00cos... gehen fehlerfrei durch.
+Die Zeilen  Load 14kw 1cos...        loesen Error 6 und Error 7 aus.
+Der Rest der Zeile ist in beiden Formen gleich. Also liegt es nur am
+Zahlenformat, nicht am Zeichen und nicht an 00:00:00.
+
+WAS BESTAETIGT IST
+
+Diese Zeilen haben auf den Fotos nie einen Fehler erzeugt:
+   Capture  On          Section  HeatRun     Instrumentation  Full
+   Delay  00:00:02      Reject               Capture  Off
+   und der vierte Wert 00:00:00 in der Load-Zeile
+
+KOMMENTARE
+
+Die Dateien enthalten keine Kommentarzeilen, weil nicht belegt ist, dass
+Unity sie akzeptiert. Die Datei TEST_Kommentar_erlaubt.tst hat genau eine
+Kommentarzeile mit Hochkomma in Zeile 1. Laedt sie ohne Fehler, kann ich
+die Kopftexte wieder einbauen. Kurz melden.
+
+REIHENFOLGE AM TESTTAG
+
+   P01 zuerst. Misst die Schrittzeit des Lastbanks.
+   Danach P02, die vertraglich geforderte Rampe.
+   Dann P03 bis P06 nach Plan.
+
+DATEIEN NIE UEBER WORD ODER WHATSAPP WEITERGEBEN. Immer als ZIP.
